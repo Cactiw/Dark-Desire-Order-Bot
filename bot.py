@@ -76,10 +76,10 @@ def send_order(bot, chat_id, response, notification):
 def attackCommand(bot, update):
     global order_id
     response = update.message.text[1:len(update.message.text)]
-    stats = "Рассылка пинов началась в {0}\n\n".format(time.ctime())
+    stats = "Рассылка пинов началась в <b>{0}</b>\n\n".format(time.ctime())
     print("begin")
 
-    bot.send_message(chat_id=update.message.chat_id, text=stats)
+    bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     request = "select chat_id, pin, disable_notification from guild_chats where enabled = '1'"
     cursor.execute(request)
     row = cursor.fetchone()
@@ -89,10 +89,13 @@ def attackCommand(bot, update):
         row = cursor.fetchone()
         order_sent += 1
     order_id += 1
+    orders_OK = 0
+    for i in range (0, order_sent):
+        current = order_backup_queue.get()
+        orders_OK += 1 if current else 0
 
-
-    stats = "Выполнено в {0}, отправлено в {1} чатов".format(time.ctime(), "Unknown")
-    bot.send_message(chat_id=update.message.chat_id, text=stats)
+    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов".format(time.ctime(), orders_OK)
+    bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     return
 
 

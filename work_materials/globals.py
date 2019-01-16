@@ -2,7 +2,8 @@ import pytz
 import tzlocal
 import psycopg2
 
-from libs.bot_async_messaging import AsyncBot
+
+from libs.bot_async_messaging import AsyncBot, order_backup_queue
 from libs.updater_async import AsyncUpdater
 from config import Production_token, psql_creditals
 

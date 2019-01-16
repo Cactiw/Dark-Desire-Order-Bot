@@ -15,6 +15,8 @@ MESSAGE_PER_CHAT_LIMIT = 3
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
 
+
+order_backup_queue = multiprocessing.Queue()
 class AsyncBot(Bot):
 
 
@@ -148,6 +150,7 @@ class AsyncBot(Bot):
                     except BadRequest:
                         #LOG
                         pass
+            order_backup_queue.put("success")
             order_in_queue = self.order_queue.get()
             if order_in_queue is None:
                 return 0
