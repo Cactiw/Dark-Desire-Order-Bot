@@ -5,10 +5,10 @@ import psycopg2
 
 from libs.bot_async_messaging import AsyncBot, order_backup_queue
 from libs.updater_async import AsyncUpdater
-from config import Production_token, psql_creditals
+from config import Production_token, psql_creditals, request_kwargs
 
 
-bot = AsyncBot(token=Production_token, workers=8)
+bot = AsyncBot(token=Production_token, workers=16, request_kwargs=request_kwargs)
 updater = AsyncUpdater(bot = bot)
 
 dispatcher = updater.dispatcher
