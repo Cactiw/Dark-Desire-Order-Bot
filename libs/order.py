@@ -8,3 +8,11 @@ class Order:
         self.text = text
         self.pin = pin
         self.notification = notification
+
+
+class OrderBackup:
+
+    def __init__(self, order_id, OK, text):
+        self.order_id = order_id
+        self.OK = OK
+        self.text = text

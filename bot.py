@@ -52,14 +52,14 @@ def menu(bot, update):
     KeyboardButton("/⚔ 🍆"),
     ]
     reply_markup = ReplyKeyboardMarkup(build_menu(button_list, n_cols=3))
-    bot.actually_send_message(chat_id=update.message.chat_id, text = 'Select castle', reply_markup=reply_markup)
+    bot.send_message(chat_id=update.message.chat_id, text = 'Select castle', reply_markup=reply_markup)
 
 
 def send_order(bot, chat_id, response, notification):
     mes_current = None
     for i in range(0, 5):
         try:
-            mes_current = bot.sync_actually_send_message(chat_id=chat_id, text=response)  # Отправка в текущий чат
+            mes_current = bot.sync_send_message(chat_id=chat_id, text=response)  # Отправка в текущий чат
         except TelegramError:
             print("TELEGRAM ERROR")
             pass
@@ -79,7 +79,7 @@ def attackCommand(bot, update):
     stats = "Рассылка пинов началась в <b>{0}</b>\n\n".format(time.ctime())
     print("begin")
 
-    bot.actually_send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
+    bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     request = "select chat_id, pin, disable_notification from guild_chats where enabled = '1'"
     cursor.execute(request)
     row = cursor.fetchone()
@@ -88,18 +88,25 @@ def attackCommand(bot, update):
         bot.send_order(order_id=order_id, chat_id=row[0], response=response, pin=row[1], notification=not row[2])
         row = cursor.fetchone()
         orders_sent += 1
+    response = ""
     orders_OK = 0
-    while orders_OK < orders_sent:
+    orders_failed = 0
+    while orders_OK + orders_failed < orders_sent:
         current = order_backup_queue.get()
-        if current == order_id:
-            orders_OK += 1
+        if current.order_id == order_id:
+            if current.OK:
+                orders_OK += 1
+            else:
+                orders_failed += 1
+                response += current.text
         else:
             order_backup_queue.put(current)
             logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, order_id))
 
     order_id += 1
-    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов".format(time.ctime(), orders_OK)
-    bot.actually_send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
+    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
+            "ошибка при отправке в <b>{2}</b> чатов\n\n".format(time.ctime(), orders_OK, orders_failed) + response
+    bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     return
 
 
@@ -109,11 +116,11 @@ def add_pin(bot, update):
     cursor.execute(request)
     row = cursor.fetchone()
     if row is not None:
-        bot.actually_send_message(chat_id=update.message.chat_id, text='Беседа уже подключена к рассылке')
+        bot.send_message(chat_id=update.message.chat_id, text='Беседа уже подключена к рассылке')
         return
     request = "INSERT INTO guild_chats(chat_id, chat_name) VALUES('{0}', '{1}')".format(mes.chat_id, mes.chat.title)
     cursor.execute(request)
-    bot.actually_send_message(chat_id=update.message.chat_id, text='Беседа успешо подключена к рассылке')
+    bot.send_message(chat_id=update.message.chat_id, text='Беседа успешо подключена к рассылке')
 
 
 
@@ -142,61 +149,48 @@ def pin_setup(bot, update):
         response_new += 'division: {0}\n'.format(row[6])
         response_new += 'Change division: /pindivision_{0}\n\n'.format(row[0])
         if len(response + response_new) >= 4096:  # Превышение лимита длины сообщения
-            bot.actually_send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
 
         row = cursor.fetchone()
-    bot.actually_send_message(chat_id=update.message.chat_id, text=response, reply_markup=ReplyKeyboardRemove())
+    bot.send_message(chat_id=update.message.chat_id, text=response, reply_markup=ReplyKeyboardRemove())
 
 
 def pinset(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
-    request = "UPDATE guild_chats SET enabled = '{0}' WHERE guild_chat_id = '{1}'".format(mes1[2], mes1[1])
-    cursor.execute(request)
+    request = "UPDATE guild_chats SET enabled = %s WHERE guild_chat_id = %s"
+    cursor.execute(request, (mes1[2], mes1[1]))
     conn.commit()
-    row = cursor.fetchone()
-    if row != None:
-        print(row)
-    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 
 def pinpin(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
     #print(mes1[0], mes1[1], mes1[2])
-    request = "UPDATE guild_chats SET pin = '{0}' WHERE guild_chat_id = '{1}'".format(mes1[2], mes1[1])
-    cursor.execute(request)
+    request = "UPDATE guild_chats SET pin = %s WHERE guild_chat_id = %s"
+    cursor.execute(request, (mes1[2], mes1[1]))
     conn.commit()
-    row = cursor.fetchone()
-    if row != None:
-        print(row)
-    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 def pinmute(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
-    request = "UPDATE guild_chats SET disable_notification = '{0}' WHERE guild_chat_id = '{1}'".format(mes1[2], mes1[1])
-    cursor.execute(request)
+    request = "UPDATE guild_chats SET disable_notification = %s WHERE guild_chat_id = %s"
+    cursor.execute(request, (mes1[2], mes1[1]))
     conn.commit()
-    row = cursor.fetchone()
-    if row != None:
-        print(row)
-    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 def pindivision(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
     division = mes.text.partition(' ')[2]
-    request = "UPDATE guild_chats SET division = '{0}' WHERE guild_chat_id = '{1}'".format(division, mes1[1])
-    cursor.execute(request)
+    request = "UPDATE guild_chats SET division = %s WHERE guild_chat_id = %s"
+    cursor.execute(request, (division, mes1[1]))
     conn.commit()
-    row = cursor.fetchone()
-    if row != None:
-        print(row)
-        return
-    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 
 

@@ -9,7 +9,7 @@ import logging
 import traceback
 import datetime
 
-from libs.order import Order
+from libs.order import Order, OrderBackup
 
 MESSAGE_PER_SECOND_LIMIT = 28
 MESSAGE_PER_CHAT_LIMIT = 3
@@ -48,6 +48,9 @@ class AsyncBot(Bot):
 
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
+
+    def send_message(self, *args, **kwargs):
+        self.actually_send_message(*args, **kwargs)
 
     def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
@@ -152,28 +155,31 @@ class AsyncBot(Bot):
     def __work(self):
         order_in_queue = self.order_queue.get()
         while self.processing and order_in_queue:
+            response = ""
             pin = order_in_queue.pin
             notification = order_in_queue.notification
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
             message = self.actually_send_message(chat_id=chat_id, text = text)
             if message == UNAUTHORIZED_ERROR_CODE:
-                #LOG
+                response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass
             elif message == BADREQUEST_ERROR_CODE:
-                #LOG
+                response += "Невозможно отправить сообщение в чат {0}, проверьте корректность chat id\n".format(chat_id)
                 pass
             else:
                 if pin:
                     try:
                         super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id, disable_notification=not notification)
                     except Unauthorized:
-                        #LOG
+                        response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
                     except BadRequest:
-                        #LOG
+                        response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
-            order_backup_queue.put(order_in_queue.order_id)
+            OK = response == ""
+            order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
+            order_backup_queue.put(order_backup)
             order_in_queue = self.order_queue.get()
             if order_in_queue is None:
                 return 0
