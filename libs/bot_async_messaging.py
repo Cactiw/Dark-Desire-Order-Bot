@@ -7,10 +7,11 @@ import threading
 import time
 import logging
 import traceback
+import datetime
 
 from libs.order import Order
 
-MESSAGE_PER_SECOND_LIMIT = 29
+MESSAGE_PER_SECOND_LIMIT = 28
 MESSAGE_PER_CHAT_LIMIT = 3
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
@@ -74,9 +75,13 @@ class AsyncBot(Bot):
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except Unauthorized:
+            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
+            release.start()
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
             logging.error(traceback.format_exc())
+            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
+            release.start()
             return BADREQUEST_ERROR_CODE
         except TimedOut:
             time.sleep(0.1)
@@ -84,6 +89,8 @@ class AsyncBot(Bot):
         except NetworkError:
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
+        release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
+        release.start()
         return message
 
     def send_order(self, order_id, chat_id, response, pin, notification):
@@ -91,8 +98,8 @@ class AsyncBot(Bot):
         self.order_queue.put(order)
 
     def start(self):
-        self.message_counter_thread = threading.Thread(target = self.__message_counter, args = ())
-        self.message_counter_thread.start()
+        #self.message_counter_thread = threading.Thread(target = self.__message_counter, args = ())
+        #self.message_counter_thread.start()
         for i in range(0, self.num_workers):
             worker = threading.Thread(target = self.__work, args = ())
             worker.start()
@@ -105,7 +112,7 @@ class AsyncBot(Bot):
             self.order_queue.put(None)
         for i in self.workers:
             i.join()
-        self.message_counter_thread.join()
+        #self.message_counter_thread.join()
 
     def __del__(self):
         self.processing = False
@@ -118,13 +125,29 @@ class AsyncBot(Bot):
             pass
 
 
-    def __message_counter(self):
+    """def __message_counter(self):
         while self.processing:
             with self.counter_lock:
                 self.messages_per_second = 0
                 self.messages_per_chat.clear()
                 self.counter_lock.notify_all()
-            time.sleep(1)
+            time.sleep(1)"""
+
+    def __releasing_resourse(self, chat_id):
+        with self.counter_lock:
+            #logging.info("releasing resourse, now it is {0}, {1}".format(self.messages_per_second, self.messages_per_chat))
+            self.messages_per_second -= 1
+            mes_per_chat = self.messages_per_chat.get(chat_id)
+            if mes_per_chat is None:
+                self.counter_lock.notify_all()
+                return
+            if mes_per_chat == 1:
+                self.messages_per_chat.pop(chat_id)
+                self.counter_lock.notify_all()
+                return
+            mes_per_chat -= 1
+            self.messages_per_chat.update({chat_id : mes_per_chat})
+            self.counter_lock.notify_all()
 
     def __work(self):
         order_in_queue = self.order_queue.get()
@@ -150,7 +173,7 @@ class AsyncBot(Bot):
                     except BadRequest:
                         #LOG
                         pass
-            order_backup_queue.put("success")
+            order_backup_queue.put(order_in_queue.order_id)
             order_in_queue = self.order_queue.get()
             if order_in_queue is None:
                 return 0

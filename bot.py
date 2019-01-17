@@ -52,14 +52,14 @@ def menu(bot, update):
     KeyboardButton("/⚔ 🍆"),
     ]
     reply_markup = ReplyKeyboardMarkup(build_menu(button_list, n_cols=3))
-    bot.send_message(chat_id=update.message.chat_id, text = 'Select castle', reply_markup=reply_markup)
+    bot.actually_send_message(chat_id=update.message.chat_id, text = 'Select castle', reply_markup=reply_markup)
 
 
 def send_order(bot, chat_id, response, notification):
     mes_current = None
     for i in range(0, 5):
         try:
-            mes_current = bot.sync_send_message(chat_id=chat_id, text=response)  # Отправка в текущий чат
+            mes_current = bot.sync_actually_send_message(chat_id=chat_id, text=response)  # Отправка в текущий чат
         except TelegramError:
             print("TELEGRAM ERROR")
             pass
@@ -79,23 +79,27 @@ def attackCommand(bot, update):
     stats = "Рассылка пинов началась в <b>{0}</b>\n\n".format(time.ctime())
     print("begin")
 
-    bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
+    bot.actually_send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     request = "select chat_id, pin, disable_notification from guild_chats where enabled = '1'"
     cursor.execute(request)
     row = cursor.fetchone()
-    order_sent = 0
+    orders_sent = 0
     while row:
         bot.send_order(order_id=order_id, chat_id=row[0], response=response, pin=row[1], notification=not row[2])
         row = cursor.fetchone()
-        order_sent += 1
-    order_id += 1
+        orders_sent += 1
     orders_OK = 0
-    for i in range (0, order_sent):
+    while orders_OK < orders_sent:
         current = order_backup_queue.get()
-        orders_OK += 1 if current else 0
+        if current == order_id:
+            orders_OK += 1
+        else:
+            order_backup_queue.put(current)
+            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, order_id))
 
+    order_id += 1
     stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов".format(time.ctime(), orders_OK)
-    bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
+    bot.actually_send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     return
 
 
@@ -105,11 +109,11 @@ def add_pin(bot, update):
     cursor.execute(request)
     row = cursor.fetchone()
     if row is not None:
-        bot.send_message(chat_id=update.message.chat_id, text='Беседа уже подключена к рассылке')
+        bot.actually_send_message(chat_id=update.message.chat_id, text='Беседа уже подключена к рассылке')
         return
     request = "INSERT INTO guild_chats(chat_id, chat_name) VALUES('{0}', '{1}')".format(mes.chat_id, mes.chat.title)
     cursor.execute(request)
-    bot.send_message(chat_id=update.message.chat_id, text='Беседа успешо подключена к рассылке')
+    bot.actually_send_message(chat_id=update.message.chat_id, text='Беседа успешо подключена к рассылке')
 
 
 
@@ -138,12 +142,12 @@ def pin_setup(bot, update):
         response_new += 'division: {0}\n'.format(row[6])
         response_new += 'Change division: /pindivision_{0}\n\n'.format(row[0])
         if len(response + response_new) >= 4096:  # Превышение лимита длины сообщения
-            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            bot.actually_send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
 
         row = cursor.fetchone()
-    bot.send_message(chat_id=update.message.chat_id, text=response, reply_markup=ReplyKeyboardRemove())
+    bot.actually_send_message(chat_id=update.message.chat_id, text=response, reply_markup=ReplyKeyboardRemove())
 
 
 def pinset(bot, update):
@@ -155,7 +159,7 @@ def pinset(bot, update):
     row = cursor.fetchone()
     if row != None:
         print(row)
-    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 
 def pinpin(bot, update):
@@ -168,7 +172,7 @@ def pinpin(bot, update):
     row = cursor.fetchone()
     if row != None:
         print(row)
-    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 def pinmute(bot, update):
     mes = update.message
@@ -179,7 +183,7 @@ def pinmute(bot, update):
     row = cursor.fetchone()
     if row != None:
         print(row)
-    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 def pindivision(bot, update):
     mes = update.message
@@ -192,7 +196,7 @@ def pindivision(bot, update):
     if row != None:
         print(row)
         return
-    bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
+    bot.actually_send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 
 
