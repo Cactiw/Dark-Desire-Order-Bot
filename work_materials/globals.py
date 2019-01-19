@@ -7,6 +7,9 @@ from libs.bot_async_messaging import AsyncBot, order_backup_queue
 from libs.updater_async import AsyncUpdater
 from config import Production_token, psql_creditals, request_kwargs
 
+admin_ids = [231900398, 205356091]
+
+castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 
 bot = AsyncBot(token=Production_token, workers=16, request_kwargs=request_kwargs)
 updater = AsyncUpdater(bot = bot)

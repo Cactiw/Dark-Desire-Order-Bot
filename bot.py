@@ -1,5 +1,6 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackQueryHandler
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Bot
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.utils.request import Request
 
 from telegram.error import (TelegramError, Unauthorized, BadRequest,
@@ -10,14 +11,19 @@ import time
 import datetime
 import psycopg2
 import threading
+import traceback
 
 import sys
 import multiprocessing
 from multiprocessing import Queue
 
 from work_materials.globals import *
+from work_materials.filters.pin_setup_filters import *
+from work_materials.filters.service_filters import *
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
+from libs.pult import build_pult, rebuild_pult
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 multiprocessing.log_to_stderr()
 logger = multiprocessing.get_logger()
@@ -26,7 +32,8 @@ logger.setLevel(logging.INFO)
 
 order_id = 0
 
-
+pult_status = { 'target' : -1 , 'defense_home' : False}
+order_chats = []
 
 
 def build_menu(buttons,
@@ -77,7 +84,6 @@ def attackCommand(bot, update):
     global order_id
     response = update.message.text[1:len(update.message.text)]
     stats = "Рассылка пинов началась в <b>{0}</b>\n\n".format(time.ctime())
-    print("begin")
 
     bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     request = "select chat_id, pin, disable_notification from guild_chats where enabled = '1'"
@@ -121,6 +127,7 @@ def add_pin(bot, update):
     request = "INSERT INTO guild_chats(chat_id, chat_name) VALUES('{0}', '{1}')".format(mes.chat_id, mes.chat.title)
     cursor.execute(request)
     bot.send_message(chat_id=update.message.chat_id, text='Беседа успешо подключена к рассылке')
+    recashe_order_chats()
 
 
 
@@ -192,73 +199,109 @@ def pindivision(bot, update):
     conn.commit()
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
+def pult(bot, update):
+    PultMarkup = build_pult(castles)
+    bot.send_message(chat_id = update.message.chat_id,
+                     text = "{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
+                     reply_markup = PultMarkup)
+
+def pult_callback(bot, update):
+    data = update.callback_query.data
+    if data == "ps":
+        pult_send(bot, update)
+    if data.find("pc") == 0:
+        pult_castles_callback(bot, update)
+        return
+
+def pult_send(bot, update):
+    time_begin = datetime.datetime.now()
+    global order_id
+    mes = update.callback_query.message
+    target = pult_status.get("target")
+    if target == -1:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
+        return
+    castle_target = castles[target]
+    defense_home = pult_status.get("defense_home")
+    response = "⚔️{0}\n🛡{1}\n".format(castle_target, "?" if defense_home else castle_target)
+    orders_sent = 0
+    for chat in order_chats:
+        bot.send_order(order_id=order_id, chat_id=chat[0], response=response, pin=chat[1], notification=not chat[2])
+        orders_sent += 1
+    response = ""
+    orders_OK = 0
+    orders_failed = 0
+    while orders_OK + orders_failed < orders_sent:
+        current = order_backup_queue.get()
+        if current.order_id == order_id:
+            if current.OK:
+                orders_OK += 1
+            else:
+                orders_failed += 1
+                response += current.text
+        else:
+            order_backup_queue.put(current)
+            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, order_id))
+
+    order_id += 1
+    time_end = datetime.datetime.now()
+    time_delta = time_end - time_begin
+    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
+            "ошибка при отправке в <b>{2}</b> чатов, " \
+            "рассылка заняла <b>{3}</b>\n\n".format(time.ctime(), orders_OK, orders_failed, time_delta) + response
+    bot.send_message(chat_id=mes.chat_id, text=stats, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 
+def pult_castles_callback(bot, update):
+    mes = update.callback_query.message
+    new_target = int(update.callback_query.data[2])
+    new_markup = rebuild_pult("change_target", new_target)
+    pult_status.update({ "target" : new_target })
+    try:
+        bot.editMessageReplyMarkup(chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup)
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    except TelegramError:
+        logging.error(traceback.format_exc)
 
-class Filter_pinset(BaseFilter):
-    def filter(self, message):
-        return 'pinset' in message.text
-
-filter_pinset = Filter_pinset()
-
-class Filter_pinpin(BaseFilter):
-    def filter(self, message):
-        return 'pinpin' in message.text
-
-filter_pinpin = Filter_pinpin()
-
-
-class Filter_pinmute(BaseFilter):
-    def filter(self, message):
-        return 'pinmute' in message.text
-
-filter_pinmute = Filter_pinmute()
-
-class Filter_pindivision(BaseFilter):
-    def filter(self, message):
-        return 'pindivision' in message.text
-
-filter_pindivision = Filter_pindivision()
-
-dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=(Filters.user(user_id=231900398)  | Filters.user(user_id = 205356091))))
-dispatcher.add_handler(CommandHandler('menu', menu, filters=(Filters.user(user_id=231900398)  | Filters.user(user_id = 205356091))))
-dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=Filters.user(user_id = 231900398)))
-dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=Filters.user(user_id = 231900398)))
-dispatcher.add_handler(MessageHandler(Filters.command & filter_pinset & Filters.user(user_id = 231900398), pinset))
-dispatcher.add_handler(MessageHandler(Filters.command & filter_pinpin & Filters.user(user_id = 231900398), pinpin))
-dispatcher.add_handler(MessageHandler(Filters.command & filter_pinmute & Filters.user(user_id = 231900398), pinmute))
-dispatcher.add_handler(MessageHandler(Filters.command & filter_pindivision & Filters.user(user_id = 231900398), pindivision))
+def inline_callback(bot, update):
+    if update.callback_query.data.find("p") == 0:
+        pult_callback(bot, update)
+        return
 
 
+
+def recashe_order_chats():
+    logging.info("Recaching chats...")
+    order_chats.clear()
+    request = "select chat_id, pin, disable_notification from guild_chats where enabled = '1'"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row:
+        current = []
+        for elem in row:
+            current.append(elem)
+        order_chats.append(current)
+        row = cursor.fetchone()
+    logging.info("Recashing done")
+
+dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
+dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
+dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))
+dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
+dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=filter_is_admin))
+dispatcher.add_handler(MessageHandler(Filters.command & filter_pinset & filter_is_admin, pinset))
+dispatcher.add_handler(MessageHandler(Filters.command & filter_pinpin & filter_is_admin, pinpin))
+dispatcher.add_handler(MessageHandler(Filters.command & filter_pinmute & filter_is_admin, pinmute))
+dispatcher.add_handler(MessageHandler(Filters.command & filter_pindivision & filter_is_admin, pindivision))
+dispatcher.add_handler(CallbackQueryHandler(inline_callback, pass_update_queue=False, pass_user_data=False))
+
+
+
+recashe_order_chats()
 updater.start_polling(clean=False)
 
-"""
-def updating(updater, division, cursor):
-    #updater.start_polling(clean=True)
-    orders = order_queues.get(division)
-    data = orders.get()
-    while data is not None:
-        response = data.text
-        order_id = data.order_id
-        print("starting sending orders, division =", division)
-        attack_send(updater, division, response, cursor, order_id)
-
-        data = orders.get()
-
-    #updater.idle()
-
-#north_updating = multiprocessing.Process(target=updating, args=(north_updater, "north", cursor), name="North_updating")
-request = Request( con_pool_size = 15, read_timeout=1.5, connect_timeout=1.5)
-north_bot = Bot(token='790769244:AAHjr7pOnzEinv9nbKeoO_dbxGw6GVcHBOw', request=request)
-south_bot = Bot(token='739120792:AAGMYTGwNx_kNMqq3epnaYYQfCpSFAnd0A4', request=request)
-north_updating = multiprocessing.Process(target=updating, args=(north_bot, "north", cursor), name="North_updating")
-north_updating.start()
-south_updating = multiprocessing.Process(target=updating, args=(south_bot, "south", cursor2), name="South_updating")
-south_updating.start()
-#south_updater.start_polling(clean=True)
-#north_updater.start_polling(clean=True)
-"""
 
 # Останавливаем бота, если были нажаты Ctrl + C
 updater.idle()
