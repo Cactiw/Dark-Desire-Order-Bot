@@ -32,7 +32,7 @@ logger.setLevel(logging.INFO)
 
 order_id = 0
 
-pult_status = { 'target' : -1 , 'defense_home' : False}
+pult_status = { 'target' : -1 , 'defense_home' : False, 'time' : 0, "tactics" : ""}
 order_chats = []
 
 
@@ -61,23 +61,6 @@ def menu(bot, update):
     reply_markup = ReplyKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(chat_id=update.message.chat_id, text = 'Select castle', reply_markup=reply_markup)
 
-
-def send_order(bot, chat_id, response, notification):
-    mes_current = None
-    for i in range(0, 5):
-        try:
-            mes_current = bot.sync_send_message(chat_id=chat_id, text=response)  # Отправка в текущий чат
-        except TelegramError:
-            print("TELEGRAM ERROR")
-            pass
-        else:
-            break
-
-    try:
-        bot.pinChatMessage(chat_id=chat_id, message_id=mes_current.message_id, disable_notification=notification)
-        pass
-    except TelegramError:
-        pass
 
 
 def attackCommand(bot, update):
@@ -114,6 +97,43 @@ def attackCommand(bot, update):
             "ошибка при отправке в <b>{2}</b> чатов\n\n".format(time.ctime(), orders_OK, orders_failed) + response
     bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     return
+
+def send_order(bot, chat_callback_id, castle_target, defense_home):
+    global order_id
+    time_begin = datetime.datetime.now()
+    response = "⚔️{0}\n🛡{1}\n".format(castle_target, "?" if defense_home else castle_target)
+    orders_sent = 0
+    for chat in order_chats:
+        bot.send_order(order_id=order_id, chat_id=chat[0], response=response, pin=chat[1], notification=not chat[2])
+        orders_sent += 1
+    response = ""
+    orders_OK = 0
+    orders_failed = 0
+    while orders_OK + orders_failed < orders_sent:
+        current = order_backup_queue.get()
+        if current.order_id == order_id:
+            if current.OK:
+                orders_OK += 1
+            else:
+                orders_failed += 1
+                response += current.text
+        else:
+            order_backup_queue.put(current)
+            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, order_id))
+
+    order_id += 1
+    time_end = datetime.datetime.now()
+    time_delta = time_end - time_begin
+    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
+            "ошибка при отправке в <b>{2}</b> чатов, " \
+            "рассылка заняла <b>{3}</b>\n\n".format(time.ctime(), orders_OK, orders_failed, time_delta) + response
+    bot.send_message(chat_id = chat_callback_id, text=stats, parse_mode='HTML')
+
+def send_order_job(bot, job):
+    chat_callback_id = job.context[0]
+    castle_target = job.context[1]
+    defense_home = job.context[2]
+    send_order(bot, chat_callback_id, castle_target, defense_home)
 
 
 def add_pin(bot, update):
@@ -200,7 +220,7 @@ def pindivision(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 def pult(bot, update):
-    PultMarkup = build_pult(castles)
+    PultMarkup = build_pult(castles, times)
     bot.send_message(chat_id = update.message.chat_id,
                      text = "{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
                      reply_markup = PultMarkup)
@@ -209,61 +229,78 @@ def pult_callback(bot, update):
     data = update.callback_query.data
     if data == "ps":
         pult_send(bot, update)
+        return
     if data.find("pc") == 0:
         pult_castles_callback(bot, update)
         return
+    if data.find("pt") == 0:
+        pult_time_callback(bot, update)
+        return
 
 def pult_send(bot, update):
-    time_begin = datetime.datetime.now()
     global order_id
     mes = update.callback_query.message
     target = pult_status.get("target")
+    time_to_send = pult_status.get("time")
+    tactics = pult_status.get("tactics")
     if target == -1:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
     castle_target = castles[target]
     defense_home = pult_status.get("defense_home")
-    response = "⚔️{0}\n🛡{1}\n".format(castle_target, "?" if defense_home else castle_target)
-    orders_sent = 0
-    for chat in order_chats:
-        bot.send_order(order_id=order_id, chat_id=chat[0], response=response, pin=chat[1], notification=not chat[2])
-        orders_sent += 1
-    response = ""
-    orders_OK = 0
-    orders_failed = 0
-    while orders_OK + orders_failed < orders_sent:
-        current = order_backup_queue.get()
-        if current.order_id == order_id:
-            if current.OK:
-                orders_OK += 1
-            else:
-                orders_failed += 1
-                response += current.text
-        else:
-            order_backup_queue.put(current)
-            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, order_id))
+    if time_to_send == 0:
+        send_order(bot = bot, chat_callback_id = mes.chat_id, castle_target = castle_target, defense_home = defense_home)
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+        return
+    next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 1, minute = 0, second=0, microsecond=0)
 
-    order_id += 1
-    time_end = datetime.datetime.now()
-    time_delta = time_end - time_begin
-    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
-            "ошибка при отправке в <b>{2}</b> чатов, " \
-            "рассылка заняла <b>{3}</b>\n\n".format(time.ctime(), orders_OK, orders_failed, time_delta) + response
-    bot.send_message(chat_id=mes.chat_id, text=stats, parse_mode='HTML')
-    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    print(next_battle)
+    now = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None)
+    while next_battle < now:
+        next_battle += datetime.timedelta(hours=8)
+    logging.info("Next battle : {0}".format(next_battle))
+    time_to_send = next_battle - times_to_time[time_to_send]
+    time_to_send.replace(tzinfo=moscow_tz)
+    context = [mes.chat_id, castle_target, defense_home]
+    #------------------------------------------------------------------------- TEST ONLY
+    #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
+    #-------------------------------------------------------------------------
 
+    job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
+    request = "insert into deferred_orders(order_id, time_set, target, defense_home, tactics) VALUES (%s,%s, %s, %s, %s)"
+    cursor.execute(request, (order_id, time_to_send, target, defense_home, tactics))
+    logging.info("Deffered successful on {0}".format(time_to_send))
 
 
 def pult_castles_callback(bot, update):
     mes = update.callback_query.message
-    new_target = int(update.callback_query.data[2])
+    new_target = int(update.callback_query.data[2:])
     new_markup = rebuild_pult("change_target", new_target)
     pult_status.update({ "target" : new_target })
     try:
         bot.editMessageReplyMarkup(chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup)
-        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    except BadRequest:
+        pass
     except TelegramError:
         logging.error(traceback.format_exc)
+    finally:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+def pult_time_callback(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    new_time = int(data[2:])
+    new_markup = rebuild_pult("change_time", new_time)
+    pult_status.update({ "time" : new_time })
+    try:
+        bot.editMessageReplyMarkup(chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup)
+    except BadRequest:
+        pass
+    except TelegramError:
+        logging.error(traceback.format_exc)
+    finally:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
 
 def inline_callback(bot, update):
     if update.callback_query.data.find("p") == 0:
@@ -286,6 +323,30 @@ def recashe_order_chats():
         row = cursor.fetchone()
     logging.info("Recashing done")
 
+def refill_deferred_orders():
+    logging.info("Refilling deferred orders...")
+    request = "select order_id, time_set, target, defense_home, tactics, deferred_id from deferred_orders"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    cursor2 = conn.cursor()
+    while row:
+        time_to_send = row[1].replace(tzinfo = moscow_tz)
+        target = row[2]
+        castle_target = castles[target]
+        defense_home = row[3]
+        tactics = row[4]
+        now = datetime.datetime.now(tz = moscow_tz)
+        if now > time_to_send:
+            request = "delete from deferred_orders where deferred_id = '{0}'".format(row[5])
+            cursor2.execute(request)
+        else:
+            context = [CALLBACK_CHAT_ID, castle_target, defense_home, tactics]
+            job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
+
+        row = cursor.fetchone()
+    logging.info("Orders refilled")
+
+
 dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))
@@ -300,6 +361,7 @@ dispatcher.add_handler(CallbackQueryHandler(inline_callback, pass_update_queue=F
 
 
 recashe_order_chats()
+refill_deferred_orders()
 updater.start_polling(clean=False)
 
 

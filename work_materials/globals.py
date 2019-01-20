@@ -1,7 +1,7 @@
 import pytz
 import tzlocal
 import psycopg2
-
+import datetime
 
 from libs.bot_async_messaging import AsyncBot, order_backup_queue
 from libs.updater_async import AsyncUpdater
@@ -10,8 +10,15 @@ from config import Production_token, psql_creditals, request_kwargs
 admin_ids = [231900398, 205356091]
 
 castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
+times = ["⚠️", "58", "59", "30", "40", "45"]
+times_to_time = [None, datetime.timedelta(minutes=2), datetime.timedelta(minutes=1),
+                 datetime.timedelta(seconds=30), datetime.timedelta(seconds=20), datetime.timedelta(seconds=15)]
+
+CALLBACK_CHAT_ID = 231900398
 
 bot = AsyncBot(token=Production_token, workers=16, request_kwargs=request_kwargs)
+""" Понимаю, что 16 - колоссальное число,
+    Однако тесты показали, что именно так достигается оптимальное время """
 updater = AsyncUpdater(bot = bot)
 
 dispatcher = updater.dispatcher
