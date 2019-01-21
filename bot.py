@@ -254,18 +254,16 @@ def pult_send(bot, update):
         return
     next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 1, minute = 0, second=0, microsecond=0)
 
-    print(next_battle)
     now = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None)
     while next_battle < now:
         next_battle += datetime.timedelta(hours=8)
     logging.info("Next battle : {0}".format(next_battle))
     time_to_send = next_battle - times_to_time[time_to_send]
-    time_to_send.replace(tzinfo=moscow_tz)
+    time_to_send = time_to_send.replace(tzinfo=moscow_tz).astimezone(local_tz)
     context = [mes.chat_id, castle_target, defense_home]
     #------------------------------------------------------------------------- TEST ONLY
     #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
     #-------------------------------------------------------------------------
-
     job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
     request = "insert into deferred_orders(order_id, time_set, target, defense_home, tactics) VALUES (%s,%s, %s, %s, %s)"
     cursor.execute(request, (order_id, time_to_send, target, defense_home, tactics))

@@ -34,3 +34,4 @@ try:
     local_tz = tzlocal.get_localzone()
 except pytz.UnknownTimeZoneError:
     local_tz = pytz.timezone('Europe/Andorra')
+print("local tz =", local_tz)
