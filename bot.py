@@ -244,10 +244,10 @@ def pult(bot, update):
     response = ""
     for order in deferred_orders:
         response += "{0} -- {1}\nDefense home: {2}\n" \
-                    "Tactics: {3}remove: /remove_order_{4}\n".format(order.time_set.replace(tzinfo = None), order.target,
+                    "Tactics: {3}\nremove: /remove_order_{4}\n".format(order.time_set.replace(tzinfo = None), order.target,
                                                                      order.defense_home, order.tactics, order.deferred_id)
     bot.send_message(chat_id = update.message.chat_id,
-                     text = response + "{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
+                     text = response + "\n{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
                      reply_markup = PultMarkup)
 
 def pult_callback(bot, update):
