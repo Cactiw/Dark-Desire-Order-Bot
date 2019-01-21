@@ -284,7 +284,7 @@ def pult_send(bot, update):
         next_battle += datetime.timedelta(hours=8)
     logging.info("Next battle : {0}".format(next_battle))
     time_to_send = next_battle - times_to_time[time_to_send]
-    time_to_send = time_to_send.replace(tzinfo=moscow_tz).astimezone(local_tz)
+    time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz)
     context = [mes.chat_id, castle_target, defense_home]
     #------------------------------------------------------------------------- TEST ONLY
     #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
