@@ -51,7 +51,7 @@ class AsyncBot(Bot):
         return super(AsyncBot, self).send_message(*args, **kwargs)
 
     def send_message(self, *args, **kwargs):
-        self.actually_send_message(*args, **kwargs)
+        return self.actually_send_message(*args, **kwargs)
 
     def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')

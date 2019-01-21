@@ -20,8 +20,10 @@ from multiprocessing import Queue
 from work_materials.globals import *
 from work_materials.filters.pin_setup_filters import *
 from work_materials.filters.service_filters import *
+from work_materials.filters.pult_filters import filter_remove_order
 
 from libs.pult import build_pult, rebuild_pult
+from libs.order import DeferredOrder
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -34,6 +36,7 @@ order_id = 0
 
 pult_status = { 'target' : -1 , 'defense_home' : False, 'time' : 0, "tactics" : ""}
 order_chats = []
+deferred_orders = []
 
 
 def build_menu(buttons,
@@ -135,6 +138,23 @@ def send_order_job(bot, job):
     defense_home = job.context[2]
     send_order(bot, chat_callback_id, castle_target, defense_home)
 
+def remove_order(bot, update):
+    mes = update.message
+    deferred_id = int(mes.text.partition("@")[0].split("_")[2])
+    current_order = None
+    for order in deferred_orders:
+        if order.deferred_id == deferred_id:
+            current_order = order
+            deferred_orders.remove(order)
+            break
+    request = "delete from deferred_orders where deferred_id = %s"
+    cursor.execute(request, (deferred_id,))
+    try:
+        current_order.job.schedule_removal()
+    except AttributeError:
+        bot.send_message(chat_id = mes.chat_id, text="Приказ существует?")
+        return
+    bot.send_message(chat_id=mes.chat_id, text="Приказ успешно отменён")
 
 def add_pin(bot, update):
     mes = update.message
@@ -221,8 +241,13 @@ def pindivision(bot, update):
 
 def pult(bot, update):
     PultMarkup = build_pult(castles, times)
+    response = ""
+    for order in deferred_orders:
+        response += "{0} -- {1}\nDefense home: {2}\n" \
+                    "Tactics: {3}remove: /remove_order_{4}\n".format(order.time_set.replace(tzinfo = None), order.target,
+                                                                     order.defense_home, order.tactics, order.deferred_id)
     bot.send_message(chat_id = update.message.chat_id,
-                     text = "{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
+                     text = response + "{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
                      reply_markup = PultMarkup)
 
 def pult_callback(bot, update):
@@ -264,10 +289,14 @@ def pult_send(bot, update):
     #------------------------------------------------------------------------- TEST ONLY
     #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
     #-------------------------------------------------------------------------
-    job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
-    request = "insert into deferred_orders(order_id, time_set, target, defense_home, tactics) VALUES (%s,%s, %s, %s, %s)"
+    j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
+    request = "insert into deferred_orders(order_id, time_set, target, defense_home, tactics) values (%s, %s, %s, %s, %s) returning deferred_id"
     cursor.execute(request, (order_id, time_to_send, target, defense_home, tactics))
+    row = cursor.fetchone()
+    current = DeferredOrder(row[0], order_id, time_to_send, castle_target, defense_home, tactics, j)
+    deferred_orders.append(current)
     logging.info("Deffered successful on {0}".format(time_to_send))
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")
 
 
 def pult_castles_callback(bot, update):
@@ -339,8 +368,9 @@ def refill_deferred_orders():
             cursor2.execute(request)
         else:
             context = [CALLBACK_CHAT_ID, castle_target, defense_home, tactics]
-            job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
-
+            j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
+            current = DeferredOrder(row[5], order_id, time_to_send, castle_target, defense_home, tactics, j)
+            deferred_orders.append(current)
         row = cursor.fetchone()
     logging.info("Orders refilled")
 
@@ -350,6 +380,7 @@ dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=filter_is_admin))
+dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_order & filter_is_admin, remove_order))
 dispatcher.add_handler(MessageHandler(Filters.command & filter_pinset & filter_is_admin, pinset))
 dispatcher.add_handler(MessageHandler(Filters.command & filter_pinpin & filter_is_admin, pinpin))
 dispatcher.add_handler(MessageHandler(Filters.command & filter_pinmute & filter_is_admin, pinmute))
