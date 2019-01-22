@@ -3,7 +3,7 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 from work_materials.globals import *
 from libs.order import *
-from work_materials.pult_constants import divisions as division_const
+from work_materials.pult_constants import divisions as division_const, castles
 
 import work_materials.globals as globals
 
