@@ -20,11 +20,12 @@ class OrderBackup:
 
 class DeferredOrder:
 
-    def __init__(self, deferred_id, order_id, time_set, target, defense_home, tactics, job):
+    def __init__(self, deferred_id, order_id, division, time_set, target, defense, tactics, job):
         self.deferred_id = deferred_id
         self.order_id = order_id
+        self.division = division
         self.time_set = time_set
         self.target = target
-        self.defense_home = defense_home
+        self.defense = defense
         self.tactics = tactics
         self.job = job

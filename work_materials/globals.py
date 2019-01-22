@@ -9,10 +9,6 @@ from config import Production_token, psql_creditals, request_kwargs
 
 admin_ids = [231900398, 205356091]
 
-castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
-times = ["⚠️", "58", "59", "30", "40", "45"]
-times_to_time = [None, datetime.timedelta(minutes=2), datetime.timedelta(minutes=1),
-                 datetime.timedelta(seconds=30), datetime.timedelta(seconds=20), datetime.timedelta(seconds=15)]
 
 CALLBACK_CHAT_ID = 231900398
 
@@ -27,6 +23,11 @@ job = updater.job_queue
 conn = psycopg2.connect("dbname={0} user={1} password={2}".format(psql_creditals['dbname'], psql_creditals['user'], psql_creditals['pass']))
 conn.set_session(autocommit = True)
 cursor = conn.cursor()
+
+order_chats = []
+deferred_orders = []
+
+order_id = 0
 
 
 moscow_tz = pytz.timezone('Europe/Moscow')
