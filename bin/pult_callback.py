@@ -33,7 +33,7 @@ def pult_callback(bot, update):
     if data == "ps":
         pult_send(bot, update)
         return
-    if data.find("pd") == 0:
+    if data.find("pdv") == 0:
         pult_divisions_callback(bot, update)
         return
     if data.find("pc") == 0:
@@ -93,7 +93,7 @@ def pult_send(bot, update):
 
 def pult_divisions_callback(bot, update):
     mes = update.callback_query.message
-    new_target = int(update.callback_query.data[2:])
+    new_target = int(update.callback_query.data[3:])
     return_value = rebuild_pult("change_division", new_target)
     new_markup = return_value[0]
     new_division = return_value[1]

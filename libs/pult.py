@@ -15,10 +15,10 @@ defense = ["Деф дома 🖤", "/g_def", ""]
 def build_pult(divisions, castles, times, defense, tactics):
     __pult_buttons = [
         [
-            InlineKeyboardButton(divisions[0], callback_data="pd0"),
-            InlineKeyboardButton(divisions[1], callback_data="pd1"),
-            InlineKeyboardButton(divisions[2], callback_data="pd2"),
-            InlineKeyboardButton(divisions[3], callback_data="pd3"),
+            InlineKeyboardButton(divisions[0], callback_data="pdv0"),
+            InlineKeyboardButton(divisions[1], callback_data="pdv1"),
+            InlineKeyboardButton(divisions[2], callback_data="pdv2"),
+            InlineKeyboardButton(divisions[3], callback_data="pdv3"),
         ],
         [
             InlineKeyboardButton(castles[0], callback_data="pc0"),
