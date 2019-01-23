@@ -42,10 +42,19 @@ def inline_callback(bot, update):
         pult_callback(bot, update)
         return
 
+def not_allowed(bot, update):
+    mes = update.message
+    title = update.message.chat.title
+    if title is None:
+        title = update.message.chat.username
+    if (mes.text and '@Rock_Centre_Order_bot' in mes.text) or mes.chat_id > 0:
+        bot.send_message(chat_id = admin_ids[0],
+                     text = "Несанкционированная попытка доступа, от @{0}, telegram id = <b>{1}</b>,\n"
+                        "Название чата - <b>{2}</b>, chat id = <b>{3}</b>".format(mes.from_user.username, mes.from_user.id,
+                                                                                title, mes.chat_id), parse_mode = 'HTML')
 
 
-
-
+dispatcher.add_handler(MessageHandler(~(filter_chat_allowed & filter_is_admin), not_allowed))
 dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))

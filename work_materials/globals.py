@@ -7,8 +7,8 @@ from libs.bot_async_messaging import AsyncBot, order_backup_queue
 from libs.updater_async import AsyncUpdater
 from config import Production_token, psql_creditals, request_kwargs
 
-admin_ids = [231900398, 205356091]
-
+admin_ids = [231900398, 205356091, 352318827]
+allowed_chats = [231900398, -1001139194354]
 
 CALLBACK_CHAT_ID = 231900398
 
