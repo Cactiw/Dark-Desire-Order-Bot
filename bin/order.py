@@ -105,7 +105,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     time_delta = time_end - time_begin
     stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
             "ошибка при отправке в <b>{2}</b> чатов, " \
-            "рассылка заняла <b>{3}</b>\n\n".format(time.ctime(), orders_OK, orders_failed, time_delta) + response
+            "рассылка заняла <b>{3}</b>\n\n".format(datetime.datetime.now(tz=moscow_tz), orders_OK, orders_failed, time_delta) + response
     bot.send_message(chat_id = chat_callback_id, text=stats, parse_mode='HTML')
 
 def send_order_job(bot, job):
