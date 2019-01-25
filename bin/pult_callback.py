@@ -8,6 +8,7 @@ from work_materials.pult_constants import *
 from libs.order import *
 from libs.pult import rebuild_pult
 from bin.order import *
+from work_materials.pult_constants import divisions as divisions_const
 
 
 pult_status = { 'divisions' : [False, False, False, True], 'target' : -1 , 'defense' : 2, 'time' : 0, "tactics" : 5}
@@ -20,11 +21,16 @@ def pult(bot, update):
     PultMarkup = rebuild_pult("default", None)
     response = ""
     for order in deferred_orders:
-        response += "{0} -- {1}\nDefense home: {2}\n" \
-                    "Tactics: {3}\nremove: /remove_order_{4}\n".format(order.time_set.replace(tzinfo = None), order.target,
-                                                                     order.defense, order.tactics, order.deferred_id)
+        div_str = ""
+        for i in range(len(divisions_const)):
+            if order.divisions[i]:
+                div_str += " {0}".format(divisions_const[i])
+        response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
+                    "Tactics: {3}\nremove: /remove_order_{4}\n\n".format(order.time_set.replace(tzinfo = None), order.target,
+                                                                     order.defense, order.tactics, order.deferred_id,
+                                                                     div_str[1:])
     bot.send_message(chat_id = update.message.chat_id,
-                     text = response + "\n{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
+                     text = response + "\n\n{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
                      reply_markup = PultMarkup)
 
 
@@ -77,15 +83,20 @@ def pult_send(bot, update):
     logging.info("Next battle : {0}".format(next_battle))
     time_to_send = next_battle - times_to_time[time_to_send]
     time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz)
-    context = [mes.chat_id, castle_target, defense_target]
+    context = [mes.chat_id, castle_target, defense_target, divisions]
     #------------------------------------------------------------------------- TEST ONLY
     #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
     #-------------------------------------------------------------------------
     j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
-    request = "insert into deferred_orders(order_id, time_set, target, defense, tactics) values (%s, %s, %s, %s, %s) returning deferred_id"
-    cursor.execute(request, (globals.order_id, time_to_send, target, defense, tactics))
+    if divisions == "ALL":
+        divisions = []
+        for i in range(len(divisions_const)):
+            divisions.append(False)
+        divisions[-1] = True
+    request = "insert into deferred_orders(order_id, time_set, target, defense, tactics, divisions) values (%s, %s, %s, %s, %s, %s) returning deferred_id"
+    cursor.execute(request, (globals.order_id, time_to_send, target, defense, tactics_target, divisions))
     row = cursor.fetchone()
-    current = DeferredOrder(row[0], globals.order_id, time_to_send, castle_target, defense_target, tactics_target, j)
+    current = DeferredOrder(row[0], globals.order_id, divisions, time_to_send, castle_target, defense_target, tactics_target, j)
     deferred_orders.append(current)
     logging.info("Deffered successful on {0}".format(time_to_send))
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")

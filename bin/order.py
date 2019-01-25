@@ -152,7 +152,7 @@ def recashe_order_chats():
 
 def refill_deferred_orders():
     logging.info("Refilling deferred orders...")
-    request = "select order_id, time_set, target, defense, tactics, deferred_id from deferred_orders"
+    request = "select order_id, time_set, target, defense, tactics, deferred_id, divisions from deferred_orders"
     cursor.execute(request)
     row = cursor.fetchone()
     cursor2 = conn.cursor()
@@ -162,6 +162,7 @@ def refill_deferred_orders():
         castle_target = castles[target]
         defense = row[3]
         tactics = row[4]
+        divisions = row[6]
         now = datetime.datetime.now(tz = moscow_tz)
         if now > time_to_send:
             request = "delete from deferred_orders where deferred_id = '{0}'".format(row[5])
@@ -169,7 +170,7 @@ def refill_deferred_orders():
         else:
             context = [CALLBACK_CHAT_ID, castle_target, defense, tactics]
             j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
-            current = DeferredOrder(row[5], globals.order_id, time_to_send, castle_target, defense, tactics, j)
+            current = DeferredOrder(row[5], globals.order_id, divisions, time_to_send, castle_target, defense, tactics, j)
             deferred_orders.append(current)
         row = cursor.fetchone()
     logging.info("Orders refilled")
