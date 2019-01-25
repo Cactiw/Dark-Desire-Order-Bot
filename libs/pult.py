@@ -64,10 +64,15 @@ def build_pult(divisions, castles, times, defense, tactics):
 def rebuild_pult(action, context):
     global castles
     if action == "default":
+        for i in range(0, len(divisions) - 1):
+            divisions[i] = divisions_const[i]
+            divisions_active[i] = False
         for i in range (0, len(castles)):
             castles[i] = castles_const[i]
         for i in range (0, len(times)):
             times[i] = times_const[i]
+        for i in range (0, len(defense)):
+            defense[i] = defense_const[i]
         for i in range (0, len(tactics)):
             tactics[i] = tactics_const[i]
         new_markup = build_pult(divisions, castles, times, defense, tactics)
