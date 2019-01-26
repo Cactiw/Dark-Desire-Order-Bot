@@ -54,11 +54,11 @@ def not_allowed(bot, update):
                                                                                 title, mes.chat_id), parse_mode = 'HTML')
 
 
+dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
 dispatcher.add_handler(MessageHandler(~(filter_chat_allowed & filter_is_admin), not_allowed))
 dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))
-dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=filter_is_admin))
 dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_order & filter_is_admin, remove_order))
 dispatcher.add_handler(MessageHandler(Filters.command & filter_pinset & filter_is_admin, pinset))
