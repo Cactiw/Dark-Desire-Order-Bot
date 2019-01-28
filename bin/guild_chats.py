@@ -80,9 +80,9 @@ def pinmute(bot, update):
 
 def pindivision(bot, update):
     mes = update.message
-    mes1 = mes.text.split("_")
+    guild_chat_id = mes.text.partition(" ")[0].split("_")
     division = mes.text.partition(' ')[2]
     request = "UPDATE guild_chats SET division = %s WHERE guild_chat_id = %s"
-    cursor.execute(request, (division, mes1[1]))
+    cursor.execute(request, (division, guild_chat_id[1]))
     conn.commit()
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
