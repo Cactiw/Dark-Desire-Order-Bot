@@ -102,13 +102,10 @@ class AsyncBot(Bot):
         self.order_queue.put(order)
 
     def start(self):
-        #self.message_counter_thread = threading.Thread(target = self.__message_counter, args = ())
-        #self.message_counter_thread.start()
         for i in range(0, self.num_workers):
             worker = threading.Thread(target = self.__work, args = ())
             worker.start()
             self.workers.append(worker)
-
 
     def stop(self):
         self.processing = False
@@ -116,7 +113,6 @@ class AsyncBot(Bot):
             self.order_queue.put(None)
         for i in self.workers:
             i.join()
-        #self.message_counter_thread.join()
 
     def __del__(self):
         self.processing = False
@@ -139,7 +135,6 @@ class AsyncBot(Bot):
 
     def __releasing_resourse(self, chat_id):
         with self.counter_lock:
-            #logging.info("releasing resourse, now it is {0}, {1}".format(self.messages_per_second, self.messages_per_chat))
             self.messages_per_second -= 1
             mes_per_chat = self.messages_per_chat.get(chat_id)
             if mes_per_chat is None:

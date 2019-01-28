@@ -64,7 +64,7 @@ def pult_send(bot, update):
     if target == -1:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
-    divisions = pult_status.get("divisions")
+    divisions = pult_status.get("divisions").copy()
     if divisions[len(divisions) - 1]:
         divisions = "ALL"
     castle_target = castles[target]
@@ -83,7 +83,7 @@ def pult_send(bot, update):
     logging.info("Next battle : {0}".format(next_battle))
     time_to_send = next_battle - times_to_time[time_to_send]
     time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz)
-    context = [mes.chat_id, castle_target, defense_target, divisions]
+    context = [mes.chat_id, castle_target, defense_target, tactics, divisions]
     #------------------------------------------------------------------------- TEST ONLY
     #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
     #-------------------------------------------------------------------------

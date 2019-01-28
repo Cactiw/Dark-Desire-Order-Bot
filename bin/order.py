@@ -168,7 +168,7 @@ def refill_deferred_orders():
             request = "delete from deferred_orders where deferred_id = '{0}'".format(row[5])
             cursor2.execute(request)
         else:
-            context = [CALLBACK_CHAT_ID, castle_target, defense, tactics]
+            context = [CALLBACK_CHAT_ID, castle_target, defense, tactics, divisions]
             j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
             current = DeferredOrder(row[5], globals.order_id, divisions, time_to_send, castle_target, defense, tactics, j)
             deferred_orders.append(current)
