@@ -1,6 +1,7 @@
 import logging, time
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
+from time import strftime
 from work_materials.globals import *
 from libs.order import *
 from work_materials.pult_constants import divisions as division_const, castles
@@ -68,9 +69,10 @@ def attackCommand(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     return
 
-def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics):
+def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, time = None):
     time_begin = datetime.datetime.now()
-    response = "⚔️{0}\n🛡{1}\n{2}\n".format(castle_target, defense if defense else castle_target, tactics)
+    time_add_str = "" if time is None else time.strftime("%H:%M")
+    response = "{3}⚔️{0}\n🛡{1}\n{2}\n".format(castle_target, defense if defense else castle_target, tactics, time_add_str)
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:

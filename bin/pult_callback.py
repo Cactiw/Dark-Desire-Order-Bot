@@ -71,7 +71,7 @@ def pult_send(bot, update):
     defense = pult_status.get("defense")
     defense_target = defense_to_order[defense]
     tactics_target = tactics_to_order[tactics_num]
-    if time_to_send == 0:
+    if time_to_send < 0:
         send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target, defense = defense_target, tactics = tactics_target)
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
         return
@@ -81,6 +81,11 @@ def pult_send(bot, update):
     while next_battle < now:
         next_battle += datetime.timedelta(hours=8)
     logging.info("Next battle : {0}".format(next_battle))
+    next_battle_time = next_battle.time()
+    if time_to_send == 0:   #   Мгновенная отправка, но с подстановкой времени в пин
+        send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target, defense = defense_target, tactics = tactics_target, time = next_battle_time)
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+        return
     time_to_send = next_battle - times_to_time[time_to_send]
     time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz)
     context = [mes.chat_id, castle_target, defense_target, tactics, divisions]

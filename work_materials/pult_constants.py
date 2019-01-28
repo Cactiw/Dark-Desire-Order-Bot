@@ -15,4 +15,4 @@ defense = ["Деф дома 🖤", "/g_def", ""]
 defense_to_order = ["🖤", "/g_def", None]
 
 
-pult_status_default = { 'divisions' : [False, False, False, True], 'target' : -1 , 'defense' : 2, 'time' : 0, "tactics" : 5}
+pult_status_default = { 'divisions' : [False, False, False, True], 'target' : -1 , 'defense' : 2, 'time' : -1, "tactics" : 5}
