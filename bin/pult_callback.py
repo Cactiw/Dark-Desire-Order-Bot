@@ -30,7 +30,7 @@ def pult(bot, update):
                                                                      order.defense, order.tactics, order.deferred_id,
                                                                      div_str[1:])
     bot.send_message(chat_id = update.message.chat_id,
-                     text = response + "\n\n{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)),
+                     text = response + "\n\n{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%D %H:%M:%S")),
                      reply_markup = PultMarkup)
 
 
