@@ -55,7 +55,7 @@ def not_allowed(bot, update):
 
 
 dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
-dispatcher.add_handler(MessageHandler(~(filter_chat_allowed & filter_is_admin), not_allowed))
+dispatcher.add_handler(MessageHandler(~filter_super_admin & ~(filter_chat_allowed & filter_is_admin), not_allowed))
 dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
 dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))

@@ -36,6 +36,8 @@ def pult(bot, update):
 
 def pult_callback(bot, update):
     data = update.callback_query.data
+    if update.callback_query.from_user.id not in admin_ids:
+        return
     if data == "ps":
         pult_send(bot, update)
         return
