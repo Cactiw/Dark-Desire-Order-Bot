@@ -26,7 +26,7 @@ def pult(bot, update):
             if order.divisions[i]:
                 div_str += " {0}".format(divisions_const[i])
         response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
-                    "Tactics: {3}\nremove: /remove_order_{4}\n\n".format(order.time_set.replace(tzinfo = None), order.target,
+                    "Tactics: {3}\nremove: /remove_order_{4}\n\n".format(order.time_set.replace(tzinfo = None).strftime("%D %H:%M:%S"), order.target,
                                                                      order.defense, order.tactics, order.deferred_id,
                                                                      div_str[1:])
     bot.send_message(chat_id = update.message.chat_id,
