@@ -7,26 +7,20 @@ import threading
 import time
 import logging
 import traceback
-import datetime
 
-from libs.order import Order, OrderBackup
-
-MESSAGE_PER_SECOND_LIMIT = 28
+MESSAGE_PER_SECOND_LIMIT = 29
 MESSAGE_PER_CHAT_LIMIT = 3
 
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
 
 
-order_backup_queue = multiprocessing.Queue()
 class AsyncBot(Bot):
-
 
     def __init__(self, token, workers = 4, request_kwargs = None):
         counter_rlock = threading.RLock()
         self.counter_lock = threading.Condition(counter_rlock)
-        #self.message_queue = multiprocessing.Queue()
-        self.order_queue = multiprocessing.Queue()
+        self.message_queue = multiprocessing.Queue()
         self.processing = True
         self.num_workers = workers
         self.messages_per_second = 0
@@ -39,19 +33,14 @@ class AsyncBot(Bot):
             request_kwargs['con_pool_size'] = con_pool_size
         self._request = Request(**request_kwargs)
         super(AsyncBot, self).__init__(token=token, request=self._request)
-        self.start()
 
-
-    """def send_message(self, *args, **kwargs):
+    def send_message(self, *args, **kwargs):
         message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
-        return 0"""
+        return 0
 
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
-
-    def send_message(self, *args, **kwargs):
-        return self.actually_send_message(*args, **kwargs)
 
     def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
@@ -87,19 +76,20 @@ class AsyncBot(Bot):
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
             release.start()
             return BADREQUEST_ERROR_CODE
-        except TimedOut:
-            time.sleep(0.1)
-            message = super(AsyncBot, self).send_message(*args, **kwargs)
-        except NetworkError:
+        except (TimedOut, NetworkError):
+            retry = kwargs.get('retry')
+            if retry is None:
+                retry = 0
+            if retry == 3:
+                self.send_message(*args, **kwargs)
+                return
+            retry += 1
+            kwargs.update({"retry": retry})
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
         release.start()
         return message
-
-    def send_order(self, order_id, chat_id, response, pin, notification):
-        order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin, notification=notification)
-        self.order_queue.put(order)
 
     def start(self):
         for i in range(0, self.num_workers):
@@ -110,28 +100,21 @@ class AsyncBot(Bot):
     def stop(self):
         self.processing = False
         for i in range(0, self.num_workers):
-            self.order_queue.put(None)
+            self.message_queue.put(None)
         for i in self.workers:
             i.join()
 
     def __del__(self):
         self.processing = False
         for i in range(0, self.num_workers):
-            self.order_queue.put(None)
-        self.order_queue.close()
+            #self.message_queue.put(None)
+            pass
+        self.message_queue.close()
         try:
             super(AsyncBot, self).__del__()
         except AttributeError:
             pass
 
-
-    """def __message_counter(self):
-        while self.processing:
-            with self.counter_lock:
-                self.messages_per_second = 0
-                self.messages_per_chat.clear()
-                self.counter_lock.notify_all()
-            time.sleep(1)"""
 
     def __releasing_resourse(self, chat_id):
         with self.counter_lock:
@@ -149,35 +132,13 @@ class AsyncBot(Bot):
             self.counter_lock.notify_all()
 
     def __work(self):
-        order_in_queue = self.order_queue.get()
-        while self.processing and order_in_queue:
-            response = ""
-            pin = order_in_queue.pin
-            notification = order_in_queue.notification
-            chat_id = order_in_queue.chat_id
-            text = order_in_queue.text
-            message = self.actually_send_message(chat_id=chat_id, text = text)
-            if message == UNAUTHORIZED_ERROR_CODE:
-                response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
-                pass
-            elif message == BADREQUEST_ERROR_CODE:
-                response += "Невозможно отправить сообщение в чат {0}, проверьте корректность chat id\n".format(chat_id)
-                pass
-            else:
-                if pin:
-                    try:
-                        super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id, disable_notification=not notification)
-                    except Unauthorized:
-                        response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
-                        pass
-                    except BadRequest:
-                        response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
-                        pass
-            OK = response == ""
-            order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
-            order_backup_queue.put(order_backup)
-            order_in_queue = self.order_queue.get()
-            if order_in_queue is None:
+        message_in_queue = self.message_queue.get()
+        while self.processing and message_in_queue:
+            args = message_in_queue.args
+            kwargs = message_in_queue.kwargs
+            self.actually_send_message(*args, **kwargs)
+            message_in_queue = self.message_queue.get()
+            if message_in_queue is None:
                 return 0
         return 0
 
