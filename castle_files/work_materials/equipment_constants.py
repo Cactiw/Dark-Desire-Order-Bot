@@ -22,43 +22,45 @@ second_hand = [
     Equipment("second_hand", "w", "16", "Silver dagger", 5, 0, 0),
     Equipment("second_hand", "w", "17", "Mithril dagger", 7, 0, 0),
 
-    Equipment("a", "21", "Wooden shield", 0, 1, 0),
-    Equipment("a", "22", "Skeleton Buckler", 0, 2, 0),
-    Equipment("a", "23", "Bronze shield", 0, 3, 0),
-    Equipment("a", "24", "Silver shield", 0, 5, 0),
-    Equipment("a", "25", "Mithril shield", 0, 7, 0),
+    Equipment("second_hand", "a", "21", "Wooden shield", 0, 1, 0),
+    Equipment("second_hand", "a", "22", "Skeleton Buckler", 0, 2, 0),
+    Equipment("second_hand", "a", "23", "Bronze shield", 0, 3, 0),
+    Equipment("second_hand", "a", "24", "Silver shield", 0, 5, 0),
+    Equipment("second_hand", "a", "25", "Mithril shield", 0, 7, 0),
+
+    Equipment("second_hand", "w", "46", "Lion Knife", 13, 0, 3),
     # TODO Добавить тир 2-4
 ]
 # TODO Добавить всё остальное, тир 0-4
 
 head = [
-    Equipment("w", "05", "Knight's sword", 16, 0, 1),
-    Equipment("w", "06", "Elven sword", 22, 0, 1),
-    Equipment("w", "07", "Rapier", 27, 0, 1),
+    Equipment("head", "w", "05", "Knight's sword", 16, 0, 1),
+    Equipment("head", "w", "06", "Elven sword", 22, 0, 1),
+    Equipment("head", "w", "07", "Rapier", 27, 0, 1),
 ]
 
 gloves = [
-    Equipment("w", "05", "Knight's sword", 16, 0, 1),
-    Equipment("w", "06", "Elven sword", 22, 0, 1),
-    Equipment("w", "07", "Rapier", 27, 0, 1),
+    Equipment("gloves", "w", "05", "Knight's sword", 16, 0, 1),
+    Equipment("gloves", "w", "06", "Elven sword", 22, 0, 1),
+    Equipment("gloves", "w", "07", "Rapier", 27, 0, 1),
 ]
 
 armor = [
-    Equipment("w", "05", "Knight's sword", 16, 0, 1),
-    Equipment("w", "06", "Elven sword", 22, 0, 1),
-    Equipment("w", "07", "Rapier", 27, 0, 1),
+    Equipment("armor", "w", "05", "Knight's sword", 16, 0, 1),
+    Equipment("armor", "w", "06", "Elven sword", 22, 0, 1),
+    Equipment("armor", "w", "07", "Rapier", 27, 0, 1),
 ]
 
 boots = [
-    Equipment("w", "05", "Knight's sword", 16, 0, 1),
-    Equipment("w", "06", "Elven sword", 22, 0, 1),
-    Equipment("w", "07", "Rapier", 27, 0, 1),
+    Equipment("boots", "w", "05", "Knight's sword", 16, 0, 1),
+    Equipment("boots", "w", "06", "Elven sword", 22, 0, 1),
+    Equipment("boots", "w", "07", "Rapier", 27, 0, 1),
 ]
 
 cloaks = [
-    Equipment("w", "05", "Knight's sword", 16, 0, 1),
-    Equipment("w", "06", "Elven sword", 22, 0, 1),
-    Equipment("w", "07", "Rapier", 27, 0, 1),
+    Equipment("cloaks", "w", "05", "Knight's sword", 16, 0, 1),
+    Equipment("cloaks", "w", "06", "Elven sword", 22, 0, 1),
+    Equipment("cloaks", "w", "07", "Rapier", 27, 0, 1),
 ]
 
 equipment = {
@@ -80,7 +82,7 @@ def fill_names():
     eq_list = list(equipment.values())
     for lst in eq_list:
         for eq in lst:
-            equipment_names.update({eq.name: "{}{}".format(eq.type, eq.name)})
+            equipment_names.update({eq.name: "{}{}".format(eq.type, eq.code)})
 
 
 fill_names()

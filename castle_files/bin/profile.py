@@ -10,6 +10,16 @@ import re
 import logging
 
 
+# Функция вывода профиля
+def profile(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    response = "{} - Воин 🖤Скалы\n".format(player.nickname)
+    response += ""
+    # TODO доделать
+
+
+# Функция для добавления или обновления профиля в базе данных, вызывается, когда бот получает хиро в лс
 def hero(bot, update):
     mes = update.message
     text = mes.text
@@ -20,14 +30,14 @@ def hero(bot, update):
         return
     player = Player.get_player(mes.from_user.id)
     # Парсинг хиро
-    guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖](\\[.+\\])", text)
+    guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
     if guild_tag:
         guild_tag = guild_tag.group(1)
     nickname = text.splitlines()[0][1:]
-    lvl = re.search("🏅Уровень: (\\d+)", text).group(1)
-    attack = re.search("⚔️Атака: (\\d+)", text).group(1)
-    defense = re.search("🛡Защита: (\\d+)", text).group(1)
-    stamina = re.search("🔋Выносливость: \\d+/(\\d+)", text).group(1)
+    lvl = int(re.search("🏅Уровень: (\\d+)", text).group(1))
+    attack = int(re.search("⚔Атака: (\\d+)", text).group(1))
+    defense = int(re.search("🛡Защита: (\\d+)", text).group(1))
+    stamina = int(re.search("🔋Выносливость: \\d+/(\\d+)", text).group(1))
     pet = re.search("Питомец:\n.(\\s.+\\(\\d+ lvl\\))", text)
     if pet:
         pet = pet.group(1)
@@ -41,11 +51,24 @@ def hero(bot, update):
         "boots": None,
         "cloaks": None
     }
-    equip_strings = text.partition("🎽Экипировка")[2].splitstrings()[1:]
+    equip_strings = text.partition("🎽Экипировка")[2].splitlines()[1:]
     for string in equip_strings:
-        name = string.partition("+")[0][:-1]  # Имя - строка до плюса, обрезая последний пробел
-        code = equipment_names.get(name)
+        print(string)
+        clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
+        if clear_name is None:
+            logging.warning("Error while parsing item_string\n{}".format(string))
+            continue
+        else:
+            logging.info("successful parsed {},, Got: {}".format(string, clear_name.group(1)))
+        clear_name = clear_name.group(1)
+        names_list = list(equipment_names.items())
+        code = None
+        for name, item_code in names_list:
+            if name in clear_name:
+                code = item_code
+                break
         if code is None:
+            logging.warning("Item code is None for item {}".format(clear_name))
             continue
         eq = get_equipment_by_code(code)
         if eq is None:
@@ -57,7 +80,10 @@ def hero(bot, update):
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
         player.insert_into_database()
+        bot.send_message(chat_id=mes.chat_id, text="Добро пожаловать в 🖤Скалу, <b>{}</b>!".format(player.nickname),
+                         parse_mode='HTML')
     else:
+        # Обновляем существующую информацию
         player.username = mes.from_user.username
         player.nickname = nickname
         player.guild_tag = guild_tag
@@ -68,4 +94,5 @@ def hero(bot, update):
         player.pet = pet
         player.equipment = player_equipment
         player.update()
-    bot.send_message(chat_id=mes.chat_id, text="Профиль успешно обновлён!")
+        bot.send_message(chat_id=mes.chat_id, text="Профиль успешно обновлён, <b>{}</b>!".format(player.nickname),
+                         parse_mode='HTML')

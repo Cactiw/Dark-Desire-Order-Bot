@@ -3,6 +3,7 @@
 Класс хранит тип(первая буква кода вещи), код (без типа),
 имя и статы вещи.
 """
+import json
 
 
 class Equipment:
@@ -16,12 +17,13 @@ class Equipment:
         self.tier = tier
 
     def to_json(self):
-        return {
+        dictionary = {
             "code": self.type + self.code,
             "name": self.name,
             "attack": self.attack,
             "defense": self.defense
         }
+        return json.dumps(dictionary)
 
     def __eq__(self, other):
         # Шмотка равна другой при совпадении типа и кода (нужно ещё подумать потом)
