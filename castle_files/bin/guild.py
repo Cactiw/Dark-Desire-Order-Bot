@@ -31,6 +31,7 @@ def create_guild(bot, update):
     return
 
 
+# Команда /edit_guild
 def edit_guild(bot, update):
     mes = update.message
     try:
@@ -57,6 +58,7 @@ def edit_guild(bot, update):
     return
 
 
+# Нажатие инлайн-кнопки "Изменить командира"
 def edit_guild_commander(bot, update, user_data):
     try:
         user_data.update({"status": "edit_guild_commander", "edit_guild_id": int(update.callback_query.data.split("_")[1])})
@@ -68,6 +70,7 @@ def edit_guild_commander(bot, update, user_data):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
+# Ввод id командира
 def change_guild_commander(bot, update, user_data):
     mes = update.message
     try:
@@ -106,6 +109,7 @@ def change_guild_commander(bot, update, user_data):
                      parse_mode='HTML')
 
 
+# Нажатие инлайн-кнопки "Изменить чат гильдии"
 def edit_guild_chat(bot, update, user_data):
     try:
         user_data.update(
@@ -118,6 +122,7 @@ def edit_guild_chat(bot, update, user_data):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
+# Ввод айди нового чата ги
 def change_guild_chat(bot, update, user_data):
     mes = update.message
     try:
@@ -158,6 +163,7 @@ def change_guild_chat(bot, update, user_data):
                      parse_mode='HTML')
 
 
+# Информация о чате в лс
 def chat_info(bot, update):
     response = "<b>{}</b>, id: <code>{}</code>".format(update.message.chat.title, update.message.chat_id)
     bot.send_message(chat_id=update.message.from_user.id, text=response, parse_mode='HTML')

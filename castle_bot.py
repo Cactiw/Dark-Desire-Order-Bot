@@ -6,6 +6,7 @@ from castle_files.work_materials.filters.profile_filters import filter_is_hero
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat
 
+from castle_files.bin.service_functions import cancel
 from castle_files.bin.profile import hero
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat
@@ -18,6 +19,7 @@ def start(bot, update):
 
 def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero))
 
