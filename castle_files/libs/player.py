@@ -84,9 +84,10 @@ class Player:
 
         eq_to_db = self.equipment_to_json()
         print(self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
-                                 self.attack, self.defense, self.stamina, self.pet, eq_to_db)
+              self.attack, self.defense, self.stamina, self.pet, eq_to_db)
         cursor.execute(request, (self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
                                  self.attack, self.defense, self.stamina, self.pet, eq_to_db))
+        players.update({self.id: self})
 
     # Метод для обновления уже существующей информации о игроке в БД
     def update_to_database(self):

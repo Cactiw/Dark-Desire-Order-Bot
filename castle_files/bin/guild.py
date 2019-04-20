@@ -24,11 +24,56 @@ def create_guild(bot, update):
     if guild is not None:
         bot.send_message(chat_id=update.message.chat_id, text="Гильдия с этим тэгом уже существует!")
         return
-    guild = Guild(None, guild_tag, None, None, None, None, None, None, None, None, None)
+    guild = Guild(None, guild_tag, None, None, None, None, None, None, None, None, None, None)
     guild.create_guild()
     bot.send_message(chat_id=update.message.chat_id, text="Гильдия успешно создана! Отредактируйте её: "
                                                           "/edit_guild_{}".format(guild.id))
     return
+
+
+def add(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
+        return
+    guild = Guild.get_guild(guild_id=player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Гильдия не найдена.")
+        return
+    if player.guild != guild.id:
+        bot.send_message(chat_id=update.message.chat_id, text="Можно добавлять игроков только в свою гильдию")
+        return
+    if update.message.chat_id != guild.chat_id:
+        bot.send_message(chat_id=update.message.chat_id, text="Добавлять игроков в гильдию можно только в официальном "
+                                                              "чате гильдии")
+        return
+    if player.id != guild.commander_id and player.id not in guild.assistants:
+        bot.send_message(chat_id=update.message.chat_id, text="Только командир и его замы могут добавлять бойцов.")
+        return
+    if update.message.reply_to_message is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Сообщение должно являться ответом на сообщение игрока, "
+                                                              "которого необходимо добавить в гильдию.")
+        return
+    player_to_add = Player.get_player(update.message.reply_to_message.from_user.id)
+    if player_to_add is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок для добавления не найден.")
+        return
+    if player_to_add.guild is not None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок уже находится в гильдии.")
+        return
+    if guild.members is None:
+        guild.members = []
+    if player_to_add.id not in guild.members:
+        guild.members.append(player_to_add.id)
+    player_to_add.guild = guild.id
+    player_to_add.guild_tag = guild.tag
+
+    player_to_add.update()
+    guild.update_to_database()
+
+    bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно добавлен в гильдию "
+                                                          "<b>{}</b>".format(player_to_add.nickname, guild.tag),
+                     parse_mode='HTML')
 
 
 # Команда /edit_guild
@@ -93,10 +138,15 @@ def change_guild_commander(bot, update, user_data):
     if player.guild_tag is not None and player.guild_tag != guild.tag:
         bot.send_message(chat_id=mes.chat_id, text="Командир может командовать только своей гильдией")
         return
-    if player.guild_tag is None:
+    if player.guild_tag is None or player.guild is None:
         player.guild_tag = guild.tag
         player.guild = guild.id
+        player.update()
     guild.commander_id = player_id
+    if guild.members is None:
+        guild.members = []
+    if player.id not in guild.members:
+        guild.members.append(player.id)
     guild.update_to_database()
     if "status" in user_data:
         user_data.pop("status")

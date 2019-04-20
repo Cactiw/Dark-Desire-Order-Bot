@@ -9,7 +9,7 @@ from castle_files.work_materials.filters.guild_filters import filter_edit_guild,
 from castle_files.bin.service_functions import cancel
 from castle_files.bin.profile import hero
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
-    edit_guild_chat, change_guild_chat
+    edit_guild_chat, change_guild_chat, add
 
 
 def start(bot, update):
@@ -31,6 +31,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_change_guild_chat, change_guild_chat,
                                           pass_user_data=True))
     dispatcher.add_handler(CommandHandler('chat_info', chat_info))
+
+    dispatcher.add_handler(CommandHandler('add', add))
 
     # Хендлеры для инлайн кнопок гильдий
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))

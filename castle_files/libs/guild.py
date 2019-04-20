@@ -9,12 +9,13 @@ import traceback
 
 # Гильдия, содержит открытые поля - id в базе данных, тэг, список айдишников(!) членов гильдии,
 class Guild:
-    def __init__(self, guild_id, tag, members, commander_id, division, chat_id, chat_name, invite_link, orders_enabled,
-                 pin_enabled, disable_notification):
+    def __init__(self, guild_id, tag, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
+                 orders_enabled, pin_enabled, disable_notification):
         self.id = guild_id
         self.tag = tag
         self.members = members
         self.commander_id = commander_id
+        self.assistants = assistants
         self.division = division
         self.chat_id = chat_id
         self.chat_name = chat_name
@@ -41,7 +42,8 @@ class Guild:
             return None
         guild_tag, guild_id, chat_id, members, commander_id, division, chat_name, invite_link, orders_enabled, \
             pin_enabled, disable_notification = row
-        guild = Guild(guild_id, guild_tag, members, commander_id, division, chat_id, chat_name, invite_link,
+        assistants = []
+        guild = Guild(guild_id, guild_tag, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
                       orders_enabled, pin_enabled, disable_notification)
         return guild
 
