@@ -16,3 +16,17 @@ def get_edit_guild_buttons(guild):
         ],
     ]
     return InlineKeyboardMarkup(buttons)
+
+
+# Функция, которая возвращает кнопки для любого статуса. Принимает на вход user_data, в котором читает поле "status",
+# далее генерирует и возвращает кнопки
+def get_general_buttons(user_data):
+    status = user_data.get("status")
+    if status is None or status == "default":
+        buttons = [
+            [
+                KeyboardButton("Профиль"),
+                KeyboardButton("Гильдия"),
+            ]
+        ]
+        return ReplyKeyboardMarkup(buttons, resize_keyboard=True)

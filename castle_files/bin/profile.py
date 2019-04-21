@@ -6,6 +6,8 @@
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
 from castle_files.libs.player import Player
 
+from castle_files.bin.buttons import get_general_buttons
+
 import re
 import logging
 
@@ -20,7 +22,7 @@ def profile(bot, update):
 
 
 # Функция для добавления или обновления профиля в базе данных, вызывается, когда бот получает хиро в лс
-def hero(bot, update):
+def hero(bot, update, user_data):
     mes = update.message
     text = mes.text
     castle = text[0]
@@ -29,6 +31,9 @@ def hero(bot, update):
         bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
         return
     player = Player.get_player(mes.from_user.id)
+    if player is None and mes.chat_id != mes.from_user.id:
+        # Добавление новых пользователей только в личке у бота
+        return
     # Парсинг хиро
     guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
     if guild_tag:
@@ -80,8 +85,9 @@ def hero(bot, update):
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
         player.insert_into_database()
+        user_data.update({"status": "default"})
         bot.send_message(chat_id=mes.chat_id, text="Добро пожаловать в 🖤Скалу, <b>{}</b>!".format(player.nickname),
-                         parse_mode='HTML')
+                         parse_mode='HTML', reply_markup=get_general_buttons(user_data))
     else:
         # Обновляем существующую информацию
         player.username = mes.from_user.username
