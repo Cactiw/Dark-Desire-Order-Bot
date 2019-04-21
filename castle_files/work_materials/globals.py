@@ -19,6 +19,8 @@ conn.set_session(autocommit=True)
 cursor = conn.cursor()
 
 CHAT_WARS_ID = 265204902
+SUPER_ADMIN_ID = 231900398
+high_access_list = []
 
 moscow_tz = pytz.timezone('Europe/Moscow')
 try:

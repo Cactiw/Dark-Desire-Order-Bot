@@ -5,9 +5,12 @@
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
-from castle_files.bin.buttons import get_edit_guild_buttons
+from castle_files.bin.buttons import get_edit_guild_buttons, get_general_buttons
 
 from telegram.error import TelegramError
+
+from castle_files.work_materials.globals import dispatcher
+from telegram.ext.dispatcher import run_async
 
 
 # Создание новой гильдии
@@ -31,6 +34,36 @@ def create_guild(bot, update):
     return
 
 
+# @dispatcher.run_async # Не работает
+def guild_info(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+        return
+    if player.guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                                                   "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=player.guild)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    commander = Player.get_player(guild.commander_id)
+    response = "<b>{}</b>  {}\n".format(guild.tag, guild.name or "")
+    response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
+    response += "Чат отряда: {}, id: {}" \
+                "\n{}\n".format(guild.chat_name or "Не задан",
+                              "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
+                              "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
+                              if guild.invite_link is not None else "")
+
+    response += "\nИгроков в гильдии: <b>{}</b>\n".format(guild.members_count)
+    response += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+# Добавление игрока в гильдию
 def add(bot, update):
     player = Player.get_player(update.message.from_user.id)
     if player is None:
@@ -61,15 +94,7 @@ def add(bot, update):
     if player_to_add.guild is not None:
         bot.send_message(chat_id=update.message.chat_id, text="Игрок уже находится в гильдии.")
         return
-    if guild.members is None:
-        guild.members = []
-    if player_to_add.id not in guild.members:
-        guild.members.append(player_to_add.id)
-    player_to_add.guild = guild.id
-    player_to_add.guild_tag = guild.tag
-
-    player_to_add.update()
-    guild.update_to_database()
+    guild.add_player(player_to_add)
 
     bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно добавлен в гильдию "
                                                           "<b>{}</b>".format(player_to_add.nickname, guild.tag),

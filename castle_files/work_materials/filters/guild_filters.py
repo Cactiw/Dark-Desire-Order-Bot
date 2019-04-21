@@ -4,6 +4,8 @@
 from telegram.ext import BaseFilter
 from castle_files.work_materials.globals import dispatcher
 
+from castle_files.work_materials.filters.general_filters import filter_is_pm
+
 
 class FilterEditGuild(BaseFilter):
     def filter(self, message):
@@ -29,3 +31,11 @@ class FilterChangeGuildChat(BaseFilter):
 
 
 filter_change_guild_chat = FilterChangeGuildChat()
+
+
+class FilterViewGuild(BaseFilter):
+    def filter(self, message):
+        return message.text.startswith("Гильдия") and filter_is_pm(message)
+
+
+filter_view_guild = FilterViewGuild()

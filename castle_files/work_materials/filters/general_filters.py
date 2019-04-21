@@ -12,3 +12,11 @@ class FilterIsChatWarsForward(BaseFilter):
 
 
 filter_is_chat_wars_forward = FilterIsChatWarsForward()
+
+
+class FilterIsPM(BaseFilter):
+    def filter(self, message):
+        return message.chat_id == message.from_user.id
+
+
+filter_is_pm = FilterIsPM()
