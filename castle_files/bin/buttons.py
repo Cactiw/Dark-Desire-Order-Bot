@@ -19,6 +19,16 @@ def get_edit_guild_buttons(guild):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_view_guild_buttons(guild):
+    buttons = [
+        [
+            InlineKeyboardButton("Список игроков", callback_data="gipl_{}".format(guild.id)),
+            InlineKeyboardButton("Покинуть гильдию", callback_data="gilv_{}".format(guild.id)),
+        ],
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 # Функция, которая возвращает кнопки для любого статуса. Принимает на вход user_data, в котором читает поле "status",
 # далее генерирует и возвращает кнопки
 def get_general_buttons(user_data):

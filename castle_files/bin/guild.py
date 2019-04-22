@@ -6,12 +6,14 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
-from castle_files.bin.buttons import get_edit_guild_buttons, get_general_buttons
+from castle_files.bin.buttons import get_edit_guild_buttons, get_general_buttons, get_view_guild_buttons
 
 from telegram.error import TelegramError
 
 from castle_files.work_materials.globals import dispatcher, cursor
 from telegram.ext.dispatcher import run_async
+
+import logging
 
 
 # Создание новой гильдии
@@ -28,7 +30,7 @@ def create_guild(bot, update):
     if guild is not None:
         bot.send_message(chat_id=update.message.chat_id, text="Гильдия с этим тэгом уже существует!")
         return
-    guild = Guild(None, guild_tag, None, None, None, None, None, None, None, None, None, None)
+    guild = Guild(None, guild_tag, None, None, None, None, None, None, None, None, None, None, None)
     guild.create_guild()
     bot.send_message(chat_id=update.message.chat_id, text="Гильдия успешно создана! Отредактируйте её: "
                                                           "/edit_guild_{}".format(guild.id))
@@ -46,12 +48,13 @@ def list_guilds(bot, update):
         guild_id = row[0]
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
+            logging.warning("Guild is None for the id {}".format(guild_id))
             continue
         response_new = "<b>{}</b>{}\nДивизион: {}\nРедактировать: /edit_guild_{}\n" \
                        "\n".format(guild.tag, " --- " + guild.name if guild.name is not None else "",
                                    guild.division or "Не задан", guild.id)
-        response_new += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n\n--------------------\n".format(guild.get_attack(),
-                                                                                    guild.get_defense())
+        response_new += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n\n--------------------" \
+                        "\n".format(guild.get_attack(), guild.get_defense())
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = ""
@@ -81,13 +84,67 @@ def guild_info(bot, update):
     response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
     response += "Чат отряда: {}, id: {}" \
                 "\n{}\n".format(guild.chat_name or "Не задан",
-                              "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
-                              "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
-                              if guild.invite_link is not None else "")
+                                "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
+                                "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
+                                if guild.invite_link is not None else "")
 
     response += "\nИгроков в гильдии: <b>{}</b>\n".format(guild.members_count)
     response += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
+    buttons = get_view_guild_buttons(guild)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
+
+
+def list_players(bot, update, guild_id=None):
+    mes = update.callback_query.message
+    if guild_id is None:
+        player = Player.get_player(update.callback_query.from_user.id)
+        if player is None:
+            bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+            return
+        guild_id = player.guild
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                                  "командира добавить вас в гильдейском чате.")
+            return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    response = "Список игроков в гильдии <b>{}</b>\n".format(guild.tag)
+    guild.sort_players_by_exp()
+    for player_id in guild.members:
+        player = Player.get_player(player_id)
+        if player is None:
+            logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
+            continue
+        response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
+                       "\n\n".format(player.nickname, player.lvl, player.attack, player.defense)
+        if len(response + response_new) > MAX_MESSAGE_LENGTH:
+            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += response_new
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def leave_guild(bot, update):
+    mes = update.callback_query.message
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
+        return
+    if player.guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
+        return
+    guild = Guild.get_guild(guild_id=player.guild)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    if guild.commander_id == player.id:
+        bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
+        # return
+    guild.delete_player(player)
+    bot.send_message(chat_id=mes.chat_id, text="Вы успешно покинули гильдию")
 
 
 # Добавление игрока в гильдию
@@ -163,7 +220,8 @@ def edit_guild(bot, update):
 # Нажатие инлайн-кнопки "Изменить командира"
 def edit_guild_commander(bot, update, user_data):
     try:
-        user_data.update({"status": "edit_guild_commander", "edit_guild_id": int(update.callback_query.data.split("_")[1])})
+        user_data.update({"status": "edit_guild_commander",
+                          "edit_guild_id": int(update.callback_query.data.split("_")[1])})
     except ValueError:
         bot.send_message(chat_id=update.callback_query.message.chat_id, text="Произошла ошибка")
     else:

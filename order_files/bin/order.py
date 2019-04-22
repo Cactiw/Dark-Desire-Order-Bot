@@ -79,7 +79,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
-            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1], notification=not chat[2])
+            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+                           notification=not chat[2])
             orders_sent += 1
     else:
         current_divisions = []
@@ -88,7 +89,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                 current_divisions.append(division_const[i])
         for chat in order_chats:
             if chat[3] in current_divisions:
-                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1], notification=not chat[2])
+                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+                               notification=not chat[2])
                 orders_sent += 1
     response = ""
     orders_OK = 0

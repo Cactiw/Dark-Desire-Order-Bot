@@ -1,7 +1,7 @@
 """
 Этот модуль содержит класс Гильдия и методы работы с ней, в том числе и с БД.
 """
-from castle_files.work_materials.globals import cursor
+from castle_files.work_materials.globals import conn
 
 from castle_files.libs.player import Player
 
@@ -13,6 +13,8 @@ import time
 # Гильдии записываются в словарь при выборке из базы данных, хранятся примерно 30 минут (?), потом выгружаются
 guilds = {}
 
+cursor = conn.cursor()
+
 
 # Гильдия, содержит открытые поля - id в базе данных, тэг, список айдишников(!) членов гильдии,
 class Guild:
@@ -22,7 +24,9 @@ class Guild:
         self.tag = tag
         self.name = name
         self.members = members
-        self.members_count = len(members)
+        if not self.members:
+            self.members = []
+        self.members_count = len(self.members)
         self.commander_id = commander_id
         self.assistants = assistants
         self.division = division
@@ -67,6 +71,13 @@ class Guild:
             self.__defense += player.defense
         return
 
+    def sort_players_by_exp(self):
+        try:
+            self.members.sort(key=lambda player_id: Player.get_player(player_id).lvl)
+            self.update_to_database()
+        except (TypeError, AttributeError, ValueError):
+            logging.error(traceback.format_exc())
+
     # Метод для добавления игрока в гильдию
     def add_player(self, player_to_add):
         if self.members is None:
@@ -81,8 +92,21 @@ class Guild:
         player_to_add.update()
         self.update_to_database()
 
-        self.__attack += player_to_add.attack
-        self.__defense += player_to_add.defense
+        if self.__attack is not None and self.__defense is not None:
+            self.__attack += player_to_add.attack
+            self.__defense += player_to_add.defense
+
+    def delete_player(self, player):
+        if player.id in self.members:
+            self.members.remove(player.id)
+        self.members_count = len(self.members)
+
+        player.guild = None
+        player.update()
+        self.update_to_database()
+        if self.__attack is not None and self.__defense is not None:
+            self.__attack -= player.attack
+            self.__defense -= player.defense
 
     # Метод получения гильдии из БД
     @staticmethod

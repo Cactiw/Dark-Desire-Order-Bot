@@ -17,7 +17,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 processes = []
 order_bot_process = multiprocessing.Process(target=order_bot_processing)
-#order_bot_process.start()
+order_bot_process.start()
 processes.append(order_bot_process)
 
 castle_bot_process = multiprocessing.Process(target=castle_bot_processing)

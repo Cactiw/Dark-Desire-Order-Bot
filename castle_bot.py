@@ -9,7 +9,8 @@ from castle_files.work_materials.filters.guild_filters import filter_edit_guild,
 from castle_files.bin.service_functions import cancel
 from castle_files.bin.profile import hero
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
-    edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division
+    edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
+    list_players, leave_guild
 
 from castle_files.bin.save_load_user_data import load_data, save_data
 
@@ -30,6 +31,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
     # Хендлеры для команд гильдий
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
 
     # Restricted access---------------------------------------------------------------------------------------------
@@ -52,6 +54,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_chat, pattern="gccht_\\d+", pass_user_data=True))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_division, pattern="gcdvs_\\d+", pass_user_data=True))
+
+    dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
 
     # Загрузка user_data с диска
     load_data()

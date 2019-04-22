@@ -96,8 +96,8 @@ class AsyncBot(Bot):
         release.start()
         return message
 
-    def send_order(self, order_id, chat_id, response, pin, notification):
-        order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin, notification=notification)
+    def send_order(self, order_id, chat_id, response, pin_enabled, notification):
+        order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin_enabled, notification=notification)
         self.order_queue.put(order)
 
     def start(self):
