@@ -5,6 +5,7 @@
 
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 
 from castle_files.bin.buttons import get_general_buttons
 
@@ -16,9 +17,22 @@ import logging
 def profile(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    response = "{} - Воин 🖤Скалы\n".format(player.nickname)
-    response += ""
-    # TODO доделать
+    response = "<b>{}</b> - Воин 🖤Скалы\n".format(player.nickname)
+    response += "{}id: <code>{}</code>\n".format("@{}, ".format(player.username) if player.username is not None else "",
+                                                 player.id)
+    response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
+                                                                                      player.defense)
+    guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
+    response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild.tag is not None else "нет")
+    if guild is not None:
+        response += "Покинуть гильдию: /leave_guild\n"
+    response += "\nЭкипировка:\n"
+    eq_list = list(player.equipment.values())
+    for equipment in eq_list:
+        response += "<b>{}</b><code>{}</code><code>{}</code>" \
+                    "\n".format(equipment.name, "+ {}⚔".format(equipment.attack) if equipment.attack is not None else "",
+                                "+ {}🛡".format(equipment.defense) if equipment.defense is not None else "")
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 # Функция для добавления или обновления профиля в базе данных, вызывается, когда бот получает хиро в лс

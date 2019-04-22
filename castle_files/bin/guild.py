@@ -53,7 +53,7 @@ def list_guilds(bot, update):
         response_new = "<b>{}</b>{}\nДивизион: {}\nРедактировать: /edit_guild_{}\n" \
                        "\n".format(guild.tag, " --- " + guild.name if guild.name is not None else "",
                                    guild.division or "Не задан", guild.id)
-        response_new += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n\n--------------------" \
+        response_new += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n\n----------------------------------" \
                         "\n".format(guild.get_attack(), guild.get_defense())
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
@@ -128,8 +128,13 @@ def list_players(bot, update, guild_id=None):
 
 
 def leave_guild(bot, update):
-    mes = update.callback_query.message
-    player = Player.get_player(update.callback_query.from_user.id)
+    if update.message is not None:
+        mes = update.message
+        user_id = mes.from_user.id
+    else:
+        mes = update.callback_query.message
+        user_id = update.callback_query.from_user.id
+    player = Player.get_player(user_id)
     if player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
         return
@@ -142,7 +147,7 @@ def leave_guild(bot, update):
         return
     if guild.commander_id == player.id:
         bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
-        # return
+        return
     guild.delete_player(player)
     bot.send_message(chat_id=mes.chat_id, text="Вы успешно покинули гильдию")
 
@@ -254,9 +259,7 @@ def change_guild_commander(bot, update, user_data):
         bot.send_message(chat_id=mes.chat_id, text="Командир может командовать только своей гильдией")
         return
     if player.guild_tag is None or player.guild is None:
-        player.guild_tag = guild.tag
-        player.guild = guild.id
-        player.update()
+        guild.add_player(player)
     guild.commander_id = player_id
     if guild.members is None:
         guild.members = []

@@ -2,12 +2,12 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
-from castle_files.work_materials.filters.profile_filters import filter_is_hero
+from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division
 
 from castle_files.bin.service_functions import cancel
-from castle_files.bin.profile import hero
+from castle_files.bin.profile import hero, profile
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild
@@ -30,9 +30,13 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile))
+
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
+
+    dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
     # Restricted access---------------------------------------------------------------------------------------------
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
