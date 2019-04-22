@@ -4,12 +4,13 @@
 """
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
+from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.buttons import get_edit_guild_buttons, get_general_buttons
 
 from telegram.error import TelegramError
 
-from castle_files.work_materials.globals import dispatcher
+from castle_files.work_materials.globals import dispatcher, cursor
 from telegram.ext.dispatcher import run_async
 
 
@@ -32,6 +33,32 @@ def create_guild(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="Гильдия успешно создана! Отредактируйте её: "
                                                           "/edit_guild_{}".format(guild.id))
     return
+
+
+# ДОРОГАЯ ОПЕРАЦИЯ - получение (и вывод в сообщении) списка ги
+# @run_async
+def list_guilds(bot, update):
+    response = "Список зарегистрированных в боте гильдий:\n\n"
+    request = "select guild_id from guilds"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        guild_id = row[0]
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild is None:
+            continue
+        response_new = "<b>{}</b>{}\nДивизион: {}\nРедактировать: /edit_guild_{}\n" \
+                       "\n".format(guild.tag, " --- " + guild.name if guild.name is not None else "",
+                                   guild.division or "Не задан", guild.id)
+        response_new += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n\n--------------------\n".format(guild.get_attack(),
+                                                                                    guild.get_defense())
+        if len(response + response_new) > MAX_MESSAGE_LENGTH:
+            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += response_new
+        row = cursor.fetchone()
+    response += "Добавить гильдию: /create_guild {TAG}"
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
 # @dispatcher.run_async # Не работает
@@ -119,11 +146,16 @@ def edit_guild(bot, update):
     else:
         commander = None
     response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
-    response += "Чат отряда: {}, id: {}" \
+    response += "Чат отряда: <code>{}</code>, id: {}" \
                 "\n{}".format(guild.chat_name or "Не задан",
                               "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
                               "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
                               if guild.invite_link is not None else "")
+    response += "\n\n⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
+    response += "Дивизион: <b>{}</b>\n".format(guild.division or "не задан")
+    response += "Приказы <b>{}</b>\n".format("включены" if guild.orders_enabled else "оключены")
+    response += "Сообщения <b>{}</b>\n".format("пинятся" if guild.pin_enabled else "не пинятся")
+    response += "Пины <b>{}</b>\n".format("громкие" if not guild.disable_notification else "тихие")
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_edit_guild_buttons(guild))
     return
 
@@ -235,6 +267,34 @@ def change_guild_chat(bot, update, user_data):
     guild.update_to_database()
     bot.send_message(chat_id=mes.chat_id, text="Чат гильдии <b>{}</b> успешно изменён "
                                                "на <b>{}</b>".format(guild.tag, guild.chat_name or guild.chat_id),
+                     parse_mode='HTML')
+
+
+def edit_guild_division(bot, update, user_data):
+    try:
+        user_data.update(
+            {"status": "edit_guild_division", "edit_guild_id": int(update.callback_query.data.split("_")[1])})
+    except ValueError:
+        bot.send_message(chat_id=update.callback_query.message.chat_id, text="Произошла ошибка")
+    else:
+        bot.send_message(chat_id=update.callback_query.message.chat_id,
+                         text="Введите название нового дивизиона гильдии, или наберите /cancel для отмены")
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def change_guild_division(bot, update, user_data):
+    mes = update.message
+    guild_id = user_data.get("edit_guild_id")
+    guild = None
+    if guild_id is not None:
+        guild = Guild.get_guild(guild_id=guild_id)
+    if guild_id is None or guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена. Начните сначала.")
+        return
+    guild.division = mes.text
+    guild.update_to_database()
+    bot.send_message(chat_id=mes.chat_id, text="Дивизион <b>{}</b> изменён на "
+                                               "<b>{}</b>".format(guild.tag, guild.division),
                      parse_mode='HTML')
 
 

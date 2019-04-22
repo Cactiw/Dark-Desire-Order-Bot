@@ -22,6 +22,8 @@ CHAT_WARS_ID = 265204902
 SUPER_ADMIN_ID = 231900398
 high_access_list = []
 
+processing = True
+
 moscow_tz = pytz.timezone('Europe/Moscow')
 try:
     local_tz = tzlocal.get_localzone()

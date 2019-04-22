@@ -39,3 +39,12 @@ class FilterViewGuild(BaseFilter):
 
 
 filter_view_guild = FilterViewGuild()
+
+
+class FilterChangeGuildDivision(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        return user_data is not None and user_data.get("status") == "edit_guild_division"
+
+
+filter_change_guild_division = FilterChangeGuildDivision()

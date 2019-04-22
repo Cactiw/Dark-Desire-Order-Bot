@@ -11,6 +11,7 @@ def get_edit_guild_buttons(guild):
             InlineKeyboardButton("Изменить чат гильдии", callback_data="gccht_{}".format(guild.id)),
         ],
         [
+            InlineKeyboardButton("Изменить дивизион", callback_data="gcdvs_{}".format(guild.id)),
             InlineKeyboardButton("Отключить приказы" if guild.orders_enabled else "Включить приказы",
                                  callback_data="gco_{}".format(guild.id))
         ],
