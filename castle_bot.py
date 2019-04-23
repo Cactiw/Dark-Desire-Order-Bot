@@ -5,12 +5,14 @@ from castle_files.work_materials.globals import dispatcher, updater, conn
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division
+from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.bin.service_functions import cancel
 from castle_files.bin.profile import hero, profile
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild
+from castle_files.bin.common_functions import unknown_input
 
 from castle_files.bin.save_load_user_data import load_data, save_data
 
@@ -61,6 +63,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm, unknown_input, pass_user_data=True))
 
     # Загрузка user_data с диска
     load_data()
