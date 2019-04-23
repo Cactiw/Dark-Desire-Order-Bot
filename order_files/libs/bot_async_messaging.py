@@ -18,8 +18,9 @@ BADREQUEST_ERROR_CODE = 3
 
 
 order_backup_queue = multiprocessing.Queue()
-class AsyncBot(Bot):
 
+
+class AsyncBot(Bot):
 
     def __init__(self, token, workers = 4, request_kwargs = None):
         counter_rlock = threading.RLock()
