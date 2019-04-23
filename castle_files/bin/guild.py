@@ -10,7 +10,7 @@ from castle_files.bin.buttons import get_edit_guild_buttons, get_general_buttons
 
 from telegram.error import TelegramError
 
-from castle_files.work_materials.globals import dispatcher, cursor
+from castle_files.work_materials.globals import dispatcher, cursor, conn
 from telegram.ext.dispatcher import run_async
 
 import logging
@@ -40,6 +40,7 @@ def create_guild(bot, update):
 # ДОРОГАЯ ОПЕРАЦИЯ - получение (и вывод в сообщении) списка ги
 # @run_async
 def list_guilds(bot, update):
+    cursor = conn.cursor()
     response = "Список зарегистрированных в боте гильдий:\n\n"
     request = "select guild_id from guilds"
     cursor.execute(request)
@@ -125,6 +126,7 @@ def list_players(bot, update, guild_id=None):
             response = ""
         response += response_new
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 def leave_guild(bot, update):
@@ -150,6 +152,8 @@ def leave_guild(bot, update):
         return
     guild.delete_player(player)
     bot.send_message(chat_id=mes.chat_id, text="Вы успешно покинули гильдию")
+    if update.callback_query is not None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 # Добавление игрока в гильдию
@@ -329,6 +333,10 @@ def change_guild_chat(bot, update, user_data):
     bot.send_message(chat_id=mes.chat_id, text="Чат гильдии <b>{}</b> успешно изменён "
                                                "на <b>{}</b>".format(guild.tag, guild.chat_name or guild.chat_id),
                      parse_mode='HTML')
+    if "status" in user_data:
+        user_data.pop("status")
+    if "edit_guild_id" in user_data:
+        user_data.pop("edit_guild_id")
 
 
 def edit_guild_division(bot, update, user_data):
@@ -357,6 +365,10 @@ def change_guild_division(bot, update, user_data):
     bot.send_message(chat_id=mes.chat_id, text="Дивизион <b>{}</b> изменён на "
                                                "<b>{}</b>".format(guild.tag, guild.division),
                      parse_mode='HTML')
+    if "status" in user_data:
+        user_data.pop("status")
+    if "edit_guild_id" in user_data:
+        user_data.pop("edit_guild_id")
 
 
 # Информация о чате в лс
