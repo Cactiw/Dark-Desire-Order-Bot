@@ -57,8 +57,22 @@ def add_report(bot, update):
     stock = re.search("📦Stock:\\s+(-?\\d+)", s)
     stock = int(stock.group(1)) if stock is not None else 0
     battle_id = count_battle_id(mes)
+    request = "select report_id from reports where battle_id = %s and player_id = %s"
+    cursor.execute(request, (battle_id, player.id))
+    row = cursor.fetchone()
+    if row is not None:
+        bot.send_message(chat_id=mes.from_user.id, text="Репорт за эту битву уже учтён!")
+        return
     request = "insert into reports(player_id, battle_id, attack, additional_attack, defense, additional_defense, lvl, "\
               "exp, gold, stock) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock))
     bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!")
+    bot.send_message(chat_id=mes.from_user.id,
+                     text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"
+                          "🔥Exp: {}\n💰Gold:{}\n📦Stock:{}"
+                          "".format(player.nickname, attack,
+                                    "({})".format(additional_attack) if additional_attack != 0 else "",
+                                    defense, "({})".format(additional_defense) if additional_defense != 0 else "",
+                                    lvl, exp, gold, stock),
+                     parse_mode='HTML')
