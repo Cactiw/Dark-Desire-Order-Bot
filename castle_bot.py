@@ -27,6 +27,10 @@ def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="Привет! Пришли мне форвард /hero из @chatwarsbot!")
 
 
+def ignore(bot, update):
+    return
+
+
 
 def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('start', start))
@@ -45,7 +49,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
-    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access & filter_is_pm, unknown_input,
+                                          pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, ignore))
     # Restricted access---------------------------------------------------------------------------------------------
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
