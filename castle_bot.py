@@ -3,6 +3,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero
+from castle_files.work_materials.filters.report_filters import filter_is_report
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division
 from castle_files.work_materials.filters.general_filters import filter_is_pm
@@ -12,6 +13,7 @@ from castle_files.bin.profile import hero, profile
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild
+from castle_files.bin.reports import add_report
 from castle_files.bin.common_functions import unknown_input
 
 from castle_files.bin.save_load_user_data import load_data, save_data
@@ -31,6 +33,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
+
+    # Приём репортов
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile))
 
