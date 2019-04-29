@@ -28,10 +28,11 @@ def profile(bot, update):
         response += "Покинуть гильдию: /leave_guild\n"
     response += "\nЭкипировка:\n"
     eq_list = list(player.equipment.values())
-    for equipment in eq_list:
-        response += "<b>{}</b><code>{}</code><code>{}</code>" \
-                    "\n".format(equipment.name, "+ {}⚔".format(equipment.attack) if equipment.attack is not None else "",
-                                "+ {}🛡".format(equipment.defense) if equipment.defense is not None else "")
+    if eq_list is not None:
+        for equipment in eq_list:
+            response += "<b>{}</b><code>{}</code><code>{}</code>" \
+                        "\n".format(equipment.name, "+ {}⚔".format(equipment.attack) if equipment.attack is not None else "",
+                                    "+ {}🛡".format(equipment.defense) if equipment.defense is not None else "")
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
