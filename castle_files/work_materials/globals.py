@@ -20,7 +20,7 @@ cursor = conn.cursor()
 
 CHAT_WARS_ID = 265204902
 SUPER_ADMIN_ID = 231900398
-high_access_list = []
+high_access_list = [231900398, 205356091, 352318827]
 
 processing = True
 

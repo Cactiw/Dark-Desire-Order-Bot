@@ -6,7 +6,7 @@ from castle_files.work_materials.filters.profile_filters import filter_is_hero, 
 from castle_files.work_materials.filters.report_filters import filter_is_report
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division
-from castle_files.work_materials.filters.general_filters import filter_is_pm
+from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access
 
 from castle_files.bin.service_functions import cancel
 from castle_files.bin.profile import hero, profile
@@ -45,6 +45,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
+    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input))
     # Restricted access---------------------------------------------------------------------------------------------
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))

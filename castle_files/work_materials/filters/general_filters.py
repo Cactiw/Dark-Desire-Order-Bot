@@ -4,6 +4,7 @@
 
 from telegram.ext import BaseFilter
 from castle_files.work_materials.globals import CHAT_WARS_ID
+from castle_files.bin.service_functions import check_access
 
 
 class FilterIsChatWarsForward(BaseFilter):
@@ -20,3 +21,11 @@ class FilterIsPM(BaseFilter):
 
 
 filter_is_pm = FilterIsPM()
+
+
+class FilterHasAccess(BaseFilter):
+    def filter(self, message):
+        return check_access(message.from_user.id)
+
+
+filter_has_access = FilterHasAccess()
