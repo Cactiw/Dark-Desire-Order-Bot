@@ -45,7 +45,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
-    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input))
+    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input, pass_user_data=True))
     # Restricted access---------------------------------------------------------------------------------------------
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
