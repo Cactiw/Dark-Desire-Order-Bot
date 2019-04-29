@@ -1,7 +1,7 @@
 """
 В этом модуле объявляется класс Player - класс, хранящий все данных о конкретном игроке.
 """
-from castle_files.work_materials.globals import cursor
+from castle_files.work_materials.globals import conn
 from castle_files.work_materials.equipment_constants import get_equipment_by_code
 
 from psycopg2 import ProgrammingError
@@ -12,6 +12,8 @@ from multiprocessing import Queue
 
 players = {}
 players_need_update = Queue()
+
+cursor = conn.cursor()
 
 
 class Player:
