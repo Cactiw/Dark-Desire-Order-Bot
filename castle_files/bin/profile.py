@@ -23,7 +23,7 @@ def profile(bot, update):
     response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
                                                                                       player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
-    response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild.tag is not None else "нет")
+    response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None:
         response += "Покинуть гильдию: /leave_guild\n"
     response += "\nЭкипировка:\n"
