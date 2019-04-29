@@ -28,7 +28,7 @@ def profile(bot, update):
         response += "Покинуть гильдию: /leave_guild\n"
     response += "\nЭкипировка:\n"
     eq_list = list(player.equipment.values())
-    if eq_list is not None:
+    if eq_list:
         for equipment in eq_list:
             response += "<b>{}</b><code>{}</code><code>{}</code>" \
                         "\n".format(equipment.name, "+ {}⚔".format(equipment.attack) if equipment.attack is not None else "",
