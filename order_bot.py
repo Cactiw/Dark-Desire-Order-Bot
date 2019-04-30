@@ -11,7 +11,11 @@ from order_files.bin.order import attackCommand, menu, remove_order, refill_defe
 
 from order_files.bin.guild_chats import add_pin, pin_setup, recashe_order_chats, pindivision, pinmute, pinpin, pinset
 
+from order_files.bin.castle_update_monitor import castle_update_monitor
+
 from order_files.work_materials.globals import dispatcher, updater, conn
+
+import threading
 
 
 # ------------------------------------------------------------------------------------------------------
@@ -53,8 +57,14 @@ def order_bot_processing():
 
     recashe_order_chats()
     refill_deferred_orders()
-    updater.start_polling(clean=False)
 
+    processes = []
+
+    update_monitor = threading.Thread(target=castle_update_monitor, name="Order Database Update Monitor")
+    update_monitor.start()
+    processes.append(update_monitor)
+
+    updater.start_polling(clean=False)
 
     # Останавливаем бота, если были нажаты Ctrl + C
     updater.idle()

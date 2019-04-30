@@ -14,7 +14,7 @@ CALLBACK_CHAT_ID = 231900398
 bot = AsyncBot(token=Production_order_token, workers=16, request_kwargs=request_kwargs)
 """ Понимаю, что 16 - колоссальное число,
     Однако тесты показали, что именно так достигается оптимальное время """
-updater = AsyncUpdater(bot = bot)
+updater = AsyncUpdater(bot=bot)
 
 dispatcher = updater.dispatcher
 job = updater.job_queue

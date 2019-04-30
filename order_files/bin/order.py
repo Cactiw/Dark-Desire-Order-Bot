@@ -157,18 +157,21 @@ def remove_order(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Приказ успешно отменён")
 
 
-def recashe_order_chats():
+# TODO ну и фигня же тут происходит, список списков. Переделать всё через классы!
+def recashe_order_chats(new_cursor=None):
+    if new_cursor is None:
+        new_cursor = cursor  # Если в главном потоке, иначе он будет другим
     logging.info("Recaching chats...")
     order_chats.clear()
-    request = "select chat_id, pin_enabled, disable_notification, division from guilds where orders_enabled = '1'"
-    cursor.execute(request)
-    row = cursor.fetchone()
+    request = "select chat_id, pin_enabled, disable_notification, division from guilds where orders_enabled = true"
+    new_cursor.execute(request)
+    row = new_cursor.fetchone()
     while row:
         current = []
         for elem in row:
             current.append(elem)
         order_chats.append(current)
-        row = cursor.fetchone()
+        row = new_cursor.fetchone()
     logging.info("Recashing done")
 
 

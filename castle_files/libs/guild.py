@@ -4,6 +4,7 @@
 from castle_files.work_materials.globals import conn
 
 from castle_files.libs.player import Player
+from globals import update_request_queue
 
 import logging
 import traceback
@@ -158,6 +159,7 @@ class Guild:
         except Exception:
             logging.error(traceback.format_exc())
             return -1
+        update_request_queue.put(self.id)
         return 0
 
     def create_guild(self):

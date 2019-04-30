@@ -42,7 +42,7 @@ def create_guild(bot, update):
 def list_guilds(bot, update):
     cursor = conn.cursor()
     response = "Список зарегистрированных в боте гильдий:\n\n"
-    request = "select guild_id from guilds"
+    request = "select guild_id from guilds order by guild_id asc"
     cursor.execute(request)
     row = cursor.fetchone()
     while row is not None:
