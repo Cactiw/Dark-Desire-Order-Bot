@@ -16,6 +16,20 @@ import logging
 import re
 
 
+def get_deferred_orders_text():
+    response = ""
+    for order in deferred_orders:
+        div_str = ""
+        for i in range(len(divisions_const)):
+            if order.divisions[i]:
+                div_str += " {0}".format(divisions_const[i])
+        response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
+                   "Tactics: {3}\nremove: /remove_order_{4}\n" \
+                   "\n".format(order.time_set.replace(tzinfo=None).strftime("%D %H:%M:%S"), order.target,
+                               order.defense, order.tactics, order.deferred_id, div_str[1:])
+    return response
+
+
 def pult(bot, update):
     mes = update.message
     pult = Pult.get_pult(0)  # Пульт - болванка
@@ -25,15 +39,7 @@ def pult(bot, update):
     send_time = None
     if 'pult' in mes.text:
         # Обычный пульт
-        for order in deferred_orders:
-            div_str = ""
-            for i in range(len(divisions_const)):
-                if order.divisions[i]:
-                    div_str += " {0}".format(divisions_const[i])
-            response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
-                        "Tactics: {3}\nremove: /remove_order_{4}\n" \
-                        "\n".format(order.time_set.replace(tzinfo = None).strftime("%D %H:%M:%S"), order.target,
-                                    order.defense, order.tactics, order.deferred_id, div_str[1:])
+        response += get_deferred_orders_text()
 
         message = bot.sync_send_message(
             chat_id=update.message.chat_id, text=response + "\n\n{0}".format(
@@ -151,6 +157,10 @@ def pult_send(bot, update):
 
     logging.info("Deffered successful on {0}".format(time_to_send))
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")
+    new_text = get_deferred_orders_text()
+    reply_markup = rebuild_pult("None", pult, None)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text, reply_markup=reply_markup,
+                        parse_mode='HTML')
 
 
 def pult_divisions_callback(bot, update):

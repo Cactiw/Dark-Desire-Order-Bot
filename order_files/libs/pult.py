@@ -77,6 +77,8 @@ def build_pult(divisions, castles, times, defense, tactics):
 
 
 def rebuild_pult(action, pult, context):
+    if action == "None":
+        return build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
     if action == "default":
         for i in range(0, len(pult.divisions) - 1):
             pult.divisions[i] = divisions_const[i]
