@@ -12,7 +12,7 @@ from castle_files.bin.service_functions import cancel
 from castle_files.bin.profile import hero, profile
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
-    list_players, leave_guild
+    list_players, leave_guild, change_guild_bool_state
 from castle_files.bin.reports import add_report
 from castle_files.bin.common_functions import unknown_input
 
@@ -72,6 +72,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_chat, pattern="gccht_\\d+", pass_user_data=True))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_division, pattern="gcdvs_\\d+", pass_user_data=True))
+
+    # Хендлер на любые изменения булеанов в гильдиях
+    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opn]_\\d+"))
 
     dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))

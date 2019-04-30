@@ -15,6 +15,12 @@ def get_edit_guild_buttons(guild):
             InlineKeyboardButton("Отключить приказы" if guild.orders_enabled else "Включить приказы",
                                  callback_data="gco_{}".format(guild.id))
         ],
+        [
+            InlineKeyboardButton("Отключить пины" if guild.pin_enabled else "Включить пины",
+                                 callback_data="gcp_{}".format(guild.id)),
+            InlineKeyboardButton("Включить уведомления" if guild.disable_notification else "Выключить уведомления",
+                                 callback_data="gcn_{}".format(guild.id)),
+        ],
     ]
     return InlineKeyboardMarkup(buttons)
 

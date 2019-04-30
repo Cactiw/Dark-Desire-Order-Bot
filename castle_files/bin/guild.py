@@ -194,6 +194,28 @@ def add(bot, update):
                      parse_mode='HTML')
 
 
+# Генерирует корректный и обновлённый текст в ответе на изменение гильдии. Генерируется каждый раз при изменении ги
+def get_edit_guild_text(guild):
+
+    if guild.commander_id is not None:
+        commander = Player.get_player(guild.commander_id)
+    else:
+        commander = None
+
+    response = "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
+    response += "Чат отряда: <code>{}</code>, id: {}" \
+                "\n{}".format(guild.chat_name or "Не задан",
+                              "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
+                              "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
+                              if guild.invite_link is not None else "")
+    response += "\n\n⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
+    response += "Дивизион: <b>{}</b>\n".format(guild.division or "не задан")
+    response += "Приказы <b>{}</b>\n".format("включены" if guild.orders_enabled else "оключены")
+    response += "Сообщения <b>{}</b>\n".format("пинятся" if guild.pin_enabled else "не пинятся")
+    response += "Пины <b>{}</b>\n".format("громкие" if not guild.disable_notification else "тихие")
+    return response
+
+
 # Команда /edit_guild
 def edit_guild(bot, update):
     mes = update.message
@@ -207,21 +229,7 @@ def edit_guild(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена")
         return
     response = "Гильдия <b>{}</b>\n".format(guild.tag)
-    if guild.commander_id is not None:
-        commander = Player.get_player(guild.commander_id)
-    else:
-        commander = None
-    response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
-    response += "Чат отряда: <code>{}</code>, id: {}" \
-                "\n{}".format(guild.chat_name or "Не задан",
-                              "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
-                              "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
-                              if guild.invite_link is not None else "")
-    response += "\n\n⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
-    response += "Дивизион: <b>{}</b>\n".format(guild.division or "не задан")
-    response += "Приказы <b>{}</b>\n".format("включены" if guild.orders_enabled else "оключены")
-    response += "Сообщения <b>{}</b>\n".format("пинятся" if guild.pin_enabled else "не пинятся")
-    response += "Пины <b>{}</b>\n".format("громкие" if not guild.disable_notification else "тихие")
+    response += get_edit_guild_text(guild)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_edit_guild_buttons(guild))
     return
 
@@ -369,6 +377,38 @@ def change_guild_division(bot, update, user_data):
         user_data.pop("status")
     if "edit_guild_id" in user_data:
         user_data.pop("edit_guild_id")
+
+
+def change_guild_bool_state(bot, update):
+    try:
+        guild_id = int(update.callback_query.data.split("_")[1])
+    except ValueError:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Произошла ошибка. Попробуйте ещё раз")
+        return
+    guild = Guild.get_guild(guild_id)
+    if guild is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Гильдия не найдена. Попробуйте ещё раз")
+        return
+    edit_type = update.callback_query.data[2]
+    if edit_type == 'o':
+        guild.orders_enabled = not guild.orders_enabled
+    elif edit_type == 'p':
+        guild.pin_enabled = not guild.pin_enabled
+    elif edit_type == 'n':
+        guild.disable_notification = not guild.disable_notification
+    guild.update_to_database()
+    mes = update.callback_query.message
+    reply_markup = get_edit_guild_buttons(guild)
+    new_text = get_edit_guild_text(guild)
+    try:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text, reply_markup=reply_markup,
+                            parse_mode='HTML')
+    except TelegramError:
+        pass
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                            text="Успешно изменено.")
 
 
 # Информация о чате в лс
