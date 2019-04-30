@@ -75,15 +75,15 @@ def hero(bot, update, user_data):
     for string in equip_strings:
         print(string)
         # clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
-        clear_name = re.search("(\\+?\\d?\\s?(.+?)\\s)\\+(\\d*)⚔?.*(\\d*)🛡?", string)
+        clear_name = re.search("(⚡?\\+?\\d*\\s?(.+?))\\s\\+(\\d*)⚔?\\s*\\+?(\\d*)🛡?", string)
         if clear_name is None:
             logging.warning("Error while parsing item_string\n{}".format(string))
             continue
         else:
             logging.info("successful parsed {},, Got: {}".format(string, clear_name.group(1)))
         full_name = clear_name.group(1)
-        attack = int(clear_name.group(3)) if clear_name.group(3) != "" else 0
-        defense = int(clear_name.group(4)) if clear_name.group(4) != "" else 0
+        eq_attack = int(clear_name.group(3)) if clear_name.group(3) != "" else 0
+        eq_defense = int(clear_name.group(4)) if clear_name.group(4) != "" else 0
         clear_name = clear_name.group(2)
         names_list = list(equipment_names.items())
         code = None
@@ -99,8 +99,8 @@ def hero(bot, update, user_data):
             logging.warning("Equipment with code {} is None".format(code))
             continue
         eq.name = full_name
-        eq.attack = attack
-        eq.defense = defense
+        eq.attack = eq_attack
+        eq.defense = eq_defense
         player_equipment.update({eq.place: eq})
     if player is None:
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
