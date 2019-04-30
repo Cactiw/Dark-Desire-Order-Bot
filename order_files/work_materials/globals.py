@@ -7,7 +7,7 @@ from libs.updater_async import AsyncUpdater
 from config import Production_order_token, psql_creditals, request_kwargs
 
 admin_ids = [231900398, 205356091, 352318827]
-allowed_chats = [231900398, -1001139194354]
+allowed_chats = [231900398, -1001139194354, -376246101]
 
 CALLBACK_CHAT_ID = 231900398
 LOGS_CHAT_ID = -1001461190292

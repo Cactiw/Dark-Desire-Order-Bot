@@ -240,4 +240,3 @@ def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
         logging.error(traceback.format_exc)
     finally:
         bot.answerCallbackQuery(callback_query_id=callback_query_id)
-    print(order_bot.logs)
