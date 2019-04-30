@@ -1,14 +1,17 @@
-import logging, traceback
-from telegram.error import (TelegramError, Unauthorized, BadRequest,
-                            TimedOut, ChatMigrated, NetworkError)
+import traceback
+from telegram.error import (TelegramError, BadRequest)
 
+from order_files.work_materials.pult_constants import *
+from order_files.libs.pult import rebuild_pult
+from order_files.libs.deferred_order import DeferredOrder
+from order_files.bin.order import send_order, send_order_job
+from order_files.work_materials.pult_constants import divisions as divisions_const
 
-from work_materials.globals import *
-from work_materials.pult_constants import *
-from libs.order import *
-from libs.pult import rebuild_pult
-from bin.order import *
-from work_materials.pult_constants import divisions as divisions_const
+from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job, admin_ids
+
+import order_files.work_materials.globals as globals
+
+import logging
 
 
 pult_status = { 'divisions' : [False, False, False, True], 'target' : -1 , 'defense' : 2, 'time' : 0, "tactics" : 5}
@@ -26,9 +29,9 @@ def pult(bot, update):
             if order.divisions[i]:
                 div_str += " {0}".format(divisions_const[i])
         response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
-                    "Tactics: {3}\nremove: /remove_order_{4}\n\n".format(order.time_set.replace(tzinfo = None).strftime("%D %H:%M:%S"), order.target,
-                                                                     order.defense, order.tactics, order.deferred_id,
-                                                                     div_str[1:])
+                    "Tactics: {3}\nremove: /remove_order_{4}\n" \
+                    "\n".format(order.time_set.replace(tzinfo = None).strftime("%D %H:%M:%S"), order.target,
+                                order.defense, order.tactics, order.deferred_id, div_str[1:])
     bot.send_message(chat_id = update.message.chat_id,
                      text = response + "\n\n{0}".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%D %H:%M:%S")),
                      reply_markup = PultMarkup)
@@ -74,37 +77,45 @@ def pult_send(bot, update):
     defense_target = defense_to_order[defense]
     tactics_target = tactics_to_order[tactics_num]
     if time_to_send < 0:
-        send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target, defense = defense_target, tactics = tactics_target)
+        send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target,
+                   defense = defense_target, tactics = tactics_target)
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
         return
-    next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 1, minute = 0, second=0, microsecond=0)
+    next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 1, minute = 0, second=0,
+                                                                                     microsecond=0)
 
     now = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None)
     while next_battle < now:
         next_battle += datetime.timedelta(hours=8)
     logging.info("Next battle : {0}".format(next_battle))
     next_battle_time = next_battle.time()
-    if time_to_send == 0:   #   Мгновенная отправка, но с подстановкой времени в пин
-        send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target, defense = defense_target, tactics = tactics_target, time = next_battle_time)
+    if time_to_send == 0:   # Мгновенная отправка, но с подстановкой времени в пин
+        send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target,
+                   defense = defense_target, tactics = tactics_target, time = next_battle_time)
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
         return
     time_to_send = next_battle - times_to_time[time_to_send]
     time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz)
-    context = [mes.chat_id, castle_target, defense_target, tactics, divisions]
-    #------------------------------------------------------------------------- TEST ONLY
-    #time_to_send = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 21, minute = 18, second=0, microsecond=0)
-    #-------------------------------------------------------------------------
-    j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
+    #------------------------------------------------------------------------------------------------------- TEST ONLY
+    #time_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).replace(hour=16, minute=31, second=0)
+    #-------------------------------------------------------------------------------------------------------
     if divisions == "ALL":
         divisions = []
         for i in range(len(divisions_const)):
             divisions.append(False)
         divisions[-1] = True
-    request = "insert into deferred_orders(order_id, time_set, target, defense, tactics, divisions) values (%s, %s, %s, %s, %s, %s) returning deferred_id"
+    request = "insert into deferred_orders(order_id, time_set, target, defense, tactics, divisions) values " \
+              "(%s, %s, %s, %s, %s, %s) returning deferred_id"
     cursor.execute(request, (globals.order_id, time_to_send, target, defense, tactics_target, divisions))
     row = cursor.fetchone()
-    current = DeferredOrder(row[0], globals.order_id, divisions, time_to_send, castle_target, defense_target, tactics_target, j)
+
+    context = [mes.chat_id, castle_target, defense_target, tactics_target, divisions, row[0]]
+    j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo=None), context=context)
+
+    current = DeferredOrder(row[0], globals.order_id, divisions, time_to_send, castle_target, defense_target,
+                            tactics_target, j)
     deferred_orders.append(current)
+
     logging.info("Deffered successful on {0}".format(time_to_send))
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")
 
@@ -116,7 +127,8 @@ def pult_divisions_callback(bot, update):
     new_markup = return_value[0]
     new_division = return_value[1]
     pult_status.update({ "divisions" : new_division })
-    edit_pult(bot = bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup, callback_query_id=update.callback_query.id)
+    edit_pult(bot = bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
+              callback_query_id=update.callback_query.id)
 
 
 def pult_castles_callback(bot, update):
@@ -124,7 +136,8 @@ def pult_castles_callback(bot, update):
     new_target = int(update.callback_query.data[2:])
     new_markup = rebuild_pult("change_target", new_target)
     pult_status.update({ "target" : new_target })
-    edit_pult(bot = bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup, callback_query_id=update.callback_query.id)
+    edit_pult(bot = bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
+              callback_query_id=update.callback_query.id)
 
 
 def pult_time_callback(bot, update):
@@ -133,7 +146,8 @@ def pult_time_callback(bot, update):
     new_time = int(data[2:])
     new_markup = rebuild_pult("change_time", new_time)
     pult_status.update({ "time" : new_time })
-    edit_pult(bot = bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup, callback_query_id=update.callback_query.id)
+    edit_pult(bot = bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
+              callback_query_id=update.callback_query.id)
 
 
 def pult_defense_callback(bot, update):

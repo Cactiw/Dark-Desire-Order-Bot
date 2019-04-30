@@ -1,12 +1,15 @@
 import logging, time
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
-from time import strftime
-from work_materials.globals import *
-from libs.order import *
-from work_materials.pult_constants import divisions as division_const, castles
+from order_files.work_materials.globals import cursor, order_chats, deferred_orders, job, moscow_tz, CALLBACK_CHAT_ID, \
+    local_tz, conn
+from order_files.libs.deferred_order import DeferredOrder
+from order_files.work_materials.pult_constants import divisions as division_const, castles, defense_to_order
+from order_files.libs.bot_async_messaging import order_backup_queue
 
-import work_materials.globals as globals
+import order_files.work_materials.globals as globals
+import datetime
+
 
 
 def build_menu(buttons,
@@ -40,12 +43,12 @@ def attackCommand(bot, update):
     stats = "Рассылка пинов началась в <b>{0}</b>\n\n".format(time.ctime())
 
     bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
-    request = "select chat_id, pin, disable_notification from guild_chats where enabled = '1'"
+    request = "select chat_id, pin_enabled, disable_notification from guilds where orders_enabled = '1'"
     cursor.execute(request)
     row = cursor.fetchone()
     orders_sent = 0
     while row:
-        bot.send_order(order_id=globals.order_id, chat_id=row[0], response=response, pin=row[1], notification=not row[2])
+        bot.send_order(order_id=globals.order_id, chat_id=row[0], response=response, pin_enabled=row[1], notification=not row[2])
         row = cursor.fetchone()
         orders_sent += 1
     response = ""
@@ -69,6 +72,7 @@ def attackCommand(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=stats, parse_mode = 'HTML')
     return
 
+
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, time = None):
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
@@ -76,7 +80,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
-            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin=chat[1], notification=not chat[2])
+            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+                           notification=not chat[2])
             orders_sent += 1
     else:
         current_divisions = []
@@ -85,7 +90,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                 current_divisions.append(division_const[i])
         for chat in order_chats:
             if chat[3] in current_divisions:
-                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin=chat[1], notification=not chat[2])
+                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+                               notification=not chat[2])
                 orders_sent += 1
     response = ""
     orders_OK = 0
@@ -110,15 +116,28 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
             "рассылка заняла <b>{3}</b>\n\n".format(datetime.datetime.now(tz=moscow_tz), orders_OK, orders_failed, time_delta) + response
     bot.send_message(chat_id = chat_callback_id, text=stats, parse_mode='HTML')
 
+
+# Начало отправки отложки
 def send_order_job(bot, job):
     chat_callback_id = job.context[0]
     castle_target = job.context[1]
     defense = job.context[2]
     tactics = job.context[3]
+    print(tactics)
     divisions = job.context[4]
+    if divisions[len(divisions) - 1]:
+        divisions = "ALL"
+    deferred_id = job.context[5]
     send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics)
-    refill_deferred_orders()
+    for i, order in enumerate(deferred_orders):
+        if order.deferred_id == deferred_id:
+            order.delete()
+            deferred_orders.pop(i)
+            break
+    # refill_deferred_orders()
 
+
+# Удаление отложки
 def remove_order(bot, update):
     mes = update.message
     deferred_id = int(mes.text.partition("@")[0].split("_")[2])
@@ -138,19 +157,23 @@ def remove_order(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Приказ успешно отменён")
 
 
-def recashe_order_chats():
+# TODO ну и фигня же тут происходит, список списков. Переделать всё через классы!
+def recashe_order_chats(new_cursor=None):
+    if new_cursor is None:
+        new_cursor = cursor  # Если в главном потоке, иначе он будет другим
     logging.info("Recaching chats...")
     order_chats.clear()
-    request = "select chat_id, pin, disable_notification, division from guild_chats where enabled = '1'"
-    cursor.execute(request)
-    row = cursor.fetchone()
+    request = "select chat_id, pin_enabled, disable_notification, division from guilds where orders_enabled = true"
+    new_cursor.execute(request)
+    row = new_cursor.fetchone()
     while row:
         current = []
         for elem in row:
             current.append(elem)
         order_chats.append(current)
-        row = cursor.fetchone()
+        row = new_cursor.fetchone()
     logging.info("Recashing done")
+
 
 def refill_deferred_orders():
     logging.info("Refilling deferred orders...")
@@ -159,20 +182,25 @@ def refill_deferred_orders():
     row = cursor.fetchone()
     cursor2 = conn.cursor()
     while row:
-        time_to_send = row[1].replace(tzinfo = moscow_tz)
+        time_to_send = row[1]
         target = row[2]
         castle_target = castles[target]
         defense = row[3]
+        defense_target = None
+        if defense is not None:
+            defense_target = defense_to_order[defense]
         tactics = row[4]
+        deferred_id = row[5]
         divisions = row[6]
-        now = datetime.datetime.now(tz = moscow_tz)
+        now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+        print(now, time_to_send)
         if now > time_to_send:
-            request = "delete from deferred_orders where deferred_id = '{0}'".format(row[5])
-            cursor2.execute(request)
+            request = "delete from deferred_orders where deferred_id = %s"
+            cursor2.execute(request, (row[5],))
         else:
-            context = [CALLBACK_CHAT_ID, castle_target, defense, tactics, divisions]
+            context = [CALLBACK_CHAT_ID, castle_target, defense_target, tactics, divisions, deferred_id]
             j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo = None), context=context)
-            current = DeferredOrder(row[5], globals.order_id, divisions, time_to_send, castle_target, defense, tactics, j)
+            current = DeferredOrder(row[5], globals.order_id, divisions, time_to_send, castle_target, defense_target, tactics, j)
             deferred_orders.append(current)
         row = cursor.fetchone()
     logging.info("Orders refilled")

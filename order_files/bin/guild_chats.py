@@ -1,26 +1,26 @@
 from telegram import ReplyKeyboardRemove
 
-from work_materials.globals import *
-from bin.order import recashe_order_chats
+from order_files.work_materials.globals import *
+from order_files.bin.order import recashe_order_chats
 
 
 def add_pin(bot, update):
     mes = update.message
-    request = "SELECT guild_chat_id FROM guild_chats WHERE chat_id = '{0}'".format(mes.chat_id)
+    request = "SELECT chat_id FROM guilds WHERE chat_id = '{0}'".format(mes.chat_id)
     cursor.execute(request)
     row = cursor.fetchone()
     if row is not None:
         bot.send_message(chat_id=update.message.chat_id, text='Беседа уже подключена к рассылке')
         return
-    request = "INSERT INTO guild_chats(chat_id, chat_name) VALUES('{0}', '{1}')".format(mes.chat_id, mes.chat.title)
-    cursor.execute(request)
+    request = "INSERT INTO guilds(chat_id, chat_name) VALUES(%s, %s)"
+    cursor.execute(request, (mes.chat_id, mes.chat.title))
     bot.send_message(chat_id=update.message.chat_id, text='Беседа успешо подключена к рассылке')
     recashe_order_chats()
 
 
 
 def pin_setup(bot, update):
-    request = "SELECT guild_chat_id, chat_id, chat_name, enabled, pin, disable_notification, division FROM guild_chats"
+    request = "SELECT chat_id, chat_id, chat_name, orders_enabled, pin_enabled, disable_notification, division FROM guilds"
     cursor.execute(request)
     row = cursor.fetchone()
     response = "Текущие рассылки пинов:\n"
@@ -55,7 +55,7 @@ def pin_setup(bot, update):
 def pinset(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
-    request = "UPDATE guild_chats SET enabled = %s WHERE guild_chat_id = %s"
+    request = "UPDATE guilds SET orders_enabled = %s WHERE chat_id = %s"
     cursor.execute(request, (mes1[2], mes1[1]))
     conn.commit()
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
@@ -65,7 +65,7 @@ def pinpin(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
     #print(mes1[0], mes1[1], mes1[2])
-    request = "UPDATE guild_chats SET pin = %s WHERE guild_chat_id = %s"
+    request = "UPDATE guilds SET pin_enabled = %s WHERE chat_id = %s"
     cursor.execute(request, (mes1[2], mes1[1]))
     conn.commit()
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
@@ -73,16 +73,16 @@ def pinpin(bot, update):
 def pinmute(bot, update):
     mes = update.message
     mes1 = mes.text.split("_")
-    request = "UPDATE guild_chats SET disable_notification = %s WHERE guild_chat_id = %s"
+    request = "UPDATE guilds SET disable_notification = %s WHERE chat_id = %s"
     cursor.execute(request, (mes1[2], mes1[1]))
     conn.commit()
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')
 
 def pindivision(bot, update):
     mes = update.message
-    guild_chat_id = mes.text.partition(" ")[0].split("_")
+    chat_id = mes.text.partition(" ")[0].split("_")
     division = mes.text.partition(' ')[2]
-    request = "UPDATE guild_chats SET division = %s WHERE guild_chat_id = %s"
-    cursor.execute(request, (division, guild_chat_id[1]))
+    request = "UPDATE guilds SET division = %s WHERE chat_id = %s"
+    cursor.execute(request, (division, chat_id[1]))
     conn.commit()
     bot.send_message(chat_id=update.message.chat_id, text='Выполнено')

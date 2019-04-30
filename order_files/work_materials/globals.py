@@ -1,21 +1,20 @@
 import pytz
 import tzlocal
 import psycopg2
-import datetime
 
-from libs.bot_async_messaging import AsyncBot, order_backup_queue
+from order_files.libs.bot_async_messaging import AsyncBot
 from libs.updater_async import AsyncUpdater
-from config import Production_token, psql_creditals, request_kwargs
+from config import Production_order_token, psql_creditals, request_kwargs
 
 admin_ids = [231900398, 205356091, 352318827]
 allowed_chats = [231900398, -1001139194354]
 
 CALLBACK_CHAT_ID = 231900398
 
-bot = AsyncBot(token=Production_token, workers=16, request_kwargs=request_kwargs)
+bot = AsyncBot(token=Production_order_token, workers=16, request_kwargs=request_kwargs)
 """ Понимаю, что 16 - колоссальное число,
     Однако тесты показали, что именно так достигается оптимальное время """
-updater = AsyncUpdater(bot = bot)
+updater = AsyncUpdater(bot=bot)
 
 dispatcher = updater.dispatcher
 job = updater.job_queue

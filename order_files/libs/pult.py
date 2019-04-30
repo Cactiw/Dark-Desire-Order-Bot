@@ -1,5 +1,4 @@
-import logging
-from work_materials.pult_constants import castles as castles_const, times as times_const, tactics as tactics_const,\
+from order_files.work_materials.pult_constants import castles as castles_const, times as times_const, tactics as tactics_const,\
     defense as defense_const, divisions as divisions_const
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup

@@ -1,3 +1,5 @@
+import logging
+import traceback
 from telegram.ext import Updater
 
 class AsyncUpdater(Updater):
@@ -16,6 +18,13 @@ class AsyncUpdater(Updater):
                                            private_key = private_key, private_key_password=private_key_password,
                                            user_sig_handler=user_sig_handler, request_kwargs = request_kwargs)
                                            #persistence = persistence)    #   Требуется на гите, но не требуется тут (?)
+
+    def start_polling(self, *args, **kwargs):
+        try:
+            self.bot.start()
+        except Exception:
+            logging.info("can not start bot, {}".format(traceback.format_exc()))
+        super(AsyncUpdater, self).start_polling(*args, **kwargs)
 
     def stop(self):
         try:
