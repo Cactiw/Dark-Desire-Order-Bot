@@ -45,6 +45,7 @@ def order_bot_processing():
     dispatcher.add_handler(MessageHandler(~filter_super_admin & ~(filter_chat_allowed & filter_is_admin), not_allowed))
     dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
+    dispatcher.add_handler(CommandHandler('order', pult, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=filter_is_admin))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_order & filter_is_admin, remove_order))

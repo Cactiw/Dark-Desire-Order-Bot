@@ -73,7 +73,7 @@ def attackCommand(bot, update):
     return
 
 
-def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, time = None):
+def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, time=None):
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
     response = "{3}⚔️{0}\n🛡{1}\n{2}\n".format(castle_target, defense if defense else castle_target, tactics, time_add_str)
@@ -155,6 +155,11 @@ def remove_order(bot, update):
         bot.send_message(chat_id = mes.chat_id, text="Приказ существует?")
         return
     bot.send_message(chat_id=mes.chat_id, text="Приказ успешно отменён")
+
+
+def deferred_order(bot, update):
+    mes = update.message
+
 
 
 # TODO ну и фигня же тут происходит, список списков. Переделать всё через классы!
