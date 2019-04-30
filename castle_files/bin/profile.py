@@ -31,8 +31,8 @@ def profile(bot, update):
     if eq_list:
         for equipment in eq_list:
             response += "<b>{}</b><code>{}</code><code>{}</code>" \
-                        "\n".format(equipment.name, "+ {}⚔".format(equipment.attack) if equipment.attack is not None else "",
-                                    "+ {}🛡".format(equipment.defense) if equipment.defense is not None else "")
+                        "\n".format(equipment.name, "+{}⚔ ".format(equipment.attack) if equipment.attack != 0 else "",
+                                    "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
@@ -74,13 +74,17 @@ def hero(bot, update, user_data):
     equip_strings = text.partition("🎽Экипировка")[2].splitlines()[1:]
     for string in equip_strings:
         print(string)
-        clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
+        # clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
+        clear_name = re.search("(\\+?\\d?\\s?(.+?)\\s)\\+(\\d*)⚔?.*(\\d*)🛡?", string)
         if clear_name is None:
             logging.warning("Error while parsing item_string\n{}".format(string))
             continue
         else:
             logging.info("successful parsed {},, Got: {}".format(string, clear_name.group(1)))
-        clear_name = clear_name.group(1)
+        full_name = clear_name.group(1)
+        attack = int(clear_name.group(3)) if clear_name.group(3) != "" else 0
+        defense = int(clear_name.group(4)) if clear_name.group(4) != "" else 0
+        clear_name = clear_name.group(2)
         names_list = list(equipment_names.items())
         code = None
         for name, item_code in names_list:
@@ -94,6 +98,9 @@ def hero(bot, update, user_data):
         if eq is None:
             logging.warning("Equipment with code {} is None".format(code))
             continue
+        eq.name = full_name
+        eq.attack = attack
+        eq.defense = defense
         player_equipment.update({eq.place: eq})
     if player is None:
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
