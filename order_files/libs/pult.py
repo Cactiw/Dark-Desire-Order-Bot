@@ -1,14 +1,17 @@
 from order_files.work_materials.pult_constants import castles as castles_const, times as times_const, \
     tactics as tactics_const, defense as defense_const, divisions as divisions_const, pult_status_default
+from order_files.work_materials.globals import deferred_orders
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 class Pult:
     pults = {}
+    last_pult_id = 0
 
-    def __init__(self, message_id, deferred_time=None):
+    def __init__(self, chat_id, message_id, deferred_time=None):
         self.id = message_id
+        self.chat_id = chat_id
         self.status = pult_status_default.copy()
         self.divisions = divisions_const.copy()
         self.divisions[-1] = '✅' + self.divisions[-1]
@@ -21,10 +24,27 @@ class Pult:
         self.deferred_time = deferred_time
         print(self.deferred_time)
         Pult.pults.update({self.id: self})
+        Pult.last_pult_id = self.id
 
     @staticmethod
-    def get_pult(message_id):
-        return Pult.pults.get(message_id) or Pult(message_id)
+    def get_pult(chat_id, message_id):
+        return Pult.pults.get(message_id) or Pult(chat_id, message_id)
+
+    def get_reply_markup(self):
+        return rebuild_pult("None", self, None)
+
+    def get_text(self):
+        response = ""
+        for order in deferred_orders:
+            div_str = ""
+            for i in range(len(divisions_const)):
+                if order.divisions[i]:
+                    div_str += " {0}".format(divisions_const[i])
+            response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
+                        "Tactics: {3}\nremove: /remove_order_{4}\n" \
+                        "\n".format(order.time_set.replace(tzinfo=None).strftime("%D %H:%M:%S"), order.target,
+                                    order.defense, order.tactics, order.deferred_id, div_str[1:])
+        return response
 
 
 def build_pult(divisions, castles, times, defense, tactics):

@@ -32,7 +32,7 @@ def get_deferred_orders_text():
 
 def pult(bot, update):
     mes = update.message
-    pult = Pult.get_pult(0)  # Пульт - болванка
+    pult = Pult.get_pult(0, 0)  # Пульт - болванка
     PultMarkup = rebuild_pult("default", pult, None)
     response = ""
     message = None
@@ -43,7 +43,7 @@ def pult(bot, update):
 
         message = bot.sync_send_message(
             chat_id=update.message.chat_id, text=response + "\n\n{0}".format(
-                datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%D %H:%M:%S")),
+                datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S")),
             reply_markup=PultMarkup)
     elif 'order' in mes.text:
         line = re.search("order (\\d+)-?(\\d*)-?(\\d*)", mes.text)
@@ -64,7 +64,7 @@ def pult(bot, update):
 
         response = "Отложенный приказ на {}".format(send_time)
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup)
-    pult = Pult(message.message_id, deferred_time=send_time)  # Создаётся новый пульт
+    pult = Pult(message.chat_id, message.message_id, deferred_time=send_time)  # Создаётся новый пульт
 
 
 def pult_callback(bot, update):
@@ -97,7 +97,7 @@ def pult_send(bot, update):
                                   update.callback_query.from_user.username)
     print(order_bot.logs)
     mes = update.callback_query.message
-    pult = Pult.get_pult(mes.message_id)
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
     target = pult_status.get("target")
     time_to_send = pult_status.get("time")
@@ -159,13 +159,14 @@ def pult_send(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")
     new_text = get_deferred_orders_text()
     reply_markup = rebuild_pult("None", pult, None)
-    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text, reply_markup=reply_markup,
-                        parse_mode='HTML')
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text+ "\n\n{0}".format(
+                datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S")),
+                        reply_markup=reply_markup, parse_mode='HTML')
 
 
 def pult_divisions_callback(bot, update):
     mes = update.callback_query.message
-    pult = Pult.get_pult(mes.message_id)
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
     new_target = int(update.callback_query.data[3:])
     return_value = rebuild_pult("change_division", pult, new_target)
@@ -181,7 +182,7 @@ def pult_divisions_callback(bot, update):
 
 def pult_castles_callback(bot, update):
     mes = update.callback_query.message
-    pult = Pult.get_pult(mes.message_id)
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
     new_target = int(update.callback_query.data[2:])
     new_markup = rebuild_pult("change_target", pult, new_target)
@@ -195,7 +196,7 @@ def pult_castles_callback(bot, update):
 
 def pult_time_callback(bot, update):
     mes = update.callback_query.message
-    pult = Pult.get_pult(mes.message_id)
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
     data = update.callback_query.data
     new_time = int(data[2:])
@@ -210,7 +211,7 @@ def pult_time_callback(bot, update):
 
 def pult_defense_callback(bot, update):
     mes = update.callback_query.message
-    pult = Pult.get_pult(mes.message_id)
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
     data = update.callback_query.data
     new_defense = int(data[3:])
@@ -228,7 +229,7 @@ def pult_defense_callback(bot, update):
 
 def pult_tactics_callback(bot, update):
     mes = update.callback_query.message
-    pult = Pult.get_pult(mes.message_id)
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
     data = update.callback_query.data
     new_tactics = int(data[3:])

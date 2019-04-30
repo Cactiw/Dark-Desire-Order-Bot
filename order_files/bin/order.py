@@ -6,6 +6,7 @@ from order_files.work_materials.globals import cursor, order_chats, deferred_ord
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.work_materials.pult_constants import divisions as division_const, castles, defense_to_order
 from order_files.libs.bot_async_messaging import order_backup_queue
+from order_files.libs.pult import Pult
 
 import order_files.work_materials.globals as globals
 import datetime
@@ -154,6 +155,14 @@ def remove_order(bot, update):
         bot.send_message(chat_id = mes.chat_id, text="Приказ существует?")
         return
     bot.send_message(chat_id=mes.chat_id, text="Приказ успешно отменён")
+    pult = Pult.get_pult(None, Pult.last_pult_id)
+    if pult is None:
+        return
+    new_text = pult.get_text()
+    reply_markup = pult.get_reply_markup()
+    bot.editMessageText(chat_id=pult.chat_id, message_id=pult.id, text=new_text + "\n\n{0}".format(
+                datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S")),
+                        reply_markup=reply_markup, parse_mode='HTML')
 
 
 def deferred_order(bot, update):
