@@ -13,4 +13,5 @@ def castle_update_monitor():
     guild_id = update_request_queue.get()
     while guild_id is not None:
         recashe_order_chats(new_cursor=cursor)  # Неоптимально, но это не должно вызываться часто.
+        # upd: TODO: говнище, всё переделать. Могут не уйти приказы из-за этого
         guild_id = update_request_queue.get()

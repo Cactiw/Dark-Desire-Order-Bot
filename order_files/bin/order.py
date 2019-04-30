@@ -11,7 +11,6 @@ import order_files.work_materials.globals as globals
 import datetime
 
 
-
 def build_menu(buttons,
                n_cols,
                header_buttons=None,

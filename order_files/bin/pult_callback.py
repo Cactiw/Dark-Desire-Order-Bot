@@ -9,11 +9,11 @@ from order_files.work_materials.pult_constants import divisions as divisions_con
 
 from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job, admin_ids
 
+import order_bot
 import order_files.work_materials.globals as globals
 
 import logging
 import re
-
 
 
 def pult(bot, update):
@@ -86,6 +86,10 @@ def pult_callback(bot, update):
 
 
 def pult_send(bot, update):
+    order_bot.logs += "{} - @{} Нажал \"Отправить\"" \
+                      "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                                  update.callback_query.from_user.username)
+    print(order_bot.logs)
     mes = update.callback_query.message
     pult = Pult.get_pult(mes.message_id)
     pult_status = pult.status
@@ -160,6 +164,9 @@ def pult_divisions_callback(bot, update):
     pult_status.update({"divisions": new_division })
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
+    order_bot.logs += "{} - @{} - Изменил дивизион на {}" \
+            "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                        update.callback_query.from_user.username, divisions_const[new_target])
 
 
 def pult_castles_callback(bot, update):
@@ -171,6 +178,9 @@ def pult_castles_callback(bot, update):
     pult_status.update({"target": new_target})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
+    order_bot.logs += "{} - @{} - Изменил цель на {}" \
+                      "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                                  update.callback_query.from_user.username, castles[new_target])
 
 
 def pult_time_callback(bot, update):
@@ -183,6 +193,9 @@ def pult_time_callback(bot, update):
     pult_status.update({ "time" : new_time })
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
+    order_bot.logs += "{} - @{} - Изменил время пина на {}" \
+            "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                        update.callback_query.from_user.username, times_to_time[new_time])
 
 
 def pult_defense_callback(bot, update):
@@ -198,6 +211,9 @@ def pult_defense_callback(bot, update):
     pult_status.update({"defense": new_defense})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
+    order_bot.logs += "{} - @{} - Изменил деф на {}" \
+                      "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                                  update.callback_query.from_user.username, defense_to_order[new_defense])
 
 
 def pult_tactics_callback(bot, update):
@@ -210,6 +226,9 @@ def pult_tactics_callback(bot, update):
     pult_status.update({"tactics": new_tactics})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
+    order_bot.logs += "{} - @{} - Изменил тактику на {}" \
+                      "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                                  update.callback_query.from_user.username, tactics_to_order[new_tactics])
 
 
 def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
@@ -221,4 +240,4 @@ def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
         logging.error(traceback.format_exc)
     finally:
         bot.answerCallbackQuery(callback_query_id=callback_query_id)
-
+    print(order_bot.logs)

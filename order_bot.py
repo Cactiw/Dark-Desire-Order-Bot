@@ -13,12 +13,18 @@ from order_files.bin.guild_chats import add_pin, pin_setup, recashe_order_chats,
 
 from order_files.bin.castle_update_monitor import castle_update_monitor
 
-from order_files.work_materials.globals import dispatcher, updater, conn
+from order_files.work_materials.globals import dispatcher, updater, conn, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
 
 import threading
 
 
 # ------------------------------------------------------------------------------------------------------
+logs = ""
+
+
+def send_logs(bot, update):
+    for logs_to_send in [logs[i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(logs), MAX_MESSAGE_LENGTH)]:
+        bot.sync_send_message(chat_id=update.message.chat_id, text=logs_to_send)
 
 
 def inline_callback(bot, update):
@@ -46,6 +52,7 @@ def order_bot_processing():
     dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('order', pult, filters=filter_is_admin))
+    dispatcher.add_handler(CommandHandler('logs', send_logs, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('menu', menu, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=filter_is_admin))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_order & filter_is_admin, remove_order))
@@ -69,5 +76,8 @@ def order_bot_processing():
 
     # Останавливаем бота, если были нажаты Ctrl + C
     updater.idle()
+    if logs != "":
+        for logs_to_send in [logs[i:i+MAX_MESSAGE_LENGTH] for i in range(0, len(logs), MAX_MESSAGE_LENGTH)]:
+            dispatcher.bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
     # Разрываем подключение.
     conn.close()

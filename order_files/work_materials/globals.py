@@ -10,6 +10,9 @@ admin_ids = [231900398, 205356091, 352318827]
 allowed_chats = [231900398, -1001139194354]
 
 CALLBACK_CHAT_ID = 231900398
+LOGS_CHAT_ID = -1001461190292
+
+MAX_MESSAGE_LENGTH = 4096
 
 bot = AsyncBot(token=Production_order_token, workers=16, request_kwargs=request_kwargs)
 """ Понимаю, что 16 - колоссальное число,
