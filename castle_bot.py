@@ -17,6 +17,7 @@ from castle_files.bin.reports import add_report
 from castle_files.bin.common_functions import unknown_input
 
 from castle_files.bin.save_load_user_data import load_data, save_data
+from castle_files.bin.unloading_resources import resources_monitor
 
 import castle_files.work_materials.globals as file_globals
 
@@ -91,6 +92,10 @@ def castle_bot_processing():
     save_user_data = threading.Thread(target=save_data, name="Save User Data", args=())
     save_user_data.start()
     processes.append(save_user_data)
+
+    unloading_resources = threading.Thread(target=resources_monitor, name="Castle Unloading Resources", args=())
+    unloading_resources.start()
+    processes.append(unloading_resources)
 
     updater.start_polling(clean=False)
 

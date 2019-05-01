@@ -7,6 +7,7 @@ from castle_files.work_materials.equipment_constants import get_equipment_by_cod
 from psycopg2 import ProgrammingError
 import logging
 import json
+import time
 
 from multiprocessing import Queue
 
@@ -29,6 +30,7 @@ class Player:
         self.stamina = stamina
         self.pet = pet
         self.equipment = equipment
+        self.last_access_time = time.time()
 
     """
     Метод получения игрока по его id. Сначала проверяется, находится ли игрок в словаре players, то есть был ли
@@ -39,6 +41,7 @@ class Player:
         player = players.get(player_id)
         if player is not None:
             # Игрок уже загружен из базы данных
+            player.last_access_time = time.time()
             return player
         # Загрузка игрока из базы данных
         request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment " \

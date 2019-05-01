@@ -145,6 +145,7 @@ class Guild:
 
         # Сохранение гильдии в словарь для дальнейшего быстрого доступа
         guilds.update({guild.id: guild})
+        guild.last_access_time = time.time()
         return guild
 
     # Метод для обновления информации о гильдии в БД
