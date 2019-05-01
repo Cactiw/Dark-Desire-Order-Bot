@@ -1,6 +1,6 @@
 from order_files.work_materials.pult_constants import castles as castles_const, times as times_const, \
     tactics as tactics_const, defense as defense_const, divisions as divisions_const, pult_status_default
-from order_files.work_materials.globals import deferred_orders
+from order_files.work_materials.globals import deferred_orders, moscow_tz, local_tz
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -33,7 +33,8 @@ class Pult:
     def get_reply_markup(self):
         return rebuild_pult("None", self, None)
 
-    def get_text(self):
+    @staticmethod
+    def get_text():
         response = ""
         for order in deferred_orders:
             div_str = ""
@@ -42,8 +43,9 @@ class Pult:
                     div_str += " {0}".format(divisions_const[i])
             response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
                         "Tactics: {3}\nremove: /remove_order_{4}\n" \
-                        "\n".format(order.time_set.replace(tzinfo=None).strftime("%D %H:%M:%S"), order.target,
-                                    order.defense, order.tactics, order.deferred_id, div_str[1:])
+                        "\n".format(moscow_tz.localize(order.time_set.replace(tzinfo=None)).astimezone(
+                            tz=local_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S"),
+                                    order.target, order.defense, order.tactics, order.deferred_id, div_str[1:])
         return response
 
 

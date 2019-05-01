@@ -16,20 +16,7 @@ import logging
 import re
 
 
-def get_deferred_orders_text():
-    response = ""
-    for order in deferred_orders:
-        div_str = ""
-        for i in range(len(divisions_const)):
-            if order.divisions[i]:
-                div_str += " {0}".format(divisions_const[i])
-        response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
-                   "Tactics: {3}\nremove: /remove_order_{4}\n" \
-                   "\n".format(order.time_set.replace(tzinfo=None).strftime("%D %H:%M:%S"), order.target,
-                               order.defense, order.tactics, order.deferred_id, div_str[1:])
-    return response
-
-
+# Вызов нового пульта
 def pult(bot, update):
     mes = update.message
     pult = Pult.get_pult(0, 0)  # Пульт - болванка
@@ -39,13 +26,14 @@ def pult(bot, update):
     send_time = None
     if 'pult' in mes.text:
         # Обычный пульт
-        response += get_deferred_orders_text()
+        response += Pult.get_text()
 
         message = bot.sync_send_message(
             chat_id=update.message.chat_id, text=response + "\n\n{0}".format(
                 datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S")),
             reply_markup=PultMarkup)
     elif 'order' in mes.text:
+        # Вызывается пульт для установки отложки
         line = re.search("order (\\d+)-?(\\d*)-?(\\d*)", mes.text)
         if line is None:
             bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис")
@@ -61,7 +49,7 @@ def pult(bot, update):
             date_to_send += datetime.timedelta(days=1)
         date_to_send = date_to_send.date()
         send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
-        send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)
+        send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
 
         response = "Отложенный приказ на {}".format(send_time)
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup)
@@ -158,7 +146,7 @@ def pult_send(bot, update):
 
     logging.info("Deffered successful on {0}".format(time_to_send))
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")
-    new_text = get_deferred_orders_text()
+    new_text = Pult.get_text()
     reply_markup = rebuild_pult("None", pult, None)
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text+ "\n\n{0}".format(
                 datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S")),
