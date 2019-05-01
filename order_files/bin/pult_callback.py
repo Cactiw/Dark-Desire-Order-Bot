@@ -60,7 +60,8 @@ def pult(bot, update):
         if time_to_send < time_now:
             date_to_send += datetime.timedelta(days=1)
         date_to_send = date_to_send.date()
-        send_time = datetime.datetime.combine(date_to_send, time_to_send)
+        send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
+        send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)
 
         response = "Отложенный приказ на {}".format(send_time)
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup)
