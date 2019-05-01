@@ -49,10 +49,11 @@ def pult(bot, update):
             date_to_send += datetime.timedelta(days=1)
         date_to_send = date_to_send.date()
         send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
+        response = "Отложенный приказ на {}".format(send_time)
         send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
 
-        response = "Отложенный приказ на {}".format(send_time)
-        message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup)
+        message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup,
+                                        reply_to_message=mes.message_id)
     pult = Pult(message.chat_id, message.message_id, deferred_time=send_time)  # Создаётся новый пульт
 
 

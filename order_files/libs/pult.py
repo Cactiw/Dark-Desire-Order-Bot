@@ -43,8 +43,8 @@ class Pult:
                     div_str += " {0}".format(divisions_const[i])
             response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
                         "Tactics: {3}\nremove: /remove_order_{4}\n" \
-                        "\n".format(moscow_tz.localize(order.time_set.replace(tzinfo=None)).astimezone(
-                            tz=local_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S"),
+                        "\n".format(local_tz.localize(order.time_set.replace(tzinfo=None)).astimezone(
+                            tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S"),
                                     order.target, order.defense, order.tactics, order.deferred_id, div_str[1:])
         return response
 
