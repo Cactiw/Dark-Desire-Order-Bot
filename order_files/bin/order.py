@@ -165,11 +165,6 @@ def remove_order(bot, update):
                         reply_markup=reply_markup, parse_mode='HTML')
 
 
-def deferred_order(bot, update):
-    mes = update.message
-
-
-
 # TODO ну и фигня же тут происходит, список списков. Переделать всё через классы!
 def recashe_order_chats(new_cursor=None):
     if new_cursor is None:

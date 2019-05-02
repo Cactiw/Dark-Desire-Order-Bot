@@ -10,3 +10,11 @@ class FilterIsReport(BaseFilter):
 
 
 filter_is_report = FilterIsReport()
+
+
+class FilterBattleStats(BaseFilter):
+    def filter(self, message):
+        return message.text.startswith("/battle_stats")
+
+
+filter_battle_stats = FilterBattleStats()

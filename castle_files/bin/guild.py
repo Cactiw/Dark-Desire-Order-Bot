@@ -40,13 +40,8 @@ def create_guild(bot, update):
 # ДОРОГАЯ ОПЕРАЦИЯ - получение (и вывод в сообщении) списка ги
 # @run_async
 def list_guilds(bot, update):
-    cursor = conn.cursor()
     response = "Список зарегистрированных в боте гильдий:\n\n"
-    request = "select guild_id from guilds order by guild_id asc"
-    cursor.execute(request)
-    row = cursor.fetchone()
-    while row is not None:
-        guild_id = row[0]
+    for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
             logging.warning("Guild is None for the id {}".format(guild_id))
@@ -60,7 +55,6 @@ def list_guilds(bot, update):
             bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
-        row = cursor.fetchone()
     response += "Добавить гильдию: /create_guild {TAG}"
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 

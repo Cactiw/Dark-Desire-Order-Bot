@@ -19,6 +19,8 @@ cursor = conn.cursor()
 
 # Гильдия, содержит открытые поля - id в базе данных, тэг, список айдишников(!) членов гильдии,
 class Guild:
+    guild_ids = []
+
     def __init__(self, guild_id, tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
                  orders_enabled, pin_enabled, disable_notification):
         self.id = guild_id
@@ -43,6 +45,11 @@ class Guild:
         self.__attack = None
         self.__defense = None
 
+        self.__report_count = 0
+        self.__counted_attack = 0
+        self.__counted_defense = 0
+        self.__counted_gold = 0
+
         # Поле, которое хранит последнее время обращения. Если оно отличается от текущего более, чем на n минут,
         # то гильдия выгружается из памяти
         self.last_access_time = time.time()
@@ -58,6 +65,21 @@ class Guild:
         if self.__defense is None:
             self.calculate_attack_and_defense()
         return self.__defense
+
+    def clear_counted_reports(self):
+        self.__report_count = 0
+        self.__counted_attack = 0
+        self.__counted_defense = 0
+        self.__counted_gold = 0
+
+    def add_count_report(self, attack, defense, gold):
+        self.__report_count += 1
+        self.__counted_attack += attack
+        self.__counted_defense += defense
+        self.__counted_gold += gold
+
+    def get_counted_report_values(self):
+        return [self.__report_count, self.__counted_attack, self.__counted_defense, self.__counted_gold]
 
     # Рассчёт общего количества атаки и дефа гильдии
     def calculate_attack_and_defense(self):
@@ -148,6 +170,16 @@ class Guild:
         guild.last_access_time = time.time()
         return guild
 
+    @staticmethod
+    def fill_guild_ids():
+        Guild.guild_ids.clear()
+        request = "select guild_id from guilds order by guild_id asc"
+        cursor.execute(request)
+        row = cursor.fetchone()
+        while row is not None:
+            Guild.guild_ids.append(row[0])
+            row = cursor.fetchone()
+
     # Метод для обновления информации о гильдии в БД
     def update_to_database(self):
         request = "update guilds set guild_name = %s, members = %s, commander_id = %s, division = %s, chat_id = %s, " \
@@ -168,4 +200,5 @@ class Guild:
         cursor.execute(request, (self.tag,))
         row = cursor.fetchone()
         self.id = row[0]
+        Guild.fill_guild_ids()
         return self

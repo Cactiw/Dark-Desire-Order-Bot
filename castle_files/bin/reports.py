@@ -1,5 +1,6 @@
-from castle_files.work_materials.globals import moscow_tz, local_tz, cursor
+from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 
 import re
 import datetime
@@ -16,6 +17,8 @@ def count_battle_id(message):
             forward_message_date = message.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
         except ValueError:
             forward_message_date = message.forward_date
+    except AttributeError:
+        forward_message_date = local_tz.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     time_from_first_battle = forward_message_date - first_battle
     battle_id = 0
     while time_from_first_battle > interval:
@@ -24,7 +27,15 @@ def count_battle_id(message):
     return battle_id
 
 
-# TODO: защита от повторных репортов
+def count_battle_time(battle_id):
+    first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
+    target_battle = first_battle
+    interval = datetime.timedelta(hours=8)
+    for i in range(battle_id):
+        target_battle += interval
+    return target_battle
+
+
 def add_report(bot, update):
     mes = update.message
     s = mes.text
@@ -76,3 +87,50 @@ def add_report(bot, update):
                                     defense, "({})".format(additional_defense) if additional_defense != 0 else "",
                                     lvl, exp, gold, stock),
                      parse_mode='HTML')
+
+
+# VERY EXPENSIVE OPERATION
+# TODO run_async
+def battle_stats(bot, update):
+    mes = update.message
+    cursor1 = conn.cursor()
+    battle_id = re.search("_(\\d+)", mes.text)
+    battle_id = int(battle_id.group(1)) if battle_id is not None else count_battle_id(mes)
+
+    guilds = []
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild is None:
+            continue
+        guild.clear_counted_reports()
+        guilds.append(guild)
+    guilds.sort(key=lambda x: x.division or "")
+    guilds.append(Guild(-1, "Без гильдии", None, None, None, None, None, None, None, None, None, None, None))
+    request = "select player_id, attack, defense, gold from reports where battle_id = %s"
+    cursor1.execute(request, (battle_id,))
+    row = cursor1.fetchone()
+    response = "Статистика по битве {} - {}:\n".format(battle_id,
+                                                       count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:"))
+    while row is not None:
+        player = Player.get_player(row[0])
+        if player.guild is None:
+            guild = guilds[-1]
+        else:
+            guild = Guild.get_guild(player.guild)
+        guild.add_count_report(row[1], row[2], row[3])
+        row = cursor1.fetchone()
+    total_reports = 0
+    total_attack = 0
+    total_defense = 0
+    total_gold = 0
+    for guild in guilds:
+        values = guild.get_counted_report_values()
+        total_reports += values[0]
+        total_attack += values[1]
+        total_defense += values[2]
+        total_gold += values[3]
+        response += "<b>{}</b> - {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, " \
+                    "💰: <b>{}</b>\n".format(guild.tag, values[0], values[1], values[2], values[3])
+    response += "\nВсего: {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, " \
+                    "💰: <b>{}</b>\n".format(total_reports, total_attack, total_defense, total_gold)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
