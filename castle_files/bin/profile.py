@@ -7,7 +7,9 @@ from castle_files.work_materials.equipment_constants import get_equipment_by_cod
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.bin.buttons import get_general_buttons
+from castle_files.bin.buttons import get_general_buttons, send_general_buttons
+
+from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 import re
 import logging
@@ -110,7 +112,10 @@ def hero(bot, update, user_data):
         player.insert_into_database()
         user_data.update({"status": "default"})
         bot.send_message(chat_id=mes.chat_id, text="Добро пожаловать в 🖤Скалу, <b>{}</b>!".format(player.nickname),
-                         parse_mode='HTML', reply_markup=get_general_buttons(user_data))
+                         parse_mode='HTML')
+        if filter_is_pm(mes):
+            send_general_buttons(mes.from_user.id, user_data)
+
     else:
         # Обновляем существующую информацию
         player.username = mes.from_user.username
@@ -125,3 +130,6 @@ def hero(bot, update, user_data):
         player.update()
         bot.send_message(chat_id=mes.chat_id, text="Профиль успешно обновлён, <b>{}</b>!".format(player.nickname),
                          parse_mode='HTML')
+        if player.guild is not None:
+            guild = Guild.get_guild()
+            guild.calculate_attack_and_defense()

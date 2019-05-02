@@ -110,8 +110,8 @@ def pult_send(bot, update):
     if pult.deferred_time is not None:
         time_to_send = pult.deferred_time
     else:
-        next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 1, minute = 0, second=0,
-                                                                                         microsecond=0)
+        next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None, hour=1, minute=0, second=0,
+                                                                    microsecond=0)
 
         now = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None)
         while next_battle < now:
