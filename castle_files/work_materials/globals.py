@@ -14,13 +14,16 @@ updater = AsyncUpdater(bot=bot)
 dispatcher = updater.dispatcher
 job = updater.job_queue
 
-conn = psycopg2.connect("dbname={0} user={1} password={2}".format(psql_creditals['dbname'], psql_creditals['user'], psql_creditals['pass']))
+conn = psycopg2.connect("dbname={0} user={1} password={2}".format(psql_creditals['dbname'], psql_creditals['user'],
+                                                                  psql_creditals['pass']))
 conn.set_session(autocommit=True)
 cursor = conn.cursor()
 
 CHAT_WARS_ID = 265204902
 SUPER_ADMIN_ID = 231900398
 high_access_list = [231900398, 205356091, 352318827]
+# king_id = SUPER_ADMIN_ID  # TODO сделать механику Короля
+king_id = 205356091
 
 processing = True
 

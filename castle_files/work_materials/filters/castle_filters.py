@@ -42,3 +42,12 @@ class FilterBarracks(BaseFilter):
 filter_barracks = FilterBarracks()
 
 
+class FilterThroneRoom(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm and message.text.startswith("🏛 Тронный зал") and user_data.get("status") == 'central_square'
+
+
+filter_throne_room = FilterThroneRoom()
