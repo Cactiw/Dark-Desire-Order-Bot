@@ -131,5 +131,5 @@ def hero(bot, update, user_data):
         bot.send_message(chat_id=mes.chat_id, text="Профиль успешно обновлён, <b>{}</b>!".format(player.nickname),
                          parse_mode='HTML')
         if player.guild is not None:
-            guild = Guild.get_guild()
+            guild = Guild.get_guild(player.guild)
             guild.calculate_attack_and_defense()
