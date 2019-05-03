@@ -48,6 +48,10 @@ def throne_room(bot, update, user_data):
 
 # Запрос на аудиенцию у Короля (возможно, когда-нибудь уберу прямые запросы в базу данных)
 def request_king_audience(bot, update):
+    if update.message.from_user.id == king_id:
+        bot.send_message(chat_id=update.message.from_user.id, text="Это уже похоже на онанизм. Впрочем, навряд ли Вам "
+                                                                   "нужно разрешение, чтобы говорить с самим собой.")
+        return
     request = "insert into king_audiences(request_player_id, king_player_id, date_created) " \
               "values (%s, %s, %s) returning audience_id"
     cursor.execute(request, (update.message.from_user.id, king_id,
