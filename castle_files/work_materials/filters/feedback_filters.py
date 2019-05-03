@@ -3,7 +3,7 @@
 """
 from telegram.ext import BaseFilter
 from castle_files.work_materials.filters.general_filters import filter_is_pm
-from castle_files.work_materials.globals import dispatcher, king_id
+from castle_files.work_materials.globals import dispatcher, king_id, MID_CHAT_ID, CASTLE_BOT_ID
 
 
 class FilterRequestAudience(BaseFilter):
@@ -32,3 +32,36 @@ class FilterDeclineAudience(BaseFilter):
 
 
 filter_decline_audience = FilterDeclineAudience()
+
+
+class FilterRequestMidFeedback(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm and message.text.startswith("Обратиться к командному составу") and \
+            user_data.get("status") == 'throne_room'
+
+
+filter_request_mid_feedback = FilterRequestMidFeedback()
+
+
+class FilterSendMidFeedback(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm and user_data.get("status") == 'mid_feedback'
+
+
+filter_send_mid_feedback = FilterSendMidFeedback()
+
+
+class FilterReplyToMidFeedback(BaseFilter):
+    def filter(self, message):
+        return message.chat_id == MID_CHAT_ID and message.reply_to_message is not None and \
+               message.reply_to_message.from_user.id == CASTLE_BOT_ID and \
+               message.reply_to_message.forward_from is not None
+
+
+filter_reply_to_mid_feedback = FilterReplyToMidFeedback()
