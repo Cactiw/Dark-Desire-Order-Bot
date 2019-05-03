@@ -2,6 +2,7 @@
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
 from castle_files.bin.buttons import send_general_buttons
+from castle_files.libs.castle.location import Location
 
 
 def back(bot, update, user_data):
@@ -14,7 +15,8 @@ def back(bot, update, user_data):
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
     new_status = statuses_back.get(status)
-    user_data.update({"status": new_status})
+    new_location = Location.get_id_by_status(new_status)
+    user_data.update({"status": new_status, "location_id": new_location})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 

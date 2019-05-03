@@ -29,6 +29,9 @@ class Location:
             return location.enter_text
         return location.enter_text.format(insert_values)
 
+    @staticmethod
+    def get_id_by_status(status):
+        return status_to_location.get(status)
 
 #
 
@@ -47,6 +50,13 @@ barracks = Location(1, "🎪 Казарма", "Вы заходите в каза
 throne_room = Location(2, "🏛 Тронный зал",
                        "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы, "
                        "или даже попросить аудиенции у 👑 @{}", special_info={"enter_text_format_values": "DjedyBreaM"})
+
+status_to_location = {
+    "default": None,
+    "central_square": 0,
+    "barracks": 1,
+    "throne_room": 2
+}
 
 # Словарь с локациями - { id локации : объект класса Location }
 locations = {
