@@ -14,6 +14,7 @@ from castle_files.work_materials.globals import dispatcher, cursor, conn
 from telegram.ext.dispatcher import run_async
 
 import logging
+import re
 
 
 # Создание новой гильдии
@@ -114,13 +115,53 @@ def list_players(bot, update, guild_id=None):
             logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
             continue
         response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
-                       "\n\n".format(player.nickname, player.lvl, player.attack, player.defense)
+                       "\nУдалить из гильдии: /remove_player_{}" \
+                       "\n\n".format(player.nickname, player.lvl, player.attack, player.defense, player.id)
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+# Функция для принудительного удаления игрока из гильдии
+def remove_player(bot, update):
+    mes = update.message
+    player_id = re.search("_(\\d+)", mes.text)
+    if player_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+        return
+    player_id = int(player_id.group(1))
+    if player_id == mes.from_user.id:
+        bot.send_message(chat_id=mes.chat_id, text="Почему бы не выйти как нормальный человек? /leave_guild")
+        return
+    current_player = Player.get_player(mes.from_user.id)
+    if current_player is None:
+        return
+    guild = Guild.get_guild(guild_id=current_player.guild)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
+        return
+    if not guild.check_high_access(current_player.id):
+        bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.")
+        return
+    player_to_remove = Player.get_player(player_id)
+    if player_to_remove is None or player_to_remove.id not in guild.members:
+        bot.send_message(chat_id=mes.chat_id, text="Вы можете удалять игроков только в своей гильдии.")
+        return
+    guild.delete_player(player_to_remove)
+    bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно удалён из гильдии "
+                                                          "<b>{}</b>".format(player_to_remove.nickname, guild.tag),
+                     parse_mode='HTML')
+    bot.send_message(chat_id=player_to_remove.id,
+                     text="Появившийся из-за угла стражник окликнул вас:\n"
+                          "<em>Твой командир просил передать, что ты больше не в гильдии, воин!</em>",
+                     parse_mode='HTML')
+
+
+def view_profile(bot, update):
+    pass
 
 
 def leave_guild(bot, update):

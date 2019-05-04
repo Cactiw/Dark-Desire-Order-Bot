@@ -131,6 +131,10 @@ class Guild:
             self.__attack -= player.attack
             self.__defense -= player.defense
 
+    # Метод для проверки, является ли игрок командиром или замом гильдии
+    def check_high_access(self, player_id):
+        return player_id == self.commander_id or player_id in self.assistants
+
     # Метод получения гильдии из БД
     @staticmethod
     def get_guild(guild_id=None, guild_tag=None):

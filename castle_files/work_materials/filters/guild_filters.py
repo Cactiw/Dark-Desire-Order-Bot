@@ -41,6 +41,14 @@ class FilterViewGuild(BaseFilter):
 filter_view_guild = FilterViewGuild()
 
 
+class FilterRemovePlayer(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.text.startswith("/remove_player_")
+
+
+filter_remove_player = FilterRemovePlayer()
+
+
 class FilterChangeGuildDivision(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
