@@ -135,6 +135,10 @@ def hero(bot, update, user_data):
         eq.defense = eq_defense
         player_equipment.update({eq.place: eq})
     if player is None:
+        if mes.from_user.username is None:
+            bot.send_message(chat_id=mes.chat_id, text="Регистрация без имени пользователя невозможна. Пожалуйста, "
+                                                       "установите его в настройках аккаунта Telegram")
+            return
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
