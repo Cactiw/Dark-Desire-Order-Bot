@@ -9,7 +9,8 @@ def back(bot, update, user_data):
     statuses_back = {
         "barracks": "central_square",
         "central_square": "default",
-        "throne_room": "central_square"
+        "throne_room": "central_square",
+        "mid_feedback": "throne_room"
     }
     status = user_data.get("status")
     if status is None:

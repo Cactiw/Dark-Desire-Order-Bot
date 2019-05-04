@@ -80,6 +80,12 @@ def get_general_buttons(user_data):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+    elif status == 'mid_feedback':
+        buttons = [
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 

@@ -60,6 +60,8 @@ def castle_bot_processing():
                                           pass_user_data=True))
 
     # Хендлеры для виртуального замка
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
+
     dispatcher.add_handler(MessageHandler(Filters.text & filter_central_square, central_square, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_barracks, barracks, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_throne_room, throne_room, pass_user_data=True))
@@ -73,8 +75,6 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.all & filter_send_mid_feedback, send_mid_feedback,
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_reply_to_mid_feedback, send_reply_to_mid_request))
-
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input, pass_user_data=True))
     # Restricted access---------------------------------------------------------------------------------------------

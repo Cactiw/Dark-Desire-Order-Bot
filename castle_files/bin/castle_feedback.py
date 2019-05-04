@@ -2,6 +2,7 @@
 В этом модуле находятся все функции для фидбека в виртуальном замке, например, аудиенция у короля, обращение в мид
 """
 from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID
+from castle_files.bin.buttons import get_general_buttons
 
 from order_files.bin.pult_callback import count_next_battle_time
 
@@ -90,7 +91,8 @@ def request_mid_feedback(bot, update, user_data):
     if not check_mid_feedback_time_access(bot, update):
         return
     user_data.update({"status": "mid_feedback"})
-    bot.send_message(chat_id=update.message.chat_id, text="Следующее сообщение будет отправлено в чат мида.")
+    bot.send_message(chat_id=update.message.chat_id, text="Следующее сообщение будет отправлено в чат мида.",
+                     reply_markup=get_general_buttons(user_data))
 
 
 def send_mid_feedback(bot, update, user_data):
@@ -105,7 +107,7 @@ def send_mid_feedback(bot, update, user_data):
 
 def forward_then_reply_to_mid(bot, message):
     mes = bot.forwardMessage(chat_id=MID_CHAT_ID, from_chat_id=message.chat_id, message_id=message.message_id)
-    bot.send_message(chat_id=MID_CHAT_ID, text="Запрос к МИДу от @{} #{}".format(message.from_user.username,
+    bot.send_message(chat_id=MID_CHAT_ID, text="Запрос к МИДу от @{} #r{}".format(message.from_user.username,
                                                                                  message.from_user.id),
                      reply_to_message_id=mes.message_id)
 
