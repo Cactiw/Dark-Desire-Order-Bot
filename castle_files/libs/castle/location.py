@@ -1,6 +1,11 @@
 """
 В этом файле находятся классы для работы с локациями в виртуальном замке, такие как Казарма, Центральная площадь и тд...
 """
+from castle_files.work_materials.globals import conn
+
+import json
+
+cursor = conn.cursor()
 
 
 # Базовый класс - Локация
@@ -12,6 +17,7 @@ class Location:
         self.state = state  # True - построено, False - не построено
         self.building_process = building_process  # -1 - стройка не начиналась / завершилась, >=0 - идёт стройка
         self.special_info = special_info
+        self.load_location()
 
     @staticmethod
     def get_location(location_id):
@@ -33,6 +39,32 @@ class Location:
     def get_id_by_status(status):
         return status_to_location.get(status)
 
+    def load_location(self):
+        request = "select state, building_process, special_info from locations where location_id = %s"
+        cursor.execute(request, (self.id,))
+        row = cursor.fetchone()
+        if row is None:
+            return -1
+        self.state = row[0]
+        self.building_process = row[1]
+        self.special_info = json.loads(row[2]) if row[2] is not None else None
+
+    def update_location_to_database(self):
+        request = "update locations set state = %s, building_process = %s, special_info = %s where location_id = %s"
+        cursor.execute(request, (self.state, self.building_process,
+                                 json.dumps(self.special_info) if self.special_info is not None else None, self.id))
+
+    def create_location_in_database(self):
+        request = "select location_id from locations where location_id = %s"
+        cursor.execute(request, (self.id,))
+        row = cursor.fetchone()
+        if row is not None:
+            return -1
+        request = "insert into locations(location_id, state, building_process, special_info) values (%s, %s, %s, %s)"
+        cursor.execute(request, (self.id, self.state, self.building_process,
+                                 json.dumps(self.special_info) if self.special_info is not None else None))
+
+
 #
 
 """
@@ -46,10 +78,13 @@ central_square = Location(0, "⛲️ Центральная площадь",
                           "На лобном месте, левее фонтана, прибит пергамент с важным объявлением:\n📜\n<em>{}</em>\n📜\n"
                           "Заверено печатью и подписью Короля.",
                           special_info={"enter_text_format_values": "Добро пожаловать в Скалу.\nСнова."})
+central_square.create_location_in_database()
 barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
+barracks.create_location_in_database()
 throne_room = Location(2, "🏛 Тронный зал",
                        "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы, "
                        "или даже попросить аудиенции у 👑 @{}", special_info={"enter_text_format_values": "DjedyBreaM"})
+throne_room.create_location_in_database()
 
 status_to_location = {
     "default": None,
