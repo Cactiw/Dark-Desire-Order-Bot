@@ -3,6 +3,9 @@
 """
 from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
+from castle_files.libs.castle.location import Location
+from castle_files.work_materials.globals import dispatcher
+
 
 def get_edit_guild_buttons(guild):
     buttons = [
@@ -39,11 +42,58 @@ def get_view_guild_buttons(guild):
 # далее генерирует и возвращает кнопки
 def get_general_buttons(user_data):
     status = user_data.get("status")
+    buttons = None
     if status is None or status == "default":
+        buttons = [
+            [
+                KeyboardButton("⛲️ Центральная площадь"),
+                KeyboardButton("⛩ Врата замка"),
+            ]
+        ]
+    elif status == "central_square":
+        buttons = [
+            [
+                KeyboardButton(Location.get_location(1).name),
+                KeyboardButton(Location.get_location(2).name),
+                KeyboardButton("🏚 Не построено"),
+                ],
+            [
+                KeyboardButton("↔️ Подойти к указателям"),
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'barracks':
         buttons = [
             [
                 KeyboardButton("Профиль"),
                 KeyboardButton("Гильдия"),
+                KeyboardButton("↩️ Назад"),
             ]
         ]
-        return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
+    elif status == 'throne_room':
+        buttons = [
+            [
+                KeyboardButton("Обратиться к командному составу"),
+                KeyboardButton("Попросить аудиенции у Короля"),
+                ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
+
+
+def get_text_to_general_buttons(user_data):
+    status = user_data.get("status")
+    location_id = user_data.get("location_id")
+    if status is None or status == "default":
+        return "Вы входите в замок Скалы. Выберите, куда направиться!"
+    if location_id is not None:
+        return Location.get_location_enter_text_by_id(location_id)
+
+
+def send_general_buttons(user_id, user_data, bot=None):
+    if bot is None:
+        bot = dispatcher.bot
+    bot.send_message(chat_id=user_id, text=get_text_to_general_buttons(user_data),
+                     reply_markup=get_general_buttons(user_data), parse_mode='HTML')

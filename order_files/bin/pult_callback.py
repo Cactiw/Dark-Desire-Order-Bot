@@ -110,12 +110,7 @@ def pult_send(bot, update):
     if pult.deferred_time is not None:
         time_to_send = pult.deferred_time
     else:
-        next_battle = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None).replace(hour = 1, minute = 0, second=0,
-                                                                                         microsecond=0)
-
-        now = datetime.datetime.now(tz = moscow_tz).replace(tzinfo=None)
-        while next_battle < now:
-            next_battle += datetime.timedelta(hours=8)
+        next_battle = count_next_battle_time()
         logging.info("Next battle : {0}".format(next_battle))
         next_battle_time = next_battle.time()
         if time_to_send == 0:   # Мгновенная отправка, но с подстановкой времени в пин
@@ -241,3 +236,13 @@ def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
         logging.error(traceback.format_exc)
     finally:
         bot.answerCallbackQuery(callback_query_id=callback_query_id)
+
+
+def count_next_battle_time():
+    next_battle = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None, hour=1, minute=0, second=0,
+                                                              microsecond=0)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    while next_battle < now:
+        next_battle += datetime.timedelta(hours=8)
+    return next_battle
