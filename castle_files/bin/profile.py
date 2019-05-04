@@ -7,7 +7,8 @@ from castle_files.work_materials.equipment_constants import get_equipment_by_cod
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.bin.buttons import get_general_buttons, send_general_buttons
+from castle_files.bin.buttons import send_general_buttons
+from castle_files.bin.service_functions import check_access
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -15,18 +16,15 @@ import re
 import logging
 
 
-# Функция вывода профиля
-def profile(bot, update):
-    mes = update.message
-    player = Player.get_player(mes.from_user.id)
+def get_profile_text(player, self_request=True):
     response = "<b>{}</b> - Воин 🖤Скалы\n".format(player.nickname)
     response += "{}id: <code>{}</code>\n".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
     response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
-                                                                                      player.defense)
+                                                                                        player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
-    if guild is not None:
+    if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
     response += "\nЭкипировка:\n"
     eq_list = list(player.equipment.values())
@@ -36,7 +34,38 @@ def profile(bot, update):
         response += "<b>{}</b><code>{}</code><code>{}</code>" \
                     "\n".format(equipment.name, "+{}⚔ ".format(equipment.attack) if equipment.attack != 0 else "",
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
+    return response
+
+
+# Функция вывода профиля
+def profile(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    response = get_profile_text(player)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def view_profile(bot, update):
+    mes = update.message
+    requested_player_id = mes.from_user.id
+    requested_player = Player.get_player(requested_player_id)
+    guild = Guild.get_guild(guild_id=requested_player.guild)
+    if not check_access(requested_player_id):
+        if guild is None or not guild.check_high_access(requested_player_id):
+            bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.")
+            return
+    # Доступ к хуизу есть
+    player_id = re.search("_(\\d+)", mes.text)
+    if player_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+        return
+    player_id = int(player_id.group(1))
+    player = Player.get_player(player_id)
+    if player is None or player.guild != guild.id:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+        return
+    response = get_profile_text(player, self_request=False)
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
 
 
 # Функция для добавления или обновления профиля в базе данных, вызывается, когда бот получает хиро в лс
@@ -133,3 +162,4 @@ def hero(bot, update, user_data):
         if player.guild is not None:
             guild = Guild.get_guild(player.guild)
             guild.calculate_attack_and_defense()
+            guild.sort_players_by_exp()

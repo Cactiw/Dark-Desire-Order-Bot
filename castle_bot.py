@@ -2,7 +2,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
-from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero
+from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player
@@ -13,7 +13,7 @@ from castle_files.work_materials.filters.feedback_filters import filter_request_
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access
 
 from castle_files.bin.service_functions import cancel
-from castle_files.bin.profile import hero, profile
+from castle_files.bin.profile import hero, profile, view_profile
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player
@@ -52,6 +52,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
 
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_view_profile, view_profile))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_player, remove_player))
 
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))

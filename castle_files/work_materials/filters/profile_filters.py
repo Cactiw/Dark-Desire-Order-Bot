@@ -20,3 +20,11 @@ class FilterViewHero(BaseFilter):
 
 
 filter_view_hero = FilterViewHero()
+
+
+class FilterViewProfile(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.text.startswith("/view_profile_")
+
+
+filter_view_profile = FilterViewProfile()

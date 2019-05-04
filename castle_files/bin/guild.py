@@ -115,8 +115,9 @@ def list_players(bot, update, guild_id=None):
             logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
             continue
         response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
+                       "\nПоказать профиль: /view_profile_{}" \
                        "\nУдалить из гильдии: /remove_player_{}" \
-                       "\n\n".format(player.nickname, player.lvl, player.attack, player.defense, player.id)
+                       "\n\n".format(player.nickname, player.lvl, player.attack, player.defense, player.id, player.id)
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
@@ -159,9 +160,6 @@ def remove_player(bot, update):
                           "<em>Твой командир просил передать, что ты больше не в гильдии, воин!</em>",
                      parse_mode='HTML')
 
-
-def view_profile(bot, update):
-    pass
 
 
 def leave_guild(bot, update):
@@ -254,6 +252,9 @@ def get_edit_guild_text(guild):
 # Команда /edit_guild
 def edit_guild(bot, update):
     mes = update.message
+    if mes.chat_id != mes.from_user.id:
+        bot.send_message(chat_id=mes.chat_id, text="Команда разрешена только в лс.")
+        return
     try:
         guild_id = int(mes.text.partition("@")[0].split("_")[2])
     except ValueError:

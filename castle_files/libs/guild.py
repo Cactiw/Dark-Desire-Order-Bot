@@ -96,7 +96,7 @@ class Guild:
 
     def sort_players_by_exp(self):
         try:
-            self.members.sort(key=lambda player_id: Player.get_player(player_id).lvl)
+            self.members.sort(key=lambda player_id: Player.get_player(player_id).lvl, reverse=True)
             self.update_to_database()
         except (TypeError, AttributeError, ValueError):
             logging.error(traceback.format_exc())
@@ -113,6 +113,7 @@ class Guild:
         player_to_add.guild_tag = self.tag
 
         player_to_add.update()
+        self.sort_players_by_exp()
         self.update_to_database()
 
         if self.__attack is not None and self.__defense is not None:
