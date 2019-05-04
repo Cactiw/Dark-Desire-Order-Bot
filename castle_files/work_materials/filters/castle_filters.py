@@ -31,6 +31,18 @@ class FilterCastleGates(BaseFilter):
 filter_castle_gates = FilterCastleGates()
 
 
+class FilterGuideSigns(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("↔️ Подойти к указателям") and \
+            user_data.get("status") == 'central_square'
+
+
+filter_guide_signs = FilterGuideSigns()
+
+
 class FilterBarracks(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)

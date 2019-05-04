@@ -8,7 +8,7 @@ from castle_files.work_materials.filters.report_filters import filter_is_report,
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player
 from castle_files.work_materials.filters.castle_filters import filter_central_square, filter_barracks, filter_back, \
-    filter_throne_room, filter_castle_gates
+    filter_throne_room, filter_castle_gates, filter_guide_signs
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
@@ -20,7 +20,7 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player
-from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates
+from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -67,6 +67,7 @@ def castle_bot_processing():
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
 
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_guide_signs, guide_signs))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_barracks, barracks, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_throne_room, throne_room, pass_user_data=True))
 
