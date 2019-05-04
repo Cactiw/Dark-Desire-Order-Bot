@@ -19,12 +19,15 @@ conn = psycopg2.connect("dbname={0} user={1} password={2}".format(psql_creditals
 conn.set_session(autocommit=True)
 cursor = conn.cursor()
 
+DEFAULT_CASTLE_STATUS = 'central_square'
+
 CHAT_WARS_ID = 265204902
 SUPER_ADMIN_ID = 231900398
 high_access_list = [231900398, 205356091, 352318827]
 # king_id = SUPER_ADMIN_ID  # TODO сделать механику Короля
 king_id = 205356091
 MID_CHAT_ID = -1001351185651
+SENTINELS_DUTY_CHAT_ID = -1001417510202
 CASTLE_BOT_ID = 756892778
 
 processing = True

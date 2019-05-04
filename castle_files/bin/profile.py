@@ -3,6 +3,7 @@
 (например, приём и обновление /hero)
 """
 
+from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -14,6 +15,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 import re
 import logging
+import datetime
 
 
 def get_profile_text(player, self_request=True):
@@ -81,6 +83,9 @@ def hero(bot, update, user_data):
     if player is None and mes.chat_id != mes.from_user.id:
         # Добавление новых пользователей только в личке у бота
         return
+    if datetime.datetime.now() - mes.forward_date > datetime.timedelta(seconds=30):
+        bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
+        return
     # Парсинг хиро
     guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
     if guild_tag:
@@ -105,14 +110,14 @@ def hero(bot, update, user_data):
     }
     equip_strings = text.partition("🎽Экипировка")[2].splitlines()[1:]
     for string in equip_strings:
-        print(string)
         # clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
         clear_name = re.search("(⚡?\\+?\\d*\\s?(.+?))\\s\\+(\\d*)⚔?\\s*\\+?(\\d*)🛡?", string)
         if clear_name is None:
-            logging.warning("Error while parsing item_string\n{}".format(string))
+            # logging.warning("Error while parsing item_string\n{}".format(string))
             continue
         else:
-            logging.info("successful parsed {},, Got: {}".format(string, clear_name.group(1)))
+            pass
+            # logging.info("successful parsed {},, Got: {}".format(string, clear_name.group(1)))
         full_name = clear_name.group(1)
         eq_attack = int(clear_name.group(3)) if clear_name.group(3) != "" else 0
         eq_defense = int(clear_name.group(4)) if clear_name.group(4) != "" else 0
@@ -124,7 +129,7 @@ def hero(bot, update, user_data):
                 code = item_code
                 break
         if code is None:
-            logging.warning("Item code is None for item {}".format(clear_name))
+            # logging.warning("Item code is None for item {}".format(clear_name))
             continue
         eq = get_equipment_by_code(code)
         if eq is None:
@@ -143,8 +148,10 @@ def hero(bot, update, user_data):
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
         player.insert_into_database()
-        user_data.update({"status": "default"})
-        bot.send_message(chat_id=mes.chat_id, text="Добро пожаловать в 🖤Скалу, <b>{}</b>!".format(player.nickname),
+        user_data.update({"status": DEFAULT_CASTLE_STATUS})
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Добро пожаловать в 🖤Скалу, <b>{}</b>!\nДля добавления информации о классе "
+                              "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\"".format(player.nickname),
                          parse_mode='HTML')
         if filter_is_pm(mes):
             send_general_buttons(mes.from_user.id, user_data)
@@ -167,3 +174,25 @@ def hero(bot, update, user_data):
             guild = Guild.get_guild(player.guild)
             guild.calculate_attack_and_defense()
             guild.sort_players_by_exp()
+
+
+def add_class_from_player(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=mes.from_user.id, text="Сначала необходимо зарегистрироваться. Для этого необходимо "
+                                                        "прислать ответ @ChatWarsBot на команду /hero")
+        return
+    if datetime.datetime.now() - mes.forward_date > datetime.timedelta(seconds=30):
+        bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
+        return
+    game_class = re.search("🖤{} (\\w+) Скалы".format(re.escape(player.nickname)), mes.text)
+    if game_class is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка.", reply_to_message_id=mes.message_id)
+        return
+    game_class = game_class.group(1)
+    player.game_class = game_class
+    player.update_to_database()
+    bot.send_message(chat_id=mes.from_user.id, text="Информация о классе обновлена, <b>{}</b>! Теперь ты "
+                                                    "<b>{}</b>!".format(player.nickname, player.game_class),
+                     parse_mode='HTML')

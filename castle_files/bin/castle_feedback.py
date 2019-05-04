@@ -99,10 +99,11 @@ def send_mid_feedback(bot, update, user_data):
     if not check_mid_feedback_time_access(bot, update):
         return
     threading.Thread(target=forward_then_reply_to_mid, args=(bot, update.message)).start()
+    user_data.update({"status": "throne_room"})
+    reply_markup = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Ваше обращение к Совету было озвучено. Если оно было по делу, то ожидайте ответа, "
-                          "но бойтесь его кары, если это не так!")
-    user_data.update({"status": "throne_room"})
+                          "но бойтесь его кары, если это не так!", reply_markup=reply_markup)
 
 
 def forward_then_reply_to_mid(bot, message):

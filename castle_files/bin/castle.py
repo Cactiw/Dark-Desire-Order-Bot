@@ -1,16 +1,22 @@
 """
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
-from castle_files.bin.buttons import send_general_buttons
+from castle_files.bin.buttons import send_general_buttons, get_general_buttons
 from castle_files.libs.castle.location import Location
+from castle_files.libs.player import Player
+
+from telegram import ReplyKeyboardMarkup
 
 
 def back(bot, update, user_data):
     statuses_back = {
         "barracks": "central_square",
-        "central_square": "default",
+        "central_square": "central_square",
+        "castle_gates": "central_square",
         "throne_room": "central_square",
-        "mid_feedback": "throne_room"
+        "mid_feedback": "throne_room",
+        "duty_feedback": "castle_gates",
+
     }
     status = user_data.get("status")
     if status is None:
@@ -44,3 +50,14 @@ def throne_room(bot, update, user_data):
     user_data.update({"status": "throne_room", "location_id": 2})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
+
+def castle_gates(bot, update, user_data):
+    location_id = 3
+    user_data.update({"status": "castle_gates", "location_id": 3})
+    response = Location.get_location_enter_text_by_id(location_id)
+    player = Player.get_player(update.message.from_user.id)
+    buttons = get_general_buttons(user_data, only_buttons=True, player=player)
+    if player.game_class == "Sentinel":  # Только для стражей, захардкожено
+        response += "\nКак страж, ты имеешь возможность заступить на вахту\n"
+    reply_markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=reply_markup)

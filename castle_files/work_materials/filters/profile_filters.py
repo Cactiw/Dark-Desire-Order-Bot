@@ -14,6 +14,16 @@ class FilterIsHero(BaseFilter):
 filter_is_hero = FilterIsHero()
 
 
+class FilterIsProfile(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and filter_is_chat_wars_forward(message) \
+               and "Битва семи замков через" in message.text and \
+               "Состояние:" in message.text and "Подробнее: /hero" in message.text
+
+
+filter_is_profile = FilterIsProfile()
+
+
 class FilterViewHero(BaseFilter):
     def filter(self, message):
         return filter_is_pm(message) and message.text.startswith("Профиль")

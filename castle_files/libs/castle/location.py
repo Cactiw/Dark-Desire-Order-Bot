@@ -47,7 +47,7 @@ class Location:
             return -1
         self.state = row[0]
         self.building_process = row[1]
-        self.special_info = json.loads(row[2]) if row[2] is not None else None
+        self.special_info = row[2]
 
     def update_location_to_database(self):
         request = "update locations set state = %s, building_process = %s, special_info = %s where location_id = %s"
@@ -85,18 +85,22 @@ throne_room = Location(2, "🏛 Тронный зал",
                        "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы, "
                        "или даже попросить аудиенции у 👑 @{}", special_info={"enter_text_format_values": "DjedyBreaM"})
 throne_room.create_location_in_database()
+castle_gates = Location(3, "⛩ Врата замка", "Вы подошли к вратам замка. Тут стражники ебать. "
+                                            "И они сами кого хочешь выебут", special_info={"players_on_duty": []})
+castle_gates.create_location_in_database()
 
 status_to_location = {
     "default": None,
     "central_square": 0,
     "barracks": 1,
-    "throne_room": 2
+    "throne_room": 2,
+    "castle_gates": 3
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
 locations = {
     0: central_square,
     1: barracks,
-    2: throne_room
-
+    2: throne_room,
+    3: castle_gates
 }

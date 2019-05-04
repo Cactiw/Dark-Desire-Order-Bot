@@ -15,10 +15,12 @@ players = {}
 players_need_update = Queue()
 
 cursor = conn.cursor()
+classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel']
 
 
 class Player:
-    def __init__(self, player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment):
+    def __init__(self, player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment,
+                 game_class=None):
         self.id = player_id
         self.username = username
         self.nickname = nickname
@@ -30,6 +32,7 @@ class Player:
         self.stamina = stamina
         self.pet = pet
         self.equipment = equipment
+        self.game_class = game_class
         self.last_access_time = time.time()
 
     """
@@ -44,8 +47,8 @@ class Player:
             player.last_access_time = time.time()
             return player
         # Загрузка игрока из базы данных
-        request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment " \
-                  "from players where id = %s"
+        request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, " \
+                  "game_class from players where id = %s"
         cursor.execute(request, (player_id,))
         try:
             row = cursor.fetchone()
@@ -53,7 +56,7 @@ class Player:
             return None
         if row is None:
             return None
-        username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment = row
+        username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class = row
         eq = {}
         for place, eq_json in list(equipment.items()):
             equipment_list = json.loads(eq_json)
@@ -65,7 +68,8 @@ class Player:
             current.attack = equipment_list.get("attack")
             current.defense = equipment_list.get("defense")
             eq.update({place: current})
-        player = Player(player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, eq)
+        player = Player(player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, eq,
+                        game_class)
         players.update({player_id: player})  # Кладу игрока в память для дальнейшего ускоренного использования
         return player
 
@@ -97,14 +101,14 @@ class Player:
     # Метод для обновления уже существующей информации о игроке в БД
     def update_to_database(self):
         request = "update players set username = %s, nickname = %s, guild_tag = %s, guild = %s, lvl= %s, " \
-                  "attack = %s, defense = %s, stamina = %s, pet = %s, equipment = %s where id = %s"
+                  "attack = %s, defense = %s, stamina = %s, pet = %s, equipment = %s, game_class = %s where id = %s"
         eq_to_db = self.equipment_to_json()
 
         print(self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
-              self.attack, self.defense, self.stamina, self.pet, eq_to_db)
+              self.attack, self.defense, self.stamina, self.pet, eq_to_db, self.game_class)
 
         cursor.execute(request, (self.username, self.nickname, self.guild_tag, self.guild, self.lvl, self.attack,
-                                 self.defense, self.stamina, self.pet, eq_to_db, self.id))
+                                 self.defense, self.stamina, self.pet, eq_to_db, self.game_class, self.id))
         return 0
 
     def update(self):

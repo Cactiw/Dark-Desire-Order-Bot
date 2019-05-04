@@ -8,7 +8,7 @@ from castle_files.work_materials.globals import dispatcher
 
 class FilterBack(BaseFilter):
     def filter(self, message):
-        return filter_is_pm and message.text.startswith("↩️ Назад")
+        return filter_is_pm(message) and message.text.startswith("↩️ Назад")
 
 
 filter_back = FilterBack()
@@ -17,7 +17,7 @@ filter_back = FilterBack()
 # Далее идут фильтры для локаций замка
 class FilterCentralSquare(BaseFilter):
     def filter(self, message):
-        return filter_is_pm and message.text.startswith("⛲️ Центральная площадь")
+        return filter_is_pm(message) and message.text.startswith("⛲️ Центральная площадь")
 
 
 filter_central_square = FilterCentralSquare()
@@ -25,7 +25,7 @@ filter_central_square = FilterCentralSquare()
 
 class FilterCastleGates(BaseFilter):
     def filter(self, message):
-        return filter_is_pm and message.text.startswith("⛩ Врата замка")
+        return filter_is_pm(message) and message.text.startswith("⛩ Врата замка")
 
 
 filter_castle_gates = FilterCastleGates()
@@ -36,7 +36,7 @@ class FilterBarracks(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm and message.text.startswith("🎪 Казарма") and user_data.get("status") == 'central_square'
+        return filter_is_pm(message) and message.text.startswith("🎪 Казарма") and user_data.get("status") == 'central_square'
 
 
 filter_barracks = FilterBarracks()
@@ -47,7 +47,7 @@ class FilterThroneRoom(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm and message.text.startswith("🏛 Тронный зал") and user_data.get("status") == 'central_square'
+        return filter_is_pm(message) and message.text.startswith("🏛 Тронный зал") and user_data.get("status") == 'central_square'
 
 
 filter_throne_room = FilterThroneRoom()

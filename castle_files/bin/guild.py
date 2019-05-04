@@ -161,7 +161,6 @@ def remove_player(bot, update):
                      parse_mode='HTML')
 
 
-
 def leave_guild(bot, update):
     if update.message is not None:
         mes = update.message

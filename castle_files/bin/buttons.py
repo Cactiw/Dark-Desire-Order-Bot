@@ -4,6 +4,7 @@
 from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from castle_files.libs.castle.location import Location
+from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher
 
 
@@ -40,23 +41,22 @@ def get_view_guild_buttons(guild):
 
 # Функция, которая возвращает кнопки для любого статуса. Принимает на вход user_data, в котором читает поле "status",
 # далее генерирует и возвращает кнопки
-def get_general_buttons(user_data):
+def get_general_buttons(user_data, player=None, only_buttons=False):
     status = user_data.get("status")
     buttons = None
     if status is None or status == "default":
-        buttons = [
-            [
-                KeyboardButton("⛲️ Центральная площадь"),
-                KeyboardButton("⛩ Врата замка"),
-            ]
-        ]
-    elif status == "central_square":
+        status = "central_square"
+        user_data.update({"status": status})
+    if status == "central_square":
         buttons = [
             [
                 KeyboardButton(Location.get_location(1).name),
                 KeyboardButton(Location.get_location(2).name),
-                KeyboardButton("🏚 Не построено"),
+                KeyboardButton("⛩ Врата замка"),
                 ],
+            [
+                KeyboardButton("🏚 Не построено"),
+            ],
             [
                 KeyboardButton("↔️ Подойти к указателям"),
                 KeyboardButton("↩️ Назад"),
@@ -80,12 +80,35 @@ def get_general_buttons(user_data):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
-    elif status == 'mid_feedback':
+    elif status == 'mid_feedback' or status == 'duty_feedback':
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+    elif status == 'castle_gates':
+        on_duty = user_data.get("on_duty")
+        print(on_duty, user_data)
+        if on_duty:
+            buttons = [
+                [
+                    KeyboardButton("Покинуть вахту"),
+                ],
+            ]
+        else:
+            buttons = [
+                [
+                    KeyboardButton("Обратиться к стражникам"),
+                ],
+                [
+                    KeyboardButton("↩️ Назад"),
+                ]
+            ]
+            print(player, player.game_class if player is not None else "")
+            if player is not None and player.game_class == "Sentinel":  # Только для стражей, захардкожено
+                buttons[0].append(KeyboardButton("Заступить на вахту"))
+    if only_buttons:
+        return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 
@@ -101,5 +124,6 @@ def get_text_to_general_buttons(user_data):
 def send_general_buttons(user_id, user_data, bot=None):
     if bot is None:
         bot = dispatcher.bot
+    player = Player.get_player(user_id)
     bot.send_message(chat_id=user_id, text=get_text_to_general_buttons(user_data),
-                     reply_markup=get_general_buttons(user_data), parse_mode='HTML')
+                     reply_markup=get_general_buttons(user_data, player=player), parse_mode='HTML')
