@@ -89,6 +89,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("Попросить аудиенции у 👑Короля"),
                 ],
             [
+                KeyboardButton("Смотреть на портреты"),
+            ],
+            [
                 KeyboardButton("↩️ Назад"),
             ]
         ]

@@ -2,7 +2,7 @@
 В этом модуле находятся функции, относящиеся к вахте стражников
 """
 from telegram.error import TelegramError
-from castle_files.work_materials.globals import SENTINELS_DUTY_CHAT_ID, CASTLE_BOT_ID
+from castle_files.work_materials.globals import SENTINELS_DUTY_CHAT_ID, CASTLE_BOT_ID, dispatcher, SUPER_ADMIN_ID
 
 from castle_files.bin.service_functions import check_access
 from castle_files.bin.buttons import get_general_buttons
@@ -12,6 +12,29 @@ from castle_files.libs.player import Player
 import logging
 import traceback
 import threading
+
+
+def revoke_duty_link(bot, update):
+    gates = Location.get_location(3)
+    try:
+        invite_link = bot.exportChatInviteLink(SENTINELS_DUTY_CHAT_ID)
+        if invite_link is not None:
+            invite_link = invite_link[22:]  # Обрезаю https://t.me/joinchat/
+            gates.special_info.update({"invite_link": invite_link})
+            gates.update_location_to_database()
+            bot.send_message(chat_id=update.message.chat_id, text="Ссылка на чат вахты сброшена")
+    except TelegramError:
+        logging.error(traceback.format_exc())
+        bot.send_message(chat_id=update.message.chat_id, text="Произошла ошибка.")
+
+
+def ask_to_revoke_duty_link():
+    gates = Location.get_location(3)
+    invite_link = gates.special_info.get("invite_link")
+
+    dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID,
+                                text="<a href=\"{}\">Проверить ссылку</a>\n Сбросить ссылку: "
+                                     "/revoke_duty_link".format("https://t.me/joinchat/" + invite_link))
 
 
 def begin_duty(bot, update, user_data):

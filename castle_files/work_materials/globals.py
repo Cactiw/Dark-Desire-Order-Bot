@@ -23,7 +23,7 @@ DEFAULT_CASTLE_STATUS = 'central_square'
 
 CHAT_WARS_ID = 265204902
 SUPER_ADMIN_ID = 231900398
-high_access_list = [231900398, 205356091, 352318827]
+high_access_list = [231900398, 205356091]  # Рей, 352318827]
 # king_id = SUPER_ADMIN_ID  # TODO сделать механику Короля
 king_id = 205356091
 MID_CHAT_ID = -1001351185651

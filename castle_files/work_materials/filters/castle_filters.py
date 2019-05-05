@@ -71,3 +71,14 @@ class FilterThroneRoom(BaseFilter):
 
 
 filter_throne_room = FilterThroneRoom()
+
+
+class FilterWatchPortraits(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("Смотреть на портреты") and user_data.get("status") == 'throne_room'
+
+
+filter_watch_portraits = FilterWatchPortraits()

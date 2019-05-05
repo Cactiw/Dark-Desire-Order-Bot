@@ -28,7 +28,7 @@ def request_king_audience(bot, update):
     bot.send_message(chat_id=king_id,
                      text="@{} просит аудиенции! \nПринять: /accept_king_audience_{}\nОтказать: "
                           "/decline_king_audience_{}".format(update.message.from_user.username, row[0], row[0]))
-    bot.send_message(chat_id=update.message.from_user.id, text="Запрос о аудиенции отправлен. Ожидайте ответа")
+    bot.send_message(chat_id=update.message.from_user.id, text="Запрос об аудиенции отправлен. Ожидайте ответа")
 
 
 # Функция, которая возвращает [ id запросившего аудиенцию : id аудиенции ], или [-1], если произошла ошибка

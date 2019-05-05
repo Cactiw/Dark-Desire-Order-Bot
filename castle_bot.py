@@ -8,7 +8,7 @@ from castle_files.work_materials.filters.report_filters import filter_is_report,
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.castle_filters import filter_central_square, filter_barracks, filter_back, \
-    filter_throne_room, filter_castle_gates, filter_guide_signs, filter_not_constructed
+    filter_throne_room, filter_castle_gates, filter_guide_signs, filter_not_constructed, filter_watch_portraits
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
@@ -22,11 +22,11 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
-    not_constructed
+    not_constructed, watch_portraits, fill_mid_players
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
-    send_reply_to_duty_request, check_ban_in_duty_chat
+    send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.reports import add_report, battle_stats
 from castle_files.bin.common_functions import unknown_input
 
@@ -66,6 +66,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
+    dispatcher.add_handler(CommandHandler('add', add))
+
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
 
@@ -74,6 +76,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guide_signs, guide_signs))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_barracks, barracks, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_throne_room, throne_room, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_watch_portraits, watch_portraits))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_begin_duty, begin_duty, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_end_duty, end_duty, pass_user_data=True))
@@ -118,9 +122,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
 
     dispatcher.add_handler(CommandHandler('chat_info', chat_info))
+    dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
     # End of the restrictions---------------------------------------------------------------------------------------
-
-    dispatcher.add_handler(CommandHandler('add', add))
 
     # Хендлеры для инлайн кнопок гильдий
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
@@ -138,6 +141,7 @@ def castle_bot_processing():
     # Загрузка user_data с диска
     load_data()
     Guild.fill_guild_ids()
+    fill_mid_players()
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True
@@ -152,6 +156,7 @@ def castle_bot_processing():
     processes.append(unloading_resources)
 
     updater.start_polling(clean=False)
+    ask_to_revoke_duty_link()
 
     updater.idle()
     file_globals.processing = False

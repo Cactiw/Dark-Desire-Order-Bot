@@ -5,6 +5,8 @@ from castle_files.bin.buttons import send_general_buttons, get_general_buttons
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 
+from castle_files.work_materials.globals import high_access_list
+
 from telegram import ReplyKeyboardMarkup
 
 
@@ -77,3 +79,23 @@ def castle_gates(bot, update, user_data):
         response += "\nКак страж, ты имеешь возможность заступить на вахту\n"
     reply_markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=reply_markup)
+
+
+# Заполнение списка мида, запускать при старте бота и при обновлении состава
+def fill_mid_players():
+    high_access_list.clear()
+    throne = Location.get_location(2)
+    mid_players = throne.special_info.get("mid_players")
+    for player_id in mid_players:
+        high_access_list.append(player_id)
+
+
+# Посмотреть состав мида
+def watch_portraits(bot, update):
+    response = "Стены замка увешаны портретами текущих генералов Скалы:\n"
+    for user_id in high_access_list:
+        player = Player.get_player(user_id, notify_on_error=False)
+        if player is None:
+            continue
+        response += "@{} - {}\n".format(player.username, player.nickname)
+    bot.send_message(chat_id=update.message.from_user.id, text=response, parse_mode='HTML')
