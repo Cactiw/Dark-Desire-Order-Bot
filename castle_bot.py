@@ -83,7 +83,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_king_cabinet, king_cabinet, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_add_general, add_general, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_adding_general, adding_general, pass_user_data=True))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_remove_general, remove_general, pass_user_data=False))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_general, remove_general, pass_user_data=False))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_begin_duty, begin_duty, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_end_duty, end_duty, pass_user_data=True))

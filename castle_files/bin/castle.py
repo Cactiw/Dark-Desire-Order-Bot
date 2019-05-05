@@ -110,8 +110,8 @@ def king_cabinet(bot, update, user_data):
         player = Player.get_player(user_id, notify_on_error=False)
         if player is None:
             continue
-        response += "@{} - <b>{}</b>\nОтправить в ссылку: /remove_general_{}".format(player.username, player.nickname,
-                                                                                     player.id)
+        response += "@{} - <b>{}</b>\nОтправить в ссылку: /remove_general_{}\n" \
+                    "\n".format(player.username, player.nickname, player.id)
     user_data.update({"status": "king_cabinet"})
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id, text=response, reply_markup=buttons, parse_mode='HTML')
@@ -126,7 +126,7 @@ def adding_general(bot, update, user_data):
     mes = update.message
     try:
         player_id = int(mes.text)
-    except AttributeError:
+    except ValueError:
         bot.send_message(chat_id=update.message.from_user.id, text="Неверный синтаксис.")
         return
     if player_id in high_access_list:

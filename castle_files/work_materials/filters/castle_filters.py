@@ -125,7 +125,7 @@ class FilterRemoveGeneral(BaseFilter):
         if user_data is None:
             return False
         return filter_is_pm(message) and message.text.startswith("/remove_general_") and \
-               user_data.get("status") == 'king_cabinet' and message.from_user.id in [king_id, SUPER_ADMIN_ID]
+            user_data.get("status") == 'king_cabinet' and message.from_user.id in [king_id, SUPER_ADMIN_ID]
 
 
 filter_remove_general = FilterRemoveGeneral()

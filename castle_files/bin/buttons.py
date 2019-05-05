@@ -5,7 +5,7 @@ from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup,
 
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
-from castle_files.work_materials.globals import dispatcher, king_id
+from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID
 
 
 def get_edit_guild_buttons(guild):
@@ -95,7 +95,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
-        if player is not None and player.id == king_id:
+        if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status == 'mid_feedback' or status == 'duty_feedback':
         buttons = [
