@@ -21,6 +21,7 @@ def back(bot, update, user_data):
     status = user_data.get("status")
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+        return
     new_status = statuses_back.get(status)
     new_location = Location.get_id_by_status(new_status)
     user_data.update({"status": new_status, "location_id": new_location})

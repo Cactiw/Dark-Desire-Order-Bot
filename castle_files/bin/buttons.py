@@ -59,7 +59,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             ],
             [
                 KeyboardButton("↔️ Подойти к указателям"),
-                KeyboardButton("↩️ Назад"),
+                # KeyboardButton("↩️ Назад"),
             ]
         ]
     elif status == 'barracks':
@@ -67,6 +67,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("Профиль"),
                 KeyboardButton("Гильдия"),
+                ],
+            [
                 KeyboardButton("↩️ Назад"),
             ]
         ]

@@ -1,7 +1,7 @@
 """
 В этом модуле объявляется класс Player - класс, хранящий все данных о конкретном игроке.
 """
-from castle_files.work_materials.globals import conn
+from castle_files.work_materials.globals import conn, dispatcher
 from castle_files.work_materials.equipment_constants import get_equipment_by_code
 
 from psycopg2 import ProgrammingError
@@ -40,7 +40,7 @@ class Player:
     он загружен из БД ранее. Если да, то он возвращается, ежели нет, то происходит его загрузка из БД
     """
     @staticmethod
-    def get_player(player_id):
+    def get_player(player_id, notify_on_error=True):
         player = players.get(player_id)
         if player is not None:
             # Игрок уже загружен из базы данных
@@ -55,6 +55,10 @@ class Player:
         except ProgrammingError:
             return None
         if row is None:
+            if notify_on_error:
+                dispatcher.bot.send_message(chat_id=player_id,
+                                            text="Вы не зарегистрированы. Для регистрации необходимо "
+                                                 "прислать ответ @ChatWarsBot на команду /hero")
             return None
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class = row
         eq = {}
