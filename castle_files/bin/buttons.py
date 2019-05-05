@@ -75,8 +75,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     elif status == 'barracks':
         buttons = [
             [
-                KeyboardButton("Профиль"),
-                KeyboardButton("Гильдия"),
+                KeyboardButton("👀 Посмотреть в зеркало"),
+                KeyboardButton("👥 Посмотреть ведомость гильдии"),
                 ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -86,7 +86,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         buttons = [
             [
                 KeyboardButton("Обратиться к командному составу"),
-                KeyboardButton("Попросить аудиенции у Короля"),
+                KeyboardButton("Попросить аудиенции у 👑Короля"),
                 ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -110,7 +110,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         else:
             buttons = [
                 [
-                    KeyboardButton("Обратиться к стражникам"),
+                    KeyboardButton("Обратиться к 💂‍♂Стражам"),
                 ],
                 [
                     KeyboardButton("↩️ Назад"),

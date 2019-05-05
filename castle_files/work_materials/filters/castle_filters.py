@@ -14,6 +14,14 @@ class FilterBack(BaseFilter):
 filter_back = FilterBack()
 
 
+class FilterNotConstructed(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.text.startswith("🏚 Не построено")
+
+
+filter_not_constructed = FilterNotConstructed()
+
+
 # Далее идут фильтры для локаций замка
 class FilterCentralSquare(BaseFilter):
     def filter(self, message):

@@ -43,7 +43,7 @@ filter_change_guild_chat = FilterChangeGuildChat()
 
 class FilterViewGuild(BaseFilter):
     def filter(self, message):
-        return message.text.startswith("Гильдия") and filter_is_pm(message)
+        return message.text.startswith("👥 Посмотреть ведомость гильдии") and filter_is_pm(message)
 
 
 filter_view_guild = FilterViewGuild()

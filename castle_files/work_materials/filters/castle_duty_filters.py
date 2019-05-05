@@ -35,7 +35,7 @@ class FilterRequestDutyFeedback(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Обратиться к стражникам") and \
+        return filter_is_pm(message) and message.text.startswith("Обратиться к 💂‍♂Стражам") and \
             user_data.get("status") == 'castle_gates' and not user_data.get('on_duty')
 
 
