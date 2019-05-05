@@ -61,3 +61,12 @@ class FilterReplyToDutyFeedback(BaseFilter):
 
 
 filter_reply_to_duty_feedback = FilterReplyToDutyFeedback()
+
+
+class FilterBaneInDutyChat(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        return message.chat_id == SENTINELS_DUTY_CHAT_ID and (user_data is None or not user_data.get("on_duty"))
+
+
+filter_ban_in_duty_chat = FilterBaneInDutyChat()

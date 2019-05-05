@@ -2,9 +2,10 @@
 В этом модуле находятся функции, относящиеся к вахте стражников
 """
 from telegram.error import TelegramError
-from castle_files.work_materials.globals import SENTINELS_DUTY_CHAT_ID
+from castle_files.work_materials.globals import SENTINELS_DUTY_CHAT_ID, CASTLE_BOT_ID
 
-from castle_files.bin.buttons import send_general_buttons, get_general_buttons
+from castle_files.bin.service_functions import check_access
+from castle_files.bin.buttons import get_general_buttons
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 
@@ -94,3 +95,12 @@ def send_reply_to_duty_request(bot, update):
                        message_id=update.message.message_id)
     bot.send_message(chat_id=update.message.chat_id, text="Ответ успешно отправлен",
                      reply_to_message_id=update.message.message_id)
+
+
+def check_ban_in_duty_chat(bot, update):
+    gates = Location.get_location(3)
+    players_on_duty = gates.special_info.get("players_on_duty")
+    user_id = update.message.from_user.id
+    if user_id not in players_on_duty and not check_access(user_id) and user_id != CASTLE_BOT_ID:
+        bot.kickChatMember(chat_id=SENTINELS_DUTY_CHAT_ID, user_id=update.message.from_user.id)
+        bot.send_message(chat_id=SENTINELS_DUTY_CHAT_ID, text="Только стражам на службе разрешён вход в этот чат")

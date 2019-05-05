@@ -66,7 +66,7 @@ def castle_gates(bot, update, user_data):
     response = Location.get_location_enter_text_by_id(location_id)
     player = Player.get_player(update.message.from_user.id)
     buttons = get_general_buttons(user_data, only_buttons=True, player=player)
-    if player.game_class == "Sentinel":  # Только для стражей, захардкожено
+    if player is not None and player.game_class == "Sentinel":  # Только для стражей, захардкожено
         response += "\nКак страж, ты имеешь возможность заступить на вахту\n"
     reply_markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=reply_markup)
