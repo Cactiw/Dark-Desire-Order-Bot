@@ -9,6 +9,8 @@ from order_files.work_materials.pult_constants import divisions as divisions_con
 
 from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job, admin_ids
 
+from castle_files.bin.service_functions import check_access
+
 import order_bot
 import order_files.work_materials.globals as globals
 
@@ -59,7 +61,7 @@ def pult(bot, update):
 
 def pult_callback(bot, update):
     data = update.callback_query.data
-    if update.callback_query.from_user.id not in admin_ids:
+    if not check_access(update.callback_query.from_user.id):
         return
     if data == "ps":
         pult_send(bot, update)
