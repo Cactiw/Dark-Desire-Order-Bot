@@ -15,6 +15,14 @@ class FilterEditGuild(BaseFilter):
 filter_edit_guild = FilterEditGuild()
 
 
+class FilterDeleteGuild(BaseFilter):
+    def filter(self, message):
+        return message.text.startswith("/delete_guild_")
+
+
+filter_delete_guild = FilterDeleteGuild()
+
+
 class FilterChangeGuildCommander(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)

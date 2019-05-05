@@ -207,3 +207,14 @@ class Guild:
         self.id = row[0]
         Guild.fill_guild_ids()
         return self
+
+    def delete_guild(self):
+        for player_id in self.members:
+            player = Player.get_player(player_id)
+            if player is None:
+                continue
+            player.guild = None
+            player.update_to_database()
+        request = "delete from guilds where guild_id = %s"
+        cursor.execute(request, (self.id,))
+        guilds.pop(self.id)

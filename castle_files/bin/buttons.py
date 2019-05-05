@@ -29,6 +29,16 @@ def get_edit_guild_buttons(guild):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_delete_guild_buttons(guild):
+    buttons = [
+        [
+            InlineKeyboardButton("Да", callback_data="g_delete_confirm_{}".format(guild.id)),
+            InlineKeyboardButton("Нет", callback_data="g_delete_cancel_{}".format(guild.id)),
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 def get_view_guild_buttons(guild):
     buttons = [
         [

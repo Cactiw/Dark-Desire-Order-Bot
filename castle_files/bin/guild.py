@@ -6,11 +6,13 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
-from castle_files.bin.buttons import get_edit_guild_buttons, get_general_buttons, get_view_guild_buttons
+from castle_files.bin.service_functions import check_access
+
+from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_buttons, get_view_guild_buttons
 
 from telegram.error import TelegramError
 
-from castle_files.work_materials.globals import dispatcher, cursor, conn
+from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID
 from telegram.ext.dispatcher import run_async
 
 import logging
@@ -47,9 +49,9 @@ def list_guilds(bot, update):
         if guild is None:
             logging.warning("Guild is None for the id {}".format(guild_id))
             continue
-        response_new = "<b>{}</b>{}\nДивизион: {}\nРедактировать: /edit_guild_{}\n" \
+        response_new = "<b>{}</b>{}\nДивизион: {}\nРедактировать: /edit_guild_{}\nУдалить: /delete_guild_{}\n" \
                        "\n".format(guild.tag, " --- " + guild.name if guild.name is not None else "",
-                                   guild.division or "Не задан", guild.id)
+                                   guild.division or "Не задан", guild.id, guild.id)
         response_new += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n\n----------------------------------" \
                         "\n".format(guild.get_attack(), guild.get_defense())
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
@@ -269,6 +271,56 @@ def edit_guild(bot, update):
     return
 
 
+def request_delete_guild(bot, update):
+    mes = update.message
+    guild_id = re.search("_(\\d+)", mes.text)
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис")
+        return
+    guild_id = int(guild_id.group(1))
+    guild = Guild.get_guild(guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    buttons = get_delete_guild_buttons(guild)
+    bot.send_message(chat_id=mes.chat_id, text="Вы действительно хотите удалить гильдию <b>{}</b>?\n\n"
+                                               "<b>Внимание!!! Это приведёт к потере всех данных о гильдии и отключению"
+                                               " пинов в их чате!!!</b>".format(guild.tag),
+                     parse_mode='HTML', reply_markup=buttons)
+
+
+def delete_guild(bot, update):
+    if not check_access(update.callback_query.from_user.id):
+        bot.send_message(chat_id=SUPER_ADMIN_ID,
+                         text="@{} (id=<code>{}</code> пытался удалить ги "
+                              "({})".format(update.callback_query.from_user.username,
+                                            update.callback_query.from_user.id, update.callback_query.data))
+        bot.send_message(chat_id=update.callback_query.message.chat_id, text="У вас недостаточно доступа!")
+        return
+    guild_id = re.search("_(\\d+)", update.callback_query.data)
+    guild_id = int(guild_id.group(1))
+    guild = Guild.get_guild(guild_id)
+    if guild is None:
+        bot.send_message(chat_id=update.callback_query.message.chat_id, text="Гильдия не найдена.")
+        return
+    guild.delete_guild()
+    try:
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id,
+                            message_id=update.callback_query.message.message_id,
+                            text="Гильдия <b>{}</b> успешно удалена".format(guild.tag), parse_mode='HTML')
+    except TelegramError:
+        pass
+
+
+def cancel_delete_guild(bot, update):
+    try:
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id,
+                            message_id=update.callback_query.message.message_id,
+                            text="Удаление гильдии отменено!")
+    except TelegramError:
+        pass
+
+
 # Нажатие инлайн-кнопки "Изменить командира"
 def edit_guild_commander(bot, update, user_data):
     try:
@@ -290,7 +342,7 @@ def change_guild_commander(bot, update, user_data):
     except ValueError:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
-    player = Player.get_player(player_id)
+    player = Player.get_player(player_id, notify_on_error=False)
     if player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Проверьте правильность ввода id.")
         return
@@ -304,14 +356,13 @@ def change_guild_commander(bot, update, user_data):
     print(player.guild_tag, player.guild_tag, guild.tag)
     if player.guild_tag is not None and player.guild_tag != guild.tag:
         bot.send_message(chat_id=mes.chat_id, text="Командир может командовать только своей гильдией")
-        return
+
+        # return
     if player.guild_tag is None or player.guild is None:
         guild.add_player(player)
     guild.commander_id = player_id
-    if guild.members is None:
-        guild.members = []
     if player.id not in guild.members:
-        guild.members.append(player.id)
+        guild.add_player(player.id)
     guild.update_to_database()
     if "status" in user_data:
         user_data.pop("status")
