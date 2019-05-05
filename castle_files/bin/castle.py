@@ -9,6 +9,8 @@ from castle_files.work_materials.globals import high_access_list
 
 from telegram import ReplyKeyboardMarkup
 
+import re
+
 
 def back(bot, update, user_data):
     statuses_back = {
@@ -18,6 +20,7 @@ def back(bot, update, user_data):
         "throne_room": "central_square",
         "mid_feedback": "throne_room",
         "duty_feedback": "castle_gates",
+        "king_cabinet": "throne_room"
 
     }
     status = user_data.get("status")
@@ -97,5 +100,68 @@ def watch_portraits(bot, update):
         player = Player.get_player(user_id, notify_on_error=False)
         if player is None:
             continue
-        response += "@{} - {}\n".format(player.username, player.nickname)
+        response += "@{} - <b>{}</b>\n".format(player.username, player.nickname)
     bot.send_message(chat_id=update.message.from_user.id, text=response, parse_mode='HTML')
+
+
+def king_cabinet(bot, update, user_data):
+    response = "Вы входите в свой кабинет. Память услужливо подсказывает вам текущий список генералов:\n"
+    for user_id in high_access_list:
+        player = Player.get_player(user_id, notify_on_error=False)
+        if player is None:
+            continue
+        response += "@{} - <b>{}</b>\nОтправить в ссылку: /remove_general_{}".format(player.username, player.nickname,
+                                                                                     player.id)
+    user_data.update({"status": "king_cabinet"})
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.from_user.id, text=response, reply_markup=buttons, parse_mode='HTML')
+
+
+def add_general(bot, update, user_data):
+    user_data.update({"status": "adding_general"})
+    bot.send_message(chat_id=update.message.from_user.id, text="Введите id нового генерала, или нажмите \"Назад\"")
+
+
+def adding_general(bot, update, user_data):
+    mes = update.message
+    try:
+        player_id = int(mes.text)
+    except AttributeError:
+        bot.send_message(chat_id=update.message.from_user.id, text="Неверный синтаксис.")
+        return
+    if player_id in high_access_list:
+        bot.send_message(chat_id=update.message.from_user.id, text="Этот человек уже являетсяс генералом.")
+        return
+    player = Player.get_player(player_id, notify_on_error=False)
+    if player is None:
+        bot.send_message(chat_id=update.message.from_user.id, text="Невозможно найти этого холопа. "
+                                                                   "Убедитесь, что он зарегистрирован в боте")
+        return
+    throne = Location.get_location(2)
+    mid_players = throne.special_info.get("mid_players")
+    mid_players.append(player_id)
+    throne.update_location_to_database()
+    fill_mid_players()
+    bot.send_message(chat_id=update.message.from_user.id, text="@{} теперь генерал!".format(player.username))
+    user_data.update({"status": "king_cabinet"})
+
+
+def remove_general(bot, update):
+    mes = update.message
+    player_id = re.search("_(\\d+)", mes.text)
+    if player_id is None:
+        bot.send_message(chat_id=update.message.from_user.id, text="Неверный синтаксис.")
+        return
+    player_id = int(player_id.group(1))
+    if player_id not in high_access_list:
+        bot.send_message(chat_id=update.message.from_user.id, text="Так он, это, вроде и не генерал вовсе. "
+                                                                   "Может, помилуем?")
+        return
+    player = Player.get_player(player_id, notify_on_error=False)
+    throne = Location.get_location(2)
+    mid_players = throne.special_info.get("mid_players")
+    mid_players.remove(player_id)
+    throne.update_location_to_database()
+    fill_mid_players()
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="@{} сослан в тортугу и больше не генерал".format(player.username))

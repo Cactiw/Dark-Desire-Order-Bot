@@ -5,7 +5,7 @@ from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup,
 
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
-from castle_files.work_materials.globals import dispatcher
+from castle_files.work_materials.globals import dispatcher, king_id
 
 
 def get_edit_guild_buttons(guild):
@@ -95,6 +95,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+        if player is not None and player.id == king_id:
+            buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status == 'mid_feedback' or status == 'duty_feedback':
         buttons = [
             [
@@ -122,6 +124,15 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             print(player, player.game_class if player is not None else "")
             if player is not None and player.game_class == "Sentinel":  # Только для стражей, захардкожено
                 buttons[0].append(KeyboardButton("Заступить на вахту"))
+    elif status == 'king_cabinet':
+        buttons = [
+            [
+                KeyboardButton("Добавить генерала"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
     if only_buttons:
         return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
