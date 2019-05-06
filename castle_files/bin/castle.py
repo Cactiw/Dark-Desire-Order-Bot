@@ -25,6 +25,7 @@ def change_rp(bot, update, user_data):
     user_data.update({"status": "rp_off", "rp_off": True})
     bot.send_message(chat_id=update.message.chat_id, text="Режим РП отключён. Если Вы захотите снова использовать "
                                                           "все функции, нажмите /change_rp ещё раз.")
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def back(bot, update, user_data):

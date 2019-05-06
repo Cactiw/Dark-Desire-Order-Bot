@@ -164,6 +164,8 @@ def get_text_to_general_buttons(user_data):
     status = user_data.get("status")
     location_id = user_data.get("location_id")
     rp_off = user_data.get("rp_off")
+    if location_id is None:
+        user_data.update({"location_id": 0})
     if rp_off:
         return "Доброго времени суток!\nВыберите действие:"
     print(status, location_id)
