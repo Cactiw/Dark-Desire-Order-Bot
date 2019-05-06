@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
-    filter_is_profile
+    filter_is_profile, filter_not_registered
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
@@ -56,6 +56,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_profile, add_class_from_player))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
 
     # Приём репортов
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report))

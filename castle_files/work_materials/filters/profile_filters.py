@@ -2,7 +2,17 @@ from telegram.ext import BaseFilter
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
 
+from castle_files.libs.player import Player
+
 import re
+
+
+class FilterNotRegistered(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and Player.get_player(message.from_user.id) is None
+
+
+filter_not_registered = FilterNotRegistered()
 
 
 class FilterIsHero(BaseFilter):
