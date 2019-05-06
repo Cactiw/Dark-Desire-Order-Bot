@@ -14,7 +14,8 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
     filter_request_change_debrief
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
-    filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback
+    filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
+    filter_restrict_feedback, filter_unrestrict_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
     filter_request_duty_feedback, filter_send_duty_feedback, filter_reply_to_duty_feedback, filter_ban_in_duty_chat
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access
@@ -30,7 +31,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
-    request_mid_feedback, send_mid_feedback, send_reply_to_mid_request
+    request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.reports import add_report, battle_stats
@@ -132,6 +133,9 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.all & filter_send_mid_feedback, send_mid_feedback,
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_reply_to_mid_feedback, send_reply_to_mid_request))
+
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_restrict_feedback, restrict_feedback))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_unrestrict_feedback, unrestrict_feedback))
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_ban_in_duty_chat, check_ban_in_duty_chat))
 

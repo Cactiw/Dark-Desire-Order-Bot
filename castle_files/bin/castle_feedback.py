@@ -1,8 +1,9 @@
 """
 В этом модуле находятся все функции для фидбека в виртуальном замке, например, аудиенция у короля, обращение в мид
 """
-from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID
+from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID
 from castle_files.bin.buttons import get_general_buttons
+from castle_files.libs.castle.location import Location
 
 from order_files.bin.pult_callback import count_next_battle_time
 
@@ -88,7 +89,13 @@ def check_mid_feedback_time_access(bot, update):
 
 
 def request_mid_feedback(bot, update, user_data):
+    mes = update.message
     if not check_mid_feedback_time_access(bot, update):
+        return
+    loc = Location.get_location(2)
+    banned_users = loc.special_info.get("banned_in_feedback")
+    if mes.from_user.id in banned_users:
+        bot.send_message(chat_id=mes.chat_id, text="Вам запретили общаться здесь!", reply_to_message_id=mes.message_id)
         return
     user_data.update({"status": "mid_feedback"})
     bot.send_message(chat_id=update.message.chat_id, text="Следующее сообщение будет отправлено в чат мида.",
@@ -108,8 +115,10 @@ def send_mid_feedback(bot, update, user_data):
 
 def forward_then_reply_to_mid(bot, message):
     mes = bot.forwardMessage(chat_id=MID_CHAT_ID, from_chat_id=message.chat_id, message_id=message.message_id)
-    bot.send_message(chat_id=MID_CHAT_ID, text="Запрос к МИДу от @{} #r{}".format(message.from_user.username,
-                                                                                 message.from_user.id),
+    bot.send_message(chat_id=MID_CHAT_ID,
+                     text="Запрос к МИДу от @{} #r{}\nЗаблокировать пользователя: "
+                          "/restrict_feedback_{}".format(message.from_user.username,
+                                                         message.from_user.id, message.from_user.id),
                      reply_to_message_id=mes.message_id)
 
 
@@ -118,3 +127,56 @@ def send_reply_to_mid_request(bot, update):
                        message_id=update.message.message_id)
     bot.send_message(chat_id=update.message.chat_id, text="Ответ успешно отправлен",
                      reply_to_message_id=update.message.message_id)
+
+
+def restrict_feedback(bot, update):
+    mes = update.message
+    user_id = re.search("_(\\d+)", mes.text)
+    if user_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис", reply_to_message_id=mes.message_id)
+        return
+    user_id = int(user_id.group(1))
+    location_id = None
+    if mes.chat_id == MID_CHAT_ID:
+        location_id = 2
+    elif mes.chat_id == SENTINELS_DUTY_CHAT_ID:
+        location_id = 3
+    if location_id is None:
+        return
+    loc = Location.get_location(location_id)
+    banned_users = loc.special_info.get("banned_in_feedback")
+    if user_id in banned_users:
+        bot.send_message(chat_id=mes.chat_id, text="Этот человек уже забанен", reply_to_message_id=mes.message_id)
+        return
+    banned_users.append(user_id)
+    loc.update_location_to_database()
+    bot.send_message(chat_id=mes.chat_id,
+                     text="Пользователь успешно заблокирован.\nСнять блокировку: "
+                          "/unrestrict_feedback_{}".format(user_id), reply_to_message_id=mes.message_id)
+    bot.send_message(chat_id=user_id, text="Вам запретили общаться в {}".format(loc.name))
+
+
+def unrestrict_feedback(bot, update):
+    mes = update.message
+    user_id = re.search("_(\\d+)", mes.text)
+    if user_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис", reply_to_message_id=mes.message_id)
+        return
+    user_id = int(user_id.group(1))
+    location_id = None
+    if mes.chat_id == MID_CHAT_ID:
+        location_id = 2
+    elif mes.chat_id == SENTINELS_DUTY_CHAT_ID:
+        location_id = 3
+    if location_id is None:
+        return
+    loc = Location.get_location(location_id)
+    banned_users = loc.special_info.get("banned_in_feedback")
+    if user_id not in banned_users:
+        bot.send_message(chat_id=mes.chat_id, text="Этот человек не забанен!", reply_to_message_id=mes.message_id)
+        return
+    banned_users.remove(user_id)
+    loc.update_location_to_database()
+    bot.send_message(chat_id=mes.chat_id,
+                     text="Пользователь успешно разблокирован", reply_to_message_id=mes.message_id)
+    bot.send_message(chat_id=user_id, text="Вам снова разрешено общаться в {}".format(loc.name))

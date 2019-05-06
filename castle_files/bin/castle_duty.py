@@ -34,7 +34,8 @@ def ask_to_revoke_duty_link():
 
     dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID,
                                 text="<a href=\"{}\">Проверить ссылку</a>\n Сбросить ссылку: "
-                                     "/revoke_duty_link".format("https://t.me/joinchat/" + invite_link),
+                                     "/revoke_duty_link".format("https://t.me/joinchat/" +
+                                                                invite_link if invite_link is not None else ""),
                                 parse_mode='HTML')
 
 

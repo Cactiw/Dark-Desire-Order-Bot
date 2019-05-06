@@ -3,7 +3,7 @@
 """
 from telegram.ext import BaseFilter
 from castle_files.work_materials.filters.general_filters import filter_is_pm
-from castle_files.work_materials.globals import dispatcher, king_id, MID_CHAT_ID, CASTLE_BOT_ID
+from castle_files.work_materials.globals import dispatcher, king_id, MID_CHAT_ID, CASTLE_BOT_ID, SENTINELS_DUTY_CHAT_ID
 
 
 class FilterRequestAudience(BaseFilter):
@@ -65,3 +65,21 @@ class FilterReplyToMidFeedback(BaseFilter):
 
 
 filter_reply_to_mid_feedback = FilterReplyToMidFeedback()
+
+
+class FilterRestrictFeedback(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in [MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID] and \
+               message.text.startswith("/restrict_feedback_")
+
+
+filter_restrict_feedback = FilterRestrictFeedback()
+
+
+class FilterUnRestrictFeedback(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in [MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID] and \
+               message.text.startswith("/unrestrict_feedback_")
+
+
+filter_unrestrict_feedback = FilterUnRestrictFeedback()
