@@ -128,6 +128,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         buttons = [
             [
                 KeyboardButton("Добавить генерала"),
+                KeyboardButton("Изменить сообщение"),
             ],
             [
                 KeyboardButton("↩️ Назад"),

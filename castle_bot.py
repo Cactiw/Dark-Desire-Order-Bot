@@ -9,7 +9,8 @@ from castle_files.work_materials.filters.guild_filters import filter_edit_guild,
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.castle_filters import filter_central_square, filter_barracks, filter_back, \
     filter_throne_room, filter_castle_gates, filter_guide_signs, filter_not_constructed, filter_watch_portraits, \
-    filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general
+    filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
+    filter_request_change_castle_message, filter_change_castle_message
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
@@ -23,7 +24,8 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
-    not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general
+    not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
+    request_change_castle_message, change_castle_message
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -83,7 +85,13 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_king_cabinet, king_cabinet, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_add_general, add_general, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_adding_general, adding_general, pass_user_data=True))
-    dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_general, remove_general, pass_user_data=False))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_general, remove_general,
+                                          pass_user_data=False))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_change_castle_message,
+                                          request_change_castle_message, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_change_castle_message, change_castle_message,
+                                          pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_begin_duty, begin_duty, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_end_duty, end_duty, pass_user_data=True))

@@ -117,6 +117,24 @@ def king_cabinet(bot, update, user_data):
     bot.send_message(chat_id=update.message.from_user.id, text=response, reply_markup=buttons, parse_mode='HTML')
 
 
+def request_change_castle_message(bot, update, user_data):
+    central = Location.get_location(0)
+    current_message = central.special_info.get("enter_text_format_values")
+    user_data.update({"status": "changing_castle_message"})
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Текущее сообщение:\n<em>{}</em>\nВведите новое сообщение. Не делайте его слишком большим."
+                          "".format(current_message), parse_mode='HTML')
+
+
+def change_castle_message(bot, update, user_data):
+    central = Location.get_location(0)
+    central.special_info.update({"enter_text_format_values": update.message.text})
+    central.update_location_to_database()
+    user_data.update({"status": "king_cabinet"})
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Новое сообщение:\n<em>{}</em>".format(update.message.text), parse_mode='HTML')
+
+
 def add_general(bot, update, user_data):
     user_data.update({"status": "adding_general"})
     bot.send_message(chat_id=update.message.from_user.id, text="Введите id нового генерала, или нажмите \"Назад\"")
