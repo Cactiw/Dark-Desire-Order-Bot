@@ -6,11 +6,25 @@ from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import high_access_list
+from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS
 
 from telegram import ReplyKeyboardMarkup
 
 import re
+
+
+def change_rp(bot, update, user_data):
+    if update.message.from_user.id != update.message.chat_id:
+        return
+    rp_off = user_data.get("rp_off")
+    if rp_off:
+        user_data.pop("rp_off")
+        user_data.update({"status": DEFAULT_CASTLE_STATUS})
+        send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+        return
+    user_data.update({"status": "rp_off", "rp_off": True})
+    bot.send_message(chat_id=update.message.chat_id, text="Режим РП отключён. Если Вы захотите снова использовать "
+                                                          "все функции, нажмите /change_rp ещё раз.")
 
 
 def back(bot, update, user_data):

@@ -79,7 +79,7 @@ def hero(bot, update, user_data):
         # Игрок не из Скалы
         bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
         return
-    player = Player.get_player(mes.from_user.id)
+    player = Player.get_player(mes.from_user.id, notify_on_error=False)
     if player is None and mes.chat_id != mes.from_user.id:
         # Добавление новых пользователей только в личке у бота
         return
@@ -148,10 +148,14 @@ def hero(bot, update, user_data):
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
         player.insert_into_database()
-        user_data.update({"status": DEFAULT_CASTLE_STATUS})
+        user_data.update({"status": DEFAULT_CASTLE_STATUS, "location_id": 0})
         bot.send_message(chat_id=mes.chat_id,
-                         text="Добро пожаловать в 🖤Скалу, <b>{}</b>!\nДля добавления информации о классе "
-                              "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\"".format(player.nickname),
+                         text="Добро пожаловать в 🖤Скалу, <b>{}</b>!\n\nДля добавления информации о классе "
+                              "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\" (рекомендуется сделать для "
+                              "получения доступа к некоторых дополнительным фишкам, особенно стражникам).\n\n"
+                              "<em>Вы всегда можете отключить рп составляющую бота командой </em>/change_rp.<em> "
+                              "Обратите внимание, что это сделает недоступными некоторые функции "
+                              "бота.</em>".format(player.nickname),
                          parse_mode='HTML')
         if filter_is_pm(mes):
             send_general_buttons(mes.from_user.id, user_data)

@@ -54,7 +54,15 @@ def get_view_guild_buttons(guild):
 # далее генерирует и возвращает кнопки
 def get_general_buttons(user_data, player=None, only_buttons=False):
     status = user_data.get("status")
+    rp_off = user_data.get("rp_off")
     buttons = None
+    if rp_off:
+        buttons = [
+            [
+                KeyboardButton("👀 Профиль"),
+                KeyboardButton("👥 Гильдия"),
+            ]
+        ]
     if status is None or status == "default":
         status = "central_square"
         user_data.update({"status": status})
@@ -155,6 +163,10 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
 def get_text_to_general_buttons(user_data):
     status = user_data.get("status")
     location_id = user_data.get("location_id")
+    rp_off = user_data.get("rp_off")
+    if rp_off:
+        return "Доброго времени суток!\nВыберите действие:"
+    print(status, location_id)
     if status is None or status == "default":
         return "Вы входите в замок Скалы. Выберите, куда направиться!"
     if location_id is not None:
