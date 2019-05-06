@@ -1,6 +1,7 @@
 from telegram.ext import BaseFilter
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
+from castle_files.work_materials.globals import allowed_list
 
 from castle_files.libs.player import Player
 
@@ -13,6 +14,14 @@ class FilterNotRegistered(BaseFilter):
 
 
 filter_not_registered = FilterNotRegistered()
+
+
+class FilterForbidden(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.from_user.id not in allowed_list
+
+
+filter_forbidden = FilterForbidden()
 
 
 class FilterIsHero(BaseFilter):

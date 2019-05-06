@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
-    filter_is_profile, filter_not_registered
+    filter_is_profile, filter_not_registered, filter_forbidden
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
@@ -49,7 +49,12 @@ def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="Привет! Пришли мне форвард /hero из @chatwarsbot!")
 
 
+def skip(bot, update):
+    return
+
+
 def castle_bot_processing():
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 

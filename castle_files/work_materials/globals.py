@@ -30,6 +30,8 @@ MID_CHAT_ID = -1001351185651
 SENTINELS_DUTY_CHAT_ID = -1001417510202
 CASTLE_BOT_ID = 756892778
 
+allowed_list = []
+
 processing = True
 
 moscow_tz = pytz.timezone('Europe/Moscow')
