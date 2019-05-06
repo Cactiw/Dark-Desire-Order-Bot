@@ -18,7 +18,7 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
     filter_request_duty_feedback, filter_send_duty_feedback, filter_reply_to_duty_feedback, filter_ban_in_duty_chat
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access
 
-from castle_files.bin.service_functions import cancel
+from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
@@ -171,6 +171,7 @@ def castle_bot_processing():
     load_data()
     Guild.fill_guild_ids()
     fill_mid_players()
+    fill_allowed_list()
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True

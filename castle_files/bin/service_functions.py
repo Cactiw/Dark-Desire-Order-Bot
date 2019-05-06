@@ -21,3 +21,4 @@ def fill_allowed_list():
     allowed_list.clear()
     while row is not None:
         allowed_list.append(row[0])
+        row = cursor.fetchone()
