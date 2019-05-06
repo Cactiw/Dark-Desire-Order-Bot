@@ -38,7 +38,9 @@ def back(bot, update, user_data):
         "duty_feedback": "castle_gates",
         "king_cabinet": "throne_room",
         "headquarters": "throne_room",
-        "sending_guild_message": "headquarters"
+        "changing_castle_message": "king_cabinet",
+        "sending_guild_message": "headquarters",
+        "editing_debrief": "headquarters",
 
     }
     status = user_data.get("status")
@@ -127,9 +129,34 @@ def headquarters(bot, update, user_data):
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
+def request_change_debrief(bot, update, user_data):
+    user_data.update({"status": "editing_debrief"})
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Следующее сообщение будет новым дебрифом. Он должен влезть в это сообщение:\n\n"
+                          "{}".format(Location.get_location_enter_text_by_id(2, without_format=True).format(
+                                "DjedyBreaM", "")), reply_markup=buttons)
+
+
+def change_debrief(bot, update, user_data):
+    user_data.update({"status": "throne_room", "location_id": 2})
+    throne = Location.get_location(2)
+    format_values = throne.special_info.get("enter_text_format_values")
+    format_values[1] = update.message.text
+    throne.special_info.update({"enter_text_format_values": format_values})
+    throne.update_location_to_database()
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Дебриф успешно изменён. Вы выходите в тронный зал, чтобы проверить, что всё выглядит "
+                          "хорошо.\n\n<em>В случае, если после этого не последует сообщение с дебрифом, "
+                          "измените его</em>", parse_mode='HTML')
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
 def request_guild_message_notify(bot, update, user_data):
     user_data.update({"status": "sending_guild_message"})
-    bot.send_message(chat_id=update.message.from_user.id, text="Следующее сообщение будет разослано во все гильдии")
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.from_user.id, text="Следующее сообщение будет разослано во все гильдии",
+                     reply_markup=buttons)
 
 
 def send_guild_message_notify(bot, update, user_data):
@@ -157,9 +184,10 @@ def request_change_castle_message(bot, update, user_data):
     central = Location.get_location(0)
     current_message = central.special_info.get("enter_text_format_values")
     user_data.update({"status": "changing_castle_message"})
+    buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Текущее сообщение:\n<em>{}</em>\nВведите новое сообщение. Не делайте его слишком большим."
-                          "".format(current_message), parse_mode='HTML')
+                          "".format(current_message), parse_mode='HTML', reply_markup=buttons)
 
 
 def change_castle_message(bot, update, user_data):

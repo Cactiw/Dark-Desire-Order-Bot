@@ -24,16 +24,17 @@ class Location:
         return locations.get(location_id)
 
     @staticmethod
-    def get_location_enter_text_by_id(location_id):
+    def get_location_enter_text_by_id(location_id, without_format=False):
         location = Location.get_location(location_id)
         if location is None:
             return None
         if location.special_info is None:
             return location.enter_text
         insert_values = location.special_info.get("enter_text_format_values")
-        if insert_values is None:
+        if insert_values is None or without_format:
             return location.enter_text
-        return location.enter_text.format(insert_values)
+        print(insert_values, *insert_values)
+        return location.enter_text.format(*insert_values)
 
     @staticmethod
     def get_id_by_status(status):
@@ -77,15 +78,17 @@ central_square = Location(0, "⛲️ Центральная площадь",
                           "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n\n"
                           "На лобном месте, левее фонтана, прибит пергамент с важным объявлением:\n📜\n<em>{}</em>\n📜\n"
                           "Заверено печатью и подписью Короля.",
-                          special_info={"enter_text_format_values": "Добро пожаловать в Скалу.\nСнова."})
+                          special_info={"enter_text_format_values": ["Добро пожаловать в Скалу.\nСнова."]})
 central_square.create_location_in_database()
 barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
 barracks.create_location_in_database()
 throne_room = Location(2, "🏛 Тронный зал",
                        "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы, "
-                       "или даже попросить аудиенции у 👑 @{}",
-                       special_info={"enter_text_format_values": "DjedyBreaM", "mid_players": [231900398, 205356091]})
+                       "или даже попросить аудиенции у 👑@{}\n\n📜\n{}",
+                       special_info={"enter_text_format_values": ["DjedyBreaM", "123"],
+                                     "mid_players": [231900398, 205356091]})
 throne_room.create_location_in_database()
+print(throne_room.special_info.get("enter_text_format_values"))
 castle_gates = Location(3, "⛩ Врата замка",
                         "Вы подошли к вратам замка. Здесь как всегда немноголюдно. На посту дежурят стражи Скалы, "
                         "возможно, они смогут подсказать  дорогу до нужного места, поделиться новостями или просто с "
@@ -104,6 +107,7 @@ status_to_location = {
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
+# НЕ МЕНЯЙТЕ ЭТИ ID
 locations = {
     0: central_square,
     1: barracks,

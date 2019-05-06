@@ -11,7 +11,8 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_throne_room, filter_castle_gates, filter_guide_signs, filter_not_constructed, filter_watch_portraits, \
     filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
-    filter_request_guild_message_notify, filter_send_guild_message_notify
+    filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
+    filter_request_change_debrief
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
@@ -27,7 +28,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
-    request_guild_message_notify, send_guild_message_notify, change_rp
+    request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -54,7 +55,7 @@ def skip(bot, update):
 
 
 def castle_bot_processing():
-    # dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
@@ -93,6 +94,10 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_watch_portraits, watch_portraits))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_headquarters, headquarters, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_change_debrief,
+                                          request_change_debrief, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_change_debrief, change_debrief, pass_user_data=True))
+
     dispatcher.add_handler(MessageHandler(Filters.text & filter_request_guild_message_notify,
                                           request_guild_message_notify, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_send_guild_message_notify,

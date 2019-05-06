@@ -98,7 +98,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("Попросить аудиенции у 👑Короля"),
                 ],
             [
-                KeyboardButton("Смотреть на портреты"),
+                KeyboardButton("🎇Посмотреть на портреты"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -108,7 +108,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             buttons[1].append(KeyboardButton("Штаб"))
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
-    elif status == 'mid_feedback' or status == 'duty_feedback':
+    elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message',
+                    'editing_debrief', 'changing_castle_message']:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
@@ -148,8 +149,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     elif status == 'headquarters':
         buttons = [
             [
-                KeyboardButton("Выкатить дебриф"),
-                KeyboardButton("Рассылка по гильдиям"),
+                KeyboardButton("📜Выкатить дебриф"),
+                KeyboardButton("📣Рассылка по гильдиям"),
             ],
             [
                 KeyboardButton("↩️ Назад"),

@@ -81,7 +81,7 @@ class FilterWatchPortraits(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Смотреть на портреты") and \
+        return filter_is_pm(message) and message.text.startswith("🎇Посмотреть на портреты") and \
             user_data.get("status") == 'throne_room'
 
 
@@ -112,12 +112,36 @@ class FilterHeadquarters(BaseFilter):
 filter_headquarters = FilterHeadquarters()
 
 
+class FilterRequestChangeDebrief(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("📜Выкатить дебриф") and \
+            user_data.get("status") == 'headquarters' and check_access(message.from_user.id)
+
+
+filter_request_change_debrief = FilterRequestChangeDebrief()
+
+
+class FilterChangeDebrief(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and user_data.get("status") == 'editing_debrief' and \
+            check_access(message.from_user.id)
+
+
+filter_change_debrief = FilterChangeDebrief()
+
+
 class FilterRequestGuildMessageNotify(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Рассылка по гильдиям") and \
+        return filter_is_pm(message) and message.text.startswith("📣Рассылка по гильдиям") and \
             user_data.get("status") == 'headquarters' and check_access(message.from_user.id)
 
 
