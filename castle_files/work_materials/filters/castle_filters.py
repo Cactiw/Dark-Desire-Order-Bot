@@ -4,6 +4,7 @@
 from telegram.ext import BaseFilter
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID
+from castle_files.bin.service_functions import check_access
 
 
 class FilterBack(BaseFilter):
@@ -97,6 +98,42 @@ class FilterKingCabinet(BaseFilter):
 
 
 filter_king_cabinet = FilterKingCabinet()
+
+
+class FilterHeadquarters(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("Штаб") and \
+            user_data.get("status") == 'throne_room' and check_access(message.from_user.id)
+
+
+filter_headquarters = FilterHeadquarters()
+
+
+class FilterRequestGuildMessageNotify(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("Рассылка по гильдиям") and \
+            user_data.get("status") == 'headquarters' and check_access(message.from_user.id)
+
+
+filter_request_guild_message_notify = FilterRequestGuildMessageNotify()
+
+
+class FilterSendGuildMessageNotify(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and user_data.get("status") == 'sending_guild_message' and \
+            check_access(message.from_user.id)
+
+
+filter_send_guild_message_notify = FilterSendGuildMessageNotify()
 
 
 class FilterRequestChangeCastleMessage(BaseFilter):

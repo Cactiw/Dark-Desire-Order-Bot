@@ -4,6 +4,7 @@
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 
 from castle_files.work_materials.globals import high_access_list
 
@@ -102,6 +103,24 @@ def watch_portraits(bot, update):
             continue
         response += "@{} - <b>{}</b>\n".format(player.username, player.nickname)
     bot.send_message(chat_id=update.message.from_user.id, text=response, parse_mode='HTML')
+
+
+def headquarters(bot, update, user_data):
+    user_data.update({"status": "headquarters", "location_id": 4})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def request_guild_message_notify(bot, update, user_data):
+    user_data.update({"status": "sending_guild_message"})
+    bot.send_message(chat_id=update.message.from_user.id, text="Следующее сообщение будет разослано во все гильдии")
+
+
+def send_guild_message_notify(bot, update, user_data):
+    user_data.update({"status": "headquarters"})
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        bot.send_message(chat_id=guild.chat_id, text=update.message.text, parse_mode='HTML')
+    bot.send_message(update.message.from_user.id, text="Успешно отправлено!")
 
 
 def king_cabinet(bot, update, user_data):

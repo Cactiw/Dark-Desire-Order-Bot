@@ -3,6 +3,7 @@
 """
 from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
+from castle_files.bin.service_functions import check_access
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID
@@ -95,6 +96,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+        if player is not None and check_access(player.id):
+            buttons[1].append(KeyboardButton("Штаб"))
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status == 'mid_feedback' or status == 'duty_feedback':
@@ -129,6 +132,16 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("Добавить генерала"),
                 KeyboardButton("Изменить сообщение"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'headquarters':
+        buttons = [
+            [
+                KeyboardButton("Выкатить дебриф"),
+                KeyboardButton("Рассылка по гильдиям"),
             ],
             [
                 KeyboardButton("↩️ Назад"),

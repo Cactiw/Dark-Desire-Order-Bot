@@ -91,13 +91,16 @@ castle_gates = Location(3, "⛩ Врата замка",
                         "возможно, они смогут подсказать  дорогу до нужного места, поделиться новостями или просто с "
                         "радостью скоротают время в беседе.", special_info={"players_on_duty": []})
 castle_gates.create_location_in_database()
+headquarters = Location(4, "Штаб", "Являясь генералом, Вы без проблем входите в штаб. На стенах висят карты, "
+                                   "посыльные зачитывают донесения.")
 
 status_to_location = {
     "default": None,
     "central_square": 0,
     "barracks": 1,
     "throne_room": 2,
-    "castle_gates": 3
+    "castle_gates": 3,
+    "headquarters": 4,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -105,5 +108,6 @@ locations = {
     0: central_square,
     1: barracks,
     2: throne_room,
-    3: castle_gates
+    3: castle_gates,
+    4: headquarters,
 }
