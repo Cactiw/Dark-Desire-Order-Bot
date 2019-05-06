@@ -36,7 +36,9 @@ def back(bot, update, user_data):
         "throne_room": "central_square",
         "mid_feedback": "throne_room",
         "duty_feedback": "castle_gates",
-        "king_cabinet": "throne_room"
+        "king_cabinet": "throne_room",
+        "headquarters": "throne_room",
+        "sending_guild_message": "headquarters"
 
     }
     status = user_data.get("status")
