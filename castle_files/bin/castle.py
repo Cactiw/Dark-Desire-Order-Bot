@@ -7,6 +7,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS
+from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
 
@@ -105,9 +106,11 @@ def castle_gates(bot, update, user_data):
 
 
 # Заполнение списка мида, запускать при старте бота и при обновлении состава
-def fill_mid_players():
+def fill_mid_players(other_process=False):
     high_access_list.clear()
     throne = Location.get_location(2)
+    if other_process:
+        throne.load_location()
     mid_players = throne.special_info.get("mid_players")
     for player_id in mid_players:
         high_access_list.append(player_id)
@@ -226,6 +229,7 @@ def adding_general(bot, update, user_data):
     fill_mid_players()
     bot.send_message(chat_id=update.message.from_user.id, text="@{} теперь генерал!".format(player.username))
     user_data.update({"status": "king_cabinet"})
+    update_request_queue.put(["update_mid"])
 
 
 def remove_general(bot, update):
@@ -247,3 +251,4 @@ def remove_general(bot, update):
     fill_mid_players()
     bot.send_message(chat_id=update.message.from_user.id,
                      text="@{} сослан в тортугу и больше не генерал".format(player.username))
+    update_request_queue.put(["update_mid"])

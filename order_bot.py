@@ -15,6 +15,8 @@ from order_files.bin.castle_update_monitor import castle_update_monitor
 
 from order_files.work_materials.globals import dispatcher, updater, conn, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
 
+from castle_files.bin.castle import fill_mid_players
+
 import threading
 
 
@@ -65,6 +67,7 @@ def order_bot_processing():
 
     recashe_order_chats()
     refill_deferred_orders()
+    fill_mid_players(other_process=True)
 
     processes = []
 

@@ -1,10 +1,11 @@
 from telegram.ext import BaseFilter
-from order_files.work_materials.globals import admin_ids, allowed_chats
+from order_files.work_materials.globals import allowed_chats, admin_ids
+from castle_files.bin.service_functions import check_access
 
 
 class FilterIsAdmin(BaseFilter):
     def filter(self, message):
-        return message.from_user.id in admin_ids
+        return check_access(message.from_user.id)
 
 
 filter_is_admin = FilterIsAdmin()

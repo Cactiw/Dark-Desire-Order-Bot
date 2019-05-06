@@ -197,7 +197,7 @@ class Guild:
         except Exception:
             logging.error(traceback.format_exc())
             return -1
-        update_request_queue.put(self.id)
+        update_request_queue.put(["update_guild", self.id])
         return 0
 
     def create_guild(self):
