@@ -44,6 +44,8 @@ def create_guild(bot, update):
 # @run_async
 def list_guilds(bot, update):
     response = "Список зарегистрированных в боте гильдий:\n\n"
+    attack = 0
+    defense = 0
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
@@ -58,7 +60,9 @@ def list_guilds(bot, update):
             bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
-    response += "Добавить гильдию: /create_guild {TAG}"
+        attack += guild.get_attack()
+        defense += guild.get_defense()
+    response += "Всего: ⚔: <b>{}</b>, 🛡: <b>{}</b>\n Добавить гильдию: /create_guild [TAG]".format(attack, defense)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
