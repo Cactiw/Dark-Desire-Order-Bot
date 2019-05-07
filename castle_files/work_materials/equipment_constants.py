@@ -97,7 +97,7 @@ gloves = [
     Equipment("gloves", "a", "70", "Divine Bracers", 3, 11, 3),
     Equipment("gloves", "a", "58", "Ghost Gloves", 5, 10, 3),
     Equipment("gloves", "a", "62", "Lion Gloves", 6, 9, 3),
-    Equipment("gloves", "a", "81", "Council Gloves", 5, 15, 4),
+    Equipment("gloves", "a", "81", "Council Gauntlets", 5, 15, 4),
     Equipment("gloves", "a", "90", "Celestial Bracers", 5, 13, 4),
     Equipment("gloves", "a", "86", "Griffin Gloves", 7, 12, 4),
 ]
