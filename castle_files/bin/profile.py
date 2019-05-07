@@ -34,7 +34,7 @@ def get_profile_text(player, self_request=True):
         if equipment is None:
             continue
         response += "<b>{}</b><code>{}</code><code>{}</code>" \
-                    "\n".format(equipment.name, "+{}⚔ ".format(equipment.attack) if equipment.attack != 0 else "",
+                    "\n".format(equipment.name, " +{}⚔️ ".format(equipment.attack) if equipment.attack != 0 else "",
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
     return response
 
