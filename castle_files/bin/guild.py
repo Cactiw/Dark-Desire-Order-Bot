@@ -78,7 +78,7 @@ def guild_info(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
     commander = Player.get_player(guild.commander_id)
-    response = "<b>{}</b>  {}\n".format(guild.tag, guild.name or "")
+    response = "[<b>{}</b>]  {}\n".format(guild.tag, guild.name or "")
     response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
     response += "Чат отряда: {}, id: {}" \
                 "\n{}\n".format(guild.chat_name or "Не задан",
