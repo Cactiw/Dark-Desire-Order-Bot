@@ -169,7 +169,6 @@ def get_text_to_general_buttons(user_data):
         user_data.update({"location_id": 0})
     if rp_off:
         return "Доброго времени суток!\nВыберите действие:"
-    print(status, location_id)
     if status is None or status == "default":
         return "Вы входите в замок Скалы. Выберите, куда направиться!"
     if location_id is not None:

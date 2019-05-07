@@ -10,10 +10,12 @@ cursor = conn.cursor()
 
 # Базовый класс - Локация
 class Location:
-    def __init__(self, location_id, location_name, enter_text, state=True, building_process=-1, special_info=None):
+    def __init__(self, location_id, location_name, enter_text, need_clicks_to_construct=None,
+                 state=True, building_process=-1, special_info=None):
         self.id = location_id
         self.name = location_name
         self.enter_text = enter_text
+        self.need_clicks_to_construct = need_clicks_to_construct
         self.state = state  # True - построено, False - не построено
         self.building_process = building_process  # -1 - стройка не начиналась / завершилась, >=0 - идёт стройка
         self.special_info = special_info
@@ -84,7 +86,7 @@ barracks = Location(1, "🎪 Казарма", "Вы заходите в каза
 barracks.create_location_in_database()
 throne_room = Location(2, "🏛 Тронный зал",
                        "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы, "
-                       "или даже попросить аудиенции у 👑@{}\n\n📜\n{}",
+                       "или даже попросить аудиенции у 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
                        special_info={"enter_text_format_values": ["DjedyBreaM", "Дебриф"],
                                      "mid_players": [231900398, 205356091], "banned_in_feedback": []})
 throne_room.create_location_in_database()

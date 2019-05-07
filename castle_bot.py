@@ -56,7 +56,7 @@ def skip(bot, update):
 
 
 def castle_bot_processing():
-    dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
+    # dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
