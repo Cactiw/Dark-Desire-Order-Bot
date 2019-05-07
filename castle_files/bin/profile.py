@@ -148,6 +148,8 @@ def hero(bot, update, user_data):
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
         player.insert_into_database()
+        player=player.reload_from_database()
+
         user_data.update({"status": DEFAULT_CASTLE_STATUS, "location_id": 0})
         bot.send_message(chat_id=mes.chat_id,
                          text="Добро пожаловать в 🖤Скалу, <b>{}</b>!\n\nДля добавления информации о классе "

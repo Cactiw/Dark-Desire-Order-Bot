@@ -90,6 +90,11 @@ class Player:
         eq_to_db = json.dumps(eq_to_db)
         return eq_to_db
 
+    def reload_from_database(self):
+        if self.id in players:
+            players.pop(self.id)
+        return Player.get_player(self.id)
+
     # Метод для первичного внесения данных о игроке в БД
     def insert_into_database(self):
         request = "insert into players(id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, " \
