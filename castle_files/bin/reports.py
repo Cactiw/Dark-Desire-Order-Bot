@@ -79,6 +79,7 @@ def add_report(bot, update):
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock))
     bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!")
+    """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"
                           "🔥Exp: {}\n💰Gold:{}\n📦Stock:{}"
@@ -87,6 +88,7 @@ def add_report(bot, update):
                                     defense, "({})".format(additional_defense) if additional_defense != 0 else "",
                                     lvl, exp, gold, stock),
                      parse_mode='HTML')
+    """
 
 
 # VERY EXPENSIVE OPERATION
