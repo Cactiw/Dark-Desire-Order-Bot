@@ -86,7 +86,7 @@ barracks = Location(1, "🎪 Казарма", "Вы заходите в каза
 barracks.create_location_in_database()
 throne_room = Location(2, "🏛 Тронный зал",
                        "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы "
-                       "и даже попросить аудиенции у 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
+                       "и даже попросить аудиенции у ВРИО 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
                        special_info={"enter_text_format_values": ["DjedyBreaM", "Дебриф"],
                                      "mid_players": [231900398, 205356091], "banned_in_feedback": []})
 throne_room.create_location_in_database()

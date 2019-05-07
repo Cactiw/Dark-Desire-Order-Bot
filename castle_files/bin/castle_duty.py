@@ -110,8 +110,10 @@ def send_duty_feedback(bot, update, user_data):
 
 def forward_then_reply_to_duty(bot, message):
     mes = bot.forwardMessage(chat_id=SENTINELS_DUTY_CHAT_ID, from_chat_id=message.chat_id, message_id=message.message_id)
-    bot.send_message(chat_id=SENTINELS_DUTY_CHAT_ID, text="Запрос к стражнику от @{} #r{}".format(message.from_user.username,
-                                                                                                  message.from_user.id),
+    bot.send_message(chat_id=SENTINELS_DUTY_CHAT_ID,
+                     text="Запрос к стражнику от @{} #r{}\nЗаблокировать пользователя: "
+                          "/restrict_feedback_{}".format(message.from_user.username, message.from_user.id,
+                                                         message.from_user.id),
                      reply_to_message_id=mes.message_id)
 
 
