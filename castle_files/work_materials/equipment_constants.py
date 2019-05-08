@@ -1,5 +1,7 @@
 from castle_files.libs.equipment import Equipment
 
+import copy
+
 main_hand = [
     Equipment("main_hand", "w", "01", "Wooden sword", 1, 0, 0),
     Equipment("main_hand", "w", "02", "Short sword", 3, 0, 0),
@@ -185,5 +187,5 @@ def get_equipment_by_code(code):
     for lst in eq_list:
         for eq in lst:
             if eq.code == eq_code and eq.type == eq_type:
-                return eq
+                return copy.deepcopy(eq)
     return None
