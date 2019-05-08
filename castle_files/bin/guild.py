@@ -121,17 +121,19 @@ def guild_reports(bot, update):
         return
     guild.sort_players_by_exp()
     response = "Статистика гильдии по битве {}:\n".format(count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:"))
-    sent_reports = []
-    request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
-              "from reports where battle_id = %s order by lvl desc"
-    cursor.execute(request, (battle_id,))
-    row = cursor.fetchone()
-    response_new = ""
-    while row is not None:
+    unsent_reports = []
+    for player_id in guild.members:
+        request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
+                  "from reports where player_id = %s and battle_id = %s "
+        cursor.execute(request, (player_id, battle_id,))
+        row = cursor.fetchone()
+        if row is None:
+            unsent_reports.append(player_id)
+            continue
         player = Player.get_player(row[0])
         if player is None:
             continue
-        response_new += "<b>{}</b> -- @{}\n🏅:<code>{}</code> ⚔️:<code>{}</code>{} 🛡<code>{}</code>{} 🔥 <code>{}</code> " \
+        response_new = "<b>{}</b> -- @{}\n🏅:<code>{}</code> ⚔️:<code>{}</code>{} 🛡<code>{}</code>{} 🔥 <code>{}</code> " \
                         "💰 <code>{}</code> 📦 <code>{}</code>\n\n" \
                         "".format(player.nickname, player.username, row[1], row[2],
                               "({}{})".format("+" if row[3] > 0 else"", row[3]) if row[3] != 0 else "",
@@ -141,19 +143,17 @@ def guild_reports(bot, update):
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
-        sent_reports.append(row[0])
-        row = cursor.fetchone()
     response += "\nНе сдали репорты:\n"
-    for player_id in guild.members:
-        if player_id not in sent_reports:
-            player = Player.get_player(player_id)
-            if player is None:
-                continue
-            response_new += "<b>{}</b> -- @{}\n".format(player.nickname, player.username)
-            if len(response + response_new) >= MAX_MESSAGE_LENGTH:  # Превышение лимита длины сообщения
-                bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
-                response = ""
-    response += "\nВсего: <b>{}/{}</b> репортов".format(len(sent_reports), len(guild.members))
+    for player_id in unsent_reports:
+        player = Player.get_player(player_id)
+        if player is None:
+            continue
+        response_new = "<b>{}</b> -- @{}\n".format(player.nickname, player.username)
+        if len(response + response_new) >= MAX_MESSAGE_LENGTH:  # Превышение лимита длины сообщения
+            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += response_new
+    response += "\nВсего: <b>{}/{}</b> репортов".format(guild.members_count - len(unsent_reports), len(guild.members))
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
