@@ -48,8 +48,9 @@ def get_view_guild_buttons(guild, user_id=None):
         ],
     ]
     if user_id is not None and guild.check_high_access(user_id):
-        buttons.append([
+        buttons.insert(0, [
             InlineKeyboardButton("Заместители", callback_data="giass_{}".format(guild.id)),
+            InlineKeyboardButton("Репорты", callback_data="girep_{}".format(guild.id)),
         ])
     return InlineKeyboardMarkup(buttons)
 

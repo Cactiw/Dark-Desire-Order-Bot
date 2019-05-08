@@ -7,6 +7,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.service_functions import check_access
+from castle_files.bin.reports import count_battle_id, count_battle_time
 
 from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_buttons, get_view_guild_buttons
 
@@ -94,6 +95,56 @@ def guild_info(bot, update):
     response += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
     buttons = get_view_guild_buttons(guild, user_id=mes.from_user.id)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
+
+
+def guild_reports(bot, update):
+    mes = update.callback_query.message
+    requested_player = Player.get_player(update.callback_query.from_user.id)
+    battle_id = count_battle_id(mes)
+    if requested_player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+        return
+    guild_id = requested_player.guild
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                              "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    if not guild.check_high_access(update.callback_query.from_user.id):
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
+        return
+    guild.sort_players_by_exp()
+    response = "Статистика гильдии по битве {}:\n".format(count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:"))
+    sent_reports = []
+    request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
+              "from reports where battle_id = %s order by lvl desc"
+    cursor.execute(request, (battle_id,))
+    row = cursor.fetchone()
+    while row is not None:
+        player = Player.get_player(row[0])
+        if player is None:
+            continue
+        response += "<b>{}</b> -- @{}\n🏅:<code>{}</code> ⚔️:<code>{}</code>{} 🛡<code>{}</code>{} 🔥 <code>{}</code> " \
+                    "💰 <code>{}</code> 📦 <code>{}</code>\n\n" \
+                    "".format(player.nickname, player.username, row[1], row[2],
+                              "({}{})".format("+" if row[3] > 0 else"", row[3]) if row[3] != 0 else "",
+                              row[4], "({}{})".format("+" if row[5] > 0 else"", row[5]) if row[5] != 0 else "",
+                              row[6], row[7], row[8])
+        sent_reports.append(row[0])
+        row = cursor.fetchone()
+    response += "\nНе сдали репорты:\n"
+    for player_id in guild.members:
+        if player_id not in sent_reports:
+            player = Player.get_player(player_id)
+            if player is None:
+                continue
+            response += "<b>{}</b> -- @{}\n".format(player.nickname, player.username)
+    response += "\nВсего: <b>{}/{}</b> репортов".format(len(sent_reports), len(guild.members))
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def list_players(bot, update, guild_id=None):
