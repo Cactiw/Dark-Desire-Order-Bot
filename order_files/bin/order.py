@@ -76,7 +76,10 @@ def attackCommand(bot, update):
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, time=None):
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
-    response = "{3}⚔️{0}\n🛡{1}\n{2}\n".format(castle_target, defense if defense else castle_target, tactics, time_add_str)
+    response = "{3}⚔️{0}\n{1}{2}" \
+               "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
+                                                         else defense) if defense is not None else "",
+                           tactics, time_add_str)
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:

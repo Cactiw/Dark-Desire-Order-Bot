@@ -96,9 +96,14 @@ def pult_send(bot, update):
     if target == -1:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
+    # TODO ошибку на невыбор дивизиона
     divisions = pult_status.get("divisions").copy()
     if divisions[len(divisions) - 1] or (not any(divisions)):
         divisions = "ALL"
+    elif divisions[pult.all_attackers_division_num] is True:
+        for i in range(pult.all_attackers_division_num):
+            divisions[i] = True
+    print(divisions)
     castle_target = castles[target]
     defense = pult_status.get("defense")
     defense_target = defense_to_order[defense]

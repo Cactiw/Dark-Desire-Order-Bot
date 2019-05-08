@@ -15,8 +15,9 @@ class Pult:
         self.status = pult_status_default.copy()
         self.divisions = divisions_const.copy()
         self.divisions[-1] = '✅' + self.divisions[-1]
+        self.all_attackers_division_num = self.divisions.index('Все атакеры')
         self.all_division_num = self.divisions.index('✅ВСЕ')
-        self.divisions_active = [False, False, False, True]
+        self.divisions_active = [False, False, False, False, False, True]
         self.castles = castles_const.copy()
         self.times = times_const.copy()
         self.tactics = tactics_const.copy()
@@ -55,7 +56,12 @@ def build_pult(divisions, castles, times, defense, tactics):
             InlineKeyboardButton(divisions[0], callback_data="pdv0"),
             InlineKeyboardButton(divisions[1], callback_data="pdv1"),
             InlineKeyboardButton(divisions[2], callback_data="pdv2"),
+        ],
+        [
             InlineKeyboardButton(divisions[3], callback_data="pdv3"),
+            InlineKeyboardButton(divisions[4], callback_data="pdv4"),
+            InlineKeyboardButton(divisions[5], callback_data="pdv5"),
+
         ],
         [
             InlineKeyboardButton(castles[0], callback_data="pc0"),
