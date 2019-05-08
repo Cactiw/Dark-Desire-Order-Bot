@@ -18,6 +18,7 @@ from order_files.work_materials.globals import dispatcher, updater, conn, LOGS_C
 from castle_files.bin.castle import fill_mid_players
 
 import threading
+import time
 
 
 # ------------------------------------------------------------------------------------------------------
@@ -67,6 +68,8 @@ def order_bot_processing():
 
     recashe_order_chats()
     refill_deferred_orders()
+    # Необходимо подождать, пока другой процесс не завершит работу с локациями
+    time.sleep(0.01)
     fill_mid_players(other_process=True)
 
     processes = []

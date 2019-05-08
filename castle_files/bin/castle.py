@@ -110,7 +110,7 @@ def fill_mid_players(other_process=False):
     high_access_list.clear()
     throne = Location.get_location(2)
     if other_process:
-        throne.load_location()
+        throne.load_location(other_process=True)
     mid_players = throne.special_info.get("mid_players")
     for player_id in mid_players:
         high_access_list.append(player_id)

@@ -157,7 +157,7 @@ class AsyncBot(Bot):
             notification = order_in_queue.notification
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
-            message = self.actually_send_message(chat_id=chat_id, text = text)
+            message = self.actually_send_message(chat_id=chat_id, text = text, parse_mode='HTML')
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass

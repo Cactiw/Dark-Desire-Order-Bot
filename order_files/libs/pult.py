@@ -1,5 +1,6 @@
 from order_files.work_materials.pult_constants import castles as castles_const, times as times_const, \
-    tactics as tactics_const, defense as defense_const, divisions as divisions_const, pult_status_default
+    tactics as tactics_const, defense as defense_const, divisions as divisions_const, pult_status_default, \
+    potions as potions_const
 from order_files.work_materials.globals import deferred_orders, moscow_tz, local_tz
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -20,10 +21,12 @@ class Pult:
         self.divisions_active = [False, False, False, False, False, True]
         self.castles = castles_const.copy()
         self.times = times_const.copy()
+        self.potions = potions_const.copy()
+        self.potions_active = [False, False]
         self.tactics = tactics_const.copy()
         self.defense = defense_const.copy()
         self.deferred_time = deferred_time
-        print(self.deferred_time)
+        print("deferred time", self.deferred_time)
         Pult.pults.update({self.id: self})
         Pult.last_pult_id = self.id
 
@@ -42,15 +45,20 @@ class Pult:
             for i in range(len(divisions_const)):
                 if order.divisions[i]:
                     div_str += " {0}".format(divisions_const[i])
-            response += "{5}\n{0} -- {1}\nDefense home: {2}\n" \
-                        "Tactics: {3}\nremove: /remove_order_{4}\n" \
+            response += "{5}\n{0} -- {1}\n{2}{3}{6}{7}remove: /remove_order_{4}\n" \
                         "\n".format(local_tz.localize(order.time_set.replace(tzinfo=None)).astimezone(
                             tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S"),
-                                    order.target, order.defense, order.tactics, order.deferred_id, div_str[1:])
+                                    order.target, "Деф:{}\n".format(order.defense) if order.defense is not None else "",
+                                    "Тактика: {}\n".format(order.tactics) if order.tactics != "" else "",
+                                    order.deferred_id, div_str[1:],
+                                    "⚗️ Атака\n" if order.potions[0] else "", "⚗️ Деф\n" if order.potions[0] else "",
+                                    div_str[1:]
+                                    )
         return response
 
 
-def build_pult(divisions, castles, times, defense, tactics):
+def build_pult(divisions, castles, times, defense, tactics, potions, deferred_time=None):
+    print(deferred_time is None)
     __pult_buttons = [
         [
             InlineKeyboardButton(divisions[0], callback_data="pdv0"),
@@ -85,6 +93,10 @@ def build_pult(divisions, castles, times, defense, tactics):
             InlineKeyboardButton(times[5], callback_data="pt5"),
         ],
         [
+            InlineKeyboardButton(potions[0], callback_data="pp0"),
+            InlineKeyboardButton(potions[1], callback_data="pp1"),
+        ],
+        [
             InlineKeyboardButton(defense[0], callback_data="pds0"),
             InlineKeyboardButton(defense[1], callback_data="pds1"),
         ],
@@ -99,15 +111,18 @@ def build_pult(divisions, castles, times, defense, tactics):
             InlineKeyboardButton("📢 SEND 📢", callback_data="ps")
         ]
     ]
-
+    if deferred_time is not None:
+        __pult_buttons.pop(5)
     PultMarkup = InlineKeyboardMarkup(__pult_buttons)
     return PultMarkup
 
 
 def rebuild_pult(action, pult, context):
+    print(pult.deferred_time)
     if action == "None":
-        return build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
-    if action == "default":
+        return build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                          deferred_time=pult.deferred_time)
+    if action in ["default", "default_deferred"]:
         for i in range(0, len(pult.divisions) - 1):
             pult.divisions[i] = divisions_const[i]
             pult.divisions_active[i] = False
@@ -119,7 +134,11 @@ def rebuild_pult(action, pult, context):
             pult.defense[i] = defense_const[i]
         for i in range (0, len(pult.tactics)):
             pult.tactics[i] = tactics_const[i]
-        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
+        deferred_time = None
+        if action == "default_deferred":
+            deferred_time = 1
+        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                                deferred_time=deferred_time)
         return new_markup
     if action == "change_division":
         if context == pult.all_division_num:
@@ -136,30 +155,44 @@ def rebuild_pult(action, pult, context):
         else:
             pult.divisions[context] = '✅' + pult.divisions[context]
             pult.divisions_active[context] = True
-        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
+        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                                deferred_time=pult.deferred_time)
         return_value = [new_markup, pult.divisions_active]
         return return_value
     if action == "change_target":
         for i in range (0, len(pult.castles)):
             pult.castles[i] = castles_const[i]
         pult.castles[context] = '✅' + pult.castles[context]
-        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
+        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                                deferred_time=pult.deferred_time)
         return new_markup
     if action == "change_time":
         for i in range (0, len(pult.times)):
             pult.times[i] = times_const[i]
         pult.times[context] = '✅' + pult.times[context]
-        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
+        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                                deferred_time=pult.deferred_time)
         return new_markup
     if action == "change_defense":
         for i in range (0, len(pult.defense)):
             pult.defense[i] = defense_const[i]
         pult.defense[context] = '✅' + pult.defense[context]
-        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
+        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                                deferred_time=pult.deferred_time)
         return new_markup
     if action == "change_tactics":
         for i in range (0, len(pult.tactics)):
             pult.tactics[i] = tactics_const[i]
         pult.tactics[context] = '✅' + pult.tactics[context]
-        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics)
+        new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                                deferred_time=pult.deferred_time)
         return new_markup
+    if action == "change_potions":
+        if pult.potions[context].startswith('✅'):
+            pult.potions[context] = pult.potions[context][1:]
+        else:
+            pult.potions[context] = '✅' + pult.potions[context]
+        pult.potions_active[context] = not pult.potions_active[context]
+        return build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
+                          deferred_time=pult.deferred_time)
+

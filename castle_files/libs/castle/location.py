@@ -6,6 +6,7 @@ from castle_files.work_materials.globals import conn
 import json
 
 cursor = conn.cursor()
+cursor2 = conn.cursor()
 
 
 # Базовый класс - Локация
@@ -42,10 +43,13 @@ class Location:
     def get_id_by_status(status):
         return status_to_location.get(status)
 
-    def load_location(self):
+    def load_location(self, other_process=False):
+        new_cursor = cursor
+        if other_process:
+            new_cursor = cursor2
         request = "select state, building_process, special_info from locations where location_id = %s"
-        cursor.execute(request, (self.id,))
-        row = cursor.fetchone()
+        new_cursor.execute(request, (self.id,))
+        row = new_cursor.fetchone()
         if row is None:
             return -1
         self.state = row[0]

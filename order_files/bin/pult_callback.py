@@ -5,7 +5,7 @@ from order_files.work_materials.pult_constants import *
 from order_files.libs.pult import rebuild_pult, Pult
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.bin.order import send_order, send_order_job
-from order_files.work_materials.pult_constants import divisions as divisions_const
+from order_files.work_materials.pult_constants import divisions as divisions_const, potions as potions_consts
 
 from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job, admin_ids
 
@@ -22,20 +22,20 @@ import re
 def pult(bot, update):
     mes = update.message
     pult = Pult.get_pult(0, 0)  # Пульт - болванка
-    PultMarkup = rebuild_pult("default", pult, None)
     response = ""
     message = None
     send_time = None
     if 'pult' in mes.text:
         # Обычный пульт
         response += Pult.get_text()
-
+        PultMarkup = rebuild_pult("default", pult, None)
         message = bot.sync_send_message(
             chat_id=update.message.chat_id, text=response + "\n\n{0}".format(
                 datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y %H:%M:%S")),
             reply_markup=PultMarkup)
     elif 'order' in mes.text:
         # Вызывается пульт для установки отложки
+        PultMarkup = rebuild_pult("default_deferred", pult, None)
         line = re.search("order (\\d+)-?(\\d*)-?(\\d*)", mes.text)
         if line is None:
             bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис")
@@ -56,6 +56,7 @@ def pult(bot, update):
 
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup,
                                         reply_to_message_id=mes.message_id)
+    print(send_time)
     pult = Pult(message.chat_id, message.message_id, deferred_time=send_time)  # Создаётся новый пульт
 
 
@@ -81,6 +82,9 @@ def pult_callback(bot, update):
     if data.find("pdt") == 0:
         pult_tactics_callback(bot, update)
         return
+    if data.find("pp") == 0:
+        pult_potions_callback(bot, update)
+        return
 
 
 def pult_send(bot, update):
@@ -93,12 +97,15 @@ def pult_send(bot, update):
     target = pult_status.get("target")
     time_to_send = pult_status.get("time")
     tactics_num = pult_status.get("tactics")
+    potions = pult.potions_active
     if target == -1:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
-    # TODO ошибку на невыбор дивизиона
     divisions = pult_status.get("divisions").copy()
-    if divisions[len(divisions) - 1] or (not any(divisions)):
+    if not any(divisions):
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать дивизион")
+        return
+    if divisions[len(divisions) - 1]:
         divisions = "ALL"
     elif divisions[pult.all_attackers_division_num] is True:
         for i in range(pult.all_attackers_division_num):
@@ -110,7 +117,7 @@ def pult_send(bot, update):
     tactics_target = tactics_to_order[tactics_num]
     if time_to_send < 0 and pult.deferred_time is None:
         send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target,
-                   defense = defense_target, tactics = tactics_target)
+                   defense = defense_target, tactics = tactics_target, potions=potions)
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
         return
     if pult.deferred_time is not None:
@@ -121,7 +128,7 @@ def pult_send(bot, update):
         next_battle_time = next_battle.time()
         if time_to_send == 0:   # Мгновенная отправка, но с подстановкой времени в пин
             send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target,
-                       defense = defense_target, tactics = tactics_target, time = next_battle_time)
+                       defense = defense_target, tactics = tactics_target, time = next_battle_time, potions=potions)
             bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
             return
         time_to_send = next_battle - times_to_time[time_to_send]
@@ -134,16 +141,16 @@ def pult_send(bot, update):
         for i in range(len(divisions_const)):
             divisions.append(False)
         divisions[-1] = True
-    request = "insert into deferred_orders(order_id, time_set, target, defense, tactics, divisions) values " \
-              "(%s, %s, %s, %s, %s, %s) returning deferred_id"
-    cursor.execute(request, (globals.order_id, time_to_send, target, defense, tactics_target, divisions))
+    request = "insert into deferred_orders(order_id, time_set, target, defense, tactics, divisions, potions) values " \
+              "(%s, %s, %s, %s, %s, %s, %s) returning deferred_id"
+    cursor.execute(request, (globals.order_id, time_to_send, target, defense, tactics_target, divisions, potions))
     row = cursor.fetchone()
 
-    context = [mes.chat_id, castle_target, defense_target, tactics_target, divisions, row[0]]
+    context = [mes.chat_id, castle_target, defense_target, tactics_target, divisions, potions, row[0]]
     j = job.run_once(send_order_job, time_to_send.astimezone(local_tz).replace(tzinfo=None), context=context)
 
     current = DeferredOrder(row[0], globals.order_id, divisions, time_to_send, castle_target, defense_target,
-                            tactics_target, j)
+                            tactics_target, potions, j)
     deferred_orders.append(current)
 
     logging.info("Deffered successful on {0}".format(time_to_send))
@@ -231,6 +238,20 @@ def pult_tactics_callback(bot, update):
     order_bot.logs += "{} - @{} - Изменил тактику на {}" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username, tactics_to_order[new_tactics])
+
+
+def pult_potions_callback(bot, update):
+    mes = update.callback_query.message
+    pult = Pult.get_pult(mes.chat_id, mes.message_id)
+    pult_status = pult.status
+    data = update.callback_query.data
+    new_potions = int(data[2:])
+    new_markup = rebuild_pult("change_potions", pult, new_potions)
+    edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
+              callback_query_id=update.callback_query.id)
+    order_bot.logs += "{} - @{} - Изменил зелья на {}" \
+                      "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
+                                  update.callback_query.from_user.username, potions_consts[new_potions])
 
 
 def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
