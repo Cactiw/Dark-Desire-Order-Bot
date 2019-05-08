@@ -265,7 +265,7 @@ def add_assistant(bot, update):
     if player_to_add is None:
         bot.send_message(chat_id=update.message.chat_id, text="Игрок для добавления не найден.")
         return
-    if player.guild != guild.id:
+    if player_to_add.guild != guild.id:
         bot.send_message(chat_id=update.message.chat_id,
                          text="Сделать заместителем можно только игрока из своей гильдии.")
         return
