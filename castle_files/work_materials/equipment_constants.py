@@ -38,6 +38,16 @@ main_hand = [
     Equipment("main_hand", "w", "97", "Nightfall Bow", 32, 12, 4),
     Equipment("main_hand", "w", "98", "Black Morningstar", 19, 21, 4),
     Equipment("main_hand", "w", "99", "Maiming Bulawa", 22, 22, 4),
+
+    Equipment("main_hand", "e", "143", "Witchling Staff", 19, 14, 2),
+    Equipment("main_hand", "e", "144", "War Club", 17, 14, 2),
+    Equipment("main_hand", "e", "145", "Imp Bow", 23, 8, 2),
+    Equipment("main_hand", "e", "148", "Fleder Scimitar", 34, 0, 2),
+    Equipment("main_hand", "e", "149", "Witch Staff", 0, 0, 2),
+    Equipment("main_hand", "e", "150", "Walker Club", 17, 20, 2),
+    Equipment("main_hand", "e", "151", "Demon Bow", 26, 12, 2),
+    Equipment("main_hand", "e", "154", "Nosferatu Rapier", 0, 0, 2),
+
 ]
 
 second_hand = [
@@ -51,6 +61,11 @@ second_hand = [
     Equipment("second_hand", "w", "46", "Lion Knife", 13, 0, 3),
     Equipment("second_hand", "w", "91", "Griffin Knife", 15, 0, 4),
 
+    Equipment("second_hand", "e", "152", "Demon Whip", 15, 1, 2),
+    Equipment("second_hand", "e", "153", "Werewolf Knife", 0, 0, 2),
+    Equipment("second_hand", "e", "147", "Manwolf Knife", 13, 0, 2),
+    Equipment("second_hand", "e", "146", "Imp Whip", 12, 0, 2),
+
     Equipment("second_hand", "a", "21", "Wooden shield", 0, 1, 0),
     Equipment("second_hand", "a", "22", "Skeleton Buckler", 0, 2, 0),
     Equipment("second_hand", "a", "23", "Bronze shield", 0, 3, 0),
@@ -60,6 +75,9 @@ second_hand = [
     Equipment("second_hand", "a", "49", "Crusader Shield", 1, 12, 3),
     Equipment("second_hand", "a", "54", "Royal Shield", 1, 13, 3),
     Equipment("second_hand", "a", "82", "Council Shield", 0, 15, 4),
+
+    Equipment("second_hand", "e", "113", "Walker Shield", 0, 12, 2),
+    Equipment("second_hand", "e", "118", "Zombie Shield", 1, 14, 2),
 ]
 
 head = [
@@ -80,6 +98,16 @@ head = [
     Equipment("head", "a", "79", "Council Helmet", 8, 25, 4),
     Equipment("head", "a", "88", "Celestial Helmet", 6, 20, 4),
     Equipment("head", "a", "84", "Griffin Helmet", 11, 18, 4),
+
+    Equipment("head", "e", "102", "Witchling Circlet", 2, 12, 2),
+    Equipment("head", "e", "106", "Witch Circlet", , , 2),
+    Equipment("head", "e", "110", "Walker Helmet", 3, 17, 2),
+    Equipment("head", "e", "115", "Zombie Helmet", 6, 22, 2),
+    Equipment("head", "e", "120", "Imp Circlet", 3, 12, 2),
+    Equipment("head", "e", "128", "Manwolf Helmet", 7, 11, 2),
+    Equipment("head", "e", "132", "Werewolf Helmet", 0, 0, 2),
+    Equipment("head", "e", "136", "Fleder Helmet", 8, 9, 2),
+    Equipment("head", "e", "140", "Nosferatu Helmet", 0, 0, 2),
 ]
 
 gloves = [
@@ -100,6 +128,17 @@ gloves = [
     Equipment("gloves", "a", "81", "Council Gauntlets", 5, 15, 4),
     Equipment("gloves", "a", "90", "Celestial Bracers", 5, 13, 4),
     Equipment("gloves", "a", "86", "Griffin Gloves", 7, 12, 4),
+
+    Equipment("gloves", "e", "104", "Witchling Bracers", 1, 9, 2),
+    Equipment("gloves", "e", "108", "Witch Bracers", 0, 0, 2),
+    Equipment("gloves", "e", "112", "Walker Gauntlets", 2, 11, 2),
+    Equipment("gloves", "e", "117", "Zombie Gauntlets", 4, 13, 2),
+    Equipment("gloves", "e", "122", "Imp Bracers", 2, 9, 2),
+    Equipment("gloves", "e", "126", "Demon Bracers", 5, 7, 2),
+    Equipment("gloves", "e", "130", "Manwolf Gloves", 5, 8, 2),
+    Equipment("gloves", "e", "134", "Werewolf Gloves", 0, 0, 2),
+    Equipment("gloves", "e", "138", "Fleder Gloves", 6, 6, 2),
+    Equipment("gloves", "e", "142", "Nosferatu Gloves", 0, 0, 2),
 ]
 
 armor = [
@@ -120,6 +159,17 @@ armor = [
     Equipment("armor", "a", "78", "Council Armor", 13, 42, 4),
     Equipment("armor", "a", "87", "Celestial Armor", 11, 34, 4),
     Equipment("armor", "a", "83", "Griffin Armor", 16, 34, 4),
+
+    Equipment("armor", "e", "101", "Witchling Robe", 4, 20, 2),
+    Equipment("armor", "e", "105", "Witch Robe", 0, 0, 2),
+    Equipment("armor", "e", "109", "Walker Armor", 5, 28, 2),
+    Equipment("armor", "e", "114", "Zombie Armor", 10, 34, 2),
+    Equipment("armor", "e", "119", "Imp Robe", 5, 20, 2),
+    Equipment("armor", "e", "123", "Demon Robe", 10, 22, 2),
+    Equipment("armor", "e", "127", "Manwolf Armor", 11, 18, 2),
+    Equipment("armor", "e", "131", "Werewolf Armor", 0, 0, 2),
+    Equipment("armor", "e", "135", "Fleder Armor", 12, 16, 2),
+    Equipment("armor", "e", "139", "Nosferatu Armor", 0, 0, 2),
 ]
 
 boots = [
@@ -140,6 +190,17 @@ boots = [
     Equipment("boots", "a", "80", "Council Boots", 5, 15, 4),
     Equipment("boots", "a", "89", "Celestial Boots", 5, 13, 4),
     Equipment("boots", "a", "85", "Griffin Boots", 7, 12, 4),
+
+    Equipment("boots", "e", "103", "Witchling Shoes", 1, 9, 2),
+    Equipment("boots", "e", "107", "Witch Shoes", 0, 0, 2),
+    Equipment("boots", "e", "111", "Walker Boots", 2, 11, 2),
+    Equipment("boots", "e", "116", "Zombie Boots", 4, 13, 2),
+    Equipment("boots", "e", "121", "Imp Shoes", 2, 9, 2),
+    Equipment("boots", "e", "125", "Demon Shoes", 5, 7, 2),
+    Equipment("boots", "e", "129", "Manwolf Boots", 5, 8, 2),
+    Equipment("boots", "e", "133", "Werewolf Boots", 0, 0, 2),
+    Equipment("boots", "e", "137", "Fleder Boots", 6, 6, 2),
+    Equipment("boots", "e", "141", "Nosferatu Boots", 0, 0, 2),
 ]
 
 cloaks = [
