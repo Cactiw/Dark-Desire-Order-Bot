@@ -26,7 +26,7 @@ filter_delete_guild = FilterDeleteGuild()
 class FilterChangeGuildCommander(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
-        return user_data is not None and user_data.get("status") == "edit_guild_commander"
+        return filter_is_pm(message) and user_data is not None and user_data.get("status") == "edit_guild_commander"
 
 
 filter_change_guild_commander = FilterChangeGuildCommander()
@@ -35,7 +35,7 @@ filter_change_guild_commander = FilterChangeGuildCommander()
 class FilterChangeGuildChat(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
-        return user_data is not None and user_data.get("status") == "edit_guild_chat"
+        return filter_is_pm(message) and user_data is not None and user_data.get("status") == "edit_guild_chat"
 
 
 filter_change_guild_chat = FilterChangeGuildChat()
@@ -61,7 +61,7 @@ filter_remove_player = FilterRemovePlayer()
 class FilterChangeGuildDivision(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
-        return user_data is not None and user_data.get("status") == "edit_guild_division"
+        return filter_is_pm(message) and user_data is not None and user_data.get("status") == "edit_guild_division"
 
 
 filter_change_guild_division = FilterChangeGuildDivision()
