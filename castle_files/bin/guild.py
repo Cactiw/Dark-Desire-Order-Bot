@@ -115,15 +115,18 @@ def list_players(bot, update, guild_id=None):
         return
     response = "Список игроков в гильдии <b>{}</b>\n".format(guild.tag)
     guild.sort_players_by_exp()
+    high_access = guild.check_high_access(update.callback_query.from_user.id)
     for player_id in guild.members:
         player = Player.get_player(player_id)
         if player is None:
             logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
             continue
         response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
-                       "\nПоказать профиль: /view_profile_{}" \
-                       "\nУдалить из гильдии: /remove_player_{}" \
-                       "\n\n".format(player.nickname, player.lvl, player.attack, player.defense, player.id, player.id)
+                       "".format(player.nickname, player.lvl, player.attack, player.defense, )
+        if high_access:
+            response_new += "\nПоказать профиль: /view_profile_{}" \
+                       "\nУдалить из гильдии: /remove_player_{}".format(player.id, player.id)
+        response_new += "\n\n"
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
