@@ -31,7 +31,7 @@ class Player:
         self.defense = defense
         self.stamina = stamina
         self.pet = pet
-        self.equipment = equipment
+        self.equipment = equipment.copy()
         self.game_class = game_class
         self.last_access_time = time.time()
 
