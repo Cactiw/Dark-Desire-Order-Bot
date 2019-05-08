@@ -4,6 +4,7 @@ from castle_files.work_materials.globals import dispatcher, updater, conn
 
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
     filter_is_profile, filter_not_registered, filter_forbidden
+from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
@@ -22,6 +23,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player
+from castle_files.bin.mid import mailing_pin, mailing
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -149,6 +151,10 @@ def castle_bot_processing():
     # Restricted access---------------------------------------------------------------------------------------------
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
+
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_mailing_pin, mailing_pin))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_mailing, mailing))
+
     dispatcher.add_handler(MessageHandler(Filters.command & filter_edit_guild, edit_guild))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_delete_guild, request_delete_guild))
     dispatcher.add_handler(CallbackQueryHandler(delete_guild, pattern="g_delete_confirm_\\d+"))
