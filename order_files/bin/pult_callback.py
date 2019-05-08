@@ -87,7 +87,6 @@ def pult_send(bot, update):
     order_bot.logs += "{} - @{} Нажал \"Отправить\"" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username)
-    print(order_bot.logs)
     mes = update.callback_query.message
     pult = Pult.get_pult(mes.chat_id, mes.message_id)
     pult_status = pult.status
@@ -98,7 +97,7 @@ def pult_send(bot, update):
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
     divisions = pult_status.get("divisions").copy()
-    if divisions[len(divisions) - 1]:
+    if divisions[len(divisions) - 1] or (not any(divisions)):
         divisions = "ALL"
     castle_target = castles[target]
     defense = pult_status.get("defense")
