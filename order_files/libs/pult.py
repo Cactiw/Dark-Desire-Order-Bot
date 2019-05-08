@@ -26,7 +26,6 @@ class Pult:
         self.tactics = tactics_const.copy()
         self.defense = defense_const.copy()
         self.deferred_time = deferred_time
-        print("deferred time", self.deferred_time)
         Pult.pults.update({self.id: self})
         Pult.last_pult_id = self.id
 
@@ -58,7 +57,6 @@ class Pult:
 
 
 def build_pult(divisions, castles, times, defense, tactics, potions, deferred_time=None):
-    print(deferred_time is None)
     __pult_buttons = [
         [
             InlineKeyboardButton(divisions[0], callback_data="pdv0"),
