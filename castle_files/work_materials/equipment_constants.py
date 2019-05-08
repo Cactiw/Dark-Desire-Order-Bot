@@ -102,7 +102,7 @@ head = [
     Equipment("head", "a", "84", "Griffin Helmet", 11, 18, 4),
 
     Equipment("head", "e", "102", "Witchling Circlet", 2, 12, 2),
-    Equipment("head", "e", "106", "Witch Circlet", , , 2),
+    Equipment("head", "e", "106", "Witch Circlet", 0, 0, 2),
     Equipment("head", "e", "110", "Walker Helmet", 3, 17, 2),
     Equipment("head", "e", "115", "Zombie Helmet", 6, 22, 2),
     Equipment("head", "e", "120", "Imp Circlet", 3, 12, 2),
