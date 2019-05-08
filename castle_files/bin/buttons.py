@@ -40,13 +40,17 @@ def get_delete_guild_buttons(guild):
     return InlineKeyboardMarkup(buttons)
 
 
-def get_view_guild_buttons(guild):
+def get_view_guild_buttons(guild, user_id=None):
     buttons = [
         [
             InlineKeyboardButton("Список игроков", callback_data="gipl_{}".format(guild.id)),
             InlineKeyboardButton("Покинуть гильдию", callback_data="gilv_{}".format(guild.id)),
         ],
     ]
+    if user_id is not None and guild.check_high_access(user_id):
+        buttons.append([
+            InlineKeyboardButton("Заместители", callback_data="giass_{}".format(guild.id)),
+        ])
     return InlineKeyboardMarkup(buttons)
 
 

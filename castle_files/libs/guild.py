@@ -151,7 +151,7 @@ class Guild:
             guild.last_access_time = time.time()
             return guild
         request = "select guild_tag, guild_id, guild_name, chat_id, members, commander_id, division, chat_name, " \
-                  "invite_link, orders_enabled, pin_enabled, disable_notification from guilds "
+                  "invite_link, orders_enabled, pin_enabled, disable_notification, assistants from guilds "
         if guild_tag is not None:
             request += "where guild_tag = %s"
             cursor.execute(request, (guild_tag,))
@@ -164,8 +164,9 @@ class Guild:
         if row is None:
             return None
         guild_tag, guild_id, name, chat_id, members, commander_id, division, chat_name, invite_link, orders_enabled, \
-            pin_enabled, disable_notification = row
-        assistants = []
+            pin_enabled, disable_notification, assistants = row
+        if assistants is None:
+            assistants = []
         # Инициализация новой гильдии
         guild = Guild(guild_id, guild_tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
                       orders_enabled, pin_enabled, disable_notification)
@@ -188,12 +189,12 @@ class Guild:
     # Метод для обновления информации о гильдии в БД
     def update_to_database(self):
         request = "update guilds set guild_name = %s, members = %s, commander_id = %s, division = %s, chat_id = %s, " \
-                  "chat_name = %s, invite_link = %s, orders_enabled = %s, pin_enabled = %s,disable_notification = %s " \
-                  "where guild_tag = %s"
+                  "chat_name = %s, invite_link = %s, orders_enabled = %s, pin_enabled = %s,disable_notification = %s, " \
+                  "assistants = %s where guild_tag = %s"
         try:
             cursor.execute(request, (self.name, self.members, self.commander_id, self.division, self.chat_id,
                                      self.chat_name, self.invite_link, self.orders_enabled, self.pin_enabled,
-                                     self.disable_notification, self.tag))
+                                     self.disable_notification, self.assistants, self.tag))
         except Exception:
             logging.error(traceback.format_exc())
             return -1

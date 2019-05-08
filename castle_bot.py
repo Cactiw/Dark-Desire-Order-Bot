@@ -25,7 +25,7 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
-    cancel_delete_guild
+    cancel_delete_guild, add_assistant, del_assistant, assistants
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -82,6 +82,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
     dispatcher.add_handler(CommandHandler('add', add))
+    dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
+    dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
 
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
@@ -173,6 +175,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opn]_\\d+"))
 
     dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm, unknown_input, pass_user_data=True))

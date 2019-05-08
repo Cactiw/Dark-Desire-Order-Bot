@@ -92,7 +92,7 @@ def guild_info(bot, update):
 
     response += "\nИгроков в гильдии: <b>{}</b>\n".format(guild.members_count)
     response += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
-    buttons = get_view_guild_buttons(guild)
+    buttons = get_view_guild_buttons(guild, user_id=mes.from_user.id)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
 
 
@@ -115,6 +115,7 @@ def list_players(bot, update, guild_id=None):
         return
     response = "Список игроков в гильдии <b>{}</b>\n".format(guild.tag)
     guild.sort_players_by_exp()
+    guild.calculate_attack_and_defense()
     high_access = guild.check_high_access(update.callback_query.from_user.id)
     for player_id in guild.members:
         player = Player.get_player(player_id)
@@ -131,6 +132,7 @@ def list_players(bot, update, guild_id=None):
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
+    response += "Всего: ⚔: <code>{}</code>, 🛡: <code>{}</code>".format(guild.get_attack(), guild.get_defense())
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
@@ -233,6 +235,122 @@ def add(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно добавлен в гильдию "
                                                           "<b>{}</b>".format(player_to_add.nickname, guild.tag),
                      parse_mode='HTML')
+
+
+def add_assistant(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард "
+                                                              "/hero личным сообщением боту.")
+        return
+    guild = Guild.get_guild(guild_id=player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Гильдия не найдена.")
+        return
+    if player.guild != guild.id:
+        bot.send_message(chat_id=update.message.chat_id, text="Можно добавлять замов только в своей гильдии")
+        return
+    if update.message.chat_id != guild.chat_id:
+        bot.send_message(chat_id=update.message.chat_id, text="Добавлять заместителя можно только в официальном "
+                                                              "чате гильдии")
+        return
+    if player.id != guild.commander_id and player.id not in guild.assistants:
+        bot.send_message(chat_id=update.message.chat_id, text="Только командир и его замы могут добавлять новых замов.")
+        return
+    if update.message.reply_to_message is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Сообщение должно являться ответом на сообщение игрока, "
+                                                              "которого необходимо сделать замом.")
+        return
+    player_to_add = Player.get_player(update.message.reply_to_message.from_user.id)
+    if player_to_add is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок для добавления не найден.")
+        return
+    if guild.check_high_access(player_to_add.id):
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок уже имеет необходимые права.")
+        return
+    guild.assistants.append(player_to_add.id)
+    guild.update_to_database()
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="<b>{}</b> теперь заместитель в гильдии <b>{}</b>".format(player_to_add.nickname, guild.tag),
+                     parse_mode='HTML', reply_to_message_id=update.message.message_id)
+
+
+def del_assistant(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард "
+                                                              "/hero личным сообщением боту.")
+        return
+    guild = Guild.get_guild(guild_id=player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Гильдия не найдена.")
+        return
+    if player.guild != guild.id:
+        bot.send_message(chat_id=update.message.chat_id, text="Можно удалять замов только в своей гильдии")
+        return
+    if update.message.chat_id != guild.chat_id:
+        bot.send_message(chat_id=update.message.chat_id, text="Удалять заместителя можно только в официальном "
+                                                              "чате гильдии")
+        return
+    if player.id != guild.commander_id and player.id not in guild.assistants:
+        bot.send_message(chat_id=update.message.chat_id, text="Только командир и его замы могут удалять текущих замов.")
+        return
+    if update.message.reply_to_message is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Сообщение должно являться ответом на сообщение игрока, "
+                                                              "которого необходимо снять с должности зама.")
+        return
+    player_to_add = Player.get_player(update.message.reply_to_message.from_user.id)
+    if player_to_add is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок для удаления не найден.")
+        return
+    if not guild.check_high_access(player_to_add.id):
+        bot.send_message(chat_id=update.message.chat_id, text="Игрок и не являлся замом.")
+        return
+    if player_to_add.id == guild.commander_id:
+        bot.send_message(chat_id=update.message.chat_id, text="Нельзя свергнуть командира.")
+        return
+    guild.assistants.remove(player_to_add.id)
+    guild.update_to_database()
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="<b>{}</b> более не является заместителем в гильдии <b>{}</b>".format(player_to_add.nickname,
+                                                                                                guild.tag),
+                     parse_mode='HTML', reply_to_message_id=update.message.message_id)
+
+
+def assistants(bot, update):
+    mes = update.callback_query.message
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+        return
+    guild_id = player.guild
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                              "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    if not guild.check_high_access(update.callback_query.from_user.id):
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
+        return
+    if not guild.assistants:
+        response = "В гильдии пока нет заместителей.\n"
+    else:
+        response = "Список заместителей гильдии <b>{}</b>:\n".format(guild.tag)
+        for player_id in guild.assistants:
+            current_player = Player.get_player(player_id)
+            if current_player is None:
+                continue
+            response += "@{} - <b>{}</b>\n".format(current_player.username, current_player.nickname)
+    response += "\nДобавить заместителя - /add_assistant - реплаем на сообщение игрока, " \
+                "которого необходимо сделать заместителем\nУдалить заместителя - " \
+                "/del_assistant - аналогично, реплаем на сообщение игрока, " \
+                "которого необходимо снять с должности заместителя"
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 # Генерирует корректный и обновлённый текст в ответе на изменение гильдии. Генерируется каждый раз при изменении ги
