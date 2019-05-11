@@ -27,7 +27,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player
-from castle_files.bin.mid import mailing_pin, mailing
+from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
@@ -231,6 +231,7 @@ def castle_bot_processing():
     fill_mid_players()
     fill_allowed_list()
     fill_triggers_lists()
+    plan_battle_jobs()
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True
