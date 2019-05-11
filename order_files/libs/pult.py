@@ -50,7 +50,7 @@ class Pult:
                                     order.target, "Деф:{}\n".format(order.defense) if order.defense is not None else "",
                                     "Тактика: {}\n".format(order.tactics) if order.tactics != "" else "",
                                     order.deferred_id, div_str[1:],
-                                    "⚗️ Атака\n" if order.potions[0] else "", "⚗️ Деф\n" if order.potions[0] else "",
+                                    "⚗️ Атака\n" if order.potions[0] else "", "⚗️ Деф\n" if order.potions[1] else "",
                                     div_str[1:]
                                     )
         return response
@@ -95,8 +95,8 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
             InlineKeyboardButton(potions[1], callback_data="pp1"),
         ],
         [
-            InlineKeyboardButton(defense[0], callback_data="pds0"),
             InlineKeyboardButton(defense[1], callback_data="pds1"),
+            InlineKeyboardButton(defense[0], callback_data="pds0"),
         ],
         [
             InlineKeyboardButton(tactics[0], callback_data="pdt0"),
