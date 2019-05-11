@@ -93,7 +93,6 @@ def add_trigger(bot, update):
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
     trigger_list.append(trigger_in)
     bot.send_message(chat_id=mes.chat_id, text="Триггер успешно создан!", reply_to_message_id=mes.message_id)
-    print(global_triggers_in)
 
 
 def send_trigger(bot, update):
