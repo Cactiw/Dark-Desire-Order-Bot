@@ -44,7 +44,7 @@ def pult(bot, update):
         minutes = int(line.group(2)) if line.group(2) != '' else 0
         seconds = int(line.group(3)) if line.group(3) != '' else 0
         time_to_send = datetime.time(hour=hours, minute=minutes, second=seconds)
-        time_now = datetime.datetime.now().time()
+        time_now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
         day_to_send = datetime.datetime.now().date()
         date_to_send = datetime.datetime.combine(day_to_send, datetime.time(hour=0))
         if time_to_send < time_now:
@@ -56,7 +56,6 @@ def pult(bot, update):
 
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup,
                                         reply_to_message_id=mes.message_id)
-    print(send_time)
     pult = Pult(message.chat_id, message.message_id, deferred_time=send_time)  # Создаётся новый пульт
 
 

@@ -214,7 +214,7 @@ def refill_deferred_orders():
         deferred_id = row[5]
         divisions = row[6]
         potions = row[7]
-        now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+        now = datetime.datetime.now(tz=local_tz).replace(tzinfo=None)
         print(now, time_to_send)
         if now > time_to_send:
             request = "delete from deferred_orders where deferred_id = %s"
