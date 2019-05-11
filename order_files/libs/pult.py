@@ -62,10 +62,10 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
             InlineKeyboardButton(divisions[0], callback_data="pdv0"),
             InlineKeyboardButton(divisions[1], callback_data="pdv1"),
             InlineKeyboardButton(divisions[2], callback_data="pdv2"),
+            InlineKeyboardButton(divisions[4], callback_data="pdv4"),  # Луки
         ],
         [
             InlineKeyboardButton(divisions[3], callback_data="pdv3"),
-            InlineKeyboardButton(divisions[4], callback_data="pdv4"),
             InlineKeyboardButton(divisions[5], callback_data="pdv5"),
 
         ],
