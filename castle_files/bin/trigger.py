@@ -69,7 +69,7 @@ def add_trigger(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Доступ только у админов.", reply_to_message_id=mes.message_id)
         return
     trigger_in = mes.text.partition(" ")[2].lower()
-    if not mes.text.startswith("/add_global_trigger"):
+    if not mes.text.startswith("/create_global_trigger"):
         chat_id = mes.chat_id
         trigger_list = triggers_in.get(mes.chat_id)
         if trigger_list is None:
