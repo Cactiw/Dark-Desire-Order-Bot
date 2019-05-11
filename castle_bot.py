@@ -5,6 +5,7 @@ from castle_files.work_materials.globals import dispatcher, updater, conn
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
     filter_is_profile, filter_not_registered, filter_forbidden
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
+from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
@@ -24,6 +25,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player
 from castle_files.bin.mid import mailing_pin, mailing
+from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -87,6 +89,14 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
 
+    # Хендлеры для триггеров
+    dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
+    dispatcher.add_handler(CommandHandler('create_global_trigger', add_trigger))
+    dispatcher.add_handler(CommandHandler('delete_trigger', remove_trigger))
+    dispatcher.add_handler(CommandHandler('triggers', triggers))
+
+
+
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
 
@@ -147,6 +157,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_castle_gates, castle_gates, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_central_square, central_square, pass_user_data=True))
 
+    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
+
     dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input, pass_user_data=True))
     # Restricted access---------------------------------------------------------------------------------------------
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
@@ -192,6 +204,7 @@ def castle_bot_processing():
     Guild.fill_guild_ids()
     fill_mid_players()
     fill_allowed_list()
+    fill_triggers_lists()
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True

@@ -1,5 +1,5 @@
 from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor
-
+from mwt import MWT
 
 def cancel(bot, update, user_data):
     if "status" in user_data:
@@ -22,3 +22,9 @@ def fill_allowed_list():
     while row is not None:
         allowed_list.append(row[0])
         row = cursor.fetchone()
+
+
+@MWT(timeout=15*60)
+def get_admin_ids(bot, chat_id):
+    """Returns a list of admin IDs for a given chat. Results are cached for 15 minutes."""
+    return [admin.user.id for admin in bot.get_chat_administrators(chat_id)]
