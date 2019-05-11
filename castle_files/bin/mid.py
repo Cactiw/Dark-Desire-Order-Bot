@@ -43,7 +43,7 @@ def mail_and_pin(bot, update):
 
 def plan_battle_jobs():
     plan_mid_notifications()
-    job.run_once(after_battle, count_next_battle_time)
+    job.run_once(after_battle, count_next_battle_time())
 
 
 def after_battle(bot, job):
