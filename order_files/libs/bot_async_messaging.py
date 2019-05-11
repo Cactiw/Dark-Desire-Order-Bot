@@ -97,8 +97,9 @@ class AsyncBot(Bot):
         release.start()
         return message
 
-    def send_order(self, order_id, chat_id, response, pin_enabled, notification):
-        order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin_enabled, notification=notification)
+    def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None):
+        order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin_enabled, notification=notification,
+                      reply_markup=reply_markup)
         self.order_queue.put(order)
 
     def start(self):
@@ -157,7 +158,9 @@ class AsyncBot(Bot):
             notification = order_in_queue.notification
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
-            message = self.actually_send_message(chat_id=chat_id, text = text, parse_mode='HTML')
+            reply_markup = order_in_queue.reply_markup
+            message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
+                                                 reply_markup=reply_markup)
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass
@@ -168,7 +171,8 @@ class AsyncBot(Bot):
                 if pin:
                     print("notification:", notification)
                     try:
-                        super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id, disable_notification=not notification)
+                        super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id,
+                                                             disable_notification=not notification)
                     except Unauthorized:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass

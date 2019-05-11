@@ -8,6 +8,7 @@ from order_files.work_materials.pult_constants import divisions as division_cons
     potions_to_order
 from order_files.libs.bot_async_messaging import order_backup_queue
 from order_files.libs.pult import Pult
+from order_files.bin.buttons import get_order_buttons
 
 import order_files.work_materials.globals as globals
 import datetime
@@ -86,11 +87,13 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
                                                          else defense) if defense is not None else "",
                            tactics, time_add_str, pot_str)
+    buttons = get_order_buttons(castle_target, defense)
+    # print("buttons =", buttons)
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
             bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
-                           notification=not chat[2])
+                           notification=not chat[2], reply_markup=buttons)
             orders_sent += 1
     else:
         current_divisions = []
