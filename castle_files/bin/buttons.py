@@ -55,6 +55,15 @@ def get_view_guild_buttons(guild, user_id=None):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_update_history_buttons(update_id, last_update_id):
+    buttons = [[]]
+    if update_id != 1:
+        buttons[0].append(InlineKeyboardButton("⬅️️", callback_data="uhl_{}".format(update_id)))
+    if update_id != last_update_id:
+        buttons[0].append(InlineKeyboardButton("➡️️", callback_data="uhr_{}".format(update_id)))
+    return InlineKeyboardMarkup(buttons)
+
+
 # Функция, которая возвращает кнопки для любого статуса. Принимает на вход user_data, в котором читает поле "status",
 # далее генерирует и возвращает кнопки
 def get_general_buttons(user_data, player=None, only_buttons=False):
@@ -79,6 +88,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("⛩ Врата замка"),
                 ],
             [
+                KeyboardButton("🔭 Башня ТехМаг наук"),
                 KeyboardButton("🏚 Не построено"),
             ],
             [
@@ -113,8 +123,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             buttons[1].append(KeyboardButton("Штаб"))
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
-    elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message',
-                    'editing_debrief', 'changing_castle_message']:
+    elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message', 'editing_debrief',
+                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message']:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
@@ -155,6 +165,30 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         buttons = [
             [
                 KeyboardButton("📜Выкатить дебриф"),
+                KeyboardButton("📣Рассылка по гильдиям"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'technical_tower':
+        buttons = [
+            [
+                # KeyboardButton("🔖Обратиться к магу"),
+                KeyboardButton("🗂Архив объявлений"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+        if player is not None and player.id == SUPER_ADMIN_ID:
+            buttons.insert(1, [
+                KeyboardButton("💻Кабинет ботодела"),
+            ])
+    elif status == 'my_cabinet':
+        buttons = [
+            [
+                KeyboardButton("📈Выкатить обнову"),
                 KeyboardButton("📣Рассылка по гильдиям"),
             ],
             [

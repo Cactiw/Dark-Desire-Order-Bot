@@ -15,6 +15,9 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
     filter_request_change_debrief
+from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
+    filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
+    filter_send_bot_guild_message_notify, filter_update_history
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
     filter_restrict_feedback, filter_unrestrict_feedback
@@ -35,6 +38,9 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief
+from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
+    change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
+    change_update_history
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -108,6 +114,23 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guide_signs, guide_signs))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_barracks, barracks, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_throne_room, throne_room, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_technical_tower, technical_tower, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_my_cabinet, my_cabinet, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_bot_guild_message_notify,
+                                          request_bot_guild_message_notify, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_send_bot_guild_message_notify,
+                                          send_bot_guild_message_notify, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_change_update_message,
+                                          request_change_update_message, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_change_update_message,
+                                          change_update_message, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_update_history, update_history))
+
+    dispatcher.add_handler(CallbackQueryHandler(change_update_history, pattern="uh[lr]_\\d+"))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_watch_portraits, watch_portraits))
 

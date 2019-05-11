@@ -105,6 +105,13 @@ castle_gates.create_location_in_database()
 headquarters = Location(4, "Штаб", "Являясь генералом, Вы без проблем входите в штаб. На стенах висят карты, "
                                    "посыльные зачитывают донесения.")
 
+technical_tower = Location(5, "Башню техно-магических наук",
+                           "Добро пожаловать в башню Техно-Магических наук.\n"
+                           "Глашатай верховного  Архимейстера Темного Желания вещает:\n📜\n{}",
+                           special_info={"enter_text_format_values": ["Последнее обновление бота"],
+                                         "last_update_id": 1})
+technical_tower.create_location_in_database()
+
 status_to_location = {
     "default": None,
     "central_square": 0,
@@ -112,6 +119,7 @@ status_to_location = {
     "throne_room": 2,
     "castle_gates": 3,
     "headquarters": 4,
+    "technical_tower": 5,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -122,4 +130,5 @@ locations = {
     2: throne_room,
     3: castle_gates,
     4: headquarters,
+    5: technical_tower,
 }
