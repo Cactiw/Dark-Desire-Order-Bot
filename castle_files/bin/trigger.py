@@ -148,7 +148,7 @@ def triggers(bot, update):
     row = cursor.fetchone()
     response = "<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n"
     while row is not None:
-        response_new = "<em>{}</em> -- создал <code>{}</code> {}\n".format(row[0], row[1],
+        response_new = "<code>{}</code> — создал <code>{}</code> {}\n".format(row[0], row[1],
                                                                            row[2].strftime("%d/%m/%y %H:%M:%S"))
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
@@ -161,7 +161,7 @@ def triggers(bot, update):
     row = cursor.fetchone()
     response += "\n\n<b>Глобальные триггеры</b>:\n"
     while row is not None:
-        response_new = "<em>{}</em> -- создал <code>{}</code> {}\n".format(row[0], row[1],
+        response_new = "<code>{}</code> — создал <code>{}</code> {}\n".format(row[0], row[1],
                                                                            row[2].strftime("%d/%m/%y %H:%M:%S"))
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
@@ -187,3 +187,49 @@ def fill_triggers_lists():
                 triggers_in.update({chat_id: triggers_list})
             triggers_list.append(text)
         row = cursor.fetchone()
+
+
+def info_trigger(bot, update):
+    mes = update.message
+    if filter_is_pm(mes):
+        return
+    if mes.from_user.id not in get_admin_ids(bot=bot, chat_id=mes.chat_id):
+        bot.send_message(chat_id=mes.chat_id, text="Доступ только у админов.", reply_to_message_id=mes.message_id)
+        return
+    text = mes.text.partition(" ")[2].lower()
+    list_triggers = triggers_in.get(mes.chat_id)
+    chat_id = mes.chat_id
+    if list_triggers is None:
+        list_triggers = []
+        triggers_in.update({mes.chat_id: list_triggers})
+    if text not in list_triggers:
+        if text not in global_triggers_in:
+            bot.send_message(chat_id=mes.chat_id, text="Триггер не найден", reply_to_message_id=mes.message_id)
+            return
+        chat_id = 0
+    request = "select creator, date_created from triggers where text_in = %s and chat_id = %s"
+    cursor.execute(request, (text, chat_id))
+    row = cursor.fetchone()
+    response = "<code>{}</code> — создал <code>{}</code> {}".format(text, row[0], row[1].strftime("%d/%m/%y %H:%M:%S"))
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_to_message_id=mes.message_id)
+
+
+def replace_trigger(bot, update):
+    mes = update.message
+    if filter_is_pm(mes):
+        return
+    if mes.from_user.id not in get_admin_ids(bot=bot, chat_id=mes.chat_id):
+        bot.send_message(chat_id=mes.chat_id, text="Доступ только у админов.", reply_to_message_id=mes.message_id)
+        return
+    text = mes.text.partition(" ")[2].lower()
+    list_triggers = triggers_in.get(mes.chat_id)
+    if list_triggers is None or text not in list_triggers:
+        bot.send_message(chat_id=mes.chat_id, text="Триггер не найден", reply_to_message_id=mes.message_id)
+        return
+    request = "update triggers set type = %s, data_out = %s, creator = %s, date_created = %s where chat_id = %s and " \
+              "text_in = %s"
+    trigger_type, data = get_message_type_and_data(mes.reply_to_message)
+    cursor.execute(request, (trigger_type, data, mes.from_user.username or mes.from_user.id,
+                             datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None), mes.chat_id, text))
+    bot.send_message(chat_id=mes.chat_id, text="Триггер успешно заменён!", reply_to_message_id=mes.message_id)
+    return

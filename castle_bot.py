@@ -25,7 +25,8 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player
 from castle_files.bin.mid import mailing_pin, mailing
-from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists
+from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
+    info_trigger, replace_trigger
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -94,6 +95,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('create_global_trigger', add_trigger))
     dispatcher.add_handler(CommandHandler('delete_trigger', remove_trigger))
     dispatcher.add_handler(CommandHandler('triggers', triggers))
+    dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
+    dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
 
 
 
