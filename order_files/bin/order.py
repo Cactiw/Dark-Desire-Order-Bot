@@ -86,7 +86,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     response = "{3}⚔️{0}\n{1}{2}\n\n{4}" \
                "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
                                                          else defense) if defense is not None else "",
-                           tactics, time_add_str, pot_str)
+                           tactics, "{}\n".format(time_add_str) if time_add_str != "" else time_add_str, pot_str)
     buttons = get_order_buttons(castle_target, defense)
     # print("buttons =", buttons)
     orders_sent = 0
