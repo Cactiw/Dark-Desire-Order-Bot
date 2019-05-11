@@ -120,7 +120,7 @@ def guild_reports(bot, update):
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
         return
     guild.sort_players_by_exp()
-    response = "Статистика гильдии по битве {}:\n".format(count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:"))
+    response = "Статистика гильдии по битве {}:\n".format(count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     unsent_reports = []
     for player_id in guild.members:
         request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \

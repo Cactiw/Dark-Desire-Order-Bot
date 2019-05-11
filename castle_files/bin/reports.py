@@ -112,7 +112,7 @@ def battle_stats(bot, update):
     cursor1.execute(request, (battle_id,))
     row = cursor1.fetchone()
     response = "Статистика по битве {} - {}:\n".format(battle_id,
-                                                       count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:"))
+                                                       count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     while row is not None:
         player = Player.get_player(row[0])
         if player.guild is None:
