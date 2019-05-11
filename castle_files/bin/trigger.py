@@ -93,6 +93,7 @@ def add_trigger(bot, update):
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
     trigger_list.append(trigger_in)
     bot.send_message(chat_id=mes.chat_id, text="Триггер успешно создан!", reply_to_message_id=mes.message_id)
+    print(global_triggers_in)
 
 
 def send_trigger(bot, update):
@@ -100,7 +101,11 @@ def send_trigger(bot, update):
     if filter_is_pm(mes):
         return
     chat_id = mes.chat_id
-    if mes.text.lower() not in triggers_in.get(mes.chat_id):
+    trigger_list = triggers_in.get(mes.chat_id)
+    if trigger_list is None:
+        trigger_list = []
+        triggers_in.update({mes.chat_id: trigger_list})
+    if mes.text.lower() not in trigger_list:
         chat_id = 0
     request = "select type, data_out from triggers where text_in = %s and chat_id = %s limit 1"
     cursor.execute(request, (mes.text.lower(), chat_id))
