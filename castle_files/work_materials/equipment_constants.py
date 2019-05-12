@@ -91,7 +91,7 @@ head = [
     Equipment("head", "a", "28", "Order Helmet", 3, 15, 2),
     Equipment("head", "a", "37", "Clarity Circlet", 2, 12, 2),
     Equipment("head", "a", "33", "Hunter Helmet", 5, 11, 2),
-    Equipment("head", "a", "49", "Crusader Helmet", 6, 19, 3),
+    Equipment("head", "a", "46", "Crusader Helmet", 6, 19, 3),
     Equipment("head", "a", "51", "Royal Helmet", 5, 20, 3),
     Equipment("head", "a", "64", "Demon Circlet", 5, 15, 3),
     Equipment("head", "a", "68", "Divine Circlet", 4, 16, 3),
