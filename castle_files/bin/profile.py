@@ -99,6 +99,7 @@ def hero(bot, update, user_data):
     if pet:
         pet = pet.group(1)
     # Парсинг экипировки
+    print("parsing eq")
     player_equipment = {
         "main_hand": None,
         "second_hand": None,
@@ -111,7 +112,7 @@ def hero(bot, update, user_data):
     equip_strings = text.partition("🎽Экипировка")[2].splitlines()[1:]
     for string in equip_strings:
         # clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
-        clear_name = re.search("(⚡?\\+?\\d*\\s?(.+?))\\s\\+(\\d*)⚔?\\s*\\+?(\\d*)🛡?", string)
+        clear_name = re.search("(⚡?\\+?\\d*\\s?(.+?))\\s\\+((\\d*)⚔)?\\s*\\+?(\\d*)🛡?", string)
         if clear_name is None:
             # logging.warning("Error while parsing item_string\n{}".format(string))
             continue
@@ -119,8 +120,8 @@ def hero(bot, update, user_data):
             pass
             # logging.info("successful parsed {},, Got: {}".format(string, clear_name.group(1)))
         full_name = clear_name.group(1)
-        eq_attack = int(clear_name.group(3)) if clear_name.group(3) != "" else 0
-        eq_defense = int(clear_name.group(4)) if clear_name.group(4) != "" else 0
+        eq_attack = int(clear_name.group(4)) if clear_name.group(4) is not None and clear_name.group(4) != "" else 0
+        eq_defense = int(clear_name.group(5)) if clear_name.group(5) != "" else 0
         clear_name = clear_name.group(2)
         names_list = list(equipment_names.items())
         code = None
@@ -148,7 +149,7 @@ def hero(bot, update, user_data):
                         stamina, pet, player_equipment)
         # Добавляем игрока в бд
         player.insert_into_database()
-        player=player.reload_from_database()
+        player = player.reload_from_database()
 
         user_data.update({"status": DEFAULT_CASTLE_STATUS, "location_id": 0})
         bot.send_message(chat_id=mes.chat_id,
