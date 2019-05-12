@@ -45,7 +45,7 @@ def pult(bot, update):
         seconds = int(line.group(3)) if line.group(3) != '' else 0
         time_to_send = datetime.time(hour=hours, minute=minutes, second=seconds)
         time_now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
-        day_to_send = datetime.datetime.now().date()
+        day_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).date()
         date_to_send = datetime.datetime.combine(day_to_send, datetime.time(hour=0))
         if time_to_send < time_now:
             date_to_send += datetime.timedelta(days=1)
@@ -53,7 +53,6 @@ def pult(bot, update):
         send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
         response = "Отложенный приказ на {}".format(send_time)
         send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
-
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup,
                                         reply_to_message_id=mes.message_id)
     pult = Pult(message.chat_id, message.message_id, deferred_time=send_time)  # Создаётся новый пульт
