@@ -96,6 +96,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
 
+    dispatcher.add_handler(CommandHandler('dokument', view_profile))
+
     # Хендлеры для триггеров
     dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
     dispatcher.add_handler(CommandHandler('create_global_trigger', add_trigger))

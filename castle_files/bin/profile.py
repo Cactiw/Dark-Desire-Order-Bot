@@ -3,7 +3,7 @@
 (например, приём и обновление /hero)
 """
 
-from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS
+from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -54,17 +54,38 @@ def view_profile(bot, update):
     guild = Guild.get_guild(guild_id=requested_player.guild)
     if not check_access(requested_player_id):
         if guild is None or not guild.check_high_access(requested_player_id):
-            bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.")
+            bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
+                             reply_to_message_id=mes.message_id)
             return
     # Доступ к хуизу есть
-    player_id = re.search("_(\\d+)", mes.text)
+    if mes.text.startswith("/dokument"):
+        if mes.reply_to_message is not None:
+            player_id = mes.reply_to_message.from_user.id
+        else:
+            request = "select id from players where username = %s"
+            cursor.execute(request, (mes.text.partition("@")[2],))
+            row = cursor.fetchone()
+            if row is None:
+                bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+                return
+            player_id = row[0]
+    else:
+        player_id = re.search("_(\\d+)", mes.text)
+        player_id = int(player_id.group(1))
     if player_id is None:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
-    player_id = int(player_id.group(1))
     player = Player.get_player(player_id)
-    if player is None or player.guild != guild.id:
+    if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+        return
+    if player.guild is None or player.guild != requested_player.guild and not check_access(requested_player_id):
+        guild = Guild.get_guild(guild_id=player.guild)
+        bot.send_message(chat_id=mes.from_user.id,
+                         text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "
+                              "служит {}".format("в гильдии <b>{}</b>".format(guild.tag) if guild is not None else
+                                                 "как вольный наёмник (без гильдии)"),
+                         parse_mode='HTML')
         return
     response = get_profile_text(player, self_request=False)
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
