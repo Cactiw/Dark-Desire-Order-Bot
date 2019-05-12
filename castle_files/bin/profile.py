@@ -51,6 +51,8 @@ def view_profile(bot, update):
     mes = update.message
     requested_player_id = mes.from_user.id
     requested_player = Player.get_player(requested_player_id)
+    if requested_player is None:
+        return
     guild = Guild.get_guild(guild_id=requested_player.guild)
     if not check_access(requested_player_id):
         if guild is None or not guild.check_high_access(requested_player_id):
