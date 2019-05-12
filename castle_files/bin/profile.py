@@ -60,7 +60,7 @@ def view_profile(bot, update):
                              reply_to_message_id=mes.message_id)
             return
     # Доступ к хуизу есть
-    if mes.text.startswith("/dokument"):
+    if mes.text.startswith("/dokument") or mes.text.startswith("/document"):
         if mes.reply_to_message is not None:
             player_id = mes.reply_to_message.from_user.id
         else:
