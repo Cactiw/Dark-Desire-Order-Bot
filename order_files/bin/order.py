@@ -79,17 +79,16 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
     pot_str = ""
-    print(potions)
     for i, p in enumerate(potions):
         if p:
             pot_str += potions_to_order[i]
     response = "{3}⚔️{0}\n{1}{2}\n\n{4}" \
                "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
                                                          else defense) if defense is not None else "",
-                           tactics, "{}\n".format(time_add_str) if time_add_str != "" else time_add_str, pot_str)
-    print("getting buttons")
+                           "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
+                           if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
+                                          time_add_str, pot_str)
     buttons = get_order_buttons(castle_target, defense)
-    print("buttons =", buttons)
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
