@@ -58,3 +58,15 @@ class FilterViewProfile(BaseFilter):
 
 
 filter_view_profile = FilterViewProfile()
+
+
+class FilterSetClass(BaseFilter):
+    def filter(self, message):
+        if message.text:
+            if message.forward_from is None:
+                return False
+            return 'skills levels' in message.text and filter_is_chat_wars_forward(message) and filter_is_pm(message)
+        return False
+
+
+filter_set_class = FilterSetClass()

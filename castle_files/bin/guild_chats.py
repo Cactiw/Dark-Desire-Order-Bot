@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import cursor
+from castle_files.work_materials.globals import cursor, job
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids
 
 from castle_files.libs.guild import Guild
@@ -7,6 +7,9 @@ from castle_files.libs.player import Player
 import datetime
 
 ping_by_chat_id = {}
+
+ranger_aiming_minutes = [0, 180, 165, 150, 135, 120, 105, 95, 85, 75, 65, 60, 55, 50, 45, 40]
+
 
 
 def notify_guild_attack(bot, update):
@@ -89,3 +92,52 @@ def notify_guild_to_battle(bot, update):
         i += 1
     response += "\n БИТВА!"
     bot.send_message(chat_id=mes.chat_id, text=response)
+
+
+def ranger_notify(bot, job):
+    context = job.context
+    response = "Поднимай свой лук, <b>{0}</b>\n@{1}".format(context[1], context[0])
+    bot.send_message(chat_id=context[2], text=response, parse_mode='HTML')
+
+
+def rangers_notify_start(bot, update):
+    time_to_battle = get_time_remaining_to_battle()
+    print("time_to_battle", time_to_battle)
+    try:
+        callback_chat_id = update.message.chat_id
+    except AttributeError:
+        try:
+            callback_chat_id = int(update)
+        except TypeError:
+            return
+    count = 0
+    request = "select id from players where game_class = 'Ranger' and class_skill_lvl is not NULL"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        player = Player.get_player(row[0])
+        if player is None:
+            continue
+        guild = Guild.get_guild(guild_id=player.guild)
+        if guild is None:
+            continue
+        telegram_username = player.username
+        username = player.nickname
+        class_skill_lvl = player.class_skill_lvl
+        context = [telegram_username, username, guild.chat_id]
+        print(class_skill_lvl)
+        time_to_aim_mins = ranger_aiming_minutes[class_skill_lvl] if \
+            class_skill_lvl < len(ranger_aiming_minutes) else 40
+
+        time_to_aim = datetime.timedelta(minutes=time_to_aim_mins)
+        print("time_to_aim", time_to_aim)
+        time_to_notify = time_to_battle - time_to_aim
+        print(time_to_notify)
+        # time_to_notify = datetime.timedelta(minutes=1)    # TEST
+        if time_to_notify >= datetime.timedelta(minutes=0):
+            job.run_once(ranger_notify, time_to_notify, context=context)
+
+        row = cursor.fetchone()
+        count += 1
+    bot.send_message(chat_id=callback_chat_id, text="Запланировано оповещение <b>{0}</b> бедных лучников".format(count),
+                     parse_mode='HTML')

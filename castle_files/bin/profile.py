@@ -226,3 +226,21 @@ def add_class_from_player(bot, update):
     bot.send_message(chat_id=mes.from_user.id, text="Информация о классе обновлена, <b>{}</b>! Теперь ты "
                                                     "<b>{}</b>!".format(player.nickname, player.game_class),
                      parse_mode='HTML')
+
+
+def update_ranger_class_skill_lvl(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    if player.game_class != 'Ranger':
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Учёт уровня скиллов пока доступен только лучникам. Для добавления информации о классе "
+                              "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\"")
+        return
+    class_skill = int(mes.text.partition("Aiming")[0][:-2].split()[-1])
+    logging.info("class_skill = {0}".format(class_skill))
+    player.class_skill_lvl = class_skill
+    player.update()
+    bot.send_message(chat_id=mes.from_user.id, text="Информация о скиллах обновлена, <b>{}</b>".format(player.nickname),
+                     parse_mode='HTML')

@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
-    filter_is_profile, filter_not_registered, filter_forbidden
+    filter_is_profile, filter_not_registered, filter_forbidden, filter_set_class
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
 from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
@@ -27,7 +27,7 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
-from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player
+from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
@@ -78,6 +78,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_profile, add_class_from_player))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_set_class, update_ranger_class_skill_lvl))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
 
