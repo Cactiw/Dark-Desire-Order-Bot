@@ -1,5 +1,8 @@
-from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor
+from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor, moscow_tz
 from mwt import MWT
+
+import datetime
+
 
 def cancel(bot, update, user_data):
     if "status" in user_data:
@@ -22,6 +25,20 @@ def fill_allowed_list():
     while row is not None:
         allowed_list.append(row[0])
         row = cursor.fetchone()
+
+
+def get_time_remaining_to_battle():
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - datetime.datetime.combine(
+        datetime.datetime.now().date(), datetime.time(hour=0))
+    if now < datetime.timedelta(hours=1):
+
+        return datetime.timedelta(hours=1) - now
+    time_from_first_battle = now - datetime.timedelta(hours=1)
+    while time_from_first_battle > datetime.timedelta(hours=8):
+        time_from_first_battle -= datetime.timedelta(hours=8)
+    time_remaining = datetime.timedelta(hours=8) - time_from_first_battle
+    return time_remaining
+
 
 
 @MWT(timeout=15*60)
