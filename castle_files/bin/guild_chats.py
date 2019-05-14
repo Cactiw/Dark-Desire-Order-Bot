@@ -1,15 +1,44 @@
-from castle_files.work_materials.globals import cursor, job
+from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids
 
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
+from castle_files.work_materials.globals import dispatcher
+from castle_files.bin.telethon_script import castles_stats_queue
+
+import re
 import datetime
+
 
 ping_by_chat_id = {}
 
 ranger_aiming_minutes = [0, 180, 165, 150, 135, 120, 105, 95, 85, 75, 65, 60, 55, 50, 45, 40]
 
+
+def parse_stats():
+    data = castles_stats_queue.get()
+    while data:
+        for castle_results_string in data.split("\n\n"):
+            for guild_id in Guild.guild_ids:
+                guild = Guild.get_guild(guild_id=guild_id)
+                tag = guild.tag
+                if tag in castle_results_string:
+                    response = ""
+                    try:
+                        attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
+                    except TypeError:
+                        attacked_castle = "???"
+                    nicknames_list = re.findall(".\\[{}[^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
+                    print(nicknames_list)
+                    for nickname in nicknames_list:
+                        if response == "":
+                            response = "Игроки, попавшие в топ:\n"
+                        response += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
+                                                              attacked_castle, nickname[:-1])
+                    if response != "":
+                        dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+        data = castles_stats_queue.get()
 
 
 def notify_guild_attack(bot, update):
@@ -51,7 +80,7 @@ def notify_guild_attack(bot, update):
 
     in_dict_do_not_ready = []
     in_dict_sleeping = []
-    ping_dict = {"do not ready" : in_dict_do_not_ready, "sleeping" : in_dict_sleeping}
+    ping_dict = {"do not ready": in_dict_do_not_ready, "sleeping": in_dict_sleeping}
     for player_id in guild.members:
         player = Player.get_player(player_id, notify_on_error=False)
         if player is None:

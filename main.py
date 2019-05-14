@@ -4,6 +4,8 @@ import logging
 from order_bot import order_bot_processing
 from castle_bot import castle_bot_processing
 
+from castle_files.bin.telethon_script import script_work
+
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
@@ -14,6 +16,8 @@ log_file.setLevel(logging.ERROR)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO, handlers=[log_file, console])
 
+
+# script_work()
 
 processes = []
 order_bot_process = multiprocessing.Process(target=order_bot_processing)

@@ -7,6 +7,7 @@ from castle_files.work_materials.filters.profile_filters import filter_is_hero, 
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
 from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
+from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
@@ -31,11 +32,12 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
+from castle_files.bin.stock import guild_parts, guild_recipes
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports
-from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle
+from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -48,6 +50,7 @@ from castle_files.bin.castle_feedback import request_king_audience, accept_king_
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.reports import add_report, battle_stats
+from castle_files.bin.telethon_script import script_work
 from castle_files.bin.common_functions import unknown_input
 
 from castle_files.bin.save_load_user_data import load_data, save_data
@@ -58,6 +61,7 @@ from castle_files.libs.guild import Guild
 import castle_files.work_materials.globals as file_globals
 
 import threading
+import multiprocessing
 
 
 def start(bot, update):
@@ -86,6 +90,12 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile))
+
+    # Всякие команды в личке у бота
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_parts, guild_parts, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_recipes, guild_recipes,
+                                          pass_user_data=True))
+
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
@@ -253,6 +263,14 @@ def castle_bot_processing():
     unloading_resources = threading.Thread(target=resources_monitor, name="Castle Unloading Resources", args=())
     unloading_resources.start()
     processes.append(unloading_resources)
+
+    telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
+    telethon_script.start()
+    processes.append(telethon_script)
+
+    parse_stats_pr = threading.Thread(target=parse_stats, name="Stats Parse")
+    parse_stats_pr.start()
+    processes.append(parse_stats_pr)
 
     updater.start_polling(clean=False)
     ask_to_revoke_duty_link()
