@@ -38,7 +38,7 @@ def get_message_type_and_data(message):
         data = message.voice.file_id
     elif message.video_note:
         trigger_type = 7
-        data = message.video_note.file_i
+        data = message.video_note.file_id
     return [trigger_type, data]
 
 
