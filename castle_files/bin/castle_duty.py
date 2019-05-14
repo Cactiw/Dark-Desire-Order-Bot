@@ -129,8 +129,8 @@ def check_ban_in_duty_chat(bot, update):
     gates = Location.get_location(3)
     players_on_duty = gates.special_info.get("players_on_duty")
     user_id = update.message.from_user.id
-    player = Player.get_player(update.message.from_user.id)
-    if player.game_class == 'Sentinel':
+    player = Player.get_player(user_id)
+    if player is not None and player.game_class == 'Sentinel':
         # Временно разрешено находиться в чате всем стражам
         return
     if user_id not in players_on_duty and not check_access(user_id) and user_id != CASTLE_BOT_ID:
