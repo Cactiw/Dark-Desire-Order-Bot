@@ -29,7 +29,7 @@ def parse_stats():
                         attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
                     except TypeError:
                         attacked_castle = "???"
-                    nicknames_list = re.findall(".\\[{}[^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
+                    nicknames_list = re.findall(".\\[{}\\][^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
                     print(nicknames_list)
                     for nickname in nicknames_list:
                         if response == "":
