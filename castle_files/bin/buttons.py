@@ -51,7 +51,19 @@ def get_view_guild_buttons(guild, user_id=None):
         buttons.insert(0, [
             InlineKeyboardButton("Заместители", callback_data="giass_{}".format(guild.id)),
             InlineKeyboardButton("Репорты", callback_data="girep_{}".format(guild.id)),
+            InlineKeyboardButton("Настройки", callback_data="giset_{}".format(guild.id)),
         ])
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_guild_settings_buttons(guild):
+    buttons = [
+        [
+            InlineKeyboardButton("{} выдачу ресурсов".format("Отключить" if guild.settings is not None and
+                                                                        guild.settings.get("withdraw") else "Включить"),
+                                 callback_data="gswith_{}".format(guild.id)),
+            ]
+    ]
     return InlineKeyboardMarkup(buttons)
 
 
@@ -88,7 +100,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("⛩ Врата замка"),
                 ],
             [
-                KeyboardButton("🔭 Башня ТехМаг наук"),
+                KeyboardButton("🔭 Башня ТехМаг наук"),  # ❗
                 KeyboardButton("🏚 Не построено"),
             ],
             [

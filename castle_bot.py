@@ -7,7 +7,8 @@ from castle_files.work_materials.filters.profile_filters import filter_is_hero, 
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
 from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
-from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes
+from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
+    filter_stock_withdraw
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
@@ -32,11 +33,11 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
-from castle_files.bin.stock import guild_parts, guild_recipes
+from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
-    cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports
+    cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_withdraw
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
@@ -123,6 +124,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_list, notify_guild_attack))
     dispatcher.add_handler(CommandHandler('notify_guild_sleeping', notify_guild_to_battle))
     dispatcher.add_handler(CommandHandler('notify_guild_not_ready', notify_guild_to_battle))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
 
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
@@ -240,6 +243,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(guild_reports, pattern="girep_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(edit_guild_withdraw, pattern="gswith_\\d+"))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm, unknown_input, pass_user_data=True))
 

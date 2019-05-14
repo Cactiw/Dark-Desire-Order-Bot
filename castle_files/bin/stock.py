@@ -2,9 +2,49 @@
 Здесь находятся всякие функции для непосредственной работы со стоком
 """
 from castle_files.work_materials.item_consts import items
+from castle_files.work_materials.resource_constants import resources
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
+from castle_files.libs.guild import Guild
+from castle_files.libs.player import Player
+
 import re
+
+
+def send_withdraw(bot, update):
+    response = "/g_withdraw "
+    res_count = 0
+    player = Player.get_player(update.message.from_user.id)
+    if player is None:
+        return
+    if player.guild is not None:
+        guild = Guild.get_guild(guild_id=player.guild)
+        if guild.settings is not None:
+            if guild.settings.get("withdraw") is False:
+                return
+    for string in update.message.text.splitlines():
+        parse = re.search("(\\d+) x ([^\n$]+)", string)
+        if parse is None:
+            continue
+        count = int(parse.group(1))
+        name = parse.group(2)
+        code = resources.get(name)
+        if code is None:
+            for num, elem in list(items.items()):
+                if elem[0] in name:
+                    code = "r" + num
+                elif name == elem[1]:
+                    code = "k" + num
+                else:
+                    continue
+        response += "{} {} ".format(code, count)
+        res_count += 1
+        if res_count >= 8:
+            bot.send_message(chat_id=update.message.chat_id, text=response)
+            response = "/g_withdraw "
+            res_count = 0
+    if res_count > 0:
+        bot.send_message(chat_id=update.message.chat_id, text=response)
 
 
 # Получает и сохраняет в user_data список шмоток, на которые есть рецепты для дальнейшего использования

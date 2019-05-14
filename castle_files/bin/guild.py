@@ -8,7 +8,8 @@ from castle_files.libs.player import Player
 from castle_files.bin.service_functions import check_access
 from castle_files.bin.reports import count_battle_id, count_battle_time
 
-from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_buttons, get_view_guild_buttons
+from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_buttons, get_view_guild_buttons, \
+    get_guild_settings_buttons
 
 
 from telegram.error import TelegramError
@@ -155,6 +156,82 @@ def guild_reports(bot, update):
         response += response_new
     response += "\nВсего: <b>{}/{}</b> репортов".format(guild.members_count - len(unsent_reports), len(guild.members))
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def get_guild_settings_text(guild):
+    response = "Гильдия <b>{}</b>\n\n".format(guild.tag)
+    settings = guild.settings
+    if settings is None:
+        settings = {}
+        guild.settings = settings
+    withdraw = settings.get("withdraw")
+    if withdraw is None:
+        withdraw = True
+        settings.update({"withdraw": withdraw})
+    response += "🏷Выдача ресурсов <b>{}</b>".format("✅включена" if withdraw else "❌отключена")
+    return response
+
+
+def guild_setting(bot, update):
+    mes = update.callback_query.message
+    requested_player = Player.get_player(update.callback_query.from_user.id)
+    if requested_player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+        return
+    guild_id = requested_player.guild
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                              "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    if not guild.check_high_access(update.callback_query.from_user.id):
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
+        return
+    response = get_guild_settings_text(guild)
+    buttons = get_guild_settings_buttons(guild)
+    bot.send_message(chat_id=update.callback_query.message.chat_id, text=response, reply_markup=buttons,
+                     parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def edit_guild_withdraw(bot, update):
+    mes = update.callback_query.message
+    requested_player = Player.get_player(update.callback_query.from_user.id)
+    if requested_player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+        return
+    guild_id = requested_player.guild
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                              "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    if not guild.check_high_access(update.callback_query.from_user.id):
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
+        return
+    settings = guild.settings
+    if settings is None:
+        settings = {}
+        guild.settings = settings
+    withdraw = settings.get("withdraw")
+    if withdraw is None:
+        withdraw = True
+        settings.update({"withdraw": withdraw})
+    settings.update({"withdraw": not withdraw})
+    guild.update_to_database()
+    response = get_guild_settings_text(guild)
+    buttons = get_guild_settings_buttons(guild)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, reply_markup=buttons,
+                        parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 

@@ -17,7 +17,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO, handlers=[log_file, console])
 
 
-# script_work()
+# script_work()  # Для авторизации на новой машине
 
 processes = []
 order_bot_process = multiprocessing.Process(target=order_bot_processing)

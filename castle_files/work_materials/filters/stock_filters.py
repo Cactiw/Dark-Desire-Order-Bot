@@ -23,3 +23,14 @@ class FilterGuildStockParts(BaseFilter):
 
 
 filter_guild_stock_parts = FilterGuildStockParts()
+
+
+# Сообщение - форвард нехватки ресов из чв3
+class FilterStockWithdraw(BaseFilter):
+    def filter(self, message):
+        return filter_is_chat_wars_forward(message) and (
+                message.text.startswith("Not enough materials") or message.text.startswith("Не хватает материалов") or
+                message.text.startswith("Materials needed"))
+
+
+filter_stock_withdraw = FilterStockWithdraw()
