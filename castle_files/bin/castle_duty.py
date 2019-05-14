@@ -87,7 +87,8 @@ def end_duty(bot, update, user_data):
         user_data.pop("on_duty")
     reply_markup = get_general_buttons(user_data, player=player)
     try:
-        bot.kickChatMember(chat_id=SENTINELS_DUTY_CHAT_ID, user_id=player_id)
+        pass
+        # bot.kickChatMember(chat_id=SENTINELS_DUTY_CHAT_ID, user_id=player_id)
     except TelegramError:
         logging.error(traceback.format_exc())
     bot.send_message(chat_id=mes.from_user.id, text="Вы успешно покинули вахту. Спасибо за службу!",
@@ -128,6 +129,10 @@ def check_ban_in_duty_chat(bot, update):
     gates = Location.get_location(3)
     players_on_duty = gates.special_info.get("players_on_duty")
     user_id = update.message.from_user.id
+    player = Player.get_player(update.message.from_user.id)
+    if player.game_class == 'Sentinel':
+        # Временно разрешено находиться в чате всем стражам
+        return
     if user_id not in players_on_duty and not check_access(user_id) and user_id != CASTLE_BOT_ID:
         bot.kickChatMember(chat_id=SENTINELS_DUTY_CHAT_ID, user_id=update.message.from_user.id)
         bot.send_message(chat_id=SENTINELS_DUTY_CHAT_ID, text="Только стражам на службе разрешён вход в этот чат")
