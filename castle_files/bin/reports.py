@@ -107,7 +107,7 @@ def battle_stats(bot, update):
         guild.clear_counted_reports()
         guilds.append(guild)
     guilds.sort(key=lambda x: x.division or "")
-    guilds.append(Guild(-1, "Без гильдии", None, None, None, None, None, None, None, None, None, None, None))
+    guilds.append(Guild(-1, "Без гильдии", None, None, None, None, None, None, None, None, None, None, None, None))
     request = "select player_id, attack, defense, gold from reports where battle_id = %s"
     cursor1.execute(request, (battle_id,))
     row = cursor1.fetchone()
