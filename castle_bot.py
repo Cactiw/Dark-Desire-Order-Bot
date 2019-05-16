@@ -26,7 +26,7 @@ from castle_files.work_materials.filters.feedback_filters import filter_request_
     filter_restrict_feedback, filter_unrestrict_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
     filter_request_duty_feedback, filter_send_duty_feedback, filter_reply_to_duty_feedback, filter_ban_in_duty_chat
-from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access
+from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl
@@ -111,6 +111,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))
+    dispatcher.add_handler(CommandHandler('dok', view_profile))
+    dispatcher.add_handler(CommandHandler('doc', view_profile))
 
     # Хендлеры для триггеров
     dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
@@ -206,10 +208,15 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
-    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access, unknown_input, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access & ~filter_is_merc, unknown_input,
+                                          pass_user_data=True))
     # Restricted access---------------------------------------------------------------------------------------------
-    dispatcher.add_handler(CommandHandler('create_guild', create_guild))
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
+    dispatcher.add_handler(CommandHandler('chat_info', chat_info))
+
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_is_merc, unknown_input, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('create_guild', create_guild))
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_mailing_pin, mailing_pin))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_mailing, mailing))
@@ -225,9 +232,6 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_change_guild_division, change_guild_division,
                                           pass_user_data=True))
 
-    dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
-
-    dispatcher.add_handler(CommandHandler('chat_info', chat_info))
     dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
     # End of the restrictions---------------------------------------------------------------------------------------
 

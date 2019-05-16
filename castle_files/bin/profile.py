@@ -5,6 +5,7 @@
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
+from castle_files.work_materials.filters.general_filters import filter_is_merc
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -54,7 +55,7 @@ def view_profile(bot, update):
     if requested_player is None:
         return
     guild = Guild.get_guild(guild_id=requested_player.guild)
-    if not check_access(requested_player_id):
+    if not check_access(requested_player_id) and not filter_is_merc(mes):
         if guild is None or not guild.check_high_access(requested_player_id):
             bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
                              reply_to_message_id=mes.message_id)
@@ -90,7 +91,8 @@ def view_profile(bot, update):
     if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
-    if player.guild is None or player.guild != requested_player.guild and not check_access(requested_player_id):
+    if player.guild is None or player.guild != requested_player.guild and not check_access(requested_player_id) and not\
+            filter_is_merc(mes):
         guild = Guild.get_guild(guild_id=player.guild)
         bot.send_message(chat_id=mes.from_user.id,
                          text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "
