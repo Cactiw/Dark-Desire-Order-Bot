@@ -31,12 +31,14 @@ def send_withdraw(bot, update):
         code = resources.get(name)
         if code is None:
             for num, elem in list(items.items()):
-                if elem[0] in name:
-                    code = "r" + num
-                elif name == elem[1]:
+                if name == elem[1]:
                     code = "k" + num
+                elif elem[0] in name:
+                    code = "r" + num
                 else:
                     continue
+        if code is None:
+            continue
         response += "{} {} ".format(code, count)
         res_count += 1
         if res_count >= 8:

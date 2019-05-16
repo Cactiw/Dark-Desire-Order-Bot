@@ -35,7 +35,7 @@ resources = {
     "Metal plate": "33",
     "Metallic fiber": "34",
     "Crafted leather": "35",
-    "Quality cloth": "36",
+    "Quality Cloth": "36",
     "Blacksmith mold": "37",
     "Artisan mold": "38",
     "Stinky Sumac": "39",
