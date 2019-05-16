@@ -60,12 +60,21 @@ def view_profile(bot, update):
                              reply_to_message_id=mes.message_id)
             return
     # Доступ к хуизу есть
-    if mes.text.startswith("/dokument") or mes.text.startswith("/document"):
+    if mes.text.startswith("/dok") or mes.text.startswith("/doc"):
         if mes.reply_to_message is not None:
             player_id = mes.reply_to_message.from_user.id
-        else:
+        elif "@" in update.message.text:
             request = "select id from players where username = %s"
             cursor.execute(request, (mes.text.partition("@")[2],))
+            row = cursor.fetchone()
+            if row is None:
+                bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+                return
+            player_id = row[0]
+        else:
+            request = "select id from players where nickname = %s or nickname like %s"
+            # print(request % mes.text.partition(" ")[2] % "%]" + mes.text.partition(" ")[2])
+            cursor.execute(request, (mes.text.partition(" ")[2], "%]" + mes.text.partition(" ")[2]))
             row = cursor.fetchone()
             if row is None:
                 bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
