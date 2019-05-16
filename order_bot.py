@@ -69,7 +69,7 @@ def order_bot_processing():
     recashe_order_chats()
     refill_deferred_orders()
     # Необходимо подождать, пока другой процесс не завершит работу с локациями
-    time.sleep(0.01)
+    time.sleep(0.1)
     fill_mid_players(other_process=True)
 
     processes = []
