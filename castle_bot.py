@@ -61,6 +61,10 @@ from castle_files.libs.guild import Guild
 
 import castle_files.work_materials.globals as file_globals
 
+
+from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
+
+
 import threading
 import multiprocessing
 
@@ -108,6 +112,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add', add))
     dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
+
+    dispatcher.add_handler(CommandHandler('drop', drop_table))  # ReiRose LTD 2019
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))
