@@ -135,7 +135,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('notify_guild_sleeping', notify_guild_to_battle))
     dispatcher.add_handler(CommandHandler('notify_guild_not_ready', notify_guild_to_battle))
 
-    dispatcher.add_handler(CommandHandler('ban', mute, pass_args=True))
+    dispatcher.add_handler(CommandHandler('ro', mute, pass_args=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
 
