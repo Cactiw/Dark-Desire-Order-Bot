@@ -54,6 +54,8 @@ from castle_files.bin.reports import add_report, battle_stats
 from castle_files.bin.telethon_script import script_work
 from castle_files.bin.common_functions import unknown_input
 
+from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
+
 from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
 
@@ -111,6 +113,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))
+
+    dispatcher.add_handler(CommandHandler('drop', drop_table))  # ReiRose LTD 2019
 
     # Хендлеры для триггеров
     dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
