@@ -1,5 +1,7 @@
+from castle_files.work_materials.drop_data_constants import *
+from castle_files.work_materials.globals import moscow_tz
+
 import datetime
-from .drop_data_constants import *
 
 
 # ReiRose LTD 2019
