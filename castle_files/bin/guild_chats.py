@@ -7,7 +7,10 @@ from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher
 from castle_files.bin.telethon_script import castles_stats_queue
 
+from telegram.error import TelegramError
+
 import re
+import time
 import datetime
 
 
@@ -121,6 +124,34 @@ def notify_guild_to_battle(bot, update):
         i += 1
     response += "\n БИТВА!"
     bot.send_message(chat_id=mes.chat_id, text=response)
+
+
+def mute(bot, update, args):
+    mes = update.message
+    if (mes.from_user.id != SUPER_ADMIN_ID) and (mes.from_user.id not in get_admin_ids(bot, chat_id=mes.chat_id)):
+        return
+    if mes.reply_to_message is None:
+        return
+    if mes.reply_to_message.from_user.id == SUPER_ADMIN_ID:
+        bot.send_message(chat_id=update.message.chat_id, text='Неа -__-')
+        return
+    if not args:
+        return
+    current = time.time()
+    try:
+        ban_for = (float(args[0]) * 60)
+    except ValueError:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Неверный синтаксис')
+        return
+    current += ban_for
+    try:
+        bot.restrictChatMember(chat_id=mes.chat_id, user_id = mes.reply_to_message.from_user.id, until_date=current)
+    except TelegramError:
+        bot.send_message(chat_id=update.message.chat_id, text='Ошибка. Проверьте, что бот имеет требуемые права.')
+        return
+    bot.send_message(chat_id=update.message.chat_id, text='Выполнено!', reply_to_message_id=update.message.message_id)
+    return
 
 
 def ranger_notify(bot, job):

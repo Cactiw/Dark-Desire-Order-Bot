@@ -38,7 +38,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_withdraw
-from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats
+from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -51,6 +51,9 @@ from castle_files.bin.castle_feedback import request_king_audience, accept_king_
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.reports import add_report, battle_stats
+
+from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
+
 from castle_files.bin.telethon_script import script_work
 from castle_files.bin.common_functions import unknown_input
 
@@ -62,7 +65,6 @@ from castle_files.libs.guild import Guild
 import castle_files.work_materials.globals as file_globals
 
 
-from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
 
 
 import threading
@@ -132,6 +134,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_list, notify_guild_attack))
     dispatcher.add_handler(CommandHandler('notify_guild_sleeping', notify_guild_to_battle))
     dispatcher.add_handler(CommandHandler('notify_guild_not_ready', notify_guild_to_battle))
+
+    dispatcher.add_handler(CommandHandler('mute', mute, pass_args=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
 
