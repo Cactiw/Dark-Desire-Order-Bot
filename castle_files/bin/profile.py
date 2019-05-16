@@ -5,6 +5,7 @@
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
+from castle_files.work_materials.filters.general_filters import filter_is_merc
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -54,18 +55,27 @@ def view_profile(bot, update):
     if requested_player is None:
         return
     guild = Guild.get_guild(guild_id=requested_player.guild)
-    if not check_access(requested_player_id):
+    if not check_access(requested_player_id) and not filter_is_merc(mes):
         if guild is None or not guild.check_high_access(requested_player_id):
             bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
                              reply_to_message_id=mes.message_id)
             return
     # Доступ к хуизу есть
-    if mes.text.startswith("/dokument") or mes.text.startswith("/document"):
+    if mes.text.startswith("/dok") or mes.text.startswith("/doc"):
         if mes.reply_to_message is not None:
             player_id = mes.reply_to_message.from_user.id
-        else:
+        elif "@" in update.message.text:
             request = "select id from players where username = %s"
             cursor.execute(request, (mes.text.partition("@")[2],))
+            row = cursor.fetchone()
+            if row is None:
+                bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+                return
+            player_id = row[0]
+        else:
+            request = "select id from players where nickname = %s or nickname like %s"
+            # print(request % mes.text.partition(" ")[2] % "%]" + mes.text.partition(" ")[2])
+            cursor.execute(request, (mes.text.partition(" ")[2], "%]" + mes.text.partition(" ")[2]))
             row = cursor.fetchone()
             if row is None:
                 bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
@@ -81,7 +91,8 @@ def view_profile(bot, update):
     if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
-    if player.guild is None or player.guild != requested_player.guild and not check_access(requested_player_id):
+    if player.guild is None or player.guild != requested_player.guild and not check_access(requested_player_id) and not\
+            filter_is_merc(mes):
         guild = Guild.get_guild(guild_id=player.guild)
         bot.send_message(chat_id=mes.from_user.id,
                          text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "

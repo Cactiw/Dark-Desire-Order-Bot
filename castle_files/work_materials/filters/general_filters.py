@@ -3,7 +3,7 @@
 """
 
 from telegram.ext import BaseFilter
-from castle_files.work_materials.globals import CHAT_WARS_ID
+from castle_files.work_materials.globals import CHAT_WARS_ID, MERC_ID
 from castle_files.bin.service_functions import check_access
 
 
@@ -29,3 +29,11 @@ class FilterHasAccess(BaseFilter):
 
 
 filter_has_access = FilterHasAccess()
+
+
+class FilterIsMerc(BaseFilter):
+    def filter(self, message):
+        return message.from_user.id == MERC_ID
+
+
+filter_is_merc = FilterIsMerc()
