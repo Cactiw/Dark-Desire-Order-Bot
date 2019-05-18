@@ -9,6 +9,9 @@ from telegram.error import TelegramError
 import re
 import logging
 import traceback
+import threading
+
+kick_players_from_union = True
 
 union_chats = {}
 
@@ -68,6 +71,7 @@ def union_list(bot, update):
 
 
 def clear_union_list(bot, update):
+    global kick_players_from_union
     mes = update.message
     union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
@@ -78,6 +82,13 @@ def clear_union_list(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Список <b>{}</b> успешно очищен. "
                                                "Пришлите форварды состава профсоюза заного.".format(union.name),
                      parse_mode='HTML')
+    kick_players_from_union = False
+    threading.Timer(function=set_kick_flag, interval=60).start()
+
+
+def set_kick_flag():
+    global kick_players_from_union
+    kick_players_from_union = True
 
 
 def print_union_players(bot, update):
@@ -140,6 +151,8 @@ def check_and_kick(bot, update):
 
 
 def view_guild_players_in_union(bot, update):
+    if kick_players_from_union is False:
+        return
     mes = update.message
     curr_player = Player.get_player(mes.from_user.id)
     if curr_player is None:
