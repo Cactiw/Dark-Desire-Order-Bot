@@ -115,7 +115,10 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
 
-    dispatcher.add_handler(CommandHandler('drop', drop_table))  # ReiRose LTD 2019
+    dispatcher.add_handler(CommandHandler('d2', drop_table))
+    dispatcher.add_handler(CommandHandler('d3', drop_table))
+    dispatcher.add_handler(CommandHandler('d4', drop_table))
+    dispatcher.add_handler(CommandHandler('dc', drop_table))
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))

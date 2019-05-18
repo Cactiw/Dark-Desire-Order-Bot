@@ -16,122 +16,143 @@ daytime_table = {
 }
 
 avalible_tiers = {
-    't2': 't2',
-    't3': 't3',
-    't4': 't4',
-    'т2': 't2',
-    'т3': 't3',
-    'т4': 't4',
+    't2': 'Tier 2',
+    'т2': 'Tier 2',
+    '/d2': 'Tier 2',
+    't3': 'Tier 3',
+    'т3': 'Tier 3',
+    '/d3': 'Tier 3',
+    't4': 'Tier 4',
+    'т4': 'Tier 4',
+    '/d4': 'Tier 4',
+    '/dc': 'cloaks',
+    'cloaks': 'cloaks'
 }
 
 
 drop = {
-    't2': {
+    'Tier 2': {
         '🍄Болото':
             {
                 'morning': [
-                            "Hunter Helmet Fragment", "Hunter Armor Part", "Order Gauntlets Part",
-                            "Order Boots Part", "Clarity Bracers Part",
-                            "Clarity Shoes Part", "Hunter Blade", "War Hammer Head", "Champion Blade"],
+                            "Hunter Helmet fragment", "Hunter Armor part", "Order Gauntlets part",
+                            "Order Boots part", "Clarity Bracers part",
+                            "Clarity Shoes part", "Hunter blade", "War Hammer head", "Champion blade"],
                 'day': [
-                        "Hunter Helmet Fragment", "Hunter Armor Part", "Order Gauntlets Part",
-                        "Order Boots Part", "Clarity Bracers Part",
-                        "Clarity Shoes Part", "Hunter Blade", "War Hammer Head", "Champion Blade"],
+                        "Hunter Helmet fragment", "Hunter Armor part", "Order Gauntlets part",
+                        "Order Boots part", "Clarity Bracers part",
+                        "Clarity Shoes part", "Hunter blade", "War Hammer head", "Champion blade"],
                 'evening': [
-                            "Hunter Helmet Fragment", "Hunter Armor Part", "Order Gauntlets Part",
-                            "Order Boots Part", "Clarity Bracers Part"
-                            "Clarity Shoes Part", "Hunter Blade", "War Hammer Head", "Champion Blade"],
+                            "Hunter Helmet fragment", "Hunter Armor part", "Order Gauntlets part",
+                            "Order Boots part", "Clarity Bracers part"
+                            "Clarity Shoes part", "Hunter blade", "War Hammer head", "Champion blade"],
                 'night': [
-                          "Hunter Gloves Part", "Hunter Boots Part", "Order Helmet Fragment", "Order Armor Piece",
-                          "Clarity Circlet Fragment",
-                          "Clarity Robe Piece", "Trident Blade", "Order Shield Part", "Hunter Shaft"]
+                          "Hunter Gloves part", "Hunter Boots part", "Order Helmet fragment", "Order Armor piece",
+                          "Clarity Circlet fragment",
+                          "Clarity Robe piece", "Trident blade", "Order Shield part", "Hunter shaft"]
                     },
         '⛰Горы':
             {
                 'morning': [
-                            "Hunter Helmet Recipe", "Hunter Armor Recipe", "Order Gauntlets Recipe",
-                            "Order Boots Recipe", "Clarity Bracers Recipe", "Clarity Shoes Recipe",
-                            "Hunter Hunter Dagger Recipe", "War Hammer Recipe", "Champion Sword Recipe"],
+                            "Hunter Helmet recipe", "Hunter Armor recipe", "Order Gauntlets recipe",
+                            "Order Boots recipe", "Clarity Bracers recipe", "Clarity Shoes recipe",
+                            "Hunter Dagger recipe", "War Hammer recipe", "Champion Sword recipe"],
                 'day': [
-                        "Hunter Helmet Recipe", "Hunter Armor Recipe", "Order Gauntlets Recipe", "Order Boots Recipe",
-                        "Clarity Bracers Recipe", "Clarity Shoes Recipe", "Hunter Hunter Dagger Recipe",
-                        "War Hammer Recipe", "Champion Sword Recipe"],
+                        "Hunter Helmet recipe", "Hunter Armor recipe", "Order Gauntlets recipe", "Order Boots recipe",
+                        "Clarity Bracers recipe", "Clarity Shoes recipe", "Hunter Dagger recipe",
+                        "War Hammer recipe", "Champion Sword recipe"],
                 'evening': [
-                            "Hunter Helmet Recipe", "Hunter Armor Recipe", "Order Gauntlets Recipe",
-                            "Order Boots Recipe", "Clarity Bracers Recipe", "Clarity Shoes Recipe",
-                            "Hunter Dagger Recipe", "War Hammer Recipe", "Champion Sword Recipe"],
+                            "Hunter Helmet recipe", "Hunter Armor recipe", "Order Gauntlets recipe",
+                            "Order Boots recipe", "Clarity Bracers recipe", "Clarity Shoes recipe",
+                            "Hunter Dagger recipe", "War Hammer recipe", "Champion Sword recipe"],
                 'night': [
-                        "Hunter Gloves Recipe", "Hunter Boots Recipe", "Order Helmet Recipe", "Order Armor Recipe",
-                        "Clarity Circlet Recipe", "Clarity Robe Recipe", "Trident Recipe",
-                        "Order Shield Recipe", "Hunter Bow Recipe"]
+                        "Hunter Gloves recipe", "Hunter Boots recipe", "Order Helmet recipe", "Order Armor recipe",
+                        "Clarity Circlet recipe", "Clarity Robe recipe", "Trident recipe",
+                        "Order Shield recipe", "Hunter Bow recipe"]
                     }
     },
-    't3': {
+    'Tier 3': {
          '🌲Лес': {
-                'morning': ["Eclipse Recipe", "Doomblade Blade"],
-                'day': ["Raging Lance Recipe", "King's Defender Blade"],
-                'evening': ["Hailstorm Bow Recipe", "Lightning Bow Shaft"],
-                'night': ["Dragon Mace Recipe", "Skull Crusher Head"]
+                'morning': ["Eclipse recipe", "Doomblade blade"],
+                'day': ["Raging Lance recipe", "King's Defender blade"],
+                'evening': ["Hailstorm Bow recipe", "Lightning Bow shaft"],
+                'night': ["Dragon Mace recipe", "Skull Crusher head"]
                     },
          '🍄Болота': {
-                    'morning': ["Eclipse Blade", "Royal Shield Part", "Crusader Armor Piece", "Crusader Armor Piece",
-                                "Royal Helmet Fragment", "Ghost Armor Part", "Demon Circlet Fragment",
-                                "Divine Shoes Part"],
-                    'day': ["Dragon Mace Head", "Lion Blade", "Crusader Gauntlets Part", "Royal Armor Piece",
-                            "Ghost Gloves Part", "Lion Helmet Fragment", "Demon Robe Piece", "Divine Circlet Fragment"],
-                    'evening': ["Raging Lance Blade", "Ghost Blade", "Lion Armor Part", "Lion Gloves Part",
-                                "Lion Boots Part", "Demon Bracers Part", "Demon Shoes Part", "Divine Robe Piece"],
-                    'night': ["Hailstorm Bow Shaft", "Crusader Shield Part", "Crusader Helmet Fragment",
-                              "Royal Helmet Fragment", "Royal Gauntlets Part", "Royal Boots Part",
-                              "Ghost Helmet Fragment", "Ghost Boots Part", "Divine Bracers Part"]
+                    'morning': ["Eclipse blade", "Royal Shield part", "Crusader Armor piece", "Crusader Armor piece",
+                                "Royal Helmet fragment", "Ghost Armor part", "Demon Circlet fragment",
+                                "Divine Shoes part"],
+                    'day': ["Dragon Mace head", "Lion blade", "Crusader Gauntlets part", "Royal Armor piece",
+                            "Ghost Gloves part", "Lion Helmet fragment", "Demon Robe piece", "Divine Circlet fragment"],
+                    'evening': ["Raging Lance blade", "Ghost blade", "Lion Armor part", "Lion Gloves part",
+                                "Lion Boots part", "Demon Bracers part", "Demon Shoes part", "Divine Robe piece"],
+                    'night': ["Hailstorm Bow shaft", "Crusader Shield part", "Crusader Helmet fragment",
+                              "Royal Helmet fragment", "Royal Gauntlets part", "Royal Boots part",
+                              "Ghost Helmet fragment", "Ghost Boots part", "Divine Bracers part"]
                         },
          '⛰Горы': {
-                    'morning': ["Doomblade Sword Recipe", "Royal Shield Recipe", "Crusader Armor Recipe",
-                                "Crusader Boots Recipe", "Royal Helmet Recipe", "Ghost Armor Recipe",
-                                "Demon Circlet Recipe", "Divine Shoes Recipe"],
-                    'day': ["Skull Crusher Recipe", "Lion Knife Recipe", "Crusader Gauntlets Recipe",
-                            "Royal Armor Recipe", "Ghost Gloves Recipe", "Lion Helmet Recipe",
-                            "Demon Robe Recipe", "Divine Circlet Recipe"],
-                    'evening': ["King's Defender Recipe", "Ghost Dagger Recipe", "Lion Armor Recipe",
-                                "Lion Gloves Recipe", "Lion Boots Recipe", "Demon Bracers Recipe",
-                                "Demon Shoes Recipe", "Divine Robe Recipe"],
-                    'night': ["Lightning Bow Recipe", "Crusader Shield Recipe", "Crusader Helmet Recipe",
-                              "Royal Gauntlets Recipe", "Royal Boots Recipe", "Ghost Helmet Recipe",
-                              "Ghost Boots Recipe", "Divine Bracers Recipe"]
+                    'morning': ["Doomblade Sword recipe", "Royal Shield recipe", "Crusader Armor recipe",
+                                "Crusader Boots recipe", "Royal Helmet recipe", "Ghost Armor recipe",
+                                "Demon Circlet recipe", "Divine Shoes recipe"],
+                    'day': ["Skull Crusher recipe", "Lion Knife recipe", "Crusader Gauntlets recipe",
+                            "Royal Armor recipe", "Ghost Gloves recipe", "Lion Helmet recipe",
+                            "Demon Robe recipe", "Divine Circlet recipe"],
+                    'evening': ["King's Defender recipe", "Ghost Dagger recipe", "Lion Armor recipe",
+                                "Lion Gloves recipe", "Lion Boots recipe", "Demon Bracers recipe",
+                                "Demon Shoes recipe", "Divine Robe recipe"],
+                    'night': ["Lightning Bow recipe", "Crusader Shield recipe", "Crusader Helmet recipe",
+                              "Royal Gauntlets recipe", "Royal Boots recipe", "Ghost Helmet recipe",
+                              "Ghost Boots recipe", "Divine Bracers recipe"]
                         }
     },
-    't4': {
+    'Tier 4': {
         '🌲Лес':
             {
-                'morning': ["Council Gauntlets Recipe", "Phoenix Sword Part", "Griffin Knife Recipe",
-                            "Assault Cape Recipe"],
-                'day': ["Celestial Boots Part", "Heavy Fauchard Recipe", "Griffin Knife Part", "Craftsman Apron Part"],
-                'evening': ["Celestial Bracers Recipe", "Minotaur Sword Recipe", "Heavy Fauchard Part",
-                            "Stoneskin Cloak Recipe"],
-                'night': ["Griffin Armor Recipe", "Celestial Bracers Part", "Minotaur Sword Part",
-                          "Stoneskin Cloak Recipe"]
+                'morning': ["Council Gauntlets recipe", "Phoenix Sword part", "Griffin Knife recipe",
+                            "Assault Cape recipe"],
+                'day': ["Celestial Boots part", "Heavy Fauchard recipe", "Griffin Knife part", "Craftsman Apron part"],
+                'evening': ["Celestial Bracers recipe", "Minotaur Sword recipe", "Heavy Fauchard part",
+                            "Stoneskin Cloak recipe"],
+                'night': ["Griffin Armor recipe", "Celestial Bracers part", "Minotaur Sword part",
+                          "Stoneskin Cloak recipe"]
                     },
         '🍄Болота':
             {
-                'morning': ["Griffin Gloves Part", "Griffin Boots Recipe", "Council Boots Recipe",
-                            "Black Morningstar Part", "Craftsman Apron Part"],
-                'day': ["Griffin Helmet Part", "Council Helmet Recipe", "Celestial Helmet Part",
-                        "Maiming Bulawa Recipe", "Stoneskin Cloak Part"],
-                'evening': ["Griffin Gloves Recipe", "Council Helmet Part", "Council Armor Recipe",
-                            "Celestial Armor Part", "Stoneskin Cloak Part"],
-                'night': ["Council Armor Part", "Council Boots Part", "Celestial Helmet Recipe",
-                          "Celestial Armor Recipe", "Stoneskin Cloak Part"]
+                'morning': ["Griffin Gloves part", "Griffin Boots recipe", "Council Boots recipe",
+                            "Black Morningstar part", "Craftsman Apron part"],
+                'day': ["Griffin Helmet part", "Council Helmet recipe", "Celestial Helmet part",
+                        "Maiming Bulawa recipe", "Stoneskin Cloak part"],
+                'evening': ["Griffin Gloves recipe", "Council Helmet part", "Council Armor recipe",
+                            "Celestial Armor part", "Stoneskin Cloak part"],
+                'night': ["Council Armor part", "Council Boots part", "Celestial Helmet recipe",
+                          "Celestial Armor recipe", "Stoneskin Cloak part"]
                     },
         '⛰Горы':
             {
-                'morning': ["Celestial Boots Recipe", "Guisarme Recipe", "Meteor Bow Part", "Council Shield Part",
-                            "Assault Cape Part"],
-                'day': ["Council Gauntlets Part", "Phoenix Sword Recipe", "Guisarme Part", "Nightfall Bow Recipe",
-                        "Assault Cape Part"],
-                'evening': ["Griffin Armor Part", "Meteor Bow Recipe", "Nightfall Bow Part", "Council Shield Recipe",
-                            "Assault Cape Part"],
-                'night': ["Griffin Helmet Recipe", "Griffin Boots Part", "Black Morningstar Recipe",
-                          "Maiming Bulawa Part", "Craftsman Apron Recipe"]
+                'morning': ["Celestial Boots recipe", "Guisarme recipe", "Meteor Bow part", "Council Shield part",
+                            "Assault Cape part"],
+                'day': ["Council Gauntlets part", "Phoenix Sword recipe", "Guisarme part", "Nightfall Bow recipe",
+                        "Assault Cape part"],
+                'evening': ["Griffin Armor part", "Meteor Bow recipe", "Nightfall Bow part", "Council Shield recipe",
+                            "Assault Cape part"],
+                'night': ["Griffin Helmet recipe", "Griffin Boots part", "Black Morningstar recipe",
+                          "Maiming Bulawa part", "Craftsman Apron recipe"]
+                    }
+    },
+    'cloaks': {
+        '🍄Болота':
+            {
+                'morning': ["Guard's blade", "Imperial Axe head"],
+                'day': ["Guard's blade", "Imperial Axe head"],
+                'evening': ["Guard's blade", "Imperial Axe head"],
+                'night': ["Thundersoul blade", "Composite Bow shaft"]
+                    },
+        '⛰Горы':
+            {
+                'morning': ["Guard's Spear recipe", "Imperial Axe recipe"],
+                'day': ["Guard's Spear recipe", "Imperial Axe recipe"],
+                'evening': ["Guard's Spear recipe", "Imperial Axe recipe"],
+                'night': ["Thundersoul Sword recipe", "Composite Bow recipe"]
                     }
     }
 }
