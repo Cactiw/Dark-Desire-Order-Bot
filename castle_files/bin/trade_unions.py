@@ -160,6 +160,9 @@ def view_guild_players_in_union(bot, update):
         return
     union_name = union_name.group(1)
     union = TradeUnion.get_union(union_name=union_name)
+    if union is None:
+        bot.send_message(chat_id=mes.chat_id, text="Профсоюз не найден. Проверьте правильность ввода его имени.")
+        return
     not_in_union = []
     response = "Список игроков в гильдии <b>{}</b> в профсоюзе <b>{}</b>\n".format(guild.tag, union.name)
     for player_id in guild.members:
