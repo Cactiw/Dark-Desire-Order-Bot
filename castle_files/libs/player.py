@@ -20,7 +20,7 @@ classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sen
 
 class Player:
     def __init__(self, player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment,
-                 game_class=None, class_skill_lvl=None):
+                 game_class=None, class_skill_lvl=None, castle=None):
         self.id = player_id
         self.username = username
         self.nickname = nickname
@@ -35,6 +35,7 @@ class Player:
         self.game_class = game_class
         self.class_skill_lvl = class_skill_lvl
         self.last_access_time = time.time()
+        self.castle = castle
 
     """
     Метод получения игрока по его id. Сначала проверяется, находится ли игрок в словаре players, то есть был ли
@@ -49,7 +50,7 @@ class Player:
             return player
         # Загрузка игрока из базы данных
         request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, " \
-                  "game_class, class_skill_lvl from players where id = %s"
+                  "game_class, class_skill_lvl, castle from players where id = %s"
         cursor.execute(request, (player_id,))
         try:
             row = cursor.fetchone()
@@ -62,7 +63,7 @@ class Player:
                                                  "прислать ответ @ChatWarsBot на команду /hero")
             return None
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class, \
-            class_skill_lvl = row
+            class_skill_lvl, castle = row
         eq = {}
         for place, eq_json in list(equipment.items()):
             equipment_list = json.loads(eq_json)
@@ -75,7 +76,7 @@ class Player:
             current.defense = equipment_list.get("defense")
             eq.update({place: current})
         player = Player(player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, eq,
-                        game_class, class_skill_lvl=class_skill_lvl)
+                        game_class, class_skill_lvl=class_skill_lvl, castle=castle)
         players.update({player_id: player})  # Кладу игрока в память для дальнейшего ускоренного использования
         return player
 
@@ -100,20 +101,20 @@ class Player:
     # Метод для первичного внесения данных о игроке в БД
     def insert_into_database(self):
         request = "insert into players(id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, " \
-                  "equipment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                  "equipment, castle) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
         eq_to_db = self.equipment_to_json()
         print(self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
               self.attack, self.defense, self.stamina, self.pet, eq_to_db)
         cursor.execute(request, (self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
-                                 self.attack, self.defense, self.stamina, self.pet, eq_to_db))
+                                 self.attack, self.defense, self.stamina, self.pet, eq_to_db, self.castle))
         players.update({self.id: self})
 
     # Метод для обновления уже существующей информации о игроке в БД
     def update_to_database(self):
         request = "update players set username = %s, nickname = %s, guild_tag = %s, guild = %s, lvl= %s, " \
                   "attack = %s, defense = %s, stamina = %s, pet = %s, equipment = %s, game_class = %s, " \
-                  "class_skill_lvl = %s where id = %s"
+                  "class_skill_lvl = %s, castle = %s where id = %s"
         eq_to_db = self.equipment_to_json()
 
         print(self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
@@ -121,7 +122,7 @@ class Player:
 
         cursor.execute(request, (self.username, self.nickname, self.guild_tag, self.guild, self.lvl, self.attack,
                                  self.defense, self.stamina, self.pet, eq_to_db, self.game_class, self.class_skill_lvl,
-                                 self.id))
+                                 self.castle, self.id))
         return 0
 
     def update(self):

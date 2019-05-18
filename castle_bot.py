@@ -52,7 +52,8 @@ from castle_files.bin.castle_feedback import request_king_audience, accept_king_
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
-from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick
+from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
+    print_union_players
 from castle_files.bin.reports import add_report, battle_stats
 
 from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
@@ -66,8 +67,6 @@ from castle_files.bin.unloading_resources import resources_monitor
 from castle_files.libs.guild import Guild
 
 import castle_files.work_materials.globals as file_globals
-
-
 
 
 import threading
@@ -106,9 +105,11 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_recipes, guild_recipes,
                                           pass_user_data=True))
 
+    # Профсоюзы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_union_list, union_list))
     dispatcher.add_handler(CommandHandler('set_union_chat', add_union_chat_id))
+    dispatcher.add_handler(CommandHandler('union_list', print_union_players))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
     # Хендлеры для команд гильдий

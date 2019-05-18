@@ -1,4 +1,5 @@
 from castle_files.work_materials.globals import cursor, castles, CASTLE_BOT_ID
+from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.player import Player
 from castle_files.libs.trade_union import TradeUnion
@@ -61,6 +62,25 @@ def union_list(bot, update):
     union.update_to_database()
     bot.send_message(chat_id=mes.chat_id, text="Список <b>{}</b> успешно обновлён!".format(union.name),
                      parse_mode='HTML')
+
+
+def print_union_players(bot, update):
+    mes = update.message
+    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может просматривать состав.")
+        return
+    response = "Участники <b>{}</b>:\n"
+    for player_id in union.players:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        response_new = "{}<b>{}</b> — @{}\n".format(player.castle, player.nickname, player.username)
+        if len(response + response_new) > MAX_MESSAGE_LENGTH:
+            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += response_new
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def add_union_chat_id(bot, update):
