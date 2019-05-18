@@ -34,6 +34,7 @@ filter_union_list = FilterUnionList()
 class FilterNeedToBanInUnionChat(BaseFilter):
     def filter(self, message):
         if message.text:
+            print(list(union_chats.values()), message.chat_id)
             if message.chat_id not in list(union_chats.values()):
                 return False
             union = TradeUnion.get_union(chat_id=message.chat_id)
