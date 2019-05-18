@@ -93,6 +93,13 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_profile, add_class_from_player))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_set_class, update_ranger_class_skill_lvl))
 
+    # Профсоюзы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_union_list, union_list))
+    dispatcher.add_handler(CommandHandler('set_union_chat', add_union_chat_id))
+    dispatcher.add_handler(CommandHandler('union_list', print_union_players))
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
+
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
 
     # Приём репортов
@@ -104,13 +111,6 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_parts, guild_parts, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_recipes, guild_recipes,
                                           pass_user_data=True))
-
-    # Профсоюзы
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_union_list, union_list))
-    dispatcher.add_handler(CommandHandler('set_union_chat', add_union_chat_id))
-    dispatcher.add_handler(CommandHandler('union_list', print_union_players))
-    dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))

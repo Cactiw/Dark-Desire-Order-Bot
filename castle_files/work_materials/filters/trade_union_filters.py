@@ -33,14 +33,12 @@ filter_union_list = FilterUnionList()
 
 class FilterNeedToBanInUnionChat(BaseFilter):
     def filter(self, message):
-        if message.text:
-            print(list(union_chats.values()), message.chat_id)
-            if message.chat_id not in list(union_chats.values()):
-                return False
-            union = TradeUnion.get_union(chat_id=message.chat_id)
-            if union is None:
-                return False
-            return message.from_user.id not in union.players
+        if message.chat_id not in list(union_chats.values()):
+            return False
+        union = TradeUnion.get_union(chat_id=message.chat_id)
+        if union is None:
+            return False
+        return message.from_user.id not in union.players
 
 
 filter_need_to_ban_in_union_chat = FilterNeedToBanInUnionChat()
