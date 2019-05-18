@@ -53,7 +53,7 @@ from castle_files.bin.castle_feedback import request_king_audience, accept_king_
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
-    print_union_players
+    print_union_players, clear_union_list, view_guild_players_in_union
 from castle_files.bin.reports import add_report, battle_stats
 
 from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
@@ -97,7 +97,9 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_union_list, union_list))
     dispatcher.add_handler(CommandHandler('set_union_chat', add_union_chat_id))
+    dispatcher.add_handler(CommandHandler('clear_union_list', clear_union_list))
     dispatcher.add_handler(CommandHandler('union_list', print_union_players))
+    dispatcher.add_handler(CommandHandler('guild_union_players', view_guild_players_in_union))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))

@@ -2,6 +2,7 @@ from castle_files.work_materials.globals import cursor, castles, CASTLE_BOT_ID
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 from castle_files.libs.trade_union import TradeUnion
 
 from telegram.error import TelegramError
@@ -66,6 +67,19 @@ def union_list(bot, update):
                      parse_mode='HTML')
 
 
+def clear_union_list(bot, update):
+    mes = update.message
+    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может удалять состав.")
+        return
+    union.players = [union.creator_id]
+    union.update_to_database()
+    bot.send_message(chat_id=mes.chat_id, text="Список <b>{}</b> успешно очищен. "
+                                               "Пришлите форварды состава профсоюза заного.".format(union.name),
+                     parse_mode='HTML')
+
+
 def print_union_players(bot, update):
     mes = update.message
     union = TradeUnion.get_union(creator_id=update.message.from_user.id)
@@ -121,4 +135,42 @@ def check_and_kick(bot, update):
                                   "Возможно, стоит обновить состав".format(union.name),
                              parse_mode='HTML')
         except TelegramError:
-            logging.error(traceback.format_exc())
+            return
+            # logging.error(traceback.format_exc())
+
+
+def view_guild_players_in_union(bot, update):
+    mes = update.message
+    curr_player = Player.get_player(mes.from_user.id)
+    if curr_player is None:
+        return
+    guild_id = curr_player.guild
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                              "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    union_name = re.search(" (.*)", mes.text)
+    if union_name is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис. Укажите название профсоюза после команды.")
+        return
+    union_name = union_name.group(1)
+    union = TradeUnion.get_union(union_name=union_name)
+    not_in_union = []
+    response = "Список игроков в гильдии <b>{}</b> в профсоюзе <b>{}</b>\n".format(guild.tag, union.name)
+    for player_id in guild.members:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        if player_id in union.players:
+            response += "<b>{}</b> — @{}\n".format(player.nickname, player.username)
+        else:
+            not_in_union.append(player)
+    response += "\nВ других профсоюзах или без него:\n"
+    for player in not_in_union:
+        response += "<b>{}</b> — @{}\n".format(player.nickname, player.username)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')

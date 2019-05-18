@@ -3,7 +3,7 @@ from castle_files.bin.buttons import send_general_buttons, get_general_buttons, 
 from castle_files.libs.castle.location import Location
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import cursor, moscow_tz
+from castle_files.work_materials.globals import cursor, moscow_tz, MY_CHANNEL_ID
 
 import re
 import datetime
@@ -50,6 +50,8 @@ def change_update_message(bot, update, user_data):
                           "хорошо.\n\n<em>В случае, если после этого не последует сообщение с обновлением, "
                           "измените его</em>", parse_mode='HTML')
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+    bot.send_message(chat_id=MY_CHANNEL_ID, text=update.message.text, parse_mode='HTML')
+    # bot.send_message(chat_id=-1001490872996, text=update.message.text, parse_mode='HTML')
 
 
 def request_bot_guild_message_notify(bot, update, user_data):

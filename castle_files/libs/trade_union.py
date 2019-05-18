@@ -12,7 +12,7 @@ class TradeUnion:
         self.chat_id = chat_id
 
     @staticmethod
-    def get_union(union_id=None, creator_id=None, chat_id=None):
+    def get_union(union_id=None, creator_id=None, chat_id=None, union_name=None):
         request = "select id, creator_id, name, players, view_link, chat_id from trade_unions where "
         arg = None
         if union_id is not None:
@@ -24,6 +24,9 @@ class TradeUnion:
         elif chat_id is not None:
             request += "chat_id = %s"
             arg = chat_id
+        elif union_name is not None:
+            request += "name = %s"
+            arg = union_name
         cursor.execute(request, (arg,))
         row = cursor.fetchone()
         if row is None:
