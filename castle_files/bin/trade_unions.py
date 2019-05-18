@@ -31,9 +31,15 @@ def add_union(bot, update):
     creator = Player.get_player(row[0], notify_on_error=False)
     view_link = re.search("View: /tu_view_(.*)", mes.text)
     view_link = view_link.group(1) if view_link is not None else None
+    request = "select id from trade_unions where name = %s"
+    cursor.execute(request, (name,))
+    row = cursor.fetchone()
+    if row is not None:
+        bot.send_message(chat_id=mes.chat_id, text="Этот профсоюз уже зарегистрирован!")
+        return
     request = "insert into trade_unions(creator_id, name, players, view_link) values (%s, %s, %s, %s)"
     cursor.execute(request, (creator.id, name, [creator.id], view_link))
-    bot.send_message(chat_id=mes.chat_id, text="Профсоюз <b>{}</b> успешно зарегестрирован!".format(name),
+    bot.send_message(chat_id=mes.chat_id, text="Профсоюз <b>{}</b> успешно зарегистрирован!".format(name),
                      parse_mode='HTML')
 
 
