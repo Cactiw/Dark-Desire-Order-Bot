@@ -30,6 +30,7 @@ class TradeUnion:
         return TradeUnion(row[0], row[1], row[2], row[3], row[4])
 
     def update_to_database(self):
-        request = "update trade_unions set creator_id = %s, name = %s, players = %s, view_link = %s where id = %s"
+        request = "update trade_unions set creator_id = %s, name = %s, players = %s, view_link = %s, chat_id = %s" \
+                  " where id = %s"
         cursor.execute(request, (self.creator_id, self.name, self.players, self.view_link, self.id,))
         return 0
