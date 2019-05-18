@@ -20,7 +20,7 @@ import datetime
 
 
 def get_profile_text(player, self_request=True):
-    response = "<b>{}</b> - Воин 🖤Скалы\n".format(player.nickname)
+    response = "<b>{}</b> - Воин {}\n".format(player.nickname, "🖤Скалы" if player.castle == '🖤' else player.castle)
     response += "{}id: <code>{}</code>\n".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
     response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
@@ -181,7 +181,7 @@ def hero(bot, update, user_data):
                                                        "установите его в настройках аккаунта Telegram")
             return
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
-                        stamina, pet, player_equipment)
+                        stamina, pet, player_equipment, castle=castle)
         # Добавляем игрока в бд
         player.insert_into_database()
         player = player.reload_from_database()
@@ -209,6 +209,7 @@ def hero(bot, update, user_data):
         player.stamina = stamina
         player.pet = pet
         player.equipment = player_equipment
+        player.castle = castle
         player.update()
         bot.send_message(chat_id=mes.chat_id, text="Профиль успешно обновлён, <b>{}</b>!".format(player.nickname),
                          parse_mode='HTML')
