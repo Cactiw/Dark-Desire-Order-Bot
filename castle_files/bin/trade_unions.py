@@ -113,7 +113,7 @@ def check_and_kick(bot, update):
     union = TradeUnion.get_union(chat_id=update.message.chat_id)
     if union is None:
         return
-    if mes.from_user.id not in union.players and mes.from_user.user_id != CASTLE_BOT_ID:
+    if mes.from_user.id not in union.players and mes.from_user.id != CASTLE_BOT_ID:
         try:
             bot.kickChatMember(chat_id=mes.chat_id, user_id=update.message.from_user.id)
             bot.send_message(chat_id=mes.chat_id,
