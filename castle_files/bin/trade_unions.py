@@ -6,6 +6,8 @@ from castle_files.libs.trade_union import TradeUnion
 
 from telegram.error import TelegramError
 import re
+import logging
+import traceback
 
 union_chats = {}
 
@@ -93,6 +95,7 @@ def add_union_chat_id(bot, update):
     union.update_to_database()
     bot.send_message(chat_id=mes.chat_id, text="Этот чат теперь официальный чат профсоюза <b>{}</b>".format(union.name),
                      parse_mode='HTML')
+    fill_union_chats()
 
 
 def fill_union_chats():
@@ -118,4 +121,4 @@ def check_and_kick(bot, update):
                                   "Возможно, стоит обновить состав".format(union.name),
                              parse_mode='HTML')
         except TelegramError:
-            return
+            logging.error(traceback.format_exc())
