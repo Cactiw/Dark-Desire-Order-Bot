@@ -22,35 +22,45 @@ def count_next_daytime():
 
 
 def qdrop(tier):
-    text = "Сейчас в квестах из {} можно найти:\n".format(tier.upper())
-    try:
-        daytime = daytime_table[count_next_daytime()]
-        for quest in drop[tier]:
-            text += '   <b>{}</b>:\n'.format(quest)
-            for item in drop[tier][quest][daytime]:
-                text += '      {};\n'.format(item)
-            text += '\n'
-        return text
-    except KeyError:
-        return 'KeyError'
+    if tier == 'cloaks':
+        text = "Сейчас падает из <i>Tier 3</i> (30-42 уровни):\n\n"
+    else:
+        text = "Сейчас падает из <i>{}</i>:\n\n".format(tier)
+    daytime = daytime_table[count_next_daytime()]
+    for quest in drop[tier]:
+        text += '   <b>{}</b>: '.format(quest)
+        for item in drop[tier][quest][daytime]:
+            text += '{}; '.format(item)
+        text += '\n\n'
+    return text
 
 
 def drop_table(bot, update):
     um = update.message
-    try:
-        tier = um.text[um.text.index(' ')+1:].lower()
-        drop_tier = avalible_tiers[tier]
-    except ValueError:
-        drop_tier = 'Null'
-    except KeyError:
-        drop_tier = 'Null'
-    text = qdrop(drop_tier)
-    if text != 'KeyError':
+    if um.text[:5] == '/drop':
+        try:
+            tier = um.text[um.text.index(' ')+1:].lower()
+            drop_tier = avalible_tiers[tier]
+        except ValueError:
+            drop_tier = 'Null'
+        except KeyError:
+            drop_tier = 'Null'
+        text = qdrop(drop_tier)
+        if text == 'KeyError':
+            bot.sendMessage(chat_id=um.chat_id,
+                            text='Использование команды:\n'
+                                 '/drop <code>{T2/cloaks/T3/T4}</code>\n'
+                                 'ИЛИ\n'
+                                 '/d2 | /d3 | /d4 | /dc',
+                            parse_mode='HTML')
+        else:
+            bot.sendMessage(chat_id=um.chat_id,
+                            text=text,
+                            parse_mode='HTML')
+    if um.text == '/d2' or um.text == '/d3' or um.text or um.text == '/d4'\
+            or um.text == '/dc':
+        drop_tier = avalible_tiers[um.text.lower()[:3]]
+        text = qdrop(drop_tier)
         bot.sendMessage(chat_id=um.chat_id,
                         text=text,
-                        parse_mode='HTML')
-    else:
-        bot.sendMessage(chat_id=um.chat_id,
-                        text='Использование команды:\n'
-                             '/drop <code>{T2/T3/T4}</code>',
                         parse_mode='HTML')
