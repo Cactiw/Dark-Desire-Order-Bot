@@ -110,9 +110,10 @@ def hero(bot, update, user_data):
     text = mes.text
     castle = text[0]
     if castle != '🖤':
+        pass
         # Игрок не из Скалы
-        bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
-        return
+        # bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
+        # return
     player = Player.get_player(mes.from_user.id, notify_on_error=False)
     if player is None and mes.chat_id != mes.from_user.id:
         # Добавление новых пользователей только в личке у бота

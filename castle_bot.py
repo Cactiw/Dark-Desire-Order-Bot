@@ -26,6 +26,8 @@ from castle_files.work_materials.filters.feedback_filters import filter_request_
     filter_restrict_feedback, filter_unrestrict_feedback
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
     filter_request_duty_feedback, filter_send_duty_feedback, filter_reply_to_duty_feedback, filter_ban_in_duty_chat
+from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
+    filter_need_to_ban_in_union_chat
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
@@ -50,6 +52,7 @@ from castle_files.bin.castle_feedback import request_king_audience, accept_king_
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
+from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick
 from castle_files.bin.reports import add_report, battle_stats
 
 from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
@@ -102,6 +105,11 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_parts, guild_parts, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_recipes, guild_recipes,
                                           pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_union_list, union_list))
+    dispatcher.add_handler(CommandHandler('set_union_chat', add_union_chat_id))
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
@@ -270,6 +278,7 @@ def castle_bot_processing():
     fill_allowed_list()
     fill_triggers_lists()
     plan_battle_jobs()
+    fill_union_chats()
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True
