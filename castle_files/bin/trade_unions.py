@@ -167,6 +167,9 @@ def view_guild_players_in_union(bot, update):
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
+    if not guild.check_high_access(curr_player.id):
+        bot.send_message(chat_id=mes.chat_id, text="Только замы и гм могут использовать эту команду.")
+        return
     union_name = re.search(" (.*)", mes.text)
     if union_name is None:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис. Укажите название профсоюза после команды.")
