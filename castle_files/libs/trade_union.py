@@ -8,7 +8,7 @@ class TradeUnion:
         self.creator_id = creator_id
         self.name = name
         self.players = players
-        self.view_list = view_link
+        self.view_link = view_link
 
     @staticmethod
     def get_union(union_id=None, creator_id=None, chat_id=None):
@@ -31,5 +31,5 @@ class TradeUnion:
 
     def update_to_database(self):
         request = "update trade_unions set creator_id = %s, name = %s, players = %s, view_link = %s where id = %s"
-        cursor.execute(request, (self.id,))
+        cursor.execute(request, (self.creator_id, self.name, self.players, self.view_link, self.id,))
         return 0
