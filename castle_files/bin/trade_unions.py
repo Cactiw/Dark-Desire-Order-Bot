@@ -52,7 +52,10 @@ def add_union(bot, update):
 
 def union_list(bot, update):
     mes = update.message
-    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if mes.from_user.id == SUPER_ADMIN_ID:
+        union = TradeUnion.get_union(union_id=1)
+    else:
+        union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
         bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может вносить его состав.")
         return
