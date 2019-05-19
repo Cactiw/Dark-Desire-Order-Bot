@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import cursor, castles, CASTLE_BOT_ID
+from castle_files.work_materials.globals import cursor, castles, CASTLE_BOT_ID, SUPER_ADMIN_ID
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.player import Player
@@ -112,7 +112,10 @@ def print_union_players(bot, update):
 
 def add_union_chat_id(bot, update):
     mes = update.message
-    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if mes.from_user.id == SUPER_ADMIN_ID:
+        union = TradeUnion.get_union(union_id=1)
+    else:
+        union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
         bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может изменять чат профсоюза")
         return
