@@ -73,6 +73,29 @@ def union_list(bot, update):
                      parse_mode='HTML')
 
 
+def add_to_union_user_id(bot, update):
+    mes = update.message
+    if mes.from_user.id == SUPER_ADMIN_ID:
+        union = TradeUnion.get_union(union_id=1)
+    else:
+        union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может вносить его состав.")
+        return
+    player_id = re.search(" (\\d+)", mes.text)
+    if player_id is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис.")
+        return
+    player_id = int(player_id.group(1))
+    if player_id not in union.players:
+        union.players.append(player_id)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Игрок успешно добавлен в профсоюз <b>{}</b>.".format(union.name), parse_mode='HTML')
+    else:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Игрок уже в профсоюзе <b>{}</b>.".format(union.name), parse_mode='HTML')
+
+
 def clear_union_list(bot, update):
     global kick_players_from_union
     mes = update.message
