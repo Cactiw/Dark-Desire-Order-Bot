@@ -89,6 +89,7 @@ def add_to_union_user_id(bot, update):
     player_id = int(player_id.group(1))
     if player_id not in union.players:
         union.players.append(player_id)
+        union.update_to_database()
         bot.send_message(chat_id=update.message.chat_id,
                          text="Игрок успешно добавлен в профсоюз <b>{}</b>.".format(union.name), parse_mode='HTML')
     else:
