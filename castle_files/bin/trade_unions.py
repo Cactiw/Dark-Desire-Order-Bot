@@ -164,6 +164,8 @@ def fill_union_chats():
 
 
 def check_and_kick(bot, update):
+    if kick_players_from_union is False:
+        return
     mes = update.message
     union = TradeUnion.get_union(chat_id=update.message.chat_id)
     if union is None:
@@ -181,8 +183,6 @@ def check_and_kick(bot, update):
 
 
 def view_guild_players_in_union(bot, update):
-    if kick_players_from_union is False:
-        return
     mes = update.message
     curr_player = Player.get_player(mes.from_user.id)
     if curr_player is None:
@@ -222,4 +222,52 @@ def view_guild_players_in_union(bot, update):
     response += "\nВ других профсоюзах или без него:\n"
     for player in not_in_union:
         response += "<b>{}</b> — @{}\n".format(player.nickname, player.username)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def view_guild_unions(bot, update):
+    mes = update.message
+    curr_player = Player.get_player(mes.from_user.id)
+    if curr_player is None:
+        return
+    guild_id = curr_player.guild
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                              "командира добавить вас в гильдейском чате.")
+        return
+    guild = Guild.get_guild(guild_id=guild_id)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    if not guild.check_high_access(curr_player.id):
+        bot.send_message(chat_id=mes.chat_id, text="Только замы и гм могут использовать эту команду.")
+        return
+    union_id = 1
+    union = TradeUnion.get_union(union_id=union_id)
+    players_in_unions = {}
+    while union is not None:
+        union_players_list = []
+        players_in_unions.update({union.name: union_players_list})
+        for player_id in guild.members:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                continue
+            if player_id in union.players:
+                union_players_list.append(player)
+        union_id += 1
+        union = TradeUnion.get_union(union_id=union_id)
+    response = "Список игроков в гильдии <b>{}</b> в профсоюзах\n".format(guild.tag)
+    for player_id in guild.members:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        found = False
+        for un, lst in list(players_in_unions.items()):
+            if player in lst:
+                response += "<b>{}</b> — @{} — <b>{}</b>\n".format(player.nickname, player.username, un)
+                found = True
+                break
+        if not found:
+            response += "<b>{}</b> — @{} — НЕТ ПРОФСОЮЗА\n".format(player.nickname, player.username)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
