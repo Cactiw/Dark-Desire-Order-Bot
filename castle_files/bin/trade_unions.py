@@ -5,6 +5,8 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.trade_union import TradeUnion
 
+from castle_files.work_materials.filters.general_filters import filter_is_pm
+
 from telegram.error import TelegramError
 import re
 import logging
@@ -184,6 +186,10 @@ def check_and_kick(bot, update):
 
 def view_guild_players_in_union(bot, update):
     mes = update.message
+    if not filter_is_pm(mes):
+        bot.send_message(chat_id=mes.chat_id, text="Команда разрешена только в лс, чтобы не пинговать людей.",
+                         reply_to_message_id=mes.message_id)
+        return
     curr_player = Player.get_player(mes.from_user.id)
     if curr_player is None:
         return
@@ -227,6 +233,10 @@ def view_guild_players_in_union(bot, update):
 
 def view_guild_unions(bot, update):
     mes = update.message
+    if not filter_is_pm(mes):
+        bot.send_message(chat_id=mes.chat_id, text="Команда разрешена только в лс, чтобы не пинговать людей.",
+                         reply_to_message_id=mes.message_id)
+        return
     curr_player = Player.get_player(mes.from_user.id)
     if curr_player is None:
         return
