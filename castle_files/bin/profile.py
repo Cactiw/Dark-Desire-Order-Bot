@@ -19,6 +19,9 @@ import logging
 import datetime
 
 
+trade_divisions_access_list = [439637823, 320365073]  # Игроки, которым дал доступ к хуизу в связи с альянсами
+
+
 def get_profile_text(player, self_request=True):
     response = "<b>{}</b> - Воин {}\n".format(player.nickname, "🖤Скалы" if player.castle == '🖤' else player.castle)
     response += "{}id: <code>{}</code>\n".format("@{}, ".format(player.username) if player.username is not None else "",
@@ -55,7 +58,8 @@ def view_profile(bot, update):
     if requested_player is None:
         return
     guild = Guild.get_guild(guild_id=requested_player.guild)
-    if not check_access(requested_player_id) and not filter_is_merc(mes):
+    if not check_access(requested_player_id) and not filter_is_merc(mes) and \
+            requested_player_id not in trade_divisions_access_list:
         if guild is None or not guild.check_high_access(requested_player_id):
             bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
                              reply_to_message_id=mes.message_id)
@@ -91,8 +95,8 @@ def view_profile(bot, update):
     if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
-    if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and not\
-            filter_is_merc(mes):
+    if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and\
+            not filter_is_merc(mes) and requested_player_id not in trade_divisions_access_list:
         guild = Guild.get_guild(guild_id=player.guild)
         bot.send_message(chat_id=mes.from_user.id,
                          text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "
