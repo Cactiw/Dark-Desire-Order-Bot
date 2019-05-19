@@ -130,7 +130,7 @@ def pult_send(bot, update):
             bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
             return
         time_to_send = next_battle - times_to_time[time_to_send]
-        time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz)
+        time_to_send = moscow_tz.localize(time_to_send).astimezone(local_tz).replace(tzinfo=None)
     #------------------------------------------------------------------------------------------------------- TEST ONLY
     #time_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).replace(hour=16, minute=31, second=0)
     #-------------------------------------------------------------------------------------------------------
