@@ -169,7 +169,6 @@ class AsyncBot(Bot):
                 pass
             else:
                 if pin:
-                    print("notification:", notification)
                     try:
                         super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id,
                                                              disable_notification=not notification)
