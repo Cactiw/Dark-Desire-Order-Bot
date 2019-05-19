@@ -91,7 +91,7 @@ def view_profile(bot, update):
     if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
-    if player.guild is None or player.guild != requested_player.guild and not check_access(requested_player_id) and not\
+    if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and not\
             filter_is_merc(mes):
         guild = Guild.get_guild(guild_id=player.guild)
         bot.send_message(chat_id=mes.from_user.id,
