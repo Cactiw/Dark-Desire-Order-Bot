@@ -165,9 +165,9 @@ def top_union_stats(bot, update):
     count = 1
     response = "Топы статов по <b>{}</b>:\n".format(union.name)
     for player in players:
-        response += "{}: <b>{}</b> {}<code>{}</code>" \
+        response += "{}: <b>{}</b> {}<code>{}</code> @{}" \
                     "\n".format(count, player.nickname, "⚔:" if "attack" in mes.text else "🛡:",
-                                player.attack if "attack" in mes.text else player.defense)
+                                player.attack if "attack" in mes.text else player.defense, player.username)
         if count >= MAX_PLAYERS_PRINT:
             break
         count += 1
