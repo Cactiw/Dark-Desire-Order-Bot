@@ -141,6 +141,40 @@ def count_union_stats(bot, update):
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
+def top_union_stats(bot, update):
+    mes = update.message
+    MAX_PLAYERS_PRINT = 20
+    if not filter_is_pm(mes):
+        bot.send_message(chat_id=mes.chat_id, text="Команда разрешена только в лс, чтобы не пинговать людей.",
+                         reply_to_message_id=mes.message_id)
+        return
+    union = TradeUnion.get_union(creator_id=mes.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=mes.chat_id, text="Только создатель и замы профсоюза могут вносить его состав.")
+        return
+    players = []
+    for player_id in union.players:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        players.append(player)
+    if "attack" in mes.text:
+        players.sort(key=lambda x: x.attack, reverse=True)
+    else:
+        players.sort(key=lambda x: x.defense, reverse=True)
+    count = 1
+    response = "Топы статов по <b>{}</b>:\n".format(union.name)
+    for player in players:
+        response += "{}: <b>{}</b> {}<code>{}</code>" \
+                    "\n".format(count, player.nickname, "⚔:" if "attack" in mes.text else "🛡:",
+                                player.attack if "attack" in mes.text else player.defense)
+        if count >= MAX_PLAYERS_PRINT:
+            break
+        count += 1
+
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
 def add_to_union_user_id(bot, update):
     mes = update.message
     union = TradeUnion.get_union(creator_id=update.message.from_user.id)
