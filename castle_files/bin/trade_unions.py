@@ -64,7 +64,7 @@ def union_list(bot, update):
     for string in update.message.text.splitlines():
         if string[0] in castles:
             request = "select id from players where nickname = %s"
-            cursor.execute(request, (string[1:],))
+            cursor.execute(request, (string[1:].partition("/")[0],))
             row = cursor.fetchone()
             if row is None:
                 continue
