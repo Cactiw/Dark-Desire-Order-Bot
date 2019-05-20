@@ -50,16 +50,57 @@ def add_union(bot, update):
     cursor.execute(request, (creator.id, name, [creator.id], view_link))
     bot.send_message(chat_id=mes.chat_id, text="Профсоюз <b>{}</b> успешно зарегистрирован!".format(name),
                      parse_mode='HTML')
+    
+    
+def add_union_assistant(bot, update):
+    mes = update.message
+    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Только создатель и замы профсоюза могут добавлять замов.")
+        return
+    new_id = re.search(" (\\d+)", mes.text)
+    if new_id is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис.")
+        return
+    new_id = int(new_id.group(1))
+    if new_id not in union.players:
+        bot.send_message(chat_id=update.message.chat_id, text="Замом можно сделать только члена профсоюза.")
+        return
+    if new_id in union.assistants:
+        bot.send_message(chat_id=update.message.chat_id, text="Этот игрок уже является заместителем.")
+        return
+    union.assistants.append(new_id)
+    union.update_to_database()
+    bot.send_message(chat_id=mes.chat_id, text="Заместитель успешно добавлен!")
+
+
+def del_union_assistant(bot, update):
+    mes = update.message
+    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Только создатель и замы профсоюза могут удалять замов.")
+        return
+    new_id = re.search(" (\\d+)", mes.text)
+    if new_id is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис.")
+        return
+    new_id = int(new_id.group(1))
+    if new_id not in union.assistants:
+        bot.send_message(chat_id=update.message.chat_id, text="Этот игрок не является заместителем.")
+        return
+    union.assistants.remove(new_id)
+    union.update_to_database()
+    bot.send_message(chat_id=mes.chat_id, text="Заместитель успешно удалён!")
 
 
 def union_list(bot, update):
     mes = update.message
-    if mes.from_user.id == SUPER_ADMIN_ID:
-        union = TradeUnion.get_union(union_id=1)
-    else:
-        union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может вносить его состав.")
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Только создатель и замы профсоюза могут вносить его состав.")
         return
     for string in update.message.text.splitlines():
         if string[0] in castles:
@@ -75,14 +116,37 @@ def union_list(bot, update):
                      parse_mode='HTML')
 
 
+def count_union_stats(bot, update):
+    mes = update.message
+    if not filter_is_pm(mes):
+        bot.send_message(chat_id=mes.chat_id, text="Команда разрешена только в лс, чтобы не пинговать людей.",
+                         reply_to_message_id=mes.message_id)
+        return
+    union = TradeUnion.get_union(creator_id=mes.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=mes.chat_id, text="Только создатель и замы профсоюза могут вносить его состав.")
+        return
+    attack = 0
+    defense = 0
+    count = 0
+    for player_id in union.players:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        attack += player.attack
+        defense += player.defense
+        count += 1
+    response = "Суммарные статы по <b>{}</b>:\n⚔️: <code>{}</code>, 🛡: <code>{}</code>\n" \
+               "Всего людей: <code>{}</code>".format(union.name, attack, defense, count)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
 def add_to_union_user_id(bot, update):
     mes = update.message
-    if mes.from_user.id == SUPER_ADMIN_ID:
-        union = TradeUnion.get_union(union_id=1)
-    else:
-        union = TradeUnion.get_union(creator_id=update.message.from_user.id)
+    union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может вносить его состав.")
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Только создатель и замы профсоюза могут вносить его состав.")
         return
     player_id = re.search(" (\\d+)", mes.text)
     if player_id is None:
@@ -104,7 +168,7 @@ def clear_union_list(bot, update):
     mes = update.message
     union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может удалять состав.")
+        bot.send_message(chat_id=update.message.chat_id, text="Только создатель и замы профсоюза могут удалять состав.")
         return
     union.players = [union.creator_id]
     union.update_to_database()
@@ -124,9 +188,10 @@ def print_union_players(bot, update):
     mes = update.message
     union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может просматривать состав.")
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Только создатель и замы профсоюза могут просматривать состав.")
         return
-    response = "Участники <b>{}</b>:\n"
+    response = "Участники <b>{}</b>:\n".format(union.name)
     for player_id in union.players:
         player = Player.get_player(player_id, notify_on_error=False)
         if player is None:
@@ -147,7 +212,8 @@ def add_union_chat_id(bot, update):
     else:
         union = TradeUnion.get_union(creator_id=update.message.from_user.id)
     if union is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Только создатель профсоюза может изменять чат профсоюза")
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Только создатель и замы профсоюза могут изменять чат профсоюза")
         return
     union.chat_id = mes.chat_id
     union.update_to_database()
