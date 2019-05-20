@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids
 
 from castle_files.libs.guild import Guild
@@ -22,6 +22,7 @@ ranger_aiming_minutes = [0, 180, 165, 150, 135, 120, 105, 95, 85, 75, 65, 60, 55
 def parse_stats():
     data = castles_stats_queue.get()
     while data:
+        response_all = "Игроки, попавшие в топ:\n"
         for castle_results_string in data.split("\n\n"):
             for guild_id in Guild.guild_ids:
                 guild = Guild.get_guild(guild_id=guild_id)
@@ -39,8 +40,14 @@ def parse_stats():
                             response = "Игроки, попавшие в топ:\n"
                         response += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
                                                               attacked_castle, nickname[:-1])
+
+                        response_all += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
+                                                                  attacked_castle, nickname[:-1])
+
                     if response != "":
                         dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+        if response_all != "Игроки, попавшие в топ:\n":
+            dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
         data = castles_stats_queue.get()
 
 
