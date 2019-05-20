@@ -131,7 +131,8 @@ def print_union_players(bot, update):
         player = Player.get_player(player_id, notify_on_error=False)
         if player is None:
             continue
-        response_new = "{}<b>{}</b> — @{}\n".format(player.castle, player.nickname, player.username)
+        response_new = "{}<b>{}</b> — @{} <code>{}</code>\n".format(player.castle, player.nickname, player.username,
+                                                                    player.id)
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
