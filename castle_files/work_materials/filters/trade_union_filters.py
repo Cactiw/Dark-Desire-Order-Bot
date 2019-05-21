@@ -10,8 +10,8 @@ class FilterTradeUnion(BaseFilter):
         if message.text:
             if message.forward_from is None:
                 return False
-            return message.text.startswith("🏚Trade Union:") and filter_is_chat_wars_forward(message) and \
-                filter_is_pm(message)
+            return (message.text.startswith("🏚Trade Union:") or message.text.startswith("🏠Trade Union:")) and \
+                filter_is_chat_wars_forward(message) and filter_is_pm(message)
         return False
 
 
