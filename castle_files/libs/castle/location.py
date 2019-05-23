@@ -21,6 +21,7 @@ class Location:
         self.building_process = building_process  # -1 - стройка не начиналась / завершилась, >=0 - идёт стройка
         self.special_info = special_info
         self.load_location()
+        self.child_locations = None
 
     @staticmethod
     def get_location(location_id):
@@ -71,6 +72,54 @@ class Location:
                                  json.dumps(self.special_info) if self.special_info is not None else None))
 
 
+# Тронный зал с сокровищницей
+class ThroneRoom(Location):
+    def __init__(self, location_id, location_name, enter_text, need_clicks_to_construct=None,
+                 state=True, building_process=-1, special_info=None):
+        if location_id != 2:
+            raise NameError
+        super(ThroneRoom, self).__init__(location_id, location_name, enter_text, need_clicks_to_construct,
+                                       state, building_process, special_info)
+        treasury = self.special_info.get("treasury")
+        self.treasury = Treasury(6, "Сокровищница",
+                                 "Вы входите в сокровищницу. Ценные ресурсы аккуратно разложены в кучки, "
+                                 "золото и ценное обмундирование занимает всё видимое пространство.\n\n"
+                                 "Текущее состояние: 🌲Дерево: <b>{}</b>, ⛰Камень: <b>{}</b>",
+                                 wood=treasury.get("wood"), stone=treasury.get("stone"), throne_room=self)
+
+    def update_location_to_database(self):
+        treasury = self.special_info.get("treasury")
+        treasury.update({"wood": self.treasury.wood, "stone": self.treasury.stone})
+        super().update_location_to_database()
+
+
+# Сокровищница, с методами для работы с ресурсами
+class Treasury(Location):
+    def __init__(self, location_id, location_name, enter_text, need_clicks_to_construct=None,
+                 state=True, building_process=-1, special_info=None, wood=0, stone=0, throne_room=None):
+        super(Treasury, self).__init__(location_id, location_name, enter_text, need_clicks_to_construct,
+                                       state, building_process, special_info)
+        self.wood = wood
+        self.stone = stone
+        self.throne_room = throne_room
+        if self.special_info is None:
+            self.special_info = {}
+        self.special_info.update({"enter_text_format_values": [self.wood, self.stone]})
+
+    def change_resource(self, resource, count):
+        if count >= 0:
+            self.__setattr__(resource, self.__getattribute__(resource) + count)
+        else:
+            attr = self.__getattribute__(resource)
+            if attr < count:
+                return -1
+            self.__setattr__(resource, attr + count)
+        self.special_info.update({"enter_text_format_values": [self.wood, self.stone]})
+        self.update_location_to_database()
+
+    def update_location_to_database(self):
+        self.throne_room.update_location_to_database()
+
 #
 
 """
@@ -89,11 +138,12 @@ central_square = Location(0, "⛲️ Центральная площадь",
 central_square.create_location_in_database()
 barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
 barracks.create_location_in_database()
-throne_room = Location(2, "🏛 Тронный зал",
-                       "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы "
-                       "и даже попросить аудиенции у ВРИО 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
-                       special_info={"enter_text_format_values": ["DjedyBreaM", "Дебриф"],
-                                     "mid_players": [231900398, 205356091], "banned_in_feedback": []})
+throne_room = ThroneRoom(2, "🏛 Тронный зал",
+                         "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы "
+                         "и даже попросить аудиенции у ВРИО 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
+                         special_info={"enter_text_format_values": ["DjedyBreaM", "Дебриф"],
+                                       "mid_players": [231900398, 205356091], "banned_in_feedback": [],
+                                       "treasury": {"wood": 0, "stone": 0}})
 throne_room.create_location_in_database()
 print(throne_room.special_info.get("enter_text_format_values"))
 castle_gates = Location(3, "⛩ Врата замка",
@@ -120,6 +170,7 @@ status_to_location = {
     "castle_gates": 3,
     "headquarters": 4,
     "technical_tower": 5,
+    "treasury": 6,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -131,4 +182,5 @@ locations = {
     3: castle_gates,
     4: headquarters,
     5: technical_tower,
+    6: throne_room.treasury,
 }

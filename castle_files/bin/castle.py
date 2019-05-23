@@ -50,6 +50,11 @@ def back(bot, update, user_data):
         "sending_bot_guild_message": "technical_tower",
         "editing_update_message": "technical_tower",
 
+        "sawmill": "castle_gates",
+        "quarry": "castle_gates",
+
+        "treasury": "throne_room",
+
     }
     status = user_data.get("status")
     if status is None:

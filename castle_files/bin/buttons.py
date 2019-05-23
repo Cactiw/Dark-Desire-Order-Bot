@@ -126,6 +126,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 ],
             [
                 KeyboardButton("🎇Посмотреть на портреты"),
+                KeyboardButton("💰Сокровищница"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -136,7 +137,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message', 'editing_debrief',
-                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message']:
+                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "sawmill",
+                    "quarry", "treasury",]:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
@@ -155,6 +157,10 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             buttons = [
                 [
                     KeyboardButton("Обратиться к 💂‍♂Стражам"),
+                ],
+                [
+                    KeyboardButton("🌲Лесопилка"),
+                    KeyboardButton("⛰Каменоломня"),
                 ],
                 [
                     KeyboardButton("↩️ Назад"),
