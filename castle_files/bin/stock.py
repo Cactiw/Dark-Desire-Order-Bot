@@ -100,13 +100,13 @@ def set_withdraw_res(bot, update, user_data, args):
     response = "Список для выдачи ресурсов обновлён. Текущий список:\n"
     response_end = "\nНе найдены ресурсы с кодом:\n"
     for res_code in args:
-        print(res_code)
-        print(resources.get(res_code))
         res_name = resources_reverted.get(res_code)
         if res_name is None:
             not_found = True
             response_end += "<b>{}</b>\n".format(res_code)
         else:
+            if res_code in found:
+                continue
             found.append(res_code)
             response += "<b>{}</b>\n".format(res_name)
     user_data.update({"withdraw_res": found})
