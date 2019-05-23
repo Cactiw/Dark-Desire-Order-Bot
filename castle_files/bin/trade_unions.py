@@ -156,6 +156,7 @@ def split_union(bot, update):
     players = []
     total_stats = 0
     attr = "attack" if "attack" in mes.text else "defense"
+    alt = "alt" in mes.text
     for player_id in union.players:
         player = Player.get_player(player_id, notify_on_error=False)
         if player is None:
@@ -178,13 +179,13 @@ def split_union(bot, update):
     players.sort(key=lambda pl: pl.__getattribute__(attr), reverse=True)
     for player in players:
         # Поиск минимального остатка необходимых статов в данной группе, > 0 после добавления этого игрока туда
-        min_stats_remain = 10000000000
+        min_stats_remain = 10000000000 if not alt else -1
         min_stats_remain_num = -1
         max_under_zero_stats_remain = -10000000000
         max_under_zero_stats_remain_num = -1
         for i, stats in enumerate(need_stats):
             current_remain = stats - player.__getattribute__(attr)
-            if 0 < current_remain < min_stats_remain:
+            if (not alt and 0 < current_remain < min_stats_remain) or (alt and 0 < current_remain > min_stats_remain):
                 min_stats_remain_num = i
                 min_stats_remain = current_remain
             elif max_under_zero_stats_remain < current_remain < 0:
