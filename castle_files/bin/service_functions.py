@@ -40,6 +40,9 @@ def get_time_remaining_to_battle():
     return time_remaining
 
 
+def dict_invert(d):
+    return dict(zip(d.values(), d.keys()))
+
 
 @MWT(timeout=15*60)
 def get_admin_ids(bot, chat_id):

@@ -1,4 +1,4 @@
-
+from castle_files.bin.service_functions import dict_invert
 
 resources = {
     "Thread": "01",
@@ -70,3 +70,5 @@ resources = {
     "Mammoth Dill": "68",
     "Silver dust": "69"
 }
+
+resources_reverted = dict_invert(resources)

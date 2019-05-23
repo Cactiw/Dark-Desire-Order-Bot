@@ -2,7 +2,7 @@
 Здесь находятся всякие функции для непосредственной работы со стоком
 """
 from castle_files.work_materials.item_consts import items
-from castle_files.work_materials.resource_constants import resources
+from castle_files.work_materials.resource_constants import resources, resources_reverted
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -91,3 +91,52 @@ def guild_parts(bot, update, user_data):
             response = ""
         response += new_response
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def set_withdraw_res(bot, update, user_data, args):
+    mes = update.message
+    found = []
+    not_found = False
+    response = "Список для выдачи ресурсов обновлён. Текущий список:\n"
+    response_end = "\nНе найдены ресурсы с кодом:\n"
+    for res_code in args:
+        print(res_code)
+        print(resources.get(res_code))
+        res_name = resources_reverted.get(res_code)
+        if res_name is None:
+            not_found = True
+            response_end += "<b>{}</b>\n".format(res_code)
+        else:
+            found.append(res_code)
+            response += "<b>{}</b>\n".format(res_name)
+    user_data.update({"withdraw_res": found})
+    if not_found:
+        response += response_end
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def withdraw_resources(bot, update, user_data):
+    mes = update.message
+    res_codes = user_data.get("withdraw_res")
+    if res_codes is None or not res_codes:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Необходимо задать список ресурсов для выдачи командой /set_withdraw_res")
+        return
+    response = "/g_withdraw "
+    res_already_counted = 0
+    for line in mes.text.splitlines()[1:]:
+        code = line.split(" ")[0]
+        if code not in res_codes:
+            continue
+        res_count = re.search("x (\\d+)", line)
+        if res_count is None:
+            continue
+        res_count = int(res_count.group(1))
+        response += "{} {} ".format(code, res_count)
+        res_already_counted += 1
+        if res_already_counted >= 8:
+            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+            response = "/g_withdraw "
+            res_already_counted = 0
+    if res_already_counted > 0:
+        bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
