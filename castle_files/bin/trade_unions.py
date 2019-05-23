@@ -5,6 +5,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.trade_union import TradeUnion
 
+from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from telegram.error import TelegramError
@@ -138,6 +139,83 @@ def count_union_stats(bot, update):
         count += 1
     response = "Суммарные статы по <b>{}</b>:\n⚔️: <code>{}</code>, 🛡: <code>{}</code>\n" \
                "Всего людей: <code>{}</code>".format(union.name, attack, defense, count)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def split_union(bot, update):
+    mes = update.message
+    args = mes.text.split()[1:]
+    if not filter_is_pm(mes):
+        bot.send_message(chat_id=mes.chat_id, text="Команда разрешена только в лс, чтобы не пинговать людей.",
+                         reply_to_message_id=mes.message_id)
+        return
+    union = TradeUnion.get_union(creator_id=mes.from_user.id)
+    if union is None:
+        bot.send_message(chat_id=mes.chat_id, text="Только создатель и замы профсоюза могут вносить его состав.")
+        return
+    players = []
+    total_stats = 0
+    attr = "attack" if "attack" in mes.text else "defense"
+    for player_id in union.players:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        players.append(player)
+        total_stats += player.__getattribute__(attr)
+    try:
+        ratios = args[0].split(":")
+        need_stats = []  # Сколько статов в каждую часть ( уже в готовых числах )
+        sum_parts = 0
+        player_groups = []
+        for part in ratios:
+            sum_parts += int(part)
+            player_groups.append([])
+        for part in ratios:
+            need_stats.append(int(part) * total_stats / sum_parts)
+    except (ValueError, IndexError):
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+        return
+    players.sort(key=lambda pl: pl.__getattribute__(attr), reverse=True)
+    for player in players:
+        # Поиск минимального остатка необходимых статов в данной группе, > 0 после добавления этого игрока туда
+        min_stats_remain = 10000000000
+        min_stats_remain_num = -1
+        max_under_zero_stats_remain = -10000000000
+        max_under_zero_stats_remain_num = -1
+        for i, stats in enumerate(need_stats):
+            current_remain = stats - player.__getattribute__(attr)
+            if 0 < current_remain < min_stats_remain:
+                min_stats_remain_num = i
+                min_stats_remain = current_remain
+            elif max_under_zero_stats_remain < current_remain < 0:
+                max_under_zero_stats_remain_num = i
+                max_under_zero_stats_remain = current_remain
+        if min_stats_remain_num >= 0:  # Нашлось свободное место под этого игрока
+            player_groups[min_stats_remain_num].append(player)
+            need_stats[min_stats_remain_num] -= player.__getattribute__(attr)
+        else:
+            # Закидываем в группу, добавление в которую вызовет минимальное отклонение от цели
+            player_groups[max_under_zero_stats_remain_num].append(player)
+            need_stats[max_under_zero_stats_remain_num] -= player.__getattribute__(attr)
+    response = "Рассчёт распределения статов подготовлен:\n"
+    full = "full" in mes.text
+    for i, group in enumerate(player_groups):
+        response += "Группа {}:\n".format(i)
+        sum_stats = 0
+        for player in group:
+            if full:
+                response_new = "<b>{}</b> — @{} {}<code>{}</code>" \
+                               "\n".format(player.nickname, player.username, "⚔️" if attr == "attack" else "🛡",
+                                           player.__getattribute__(attr))
+            else:
+                response_new = "@{}\n".format(player.username)
+            if len(response + response_new) > MAX_MESSAGE_LENGTH - 100:
+                bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+                response = ""
+            response += response_new
+            sum_stats += player.__getattribute__(attr)
+        if full:
+            response += "Всего в группе {}: <code>{}</code>\n\n".format("⚔️" if attr == "attack" else "🛡", sum_stats)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 

@@ -42,3 +42,12 @@ class FilterNeedToBanInUnionChat(BaseFilter):
 
 
 filter_need_to_ban_in_union_chat = FilterNeedToBanInUnionChat()
+
+
+class FilterSplitUnion(BaseFilter):
+    def filter(self, message):
+        return message.text.split(" ")[0] in ["/split_union_attack", "/split_union_defense", "/split_union_attack_full",
+                                              "/split_union_defense_full"] and filter_is_pm(message)
+
+
+filter_split_union = FilterSplitUnion()

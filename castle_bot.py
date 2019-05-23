@@ -27,7 +27,7 @@ from castle_files.work_materials.filters.feedback_filters import filter_request_
 from castle_files.work_materials.filters.castle_duty_filters import filter_begin_duty, filter_end_duty, \
     filter_request_duty_feedback, filter_send_duty_feedback, filter_reply_to_duty_feedback, filter_ban_in_duty_chat
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
-    filter_need_to_ban_in_union_chat
+    filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
@@ -54,7 +54,7 @@ from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feed
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
-    count_union_stats, add_union_assistant, del_union_assistant, top_union_stats
+    count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
 from castle_files.bin.reports import add_report, battle_stats
 
 from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
@@ -108,6 +108,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('del_union_assistant', del_union_assistant))
     dispatcher.add_handler(CommandHandler('top_union_attack', top_union_stats))
     dispatcher.add_handler(CommandHandler('top_union_defense', top_union_stats))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_split_union, split_union))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
