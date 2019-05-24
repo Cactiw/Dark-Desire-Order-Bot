@@ -134,17 +134,19 @@ def guild_reports(bot, update):
         player = Player.get_player(row[0])
         if player is None:
             continue
-        response_new = "<b>{}</b> -- @{}\n🏅:<code>{}</code> ⚔️:<code>{}</code>{} 🛡<code>{}</code>{} 🔥 <code>{}</code> " \
-                        "💰 <code>{}</code> 📦 <code>{}</code>\n\n" \
-                        "".format(player.nickname, player.username, row[1], row[2],
-                              "({}{})".format("+" if row[3] > 0 else"", row[3]) if row[3] != 0 else "",
-                              row[4], "({}{})".format("+" if row[5] > 0 else"", row[5]) if row[5] != 0 else "",
-                              row[6], row[7], row[8])
+        response_new = "<b>{}</b> -- @{}\n🏅:<code>{}</code> ⚔️:<code>{}</code>{} 🛡<code>{}</code>{} 🔥 <code>{}" \
+                       "</code> 💰 <code>{}</code> 📦 <code>{}</code>\n\n" \
+                       "".format(player.nickname, player.username, row[1], row[2],
+                                 "({}{})".format("+" if row[3] > 0 else"", row[3]) if row[3] != 0 else "",
+                                 row[4], "({}{})".format("+" if row[5] > 0 else"", row[5]) if row[5] != 0 else "",
+                                 row[6], row[7], row[8])
         if len(response + response_new) >= MAX_MESSAGE_LENGTH:  # Превышение лимита длины сообщения
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
-    response += "\nНе сдали репорты:\n"
+    if response != "":
+        bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    response = "\nНе сдали репорты:\n"
     for player_id in unsent_reports:
         player = Player.get_player(player_id)
         if player is None:
