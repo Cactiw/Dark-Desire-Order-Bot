@@ -12,7 +12,7 @@ cursor2 = conn.cursor()
 # Базовый класс - Локация
 class Location:
     def __init__(self, location_id, location_name, enter_text, need_clicks_to_construct=None,
-                 state=True, building_process=-1, special_info=None):
+                 state=True, building_process=-1, special_info=None, need_res_to_construct=None):
         self.id = location_id
         self.name = location_name
         self.enter_text = enter_text
@@ -21,6 +21,7 @@ class Location:
         self.building_process = building_process  # -1 - стройка не начиналась / завершилась, >=0 - идёт стройка
         self.special_info = special_info
         self.load_location()
+        self.need_res_to_construct = need_res_to_construct
         self.child_locations = None
 
     @staticmethod
@@ -37,6 +38,7 @@ class Location:
         insert_values = location.special_info.get("enter_text_format_values")
         if insert_values is None or without_format:
             return location.enter_text
+        print(insert_values)
         return location.enter_text.format(*insert_values)
 
     @staticmethod
@@ -115,6 +117,10 @@ class Treasury(Location):
                 return -1
             self.__setattr__(resource, attr + count)
         self.special_info.update({"enter_text_format_values": [self.wood, self.stone]})
+        old = central_square.special_info.get("enter_text_format_values")
+        old[1] = self.wood
+        old[2] = self.stone
+        central_square.update_location_to_database()
         self.update_location_to_database()
 
     def update_location_to_database(self):
@@ -128,16 +134,6 @@ class Treasury(Location):
 Это бы конечно закинуть в отдельный модуль с константами, но тогда ошибки импорта возникают
 """
 
-
-central_square = Location(0, "⛲️ Центральная площадь",
-                          "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n\n"
-                          "На лобном месте, левее фонтана, прибит пергамент с важным объявлением:\n📜\n<em>{}</em>\n📜\n"
-                          "Заверено печатью и подписью Короля.\n\n"
-                          "<a href=\"https://t.me/joinchat/GFFOhRbguH_dJK_6eiccIg\">Чат центральной площади</a>",
-                          special_info={"enter_text_format_values": ["Добро пожаловать в Скалу.\nСнова."]})
-central_square.create_location_in_database()
-barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
-barracks.create_location_in_database()
 throne_room = ThroneRoom(2, "🏛 Тронный зал",
                          "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы "
                          "и даже попросить аудиенции у ВРИО 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
@@ -145,7 +141,19 @@ throne_room = ThroneRoom(2, "🏛 Тронный зал",
                                        "mid_players": [231900398, 205356091], "banned_in_feedback": [],
                                        "treasury": {"wood": 0, "stone": 0}})
 throne_room.create_location_in_database()
-print(throne_room.special_info.get("enter_text_format_values"))
+central_square = Location(0, "⛲️ Центральная площадь",
+                          "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n\n"
+                          "На лобном месте, левее фонтана, прибит пергамент с важным объявлением:\n📜\n<em>{}</em>\n📜\n"
+                          "Заверено печатью и подписью Короля.\n\nТекущее состояние казны: 🌲Дерево: <b>{}</b>, "
+                          "⛰Камень: <b>{}</b>\n\n"
+                          "<a href=\"https://t.me/joinchat/GFFOhRbguH_dJK_6eiccIg\">Чат центральной площади</a>",
+                          special_info={"enter_text_format_values": [
+                              "Добро пожаловать в Скалу.\nСнова.", throne_room.treasury.wood,
+                              throne_room.treasury.stone]
+                          })
+central_square.create_location_in_database()
+barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
+barracks.create_location_in_database()
 castle_gates = Location(3, "⛩ Врата замка",
                         "Вы подошли к вратам замка. Здесь как всегда немноголюдно. На посту дежурят стражи Скалы, "
                         "возможно, они смогут подсказать дорогу до нужного места, поделиться новостями или просто с "
@@ -162,6 +170,14 @@ technical_tower = Location(5, "Башню техно-магических нау
                                          "last_update_id": 0})
 technical_tower.create_location_in_database()
 
+hall_of_fame = Location(7, "Зал славы", "Зал Доблести - почетное место, где увековечены герои Скалы, их подвиги и "
+                                        "заслуги перед замком. Вечная слава и почет!",
+                        need_clicks_to_construct=1000, state=False, building_process=-1,
+                        need_res_to_construct={"wood": 300, "stone": 300})
+hall_of_fame.create_location_in_database()
+
+# ТОВАРИЩ! СОЗДАЛ ЛОКАЦИЮ -- ВНЕСИ В СЛОВАРИ НИЖЕ!
+
 status_to_location = {
     "default": None,
     "central_square": 0,
@@ -171,6 +187,7 @@ status_to_location = {
     "headquarters": 4,
     "technical_tower": 5,
     "treasury": 6,
+    "hall_of_fame": 7,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -183,4 +200,5 @@ locations = {
     4: headquarters,
     5: technical_tower,
     6: throne_room.treasury,
+    7: hall_of_fame,
 }

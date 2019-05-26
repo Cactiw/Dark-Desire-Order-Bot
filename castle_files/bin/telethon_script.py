@@ -9,6 +9,8 @@ except ImportError:
     pass
 
 from multiprocessing import Queue
+import logging
+logging.getLogger('telethon').setLevel(logging.WARNING)
 
 castles_stats_queue = Queue()
 

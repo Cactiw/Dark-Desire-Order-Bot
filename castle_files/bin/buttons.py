@@ -126,7 +126,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 ],
             [
                 KeyboardButton("🎇Посмотреть на портреты"),
-                KeyboardButton("💰Сокровищница"),
+                # KeyboardButton("💰Сокровищница"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -174,6 +174,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("Добавить генерала"),
                 KeyboardButton("Изменить сообщение"),
+            ],
+            [
+                KeyboardButton("Начать стройку"),
             ],
             [
                 KeyboardButton("↩️ Назад"),

@@ -27,7 +27,8 @@ def get_profile_text(player, self_request=True):
     response += "{}id: <code>{}</code>\n".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
     response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
-                                                                                        player.defense)
+                                                                                      player.defense)
+    response += "🔘: <code>{}</code>\n".format(player.reputation)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:

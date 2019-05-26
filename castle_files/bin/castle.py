@@ -211,7 +211,8 @@ def request_change_castle_message(bot, update, user_data):
 
 def change_castle_message(bot, update, user_data):
     central = Location.get_location(0)
-    central.special_info.update({"enter_text_format_values": update.message.text})
+    old_format = central.special_info.get("enter_text_format_values")
+    old_format[0] = update.message.text
     central.update_location_to_database()
     user_data.update({"status": "king_cabinet"})
     bot.send_message(chat_id=update.message.from_user.id,
