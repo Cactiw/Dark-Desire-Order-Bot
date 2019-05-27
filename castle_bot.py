@@ -22,7 +22,7 @@ from castle_files.work_materials.filters.technical_tower_filters import filter_t
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history
 from castle_files.work_materials.filters.construction_filters import filter_sawmill, filter_quarry, filter_treasury, \
-    filter_king_cabinet_construction, filter_begin_construction
+    filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
     filter_restrict_feedback, filter_unrestrict_feedback
@@ -51,7 +51,7 @@ from castle_files.bin.technical_tower import technical_tower, my_cabinet, reques
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history
 from castle_files.bin.construction import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction, \
-    begin_construction
+    begin_construction, construct, construction_plate
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -168,7 +168,8 @@ def castle_bot_processing():
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_not_constructed, not_constructed))
+    # dispatcher.add_handler(MessageHandler(Filters.text & filter_not_constructed, not_constructed))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_not_constructed, construct, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guide_signs, guide_signs))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_barracks, barracks, pass_user_data=True))
@@ -182,6 +183,11 @@ def castle_bot_processing():
     # Хендлеры для строительства в замке
     dispatcher.add_handler(MessageHandler(Filters.text & filter_sawmill, sawmill, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_quarry, quarry, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_construction_plate, construction_plate,
+                                          pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_construct, construct,
+                                          pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_king_cabinet_construction, king_cabinet_construction))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_begin_construction, begin_construction))

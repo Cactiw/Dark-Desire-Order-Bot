@@ -3,6 +3,8 @@
 """
 from castle_files.work_materials.globals import conn
 
+from telegram import KeyboardButton, ReplyKeyboardMarkup
+
 import json
 
 cursor = conn.cursor()
@@ -33,6 +35,8 @@ class Location:
         location = Location.get_location(location_id)
         if location is None:
             return None
+        if hasattr(location, "update_enter_text"):
+            location.update_enter_text()
         if location.special_info is None:
             return location.enter_text
         insert_values = location.special_info.get("enter_text_format_values")
@@ -126,6 +130,38 @@ class Treasury(Location):
     def update_location_to_database(self):
         self.throne_room.update_location_to_database()
 
+
+class ConstructionPlate(Location):
+
+    BUTTONS_IN_ROW_LIMIT = 3
+
+    def __init__(self, location_id, location_name, enter_text, need_clicks_to_construct=None,
+                 state=True, building_process=-1, special_info=None):
+        super(ConstructionPlate, self).__init__(location_id, location_name, enter_text, need_clicks_to_construct,
+                                                state, building_process, special_info)
+        self.construction_active = False
+        self.buttons = [[KeyboardButton("↩️ Назад")]]
+
+    def refill_current_buildings_info(self):
+        current_row = 0
+        new_text = "Сейчас происходят следующие стройки:\n"
+        for loc in list(locations.values()):
+            if loc.state is False and loc.building_process >= 0:
+                # Стройка на локации активна
+                if not self.construction_active:
+                    self.buttons = [[], [KeyboardButton("↩️ Назад")]]
+                new_text += "<b>{}</b>\n".format(loc.name)
+                if len(self.buttons[current_row]) >= self.BUTTONS_IN_ROW_LIMIT:
+                    self.buttons.append([])
+                    current_row += 1
+                self.buttons[current_row].append(KeyboardButton(loc.name))
+        new_text += "\nВыберите, куда отправиться!"
+        if self.construction_active:
+            self.special_info.update({"enter_text_format_values": new_text})
+
+    def update_enter_text(self):
+        self.refill_current_buildings_info()
+
 #
 
 """
@@ -170,11 +206,18 @@ technical_tower = Location(5, "Башню техно-магических нау
                                          "last_update_id": 0})
 technical_tower.create_location_in_database()
 
-hall_of_fame = Location(7, "Зал славы", "Зал Доблести - почетное место, где увековечены герои Скалы, их подвиги и "
+construction_plate = ConstructionPlate(7, "Стойплощадка", "Вы входите на стройплощадку.\n{}",
+                                       special_info={
+                                           "enter_text_format_values": ["Сейчас в замке нет активного строительства. "
+                                                                        "Следите за новостями."]})
+construction_plate.create_location_in_database()
+
+hall_of_fame = Location(8, "Зал славы", "Зал Доблести - почетное место, где увековечены герои Скалы, их подвиги и "
                                         "заслуги перед замком. Вечная слава и почет!",
                         need_clicks_to_construct=1000, state=False, building_process=-1,
                         need_res_to_construct={"wood": 300, "stone": 300})
 hall_of_fame.create_location_in_database()
+
 
 # ТОВАРИЩ! СОЗДАЛ ЛОКАЦИЮ -- ВНЕСИ В СЛОВАРИ НИЖЕ!
 
@@ -187,7 +230,8 @@ status_to_location = {
     "headquarters": 4,
     "technical_tower": 5,
     "treasury": 6,
-    "hall_of_fame": 7,
+    "construction_plate": 7,
+    "hall_of_fame": 8,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -200,5 +244,6 @@ locations = {
     4: headquarters,
     5: technical_tower,
     6: throne_room.treasury,
-    7: hall_of_fame,
+    7: construction_plate,
+    8: hall_of_fame,
 }

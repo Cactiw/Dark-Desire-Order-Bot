@@ -42,6 +42,31 @@ class FilterTreasury(BaseFilter):
 filter_treasury = FilterTreasury()
 
 
+class FilterConstruct(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        # Внимательность при копировании, отрицание
+        return filter_is_pm(message) and not message.text.startswith("↩️ Назад") and \
+            user_data.get("status") == 'construction_plate'
+
+
+filter_construct = FilterConstruct()
+
+
+class FilterConstructionPlate(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("🏚 Стройплощадка") and \
+            user_data.get("status") == 'central_square'
+
+
+filter_construction_plate = FilterConstructionPlate()
+
+
 class FilterKingCabinetConstruction(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)

@@ -52,6 +52,8 @@ def back(bot, update, user_data):
 
         "sawmill": "castle_gates",
         "quarry": "castle_gates",
+        "construction": "construction_plate",
+        "construction_plate": "central_square",
 
         "treasury": "throne_room",
 
