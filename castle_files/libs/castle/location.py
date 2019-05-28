@@ -151,6 +151,8 @@ class ConstructionPlate(Location):
 
     def refill_current_buildings_info(self):
         current_row = 0
+        old_text = "Сейчас в замке нет активного строительства. Следите за новостями."
+        self.construction_active = False
         new_text = "Сейчас происходят следующие стройки:\n\n"
         self.buttons = [[], [KeyboardButton("↩️ Назад")]]
         for loc in list(locations.values()):
@@ -168,6 +170,8 @@ class ConstructionPlate(Location):
         new_text += "\nВыберите, куда отправиться!"
         if self.construction_active:
             self.special_info.update({"enter_text_format_values": [new_text]})
+        else:
+            self.special_info.update({"enter_text_format_values": [old_text]})
 
     def update_enter_text(self):
         self.refill_current_buildings_info()
