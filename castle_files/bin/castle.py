@@ -301,17 +301,20 @@ def top_stat(bot, update):
     request = "select nickname, {}, game_class, lvl from players where castle = '🖤' order by {} desc".format(stat, stat)
     cursor.execute(request)
     row = cursor.fetchone()
-    num = 1
+    num = 0
     response_old = ""
     while row is not None:
+        num += 1
         if row[0] == player.nickname:
-            response_new = "<b>{}: {}{} 🏅:{} {}</b>".format(num, mes.text[0], row[1], row[3], row[0])
+            response_new = "<b>{}) {}{} 🏅: {} {}</b>\n".format(num, mes.text[0], row[1], row[3], row[0])
             found = True
             if num < TOP_NUM_PLAYERS:
+                response += response_new
                 row = cursor.fetchone()
                 continue
             response += "\n...\n" + response_old + response_new
-        response_old = "{}: {}<code>{}</code> 🏅:{} {}".format(num, mes.text[0], row[1], row[3], row[0])
+        response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}" \
+                       "\n".format(num, mes.text[0], row[1], row[3], row[0])
         if num < TOP_NUM_PLAYERS:
             response += response_old
         else:
