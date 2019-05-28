@@ -26,6 +26,12 @@ class Location:
         self.need_res_to_construct = need_res_to_construct
         self.child_locations = None
 
+    def under_construction(self):
+        return self.state is False and self.building_process >= 0
+
+    def is_constructed(self):
+        return self.state
+
     @staticmethod
     def get_location(location_id):
         return locations.get(location_id)

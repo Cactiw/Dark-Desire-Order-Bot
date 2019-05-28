@@ -109,6 +109,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 # KeyboardButton("↩️ Назад"),
             ]
         ]
+        hall = Location.get_location(8)
+        if hall is not None and hall.is_constructed():
+            buttons[1].insert(1, KeyboardButton("Зал славы"))
     elif status == 'barracks':
         buttons = [
             [
