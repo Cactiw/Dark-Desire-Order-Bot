@@ -133,6 +133,10 @@ def begin_construction(bot, update):
     treasury.wood -= need_wood
     treasury.stone -= need_stone
     treasury.update_location_to_database()
+    ctrl = Location.get_location(2)
+    old = ctrl.special_info.get("enter_text_format_values")
+    old[1] = treasury.wood
+    old[2] = treasury.stone
     location.building_process = 0
     location.update_location_to_database()
     bot.send_message(chat_id=mes.chat_id, text="Стройка <b>{}</b> началась!".format(location.name), parse_mode='HTML')

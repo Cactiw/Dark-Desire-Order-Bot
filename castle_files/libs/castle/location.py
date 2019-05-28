@@ -111,6 +111,7 @@ class Treasury(Location):
                  state=True, building_process=-1, special_info=None, wood=0, stone=0, throne_room=None):
         super(Treasury, self).__init__(location_id, location_name, enter_text, need_clicks_to_construct,
                                        state, building_process, special_info)
+        print(wood, stone)
         self.wood = wood
         self.stone = stone
         self.throne_room = throne_room
@@ -150,23 +151,27 @@ class ConstructionPlate(Location):
 
     def refill_current_buildings_info(self):
         current_row = 0
-        new_text = "Сейчас происходят следующие стройки:\n"
+        new_text = "Сейчас происходят следующие стройки:\n\n"
+        self.buttons = [[], [KeyboardButton("↩️ Назад")]]
         for loc in list(locations.values()):
             if loc.state is False and loc.building_process >= 0:
                 # Стройка на локации активна
                 if not self.construction_active:
                     self.buttons = [[], [KeyboardButton("↩️ Назад")]]
-                new_text += "<b>{}</b>\n".format(loc.name)
+                self.construction_active = True
+                new_text += "<b>{}</b>\nПрогресс: <code>{}</code> из <code>{}</code>\n\n" \
+                            "".format(loc.name, loc.building_process, loc.need_clicks_to_construct)
                 if len(self.buttons[current_row]) >= self.BUTTONS_IN_ROW_LIMIT:
                     self.buttons.append([])
                     current_row += 1
                 self.buttons[current_row].append(KeyboardButton(loc.name))
         new_text += "\nВыберите, куда отправиться!"
         if self.construction_active:
-            self.special_info.update({"enter_text_format_values": new_text})
+            self.special_info.update({"enter_text_format_values": [new_text]})
 
     def update_enter_text(self):
         self.refill_current_buildings_info()
+
 
 #
 
@@ -194,6 +199,9 @@ central_square = Location(0, "⛲️ Центральная площадь",
                               throne_room.treasury.stone]
                           })
 central_square.create_location_in_database()
+old = central_square.special_info.get("enter_text_format_values")
+old[1] = throne_room.treasury.wood
+old[2] = throne_room.treasury.stone
 barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
 barracks.create_location_in_database()
 castle_gates = Location(3, "⛩ Врата замка",
