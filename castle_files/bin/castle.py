@@ -6,12 +6,14 @@ from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS
+from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
 
 import re
+
+TOP_NUM_PLAYERS = 20
 
 
 def change_rp(bot, update, user_data):
@@ -56,6 +58,9 @@ def back(bot, update, user_data):
         "construction_plate": "central_square",
 
         "treasury": "throne_room",
+
+        "hall_of_fame": "central_square",
+        "tops": "hall_of_fame",
 
     }
     status = user_data.get("status")
@@ -271,3 +276,47 @@ def remove_general(bot, update):
     bot.send_message(chat_id=update.message.from_user.id,
                      text="@{} сослан в тортугу и больше не генерал".format(player.username))
     update_request_queue.put(["update_mid"])
+
+
+def hall_of_fame(bot, update, user_data):
+    user_data.update({"status": "hall_of_fame", "location_id": 8})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def tops(bot, update, user_data):
+    user_data.update({"status": "tops"})
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.chat_id, text="Выберите категорию:", reply_markup=buttons)
+
+
+def top_stat(bot, update):
+    mes = update.message
+    response = "Топ {} по замку:\n".format(mes.text[0])
+    player = Player.get_player(mes.from_user.id)
+    found = False
+    if player is None:
+        found = True
+    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense"}
+    stat = text_to_stats.get(mes.text)
+    request = "select nickname, {}, game_class, lvl from players where castle = '🖤' order by {} desc".format(stat, stat)
+    cursor.execute(request)
+    row = cursor.fetchone()
+    num = 1
+    response_old = ""
+    while row is not None:
+        if row[0] == player.nickname:
+            response_new = "<b>{}: {}{} 🏅:{} {}</b>".format(num, mes.text[0], row[1], row[3], row[0])
+            found = True
+            if num < TOP_NUM_PLAYERS:
+                row = cursor.fetchone()
+                continue
+            response += "\n...\n" + response_old + response_new
+        response_old = "{}: {}<code>{}</code> 🏅:{} {}".format(num, mes.text[0], row[1], row[3], row[0])
+        if num < TOP_NUM_PLAYERS:
+            response += response_old
+        else:
+            if found:
+                response += response_old
+                break
+        row = cursor.fetchone()
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')

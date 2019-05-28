@@ -223,6 +223,26 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     elif status == 'construction_plate':
         location = Location.get_location(status_to_location.get(status))
         buttons = location.buttons
+    elif status == 'hall_of_fame':
+        buttons = [
+            [
+                KeyboardButton("📈Топы"),
+                KeyboardButton("📣Ещё кнопка, хз что"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'tops':
+        buttons = [
+            [
+                KeyboardButton("⚔️Атака"),
+                KeyboardButton("🛡Защита"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
     if only_buttons or buttons is None:
         return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)

@@ -218,3 +218,39 @@ class FilterRemoveGeneral(BaseFilter):
 
 
 filter_remove_general = FilterRemoveGeneral()
+
+
+class FilterHallOfFame(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("Зал славы") and \
+            user_data.get("status") == 'central_square'
+
+
+filter_hall_of_fame = FilterHallOfFame()
+
+
+class FilterTops(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("📈Топы") and \
+            user_data.get("status") == 'hall_of_fame'
+
+
+filter_tops = FilterTops()
+
+
+class FilterTopStat(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text in ["⚔️Атака", "🛡Защита"] and \
+            user_data.get("status") == 'tops'
+
+
+filter_top_stat = FilterTopStat()

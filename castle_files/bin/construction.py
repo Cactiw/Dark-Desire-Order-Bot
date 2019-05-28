@@ -168,7 +168,9 @@ def construct(bot, update, user_data):
         old_j.job.schedule_removal()
     construction_jobs.update({update.message.from_user.id: MyJob(j, CONSTRUCTION_DURATION_SECONDS)})
     user_data.update({"status": "construction", "construction_id": location.id})
-    bot.send_message(chat_id=update.message.chat_id, text="Вы отправились на стройку. Это займёт 5 минут.")
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.chat_id, text="Вы отправились на стройку. Это займёт 5 минут.",
+                     reply_markup=buttons)
 
 
 def construction_return(bot, job):

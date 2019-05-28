@@ -17,7 +17,7 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
-    filter_request_change_debrief
+    filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history
@@ -46,7 +46,8 @@ from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_ba
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
-    request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief
+    request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
+    hall_of_fame, tops, top_stat
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history
@@ -229,6 +230,10 @@ def castle_bot_processing():
                                           request_change_castle_message, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_change_castle_message, change_castle_message,
                                           pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_hall_of_fame, hall_of_fame, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_tops, tops, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_top_stat, top_stat))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_begin_duty, begin_duty, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_end_duty, end_duty, pass_user_data=True))
