@@ -324,7 +324,6 @@ def get_tops_text(player, stat, stat_text, game_class=None):
         request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' {}" \
                   "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
                                             game_class is not None else "", stat)
-    print(request)
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
@@ -336,7 +335,7 @@ def get_tops_text(player, stat, stat_text, game_class=None):
             response_new = "<b>{}) {}</b><code>{:<3}</code><b> 🏅: {} {}{}</b> 🔻\n".format(num, stat_text, row[1],
                                                                                           row[3], class_icon, row[0])
             found = True
-            if num < TOP_NUM_PLAYERS:
+            if num <= TOP_NUM_PLAYERS:
                 response += response_new
                 row = cursor.fetchone()
                 continue
@@ -344,7 +343,7 @@ def get_tops_text(player, stat, stat_text, game_class=None):
         else:
             response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}{}" \
                            "\n".format(num, stat_text, row[1], row[3], class_icon, row[0])
-            if num < TOP_NUM_PLAYERS:
+            if num <= TOP_NUM_PLAYERS:
                 response += response_old
             else:
                 if found:
