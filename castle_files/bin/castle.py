@@ -321,13 +321,14 @@ def top_stat(bot, update):
                 row = cursor.fetchone()
                 continue
             response += "\n...\n" + response_old + response_new
-        response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}" \
-                       "\n".format(num, mes.text[0], row[1], row[3], row[0])
-        if num < TOP_NUM_PLAYERS:
-            response += response_old
         else:
-            if found:
+            response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}" \
+                           "\n".format(num, mes.text[0], row[1], row[3], row[0])
+            if num < TOP_NUM_PLAYERS:
                 response += response_old
-                break
+            else:
+                if found:
+                    response += response_old
+                    break
         row = cursor.fetchone()
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
