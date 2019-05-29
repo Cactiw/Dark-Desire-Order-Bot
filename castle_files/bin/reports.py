@@ -78,7 +78,9 @@ def add_report(bot, update):
               "exp, gold, stock) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock))
-    bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!")
+    player.reputation += 1
+    player.update()
+    bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!\nПолучен 🔘!")
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"

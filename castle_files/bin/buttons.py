@@ -4,9 +4,9 @@
 from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from castle_files.bin.service_functions import check_access
-from castle_files.libs.castle.location import Location
+from castle_files.libs.castle.location import Location, status_to_location
 from castle_files.libs.player import Player
-from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 
 def get_edit_guild_buttons(guild):
@@ -101,13 +101,17 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 ],
             [
                 KeyboardButton("🔭 Башня ТехМаг наук"),  # ❗
-                KeyboardButton("🏚 Не построено"),
+                KeyboardButton("🏚 Стройплощадка"),
+                # KeyboardButton("🏚 Не построено"),
             ],
             [
                 KeyboardButton("↔️ Подойти к указателям"),
                 # KeyboardButton("↩️ Назад"),
             ]
         ]
+        hall = Location.get_location(8)
+        if hall is not None and hall.is_constructed():
+            buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
     elif status == 'barracks':
         buttons = [
             [
@@ -126,6 +130,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 ],
             [
                 KeyboardButton("🎇Посмотреть на портреты"),
+                # KeyboardButton("💰Сокровищница"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -136,10 +141,19 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message', 'editing_debrief',
-                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message']:
+                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "treasury"]:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status in ["sawmill", "quarry", "construction"]:
+        buttons = [
+            [
+                KeyboardButton("👀 Профиль"),
+            ],
+            [
+                KeyboardButton("↩️ Отмена"),
             ]
         ]
     elif status == 'castle_gates':
@@ -157,6 +171,10 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                     KeyboardButton("Обратиться к 💂‍♂Стражам"),
                 ],
                 [
+                    KeyboardButton("🌲Лесопилка"),
+                    KeyboardButton("⛰Каменоломня"),
+                ],
+                [
                     KeyboardButton("↩️ Назад"),
                 ]
             ]
@@ -168,6 +186,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("Добавить генерала"),
                 KeyboardButton("Изменить сообщение"),
+            ],
+            [
+                KeyboardButton("Начать стройку"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -207,12 +228,35 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
-    if only_buttons:
+    elif status == 'construction_plate':
+        location = Location.get_location(status_to_location.get(status))
+        buttons = location.buttons
+    elif status == 'hall_of_fame':
+        buttons = [
+            [
+                KeyboardButton("📈Топы"),
+                KeyboardButton("📣Ещё кнопка, хз что"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'tops':
+        buttons = [
+            [
+                KeyboardButton("⚔️Атака"),
+                KeyboardButton("🛡Защита"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    if only_buttons or buttons is None:
         return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 
-def get_text_to_general_buttons(user_data):
+def get_text_to_general_buttons(user_data, player=None):
     status = user_data.get("status")
     location_id = user_data.get("location_id")
     rp_off = user_data.get("rp_off")
@@ -222,6 +266,13 @@ def get_text_to_general_buttons(user_data):
         return "Доброго времени суток!\nВыберите действие:"
     if status is None or status == "default":
         return "Вы входите в замок Скалы. Выберите, куда направиться!"
+    if status in ["construction", "sawmill", "quarry"]:
+        if player is not None:
+            j = construction_jobs.get(player.id)
+            if j is not None:
+                seconds_left = j.get_time_left()
+                return "Вы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>".format(seconds_left // 60,
+                                                                                          (seconds_left % 60) // 1)
     if location_id is not None:
         return Location.get_location_enter_text_by_id(location_id)
 
@@ -230,5 +281,5 @@ def send_general_buttons(user_id, user_data, bot=None):
     if bot is None:
         bot = dispatcher.bot
     player = Player.get_player(user_id)
-    bot.send_message(chat_id=user_id, text=get_text_to_general_buttons(user_data),
+    bot.send_message(chat_id=user_id, text=get_text_to_general_buttons(user_data, player=player),
                      reply_markup=get_general_buttons(user_data, player=player), parse_mode='HTML')

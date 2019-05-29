@@ -2,16 +2,19 @@
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons
+from castle_files.bin.common_functions import unknown_input
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS
+from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
 
 import re
+
+TOP_NUM_PLAYERS = 20
 
 
 def change_rp(bot, update, user_data):
@@ -50,11 +53,23 @@ def back(bot, update, user_data):
         "sending_bot_guild_message": "technical_tower",
         "editing_update_message": "technical_tower",
 
+        "sawmill": "castle_gates",
+        "quarry": "castle_gates",
+        "construction": "construction_plate",
+        "construction_plate": "central_square",
+
+        "treasury": "throne_room",
+
+        "hall_of_fame": "central_square",
+        "tops": "hall_of_fame",
+
     }
     status = user_data.get("status")
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
+    if status in ["sawmill", "quarry", "construction"]:
+        bot.send_message(chat_id=update.message.from_user.id, text="Операция отменена.")
     new_status = statuses_back.get(status)
     new_location = Location.get_id_by_status(new_status)
     user_data.update({"status": new_status, "location_id": new_location})
@@ -206,7 +221,8 @@ def request_change_castle_message(bot, update, user_data):
 
 def change_castle_message(bot, update, user_data):
     central = Location.get_location(0)
-    central.special_info.update({"enter_text_format_values": update.message.text})
+    old_format = central.special_info.get("enter_text_format_values")
+    old_format[0] = update.message.text
     central.update_location_to_database()
     user_data.update({"status": "king_cabinet"})
     bot.send_message(chat_id=update.message.from_user.id,
@@ -263,3 +279,55 @@ def remove_general(bot, update):
     bot.send_message(chat_id=update.message.from_user.id,
                      text="@{} сослан в тортугу и больше не генерал".format(player.username))
     update_request_queue.put(["update_mid"])
+
+
+def hall_of_fame(bot, update, user_data):
+    hall = Location.get_location(8)
+    if not hall.is_constructed():
+        unknown_input(bot, update, user_data)
+        return
+    user_data.update({"status": "hall_of_fame", "location_id": 8})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def tops(bot, update, user_data):
+    user_data.update({"status": "tops"})
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.chat_id, text="Выберите категорию:", reply_markup=buttons)
+
+
+def top_stat(bot, update):
+    mes = update.message
+    response = "Топ {} по замку:\n".format(mes.text[0])
+    player = Player.get_player(mes.from_user.id)
+    found = False
+    if player is None:
+        found = True
+    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense"}
+    stat = text_to_stats.get(mes.text)
+    request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' order by {} desc".format(stat,
+                                                                                                                 stat)
+    cursor.execute(request)
+    row = cursor.fetchone()
+    num = 0
+    response_old = ""
+    while row is not None:
+        num += 1
+        if row[4] == player.id:
+            response_new = "<b>{}) {}{} 🏅: {} {}</b>\n".format(num, mes.text[0], row[1], row[3], row[0])
+            found = True
+            if num < TOP_NUM_PLAYERS:
+                response += response_new
+                row = cursor.fetchone()
+                continue
+            response += "\n...\n" + response_old + response_new
+        response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}" \
+                       "\n".format(num, mes.text[0], row[1], row[3], row[0])
+        if num < TOP_NUM_PLAYERS:
+            response += response_old
+        else:
+            if found:
+                response += response_old
+                break
+        row = cursor.fetchone()
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
