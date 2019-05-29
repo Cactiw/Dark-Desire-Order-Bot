@@ -36,7 +36,7 @@ filter_is_hero = FilterIsHero()
 class FilterIsProfile(BaseFilter):
     def filter(self, message):
         return filter_is_pm(message) and filter_is_chat_wars_forward(message) \
-               and "Битва семи замков через" in message.text and \
+               and "Битва" in message.text and "семи замков через" in message.text and \
                "Состояние:" in message.text and "Подробнее: /hero" in message.text
 
 
