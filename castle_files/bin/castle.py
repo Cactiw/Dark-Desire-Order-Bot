@@ -308,18 +308,33 @@ def get_tops_text(player, stat, stat_text, game_class=None):
     found = False
     if player is None:
         found = True
-    request = "select nickname, {}, game_class, lvl, id, game_class from players where castle = '🖤' {}" \
-              "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
-                                        game_class is not None else "", stat)
+    if stat in ["wood", "stone", "construction"]:
+        if stat == "construction":
+            request = "select nickname, count(1) as construction_count, game_class, lvl, player_id from castle_logs " \
+                      "left join players on castle_logs.player_id = players.id where action = 'construction' {}" \
+                      "group by nickname, game_class, lvl, player_id order by construction_count desc;" \
+                      "".format("and game_class = '{}' ".format(game_class) if game_class is not None else "")
+        else:
+            request = "select nickname, count(1) as res_count, game_class, lvl, player_id from castle_logs " \
+                      "left join players on castle_logs.player_id = players.id where action = 'collect_resources' and "\
+                      "additional_info ->> 'resource' = '{}' {}group by nickname, game_class, lvl, player_id order by "\
+                      "res_count desc;".format(stat, "and game_class = '{}'"
+                                                     "".format(game_class) if game_class is not None else "")
+    else:
+        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' {}" \
+                  "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
+                                            game_class is not None else "", stat)
+    print(request)
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
     response_old = ""
     while row is not None:
         num += 1
-        class_icon = classes_to_emoji.get(row[5]) or '❔'
+        class_icon = classes_to_emoji.get(row[2]) or '❔'
         if row[4] == player.id:
-            response_new = "<b>{}) {}{} 🏅: {} {}{}</b>\n".format(num, stat_text, row[1], row[3], class_icon, row[0])
+            response_new = "<b>{}) {}</b><code>{:<3}</code><b> 🏅: {} {}{}</b> 🔻\n".format(num, stat_text, row[1],
+                                                                                          row[3], class_icon, row[0])
             found = True
             if num < TOP_NUM_PLAYERS:
                 response += response_new
@@ -342,7 +357,8 @@ def get_tops_text(player, stat, stat_text, game_class=None):
 def top_stat(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense"}
+    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense", "🌲Дерево": "wood", "⛰Камень": "stone",
+                     "🏚Стройка": "construction"}
     stat = text_to_stats.get(mes.text)
     response = get_tops_text(player, stat, mes.text[0])
     buttons = get_tops_buttons(stat)
@@ -350,7 +366,7 @@ def top_stat(bot, update):
 
 
 def send_new_top(bot, update):
-    stat_to_text = {"attack": "⚔️", "defense": "🛡"}
+    stat_to_text = {"attack": "⚔️", "defense": "🛡", "wood": "🌲", "stone": "⛰", "construction": "🏚"}
     mes = update.callback_query.message
     data = update.callback_query.data
     parse = re.search("top_([^_]+)_(.*)", data)

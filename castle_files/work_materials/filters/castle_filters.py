@@ -249,7 +249,7 @@ class FilterTopStat(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["⚔️Атака", "🛡Защита"] and \
+        return filter_is_pm(message) and message.text in ["⚔️Атака", "🛡Защита", "🌲Дерево", "⛰Камень", "🏚Стройка"] and \
             user_data.get("status") == 'tops'
 
 

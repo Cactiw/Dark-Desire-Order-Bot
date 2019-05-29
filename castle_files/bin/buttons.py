@@ -265,6 +265,11 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("🛡Защита"),
             ],
             [
+                KeyboardButton("🌲Дерево"),
+                KeyboardButton("⛰Камень"),
+                KeyboardButton("🏚Стройка"),
+            ],
+            [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
