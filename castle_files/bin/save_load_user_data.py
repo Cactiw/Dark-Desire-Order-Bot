@@ -39,9 +39,9 @@ def save_data():
             f.close()
             dump = {}
             for k, v in list(construction_jobs.items()):
-                if v.get_time_left() < 0:
+                """if v.get_time_left() < 0:
                     construction_jobs.pop(k)
-                    continue
+                    continue"""
                 dump.update({k: [file_globals.dispatcher.user_data.get(k).get("status"), v.stop_time]})
             f = open('castle_files/backup/construction_jobs', 'wb+')
             pickle.dump(dump, f)

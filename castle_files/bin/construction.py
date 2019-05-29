@@ -207,6 +207,11 @@ def construction_return(bot, job):
     user_data.update({"status": "central_square"})
     if "construction_id" in user_data:
         user_data.pop("construction_id")
+    if job.context[0] in construction_jobs:
+        try:
+            construction_jobs.pop(job.context[0])
+        except Exception:
+            logging.error(traceback.format_exc())
     buttons = get_general_buttons(job.context[1], player)
     request = "insert into castle_logs(player_id, action, result, additional_info, date) values (%s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, "construction", 1, json.dumps({"location_id": location_id}),
@@ -227,7 +232,7 @@ def load_construction_jobs():
         for k, v in list(up.items()):
             now = time.time()
             remaining_time = v[1] - now
-            print(remaining_time)
+            print("remaining", remaining_time)
             construction_jobs.update({k: MyJob(job.run_once(statuses_to_callbacks.get(v[0]), remaining_time,
                                                             context=[k, dispatcher.user_data.get(k)]), remaining_time)})
         f.close()
