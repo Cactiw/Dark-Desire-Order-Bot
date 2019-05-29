@@ -76,6 +76,23 @@ def get_update_history_buttons(update_id, last_update_id):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_tops_buttons(stat, curr='all'):
+    buttons = [
+        [
+            InlineKeyboardButton("{}ВСЕ".format('✅' if curr == 'all' else ""), callback_data="top_{}_all".format(stat)),
+            InlineKeyboardButton("⚗".format('✅' if curr == '⚗' else ""), callback_data="top_{}_⚗️".format(stat)),
+            InlineKeyboardButton("⚒".format('✅' if curr == '⚒' else ""), callback_data="top_{}_⚒".format(stat)),
+        ],
+        [
+            InlineKeyboardButton("📦".format('✅' if curr == '📦' else ""), callback_data="top_{}_📦".format(stat)),
+            InlineKeyboardButton("🏹".format('✅' if curr == '🏹' else ""), callback_data="top_{}_🏹".format(stat)),
+            InlineKeyboardButton("⚔".format('✅' if curr == '⚔' else ""), callback_data="top_{}_⚔️".format(stat)),
+            InlineKeyboardButton("🛡".format('✅' if curr == '🛡' else ""), callback_data="top_{}_🛡".format(stat)),
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 # Функция, которая возвращает кнопки для любого статуса. Принимает на вход user_data, в котором читает поле "status",
 # далее генерирует и возвращает кнопки
 def get_general_buttons(user_data, player=None, only_buttons=False):
@@ -235,7 +252,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         buttons = [
             [
                 KeyboardButton("📈Топы"),
-                KeyboardButton("📣Ещё кнопка, хз что"),
+                # KeyboardButton("📣Ещё кнопка, хз что"),
             ],
             [
                 KeyboardButton("↩️ Назад"),

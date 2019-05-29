@@ -47,7 +47,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
-    hall_of_fame, tops, top_stat
+    hall_of_fame, tops, top_stat, send_new_top
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history
@@ -296,6 +296,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
     # End of the restrictions---------------------------------------------------------------------------------------
+
+    # Хендлеры для инлайн кнопок в топах
+    dispatcher.add_handler(CallbackQueryHandler(send_new_top, pattern="top_[^_]+_.*"))
 
     # Хендлеры для инлайн кнопок гильдий
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))

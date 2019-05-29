@@ -1,20 +1,27 @@
 """
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
-from castle_files.bin.buttons import send_general_buttons, get_general_buttons
+from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons
+from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, SUPER_ADMIN_ID, \
+    classes_to_emoji
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
+from telegram.error import BadRequest, TelegramError
 
 import re
+import logging
+import traceback
 
 TOP_NUM_PLAYERS = 20
+
+emoji_to_class = dict_invert(classes_to_emoji)
 
 
 def change_rp(bot, update, user_data):
@@ -296,25 +303,24 @@ def tops(bot, update, user_data):
     bot.send_message(chat_id=update.message.chat_id, text="Выберите категорию:", reply_markup=buttons)
 
 
-def top_stat(bot, update):
-    mes = update.message
-    response = "Топ {} по замку:\n".format(mes.text[0])
-    player = Player.get_player(mes.from_user.id)
+def get_tops_text(player, stat, stat_text, game_class=None):
+    response = "Топ {} по замку:\n".format(stat_text)
     found = False
     if player is None:
         found = True
-    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense"}
-    stat = text_to_stats.get(mes.text)
-    request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' order by {} desc".format(stat,
-                                                                                                                 stat)
+    request = "select nickname, {}, game_class, lvl, id, game_class from players where castle = '🖤' {}" \
+              "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
+                                        game_class is not None else "", stat)
+    print(request)
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
     response_old = ""
     while row is not None:
         num += 1
+        class_icon = classes_to_emoji.get(row[5]) or '❔'
         if row[4] == player.id:
-            response_new = "<b>{}) {}{} 🏅: {} {}</b>\n".format(num, mes.text[0], row[1], row[3], row[0])
+            response_new = "<b>{}) {}{} 🏅: {} {}{}</b>\n".format(num, stat_text, row[1], row[3], class_icon, row[0])
             found = True
             if num < TOP_NUM_PLAYERS:
                 response += response_new
@@ -322,8 +328,8 @@ def top_stat(bot, update):
                 continue
             response += "\n...\n" + response_old + response_new
         else:
-            response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}" \
-                           "\n".format(num, mes.text[0], row[1], row[3], row[0])
+            response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}{}" \
+                           "\n".format(num, stat_text, row[1], row[3], class_icon, row[0])
             if num < TOP_NUM_PLAYERS:
                 response += response_old
             else:
@@ -331,4 +337,46 @@ def top_stat(bot, update):
                     response += response_old
                     break
         row = cursor.fetchone()
-    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+    return response
+
+
+def top_stat(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense"}
+    stat = text_to_stats.get(mes.text)
+    response = get_tops_text(player, stat, mes.text[0])
+    buttons = get_tops_buttons(stat)
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
+
+
+def send_new_top(bot, update):
+    stat_to_text = {"attack": "⚔️", "defense": "🛡"}
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    parse = re.search("top_([^_]+)_(.*)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Произошла ошибка. Попробуйте вызвать топы заного.")
+        return
+    stat = parse.group(1)
+    class_emoji = parse.group(2)
+    game_class = emoji_to_class.get(class_emoji)
+    # print(class_emoji, game_class, emoji_to_class)
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        return
+    response = get_tops_text(player, stat, stat_to_text.get(stat), game_class=game_class)
+    buttons = get_tops_buttons(stat, curr=class_emoji)
+    """bot.send_message(chat_id=update.callback_query.message.chat_id, text=response, parse_mode='HTML',
+                     reply_markup=buttons)"""
+    try:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
+                            reply_markup=buttons, parse_mode='HTML')
+    # except Exception:
+        # logging.error(traceback.format_exc())
+    except BadRequest:
+        pass
+    except TelegramError:
+        pass
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)

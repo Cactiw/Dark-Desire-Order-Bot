@@ -8,6 +8,10 @@ from castle_files.libs.bot_async_messaging import AsyncBot
 
 castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 
+classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel']
+classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',
+                    'Sentinel': '🛡'}
+
 bot = AsyncBot(token=Production_castle_token, workers=8, request_kwargs=request_kwargs)
 updater = AsyncUpdater(bot=bot)
 
