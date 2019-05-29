@@ -43,7 +43,8 @@ construction_jobs = {}
 
 allowed_list = []
 
-processing = True
+processing = False
+began = False
 
 moscow_tz = pytz.timezone('Europe/Moscow')
 try:

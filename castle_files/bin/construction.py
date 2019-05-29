@@ -233,8 +233,18 @@ def load_construction_jobs():
             now = time.time()
             remaining_time = v[1] - now
             print("remaining", remaining_time)
-            construction_jobs.update({k: MyJob(job.run_once(statuses_to_callbacks.get(v[0]), remaining_time,
-                                                            context=[k, dispatcher.user_data.get(k)]), remaining_time)})
+            if remaining_time < 0:
+                try:
+                    job.run_once(statuses_to_callbacks.get(v[0]), 0.1, context=[k, dispatcher.user_data.get(k)])
+                except Exception:
+                    logging.error(traceback.format_exc())
+                continue
+            try:
+                construction_jobs.update({k: MyJob(job.run_once(statuses_to_callbacks.get(v[0]), remaining_time,
+                                                                context=[k, dispatcher.user_data.get(k)]),
+                                                   remaining_time)})
+            except Exception:
+                logging.error(traceback.format_exc())
         f.close()
     except FileNotFoundError:
         return

@@ -43,9 +43,10 @@ def save_data():
                     construction_jobs.pop(k)
                     continue"""
                 dump.update({k: [file_globals.dispatcher.user_data.get(k).get("status"), v.stop_time]})
-            f = open('castle_files/backup/construction_jobs', 'wb+')
-            pickle.dump(dump, f)
-            f.close()
+            if file_globals.began:
+                f = open('castle_files/backup/construction_jobs', 'wb+')
+                pickle.dump(dump, f)
+                f.close()
             log.debug("Data write completed\b")
         except Exception:
             logging.error(sys.exc_info()[0])

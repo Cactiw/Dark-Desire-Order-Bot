@@ -330,7 +330,7 @@ def castle_bot_processing():
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True
-
+    file_globals.began = True
     # Поток, сохраняющий user_data на диск
     save_user_data = threading.Thread(target=save_data, name="Save User Data", args=())
     save_user_data.start()
