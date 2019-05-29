@@ -311,7 +311,6 @@ def get_tops_text(player, stat, stat_text, game_class=None):
     request = "select nickname, {}, game_class, lvl, id, game_class from players where castle = '🖤' {}" \
               "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
                                         game_class is not None else "", stat)
-    print(request)
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
@@ -362,7 +361,6 @@ def send_new_top(bot, update):
     stat = parse.group(1)
     class_emoji = parse.group(2)
     game_class = emoji_to_class.get(class_emoji)
-    # print(class_emoji, game_class, emoji_to_class)
     player = Player.get_player(update.callback_query.from_user.id)
     if player is None:
         return

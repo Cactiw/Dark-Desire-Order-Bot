@@ -80,14 +80,14 @@ def get_tops_buttons(stat, curr='all'):
     buttons = [
         [
             InlineKeyboardButton("{}ВСЕ".format('✅' if curr == 'all' else ""), callback_data="top_{}_all".format(stat)),
-            InlineKeyboardButton("⚗".format('✅' if curr == '⚗' else ""), callback_data="top_{}_⚗️".format(stat)),
-            InlineKeyboardButton("⚒".format('✅' if curr == '⚒' else ""), callback_data="top_{}_⚒".format(stat)),
+            InlineKeyboardButton("{}⚗️".format('✅' if curr == '⚗️' else ""), callback_data="top_{}_⚗️".format(stat)),
+            InlineKeyboardButton("{}⚒".format('✅' if curr == '⚒' else ""), callback_data="top_{}_⚒".format(stat)),
         ],
         [
-            InlineKeyboardButton("📦".format('✅' if curr == '📦' else ""), callback_data="top_{}_📦".format(stat)),
-            InlineKeyboardButton("🏹".format('✅' if curr == '🏹' else ""), callback_data="top_{}_🏹".format(stat)),
-            InlineKeyboardButton("⚔".format('✅' if curr == '⚔' else ""), callback_data="top_{}_⚔️".format(stat)),
-            InlineKeyboardButton("🛡".format('✅' if curr == '🛡' else ""), callback_data="top_{}_🛡".format(stat)),
+            InlineKeyboardButton("{}📦".format('✅' if curr == '📦' else ""), callback_data="top_{}_📦".format(stat)),
+            InlineKeyboardButton("{}🏹".format('✅' if curr == '🏹' else ""), callback_data="top_{}_🏹".format(stat)),
+            InlineKeyboardButton("{}⚔️".format('✅' if curr == '⚔️' else ""), callback_data="top_{}_⚔️".format(stat)),
+            InlineKeyboardButton("{}🛡".format('✅' if curr == '🛡' else ""), callback_data="top_{}_🛡".format(stat)),
         ]
     ]
     return InlineKeyboardMarkup(buttons)
