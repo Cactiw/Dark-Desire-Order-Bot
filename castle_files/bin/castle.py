@@ -7,7 +7,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor
+from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, SUPER_ADMIN_ID
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
@@ -283,7 +283,7 @@ def remove_general(bot, update):
 
 def hall_of_fame(bot, update, user_data):
     hall = Location.get_location(8)
-    if not hall.is_constructed():
+    if not hall.is_constructed() and update.message.from_user.id != SUPER_ADMIN_ID:
         unknown_input(bot, update, user_data)
         return
     user_data.update({"status": "hall_of_fame", "location_id": 8})
