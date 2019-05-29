@@ -133,7 +133,7 @@ def begin_construction(bot, update):
     treasury.wood -= need_wood
     treasury.stone -= need_stone
     treasury.update_location_to_database()
-    ctrl = Location.get_location(2)
+    ctrl = Location.get_location(0)
     old = ctrl.special_info.get("enter_text_format_values")
     old[1] = treasury.wood
     old[2] = treasury.stone
