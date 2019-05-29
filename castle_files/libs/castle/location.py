@@ -49,7 +49,6 @@ class Location:
         insert_values = location.special_info.get("enter_text_format_values")
         if insert_values is None or without_format:
             return location.enter_text
-        print(insert_values)
         return location.enter_text.format(*insert_values)
 
     @staticmethod
