@@ -347,6 +347,8 @@ def get_tops_text(player, stat, stat_text, game_class=None):
                 response += response_old
             else:
                 if found:
+                    if num == TOP_NUM_PLAYERS + 1:
+                        break
                     response += response_old
                     break
         row = cursor.fetchone()
