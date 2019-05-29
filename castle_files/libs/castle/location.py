@@ -6,6 +6,7 @@ from castle_files.work_materials.globals import conn
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 import json
+import logging
 
 cursor = conn.cursor()
 cursor2 = conn.cursor()
@@ -203,9 +204,14 @@ central_square = Location(0, "⛲️ Центральная площадь",
                               throne_room.treasury.stone]
                           })
 central_square.create_location_in_database()
-old = central_square.special_info.get("enter_text_format_values")
-old[1] = throne_room.treasury.wood
-old[2] = throne_room.treasury.stone
+try:
+    old = central_square.special_info.get("enter_text_format_values")
+    old[1] = throne_room.treasury.wood
+    old[2] = throne_room.treasury.stone
+except IndexError:
+    # первый запуск с казной
+    logging.error("Old format values in central square")
+    pass
 barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
 barracks.create_location_in_database()
 castle_gates = Location(3, "⛩ Врата замка",
