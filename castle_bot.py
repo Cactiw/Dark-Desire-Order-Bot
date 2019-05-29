@@ -120,7 +120,7 @@ def castle_bot_processing():
     # Приём репортов
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile, pass_user_data=True))
 
     # Всякие команды в личке у бота
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_parts, guild_parts, pass_user_data=True))

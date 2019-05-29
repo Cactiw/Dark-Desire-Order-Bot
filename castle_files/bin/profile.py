@@ -3,7 +3,7 @@
 (например, приём и обновление /hero)
 """
 
-from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz
+from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
 from castle_files.work_materials.filters.general_filters import filter_is_merc
 from castle_files.libs.player import Player
@@ -22,13 +22,14 @@ import datetime
 trade_divisions_access_list = [439637823, 320365073]  # Игроки, которым дал доступ к хуизу в связи с альянсами
 
 
-def get_profile_text(player, self_request=True):
+def get_profile_text(player, self_request=True, user_data=None):
     response = "<b>{}</b> - Воин {}\n".format(player.nickname, "🖤Скалы" if player.castle == '🖤' else player.castle)
-    response += "{}id: <code>{}</code>\n".format("@{}, ".format(player.username) if player.username is not None else "",
+    response += "{}id: <code>{}</code>, ".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
+
+    response += "🔘: <code>{}</code>\n".format(player.reputation)
     response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
                                                                                       player.defense)
-    response += "🔘: <code>{}</code>\n".format(player.reputation)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:
@@ -42,16 +43,26 @@ def get_profile_text(player, self_request=True):
                     "\n".format(equipment.name, " +{}⚔️ ".format(equipment.attack) if equipment.attack != 0 else "",
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
     response += "\nПоследнее обновление профиля: " \
-                "<code>{}</code>".format(player.last_updated.strftime("%d/%m/%y %H:%M:%S") if
-                                         player.last_updated is not None else "неизвестно")
+                "<code>{}</code>\n".format(player.last_updated.strftime("%d/%m/%y %H:%M:%S") if
+                                           player.last_updated is not None else "неизвестно")
+    if user_data is None:
+        return response
+    status = user_data.get("status")
+    if status is not None and status in ["sawmill", "quarry", "construction"]:
+        if player is not None:
+            j = construction_jobs.get(player.id)
+            if j is not None:
+                seconds_left = j.get_time_left()
+                response += "\nВы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>" \
+                            "".format(seconds_left // 60, (seconds_left % 60) // 1)
     return response
 
 
 # Функция вывода профиля
-def profile(bot, update):
+def profile(bot, update, user_data=None):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    response = get_profile_text(player)
+    response = get_profile_text(player, user_data=user_data)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 

@@ -2,6 +2,7 @@
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons
+from castle_files.bin.common_functions import unknown_input
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -67,6 +68,8 @@ def back(bot, update, user_data):
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
+    if status in ["sawmill", "quarry", "construction"]:
+        bot.send_message(chat_id=update.message.from_user.id, text="Операция отменена.")
     new_status = statuses_back.get(status)
     new_location = Location.get_id_by_status(new_status)
     user_data.update({"status": new_status, "location_id": new_location})
@@ -279,6 +282,10 @@ def remove_general(bot, update):
 
 
 def hall_of_fame(bot, update, user_data):
+    hall = Location.get_location(8)
+    if not hall.is_constructed():
+        unknown_input(bot, update, user_data)
+        return
     user_data.update({"status": "hall_of_fame", "location_id": 8})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
@@ -298,14 +305,15 @@ def top_stat(bot, update):
         found = True
     text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense"}
     stat = text_to_stats.get(mes.text)
-    request = "select nickname, {}, game_class, lvl from players where castle = '🖤' order by {} desc".format(stat, stat)
+    request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' order by {} desc".format(stat,
+                                                                                                                 stat)
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
     response_old = ""
     while row is not None:
         num += 1
-        if row[0] == player.nickname:
+        if row[4] == player.id:
             response_new = "<b>{}) {}{} 🏅: {} {}</b>\n".format(num, mes.text[0], row[1], row[3], row[0])
             found = True
             if num < TOP_NUM_PLAYERS:

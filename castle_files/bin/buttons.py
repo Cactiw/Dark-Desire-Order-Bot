@@ -111,7 +111,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         ]
         hall = Location.get_location(8)
         if hall is not None and hall.is_constructed():
-            buttons[1].insert(1, KeyboardButton("Зал славы"))
+            buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
     elif status == 'barracks':
         buttons = [
             [
@@ -141,11 +141,19 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message', 'editing_debrief',
-                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "sawmill",
-                    "quarry", "treasury", "construction"]:
+                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "treasury"]:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status in ["sawmill", "quarry", "construction"]:
+        buttons = [
+            [
+                KeyboardButton("👀 Профиль"),
+            ],
+            [
+                KeyboardButton("↩️ Отмена"),
             ]
         ]
     elif status == 'castle_gates':
@@ -264,7 +272,7 @@ def get_text_to_general_buttons(user_data, player=None):
             if j is not None:
                 seconds_left = j.get_time_left()
                 return "Вы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>".format(seconds_left // 60,
-                                                                                          seconds_left % 60)
+                                                                                          (seconds_left % 60) // 1)
     if location_id is not None:
         return Location.get_location_enter_text_by_id(location_id)
 
