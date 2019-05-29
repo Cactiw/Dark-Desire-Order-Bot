@@ -5,6 +5,8 @@ from castle_files.libs.guild import Guild
 import re
 import datetime
 
+REPORT_REPUTATION_COUNT = 5
+
 
 # Функция, которая считает id битвы по сообщению, крайне желательно переписать нормально, похоже на костыль
 def count_battle_id(message):
@@ -78,9 +80,10 @@ def add_report(bot, update):
               "exp, gold, stock) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock))
-    player.reputation += 1
+    player.reputation += REPORT_REPUTATION_COUNT
     player.update()
-    bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!\nПолучен 🔘!")
+    bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!\nПолучено "
+                                                    "{}🔘!".format(REPORT_REPUTATION_COUNT))
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"
