@@ -64,3 +64,53 @@ def drop_table(bot, update):
         bot.sendMessage(chat_id=um.chat_id,
                         text=text,
                         parse_mode='HTML')
+
+
+def search_drop(item):
+    search_res = [[], [], [], []]
+    t = 0
+    text = ""
+    for tier in drop:
+        for quest in drop[tier]:
+            for daytime in drop[tier][quest]:
+                for i in drop[tier][quest][daytime]:
+                    if item.lower() in i.lower():
+                        search_res[t].append("{} {} {}\n".format(daytime_to_string[daytime], quest, i))
+                    else:
+                        pass
+        t += 1
+    for tier in search_res:
+        if not tier:
+            pass
+        else:
+            for res in tier:
+                text += res
+        text += "\n"
+    return text
+
+
+# ̶
+def send_search_bot(bot, update):
+    um = update.message
+    bot.sendChatAction(um.chat_id, "TYPING")
+    search_query = um.text[um.text.index(' ')+1:]
+    if len(search_query) >= 3:
+        text = search_drop(search_query)
+        if len(text) > 250:
+            bot.sendMessage(um.chat_id,
+                            "<i>Слиииишком много совпадений</i>. Попробуйте сузить область поиска.",
+                            parse_mode="HTML")
+        else:
+            try:
+                bot.sendMessage(um.chat_id,
+                                text,
+                                parse_mode="HTML")
+            except BadRequest:
+                text = '<i>Ветер завывает по окрестным лугам, замки как будто вымерли.</i>\n' \
+                       'Видимо, ваш запрос так никто и не смог найти, а может, таких предметов и не существует'
+                bot.sendMessage(chat_id=um.chat_id,
+                                text=text,
+                                parse_mode='HTML')
+    else:
+        bot.sendMessage(um.chat_id,
+                        'Ваш запрос слишком короткий(меньше трёх символов).')
