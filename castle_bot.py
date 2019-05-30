@@ -62,7 +62,7 @@ from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
 from castle_files.bin.reports import add_report, battle_stats
 
-from castle_files.bin.drop_data import drop_table  # ReiRose LTD 2019
+from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
 from castle_files.bin.telethon_script import script_work
 from castle_files.bin.common_functions import unknown_input
@@ -148,6 +148,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('d3', drop_table))
     dispatcher.add_handler(CommandHandler('d4', drop_table))
     dispatcher.add_handler(CommandHandler('dc', drop_table))
+    dispatcher.add_handler(CommandHandler('drop', send_search_bot))
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))

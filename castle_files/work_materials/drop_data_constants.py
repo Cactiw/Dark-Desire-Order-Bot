@@ -29,6 +29,12 @@ avalible_tiers = {
     'cloaks': 'cloaks'
 }
 
+daytime_to_string = {
+    'morning': '🌅Утро',
+    'day': '🏞День',
+    'evening': '🌇Вечер',
+    'night': '🌃Ночь'
+}
 
 drop = {
     'Tier 2': {
