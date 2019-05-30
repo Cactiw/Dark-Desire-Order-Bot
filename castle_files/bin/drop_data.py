@@ -94,6 +94,8 @@ def search_drop(item):
 # ̶
 def send_search_bot(bot, update):
     um = update.message
+    if ' ' not in um.text:
+        return
     bot.sendChatAction(um.chat_id, "TYPING")
     search_query = um.text[um.text.index(' ')+1:]
     if len(search_query) >= 3:
