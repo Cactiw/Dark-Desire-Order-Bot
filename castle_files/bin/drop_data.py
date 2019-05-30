@@ -1,6 +1,8 @@
 from castle_files.work_materials.drop_data_constants import *
 from castle_files.work_materials.globals import moscow_tz
 
+from telegram.error import BadRequest
+
 import datetime
 
 
