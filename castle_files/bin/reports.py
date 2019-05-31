@@ -80,10 +80,25 @@ def add_report(bot, update):
               "exp, gold, stock) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock))
-    player.reputation += REPORT_REPUTATION_COUNT
+
+    try:
+        forward_message_date = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except ValueError:
+        try:
+            forward_message_date = mes.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
+        except ValueError:
+            forward_message_date = mes.forward_date
+    except AttributeError:
+        forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    reputation = REPORT_REPUTATION_COUNT
+
+    if forward_message_date < datetime.datetime(year=2019, month=5, day=29, hour=12):
+        reputation = 0
+
+    player.reputation += reputation
     player.update()
     bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!\nПолучено "
-                                                    "{}🔘!".format(REPORT_REPUTATION_COUNT))
+                                                    "{}🔘!".format(reputation))
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"
