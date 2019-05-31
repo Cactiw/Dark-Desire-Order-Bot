@@ -412,13 +412,13 @@ def count_reputation_sum(bot, update):
         rep.update({player_id: cur_rep})
         row = cursor.fetchone()
     lst = list(rep.items())
-    lst.sort(key=lambda x: x[1], reverse=True)
+    lst.sort(key=lambda x: Player.get_player(x[0]).reputation - x[1], reverse=True)
     response = "Статистика по жетонам:\n"
     for obj in lst:
         id, reputation = obj
         player = Player.get_player(id)
-        new_response = "<code>{:<20}</code> 🔘: <code>{:4<}</code>, всего 🔘: <code>{:<4}</code>\n" \
-                       "".format(player.username, reputation, player.reputation)
+        new_response = "<code>{:<20}</code> 🔘: <code>{:4<}</code>, всего 🔘: <code>{:<4}</code>, <code>{}</code>\n" \
+                       "".format(player.username, reputation, player.reputation, player.reputation - reputation)
         if len(response + new_response) > 4000:
             bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = ""
