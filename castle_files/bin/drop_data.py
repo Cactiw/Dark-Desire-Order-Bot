@@ -108,7 +108,7 @@ def send_search_bot(bot, update, args):
                                 parse_mode="HTML")
             except BadRequest:
                 text = '<i>Ветер завывает по окрестным лугам, замки как будто вымерли.</i>\n' \
-                       'Видимо, ваш запрос так никто и не смог найти, а может, таких предметов и не существует'
+                       'Видимо, ваш запрос никто не смог найти. Возможно, таких предметов и не существует'
                 bot.sendMessage(chat_id=um.chat_id,
                                 text=text,
                                 parse_mode='HTML')
