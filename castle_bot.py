@@ -47,7 +47,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
-    hall_of_fame, tops, top_stat, send_new_top
+    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history
@@ -274,6 +274,9 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access & ~filter_is_merc, unknown_input,
                                           pass_user_data=True))
     # Restricted access---------------------------------------------------------------------------------------------
+
+    dispatcher.add_handler(CommandHandler('count_reputation_sum', count_reputation_sum))
+
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
     dispatcher.add_handler(CommandHandler('chat_info', chat_info))

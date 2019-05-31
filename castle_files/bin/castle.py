@@ -8,7 +8,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, SUPER_ADMIN_ID, \
+from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
     classes_to_emoji
 from globals import update_request_queue
 
@@ -397,3 +397,32 @@ def send_new_top(bot, update):
     except TelegramError:
         pass
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def count_reputation_sum(bot, update):
+    request = "select action, player_id from castle_logs"
+    cursor.execute(request)
+    rep = {}
+    action_to_rep = {"collect_resources": 3, "construction": 5}
+    row = cursor.fetchone()
+    while row is not None:
+        action, player_id = row
+        cur_rep = rep.get(player_id) or 0
+        cur_rep += action_to_rep.get(action)
+        rep.update({player_id: cur_rep})
+        row = cursor.fetchone()
+    lst = list(rep.items())
+    lst.sort(key=lambda x: x[1], reverse=True)
+    response = "Статистика по жетонам:\n"
+    for obj in lst:
+        id, reputation = obj
+        player = Player.get_player(id)
+        new_response = "<code>{:<20}</code> 🔘: <code>{:4<}</code>, всего 🔘: <code>{:<4}</code>\n" \
+                       "".format(player.username, reputation, player.reputation)
+        if len(response + new_response) > 4000:
+            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += new_response
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+
+
