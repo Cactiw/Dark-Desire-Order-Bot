@@ -184,9 +184,11 @@ def rangers_notify_start(bot, update):
     while row is not None:
         player = Player.get_player(row[0])
         if player is None:
+            row = cursor.fetchone()
             continue
         guild = Guild.get_guild(guild_id=player.guild)
         if guild is None:
+            row = cursor.fetchone()
             continue
         telegram_username = player.username
         username = player.nickname
