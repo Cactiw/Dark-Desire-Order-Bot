@@ -43,22 +43,10 @@ def get_message_type_and_data(message):
 
 
 def send_trigger_with_type_and_data(bot, update, trigger_type, data):
-    if trigger_type == 0:
-        bot.send_message(chat_id=update.message.chat_id, text=data, parse_mode='HTML')
-    elif trigger_type == 1:
-        bot.send_video(chat_id=update.message.chat_id, video=data)
-    elif trigger_type == 2:
-        bot.send_audio(chat_id=update.message.chat_id, audio=data)
-    elif trigger_type == 3:
-        bot.send_photo(chat_id=update.message.chat_id, photo=data)
-    elif trigger_type == 4:
-        bot.send_document(chat_id=update.message.chat_id, document=data)
-    elif trigger_type == 5:
-        bot.send_sticker(chat_id=update.message.chat_id, sticker=data)
-    elif trigger_type == 6:
-        bot.send_voice(chat_id=update.message.chat_id, voice=data)
-    elif trigger_type == 7:
-        bot.sendVideoNote(chat_id=update.message.chat_id, video_note=data)
+    mes = update.message
+    action = [bot.send_message,  bot.send_video,   bot.send_audio, bot.send_photo,
+              bot.send_document, bot.send_sticker, bot.send_voice, bot.sendVideoNote][trigger_type]
+    action(mes.chat_id, data, parse_mode='HTML')
 
 
 def add_trigger(bot, update):
@@ -139,7 +127,6 @@ def remove_trigger(bot, update):
     cursor.execute(request, (text, chat_id))
     bot.send_message(chat_id=mes.chat_id, text="Триггер успешно удалён!", reply_to_message_id=mes.message_id)
 
-
 def triggers(bot, update):
     mes = update.message
     if filter_is_pm(mes):
@@ -147,33 +134,33 @@ def triggers(bot, update):
     if mes.from_user.id not in get_admin_ids(bot=bot, chat_id=mes.chat_id):
         bot.send_message(chat_id=mes.chat_id, text="Доступ только у админов.", reply_to_message_id=mes.message_id)
         return
-    request = "select text_in, creator, date_created from triggers where chat_id = %s"
-    cursor.execute(request, (mes.chat_id,))
-    row = cursor.fetchone()
-    response = "<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n"
-    while row is not None:
-        response_new = "<code>{}</code> — создал <code>{}</code> {}\n".format(row[0], row[1],
-                                                                           row[2].strftime("%d/%m/%y %H:%M:%S"))
-        if len(response + response_new) > MAX_MESSAGE_LENGTH:
-            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
-            response = ""
-        response += response_new
-        row = cursor.fetchone()
-    # TODO избавиться от дублирования кода
-    request = "select text_in, creator, date_created from triggers where chat_id = 0"
-    cursor.execute(request)
-    row = cursor.fetchone()
-    response += "\n\n<b>Глобальные триггеры</b>:\n"
-    while row is not None:
-        response_new = "<code>{}</code> — создал <code>{}</code> {}\n".format(row[0], row[1],
-                                                                           row[2].strftime("%d/%m/%y %H:%M:%S"))
-        if len(response + response_new) > MAX_MESSAGE_LENGTH:
-            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
-            response = ""
-        response += response_new
-        row = cursor.fetchone()
-    # TODO избавиться от дублирования кода
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    local = trigger_listmain(mes.chat_id)
+    globals = trigger_listmain(0)
+    response=f"<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n{local}\n\n<b>Глобальные триггеры</b>:\n{globals}"
+    kolvo_sumb = len(response)
+    lim = MAX_MESSAGE_LENGTH
+    if kolvo_sumb > lim:
+        old_a = 0
+        while kolvo_sumb > lim:
+            new_a = old_a
+            new_a += 1
+            bot.send_message(chat_id=mes.chat_id, text=response[(old_a * lim):(new_a * lim)], parse_mode = 'HTML')
+            old_a +=1
+            kolvo_sumb -= lim
+        return
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
+
+
+def trigger_listmain(trigger_chat_id):
+    returned = ''
+    cursor.execute("select text_in, creator, date_created from triggers where chat_id = %s", (trigger_chat_id))
+    row = cursor.fetchall()
+    if row:
+        for i in row:
+            returned += f'<code>{i[0]}</code> — создал <code>{i[1]}</code> {i[2].strftime("%d/%m/%y %H:%M:%S")}\n'
+    else: 
+        pass
+    return returned
 
 
 def fill_triggers_lists():
