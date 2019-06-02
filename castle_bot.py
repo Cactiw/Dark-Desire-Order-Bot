@@ -148,7 +148,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('d3', drop_table))
     dispatcher.add_handler(CommandHandler('d4', drop_table))
     dispatcher.add_handler(CommandHandler('dc', drop_table))
-    dispatcher.add_handler(CommandHandler('drop', send_search_bot))
+    dispatcher.add_handler(CommandHandler('drop', send_search_bot, pass_args=True))
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))
