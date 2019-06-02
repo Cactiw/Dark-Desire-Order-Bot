@@ -6,6 +6,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 import datetime
+import logging
 
 triggers_in = {}
 global_triggers_in = []
@@ -43,22 +44,13 @@ def get_message_type_and_data(message):
 
 
 def send_trigger_with_type_and_data(bot, update, trigger_type, data):
-    if trigger_type == 0:
-        bot.send_message(chat_id=update.message.chat_id, text=data, parse_mode='HTML')
-    elif trigger_type == 1:
-        bot.send_video(chat_id=update.message.chat_id, video=data)
-    elif trigger_type == 2:
-        bot.send_audio(chat_id=update.message.chat_id, audio=data)
-    elif trigger_type == 3:
-        bot.send_photo(chat_id=update.message.chat_id, photo=data)
-    elif trigger_type == 4:
-        bot.send_document(chat_id=update.message.chat_id, document=data)
-    elif trigger_type == 5:
-        bot.send_sticker(chat_id=update.message.chat_id, sticker=data)
-    elif trigger_type == 6:
-        bot.send_voice(chat_id=update.message.chat_id, voice=data)
-    elif trigger_type == 7:
-        bot.sendVideoNote(chat_id=update.message.chat_id, video_note=data)
+    action = [bot.send_message,  bot.send_video,   bot.send_audio, bot.send_photo, bot.send_document, bot.send_sticker,
+              bot.send_voice, bot.sendVideoNote]
+    if trigger_type >= len(action):
+        # Неверный тип триггера
+        logging.warning("Incorrect trigger_type: {}".format(trigger_type))
+        return -1
+    action[trigger_type](update.message.chat_id, data, parse_mode='HTML')
 
 
 def add_trigger(bot, update):
