@@ -17,9 +17,21 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm
 import re
 import logging
 import datetime
+import random
 
 
 trade_divisions_access_list = [439637823, 320365073]  # Игроки, которым дал доступ к хуизу в связи с альянсами
+
+status_messages = [
+    "В таверне вы слышали, как этот человек отзывался на имя <b>{}</b>",
+    "Кажется, это <b>{}</b>, вы видели его не стенде объявлений. Он занимался крафтом в неположенном месте.",
+    "Да это же <b>{}</b>! Вот кто привёл ручного дракона на прошлой неделе и чуть не сжёг все казармы.",
+    "Есть люди, которые пропускают битвы. Но <b>{}</b> не из таких. Он вообще на них не ходит.",
+    "*Крики о помощи*\nО! Кажется, это <b>{}</b> вновь полез в колодец за “счастливыми” монетками. Может, "
+    "стоит подать ему веревку, в обмен на мелочь?",
+    "Снова этот <b>{}</b> хвастается своим Грифоновским кинжалом. Может кто-то ему расскажет, что выгоднее точить "
+    "Хантер?"
+]
 
 
 def get_profile_text(player, self_request=True, user_data=None):
@@ -120,7 +132,7 @@ def view_profile(bot, update):
         return
     if reply and player.status is not None:
         # Сообщение со статусом
-        bot.send_message(chat_id=mes.chat_id, text="Игрок известен как <b>{}</b>!".format(player.status),
+        bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(player.status),
                          parse_mode='HTML', reply_to_message_id=mes.message_id)
     if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and\
             not filter_is_merc(mes) and requested_player_id not in trade_divisions_access_list:
