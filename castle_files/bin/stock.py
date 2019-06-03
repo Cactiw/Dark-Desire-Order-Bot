@@ -140,3 +140,21 @@ def withdraw_resources(bot, update, user_data):
             res_already_counted = 0
     if res_already_counted > 0:
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def deposit(bot, update):
+    mes = update.message
+    # 📦Склад
+    response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
+    for string in mes.text.splitlines()[1:]:
+        parse = re.search("(.*) \\((\\d+)\\)", string)
+        if parse is None:
+            continue
+        res_name = parse.group(1)
+        count = int(parse.group(2))
+        code = resources.get(res_name)
+        if code is None:
+            continue
+        response += "<a href=\"https://t.me/share/url?url=/g_deposit {} {}\">{} x {}</a>\n".format(code, count,
+                                                                                                   res_name, count)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')

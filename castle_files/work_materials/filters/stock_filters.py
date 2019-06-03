@@ -47,3 +47,12 @@ class FilterGuildStockResources(BaseFilter):
 
 
 filter_guild_stock_resources = FilterGuildStockResources()
+
+
+# Сообщение - форвард /stock из чв3 и в личке
+class FilterPlayerStockResources(BaseFilter):
+    def filter(self, message):
+        return filter_is_chat_wars_forward(message) and filter_is_pm(message) and message.text.startswith("📦Склад")
+
+
+filter_player_stock_resources = FilterPlayerStockResources()
