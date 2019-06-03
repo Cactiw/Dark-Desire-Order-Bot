@@ -26,8 +26,9 @@ def get_profile_text(player, self_request=True, user_data=None):
     response = "<b>{}</b> - Воин {}\n".format(player.nickname, "🖤Скалы" if player.castle == '🖤' else player.castle)
     response += "{}id: <code>{}</code>, ".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
-
     response += "🔘: <code>{}</code>\n".format(player.reputation)
+    if player.status is not None:
+        response += "Статус: <b>{}</b>\n".format(player.status)
     response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
                                                                                       player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
@@ -82,10 +83,14 @@ def view_profile(bot, update):
                              reply_to_message_id=mes.message_id)
             return
     # Доступ к хуизу есть
+    reply = False
     if mes.text.startswith("/dok") or mes.text.startswith("/doc"):
         if mes.reply_to_message is not None:
+            #  Реплай в чате
+            reply = True
             player_id = mes.reply_to_message.from_user.id
         elif "@" in update.message.text:
+            # Поиск по юзерке
             request = "select id from players where username = %s"
             cursor.execute(request, (mes.text.partition("@")[2],))
             row = cursor.fetchone()
@@ -94,6 +99,7 @@ def view_profile(bot, update):
                 return
             player_id = row[0]
         else:
+            # Поиск по нику в игре
             request = "select id from players where nickname = %s or nickname like %s"
             # print(request % mes.text.partition(" ")[2] % "%]" + mes.text.partition(" ")[2])
             cursor.execute(request, (mes.text.partition(" ")[2], "%]" + mes.text.partition(" ")[2]))
@@ -112,6 +118,10 @@ def view_profile(bot, update):
     if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
+    if reply and player.status is not None:
+        # Сообщение со статусом
+        bot.send_message(chat_id=mes.chat_id, text="Игрок известен как <b>{}</b>!".format(player.status),
+                         parse_mode='HTML', reply_to_message_id=mes.message_id)
     if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and\
             not filter_is_merc(mes) and requested_player_id not in trade_divisions_access_list:
         guild = Guild.get_guild(guild_id=player.guild)
@@ -280,3 +290,26 @@ def update_ranger_class_skill_lvl(bot, update):
     player.update()
     bot.send_message(chat_id=mes.from_user.id, text="Информация о скиллах обновлена, <b>{}</b>".format(player.nickname),
                      parse_mode='HTML')
+
+
+def set_status(bot, update):
+    mes = update.message
+    if not check_access(mes.from_user.id):
+        return
+    parse = re.search("set_status (\\d+) (.*)", mes.text)
+    if parse is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис", reply_to_message_id=mes.message_id)
+        return
+    player_id = int(parse.group(1))
+    new_status = parse.group(2)
+    player = Player.get_player(player_id, notify_on_error=False)
+    if player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.", reply_to_message_id=mes.message_id)
+        return
+    if new_status == "":
+        player.status = None
+    else:
+        player.status = new_status
+    player.update()
+    bot.send_message(chat_id=mes.chat_id, text="Обновление статуса успешно!", reply_to_message_id=mes.message_id)
+
