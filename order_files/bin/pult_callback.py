@@ -5,17 +5,21 @@ from order_files.work_materials.pult_constants import *
 from order_files.libs.pult import rebuild_pult, Pult
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.bin.order import send_order, send_order_job
-from order_files.work_materials.pult_constants import divisions as divisions_const, potions as potions_consts
+from order_files.work_materials.pult_constants import divisions as divisions_const, potions as potions_consts, \
+    tactics_order_to_emoji
 
-from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job, admin_ids
+from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job
 
 from castle_files.bin.service_functions import check_access
 
 import order_bot
 import order_files.work_materials.globals as globals
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 import logging
 import re
+import time
 
 
 # Вызов нового пульта
@@ -25,6 +29,7 @@ def pult(bot, update):
     response = ""
     message = None
     send_time = None
+    variant = None
     if 'pult' in mes.text:
         # Обычный пульт
         response += Pult.get_text()
@@ -55,7 +60,83 @@ def pult(bot, update):
         send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
         message = bot.sync_send_message(chat_id=update.message.chat_id, text=response, reply_markup=PultMarkup,
                                         reply_to_message_id=mes.message_id)
-    pult = Pult(message.chat_id, message.message_id, deferred_time=send_time)  # Создаётся новый пульт
+    elif 'variant':
+        variant = True
+        PultMarkup = rebuild_pult("default_variant", pult, None)
+        message = bot.sync_send_message(
+            chat_id=update.message.chat_id, text="Создание варинта битвы:",
+            reply_markup=PultMarkup)
+    pult = Pult(message.chat_id, message.message_id, deferred_time=send_time, variant=variant)  # Создаётся новый пульт
+
+
+def get_variants_text():
+    if not Pult.variants:
+        return "Вариантов битвы нет!"
+    response = "Текущие варианты битвы:\n"
+
+    for order in list(Pult.variants.values()):
+        div_str = ""
+        if order.divisions == "ALL":
+            div_str = " ВСЕ"
+        else:
+            for i in range(len(divisions_const)):
+                if order.divisions[i]:
+                    div_str += " {0}".format(divisions_const[i])
+        response += "{}\n{}, {}{}{}{}Удалить вариант: /remove_variant_{}\n\n" \
+                    "".format(div_str[1:], order.target,
+                              "🛡:{}\n".format(order.target if order.defense == "Attack!" else
+                                               order.defense) if order.defense is not None else "",
+                              "Тактика: {}\n".format(order.tactics) if order.tactics != "" else "",
+                              "⚗️ Атака\n" if order.potions[0] else "", "⚗️ Деф\n" if order.potions[1] else "",
+                              order.deferred_id)
+    return response
+
+
+def get_variants_markup():
+    MAX_BUTTONS_IN_ROW = 2
+    if not Pult.variants:
+        return None
+    buttons = [[]]
+    current_row = 0
+    for order in list(Pult.variants.values()):
+        if len(buttons[current_row]) >= MAX_BUTTONS_IN_ROW:
+            current_row += 1
+            buttons.append([])
+        print(order.potions)
+        buttons[current_row].append(InlineKeyboardButton(
+            text="{},{}{}{}{}".format(order.target, "🛡:{} ".format(order.target if order.defense == "Attack!" else
+                                                                   order.defense) if order.defense is not None else "",
+                                      "⚗️⚔️ " if order.potions[0] else "", "⚗️🛡 " if order.potions[1] else "",
+                                      "/t{}".format(tactics_order_to_emoji.get(order.tactics)) if
+                                      order.tactics != "" else "", order.deferred_id),
+            callback_data="var_send_{}".format(order.deferred_id)))
+
+    return InlineKeyboardMarkup(buttons)
+
+
+def pult_variants(bot, update):
+    response = get_variants_text()
+    buttons = get_variants_markup()
+    bot.send_message(chat_id=update.message.chat_id, text=response, reply_markup=buttons, parse_mode='HTML')
+
+
+def send_variant(bot, update):
+    data = update.callback_query.data
+    variant_id = re.search("_(\\d+)", data)
+    if variant_id is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка поиска варианта",
+                                show_alert=True)
+        return
+    variant_id = int(variant_id.group(1))
+    order = Pult.variants.get(variant_id)
+    if order is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка поиска варианта",
+                                show_alert=True)
+        return
+    send_order(bot=bot, chat_callback_id=update.callback_query.message.chat_id, divisions=order.divisions,
+               castle_target=order.target, defense=order.defense, tactics=order.tactics, potions=order.potions,
+               time=None)
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 def pult_callback(bot, update):
@@ -95,7 +176,7 @@ def pult_send(bot, update):
     target = pult_status.get("target")
     time_to_send = pult_status.get("time")
     tactics_num = pult_status.get("tactics")
-    potions = pult.potions_active
+    potions = pult.potions_active.copy()
     if target == -1:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
@@ -113,11 +194,22 @@ def pult_send(bot, update):
     defense = pult_status.get("defense")
     defense_target = defense_to_order[defense]
     tactics_target = tactics_to_order[tactics_num]
-    if time_to_send < 0 and pult.deferred_time is None:
-        send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target,
-                   defense = defense_target, tactics = tactics_target, potions=potions)
-        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    if pult.variant:
+        # Создание варианта битвы
+        i = int(time.time() % (24 * 60 * 60))  # id уникален в течении суток
+        while Pult.variants and i in Pult.variants:
+            i += 1
+        current = DeferredOrder(i, globals.order_id, divisions, time_to_send, castle_target, defense_target,
+                                tactics_target, potions, None)
+        pult.variants.update({i: current})
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вариант создан.")
         return
+    if time_to_send < 0 and pult.deferred_time is None:
+        # Мгновенная отправка приказа
+        send_order(bot=bot, chat_callback_id=mes.chat_id, divisions=divisions, castle_target=castle_target,
+                   defense=defense_target, tactics=tactics_target, potions=potions)
+        return
+    # Планирование отложки
     if pult.deferred_time is not None:
         time_to_send = pult.deferred_time
     else:
@@ -125,8 +217,8 @@ def pult_send(bot, update):
         logging.info("Next battle : {0}".format(next_battle))
         next_battle_time = next_battle.time()
         if time_to_send == 0:   # Мгновенная отправка, но с подстановкой времени в пин
-            send_order(bot = bot, chat_callback_id = mes.chat_id, divisions = divisions, castle_target = castle_target,
-                       defense = defense_target, tactics = tactics_target, time = next_battle_time, potions=potions)
+            send_order(bot=bot, chat_callback_id=mes.chat_id, divisions=divisions, castle_target=castle_target,
+                       defense=defense_target, tactics=tactics_target, time=next_battle_time, potions=potions)
             bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
             return
         time_to_send = next_battle - times_to_time[time_to_send]
@@ -152,7 +244,7 @@ def pult_send(bot, update):
     deferred_orders.append(current)
 
     logging.info("Deffered successful on {0}".format(time_to_send))
-    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text = "Приказ успешно отложен")
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Приказ успешно отложен")
     new_text = Pult.get_text()
     reply_markup = rebuild_pult("None", pult, None)
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text+ "\n\n{0}".format(
