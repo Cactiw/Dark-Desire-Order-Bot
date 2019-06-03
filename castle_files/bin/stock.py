@@ -42,11 +42,13 @@ def send_withdraw(bot, update):
         response += "{} {} ".format(code, count)
         res_count += 1
         if res_count >= 8:
-            bot.send_message(chat_id=update.message.chat_id, text=response)
+            response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
+            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
             response = "/g_withdraw "
             res_count = 0
     if res_count > 0:
-        bot.send_message(chat_id=update.message.chat_id, text=response)
+        response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
+        bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
 # Получает и сохраняет в user_data список шмоток, на которые есть рецепты для дальнейшего использования
@@ -135,16 +137,17 @@ def withdraw_resources(bot, update, user_data):
         response += "{} {} ".format(code, res_count)
         res_already_counted += 1
         if res_already_counted >= 8:
+            response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = "/g_withdraw "
             res_already_counted = 0
     if res_already_counted > 0:
+        response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def deposit(bot, update):
     mes = update.message
-    # 📦Склад
     response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
     for string in mes.text.splitlines():
         parse = re.search("/lot_(\\S+) (.*) \\((\\d+)\\)", string)
@@ -163,7 +166,6 @@ def deposit(bot, update):
                     code = code[:-1]
                 res_name = parse.group(1)
                 count = int(parse.group(2))
-                print(code)
             else:
                 # Кинут сток
                 parse = re.search("(/sg_\\d+ )?(.*) \\((\\d+)\\)", string)
