@@ -147,11 +147,11 @@ def deposit(bot, update):
     # 📦Склад
     response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
     for string in mes.text.splitlines()[1:]:
-        parse = re.search("(.*) \\((\\d+)\\)", string)
+        parse = re.search("(/sg_\\d+)? (.*) \\((\\d+)\\)", string)
         if parse is None:
             continue
-        res_name = parse.group(1)
-        count = int(parse.group(2))
+        res_name = parse.group(2)
+        count = int(parse.group(3))
         code = resources.get(res_name)
         if code is None:
             continue
