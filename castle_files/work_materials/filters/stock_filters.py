@@ -56,3 +56,13 @@ class FilterPlayerStockResources(BaseFilter):
 
 
 filter_player_stock_resources = FilterPlayerStockResources()
+
+
+# Сообщение - форвард доступных вещей для продажи с аука из чв3 и в личке
+class FilterPlayerAuction(BaseFilter):
+    def filter(self, message):
+        return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+               message.text.startswith("You have for sale:")
+
+
+filter_player_auction = FilterPlayerAuction()
