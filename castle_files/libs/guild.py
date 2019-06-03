@@ -23,7 +23,7 @@ class Guild:
     guild_ids = []
 
     def __init__(self, guild_id, tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
-                 orders_enabled, pin_enabled, disable_notification, settings):
+                 orders_enabled, pin_enabled, disable_notification, settings=None):
         self.id = guild_id
         self.tag = tag
         self.name = name
