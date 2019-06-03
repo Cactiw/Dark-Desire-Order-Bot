@@ -146,19 +146,32 @@ def deposit(bot, update):
     mes = update.message
     # 📦Склад
     response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
-    for string in mes.text.splitlines()[1:]:
+    for string in mes.text.splitlines():
         parse = re.search("/lot_(\\S+) (.*) \\((\\d+)\\)", string)
         if parse is not None:
+            # Кинут аукцион
             code = parse.group(1)
             res_name = parse.group(2)
             count = int(parse.group(3))
         else:
-            parse = re.search("(/sg_\\d+)? (.*) \\((\\d+)\\)", string)
-            if parse is None:
-                continue
-            res_name = parse.group(2)
-            count = int(parse.group(3))
-            code = resources.get(res_name)
+            parse = re.search("(.*) \\((\\d+)\\) /(use|view)_(.+)", string)
+            if parse is not None:
+                # Кинут misc
+                code = parse.group(4)
+                if code[-1] == ' ':
+                    # Обрезаем последний пробел, найс чв вообще прогали, тупо пробел в конце строки
+                    code = code[:-1]
+                res_name = parse.group(1)
+                count = int(parse.group(2))
+                print(code)
+            else:
+                # Кинут сток
+                parse = re.search("(/sg_\\d+ )?(.*) \\((\\d+)\\)", string)
+                if parse is None:
+                    continue
+                res_name = parse.group(2)
+                count = int(parse.group(3))
+                code = resources.get(res_name)
         if code is None:
             for num, elem in list(items.items()):
                 if res_name == elem[1]:
@@ -167,6 +180,8 @@ def deposit(bot, update):
                     code = "r" + num
                 else:
                     continue
+        if code is None:
+            continue
         response += "<a href=\"https://t.me/share/url?url=/g_deposit {} {}\">{} x {}</a>\n".format(code, count,
                                                                                                    res_name, count)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')

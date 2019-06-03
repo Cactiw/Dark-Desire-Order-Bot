@@ -8,7 +8,8 @@ from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, 
 from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
-    filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction
+    filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction, \
+    filter_player_misc
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
@@ -136,6 +137,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_stock_resources, deposit))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_auction, deposit))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_misc, deposit))
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
