@@ -237,7 +237,8 @@ def load_construction_jobs():
                 try:
                     job.run_once(statuses_to_callbacks.get(v[0]), 0.1, context=[k, dispatcher.user_data.get(k)])
                 except Exception:
-                    logging.error(traceback.format_exc())
+                    # logging.error(traceback.format_exc())
+                    pass
                 continue
             try:
                 construction_jobs.update({k: MyJob(job.run_once(statuses_to_callbacks.get(v[0]), remaining_time,
