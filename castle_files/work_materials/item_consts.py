@@ -80,7 +80,7 @@ items = {
     "94": ["Heavy Fauchard", "Heavy Fauchard part", 6],
     "95": ["Guisarme", "Guisarme part", 5],
     "96": ["Meteor Bow", "Meteor Bow part", 5],
-    "97": ["Nightfall Bow", "Nightfall Bow part", 6],
+    "97": ["Nightfall Bow", "Nightfall Bow part", 5],
     "98": ["Black Morningstar", "Black Morningstar part", 6],
     "99": ["Maiming Bulawa", "Maiming Bulawa part", 6],
     "100": ["Assault Cape", "Assault Cape part", 4],
