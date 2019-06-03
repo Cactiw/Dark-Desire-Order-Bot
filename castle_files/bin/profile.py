@@ -42,7 +42,9 @@ def get_profile_text(player, self_request=True, user_data=None):
         response += "<b>{}</b><code>{}</code><code>{}</code>" \
                     "\n".format(equipment.name, " +{}⚔️ ".format(equipment.attack) if equipment.attack != 0 else "",
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
-    response += "\nПоследнее обновление профиля: " \
+    response += "\nРегистрация в боте: <code>{}</code>\n".format(player.created.strftime("%d/%m/%y %H:%M:%S") if
+                                                                 player.created is not None else "Оппозит")
+    response += "Последнее обновление профиля: " \
                 "<code>{}</code>\n".format(player.last_updated.strftime("%d/%m/%y %H:%M:%S") if
                                            player.last_updated is not None else "неизвестно")
     if user_data is None:
@@ -201,7 +203,7 @@ def hero(bot, update, user_data):
                                                        "установите его в настройках аккаунта Telegram")
             return
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
-                        stamina, pet, player_equipment, castle=castle, last_updated=last_updated)
+                        stamina, pet, player_equipment, castle=castle, last_updated=last_updated, created=last_updated)
         # Добавляем игрока в бд
         player.insert_into_database()
         player = player.reload_from_database()
