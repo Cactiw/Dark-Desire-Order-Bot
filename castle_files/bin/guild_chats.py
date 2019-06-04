@@ -60,7 +60,7 @@ def notify_guild_attack(bot, update):
         pass
         return 0
     ready_to_battle = mes.text.count("[⚔]") + mes.text.count("[🛡]")
-    sleeping = mes.text.count("[🛌]")
+    sleeping = mes.text.count("[🛌]") + mes.text.count("[⚒]")
     response = "<b>{0}</b>\nГотово к битве: <b>{1}</b>\nНе готово к битве, но занято <b>{2}</b>\n" \
                "Спит: <b>{3}</b>\n\nВремя до битвы: {4}\n".format(mes.text.splitlines()[0], ready_to_battle,
                                                                 mes.text.count("\n") - ready_to_battle - sleeping,
@@ -85,7 +85,7 @@ def notify_guild_attack(bot, update):
         if not ("[⚔]" in string or "[🛡]" in string):
             nickname = string.partition("]")[2][1:]
             do_not_ready.append(nickname)
-            if "[🛌]" in string:
+            if "[🛌]" in string or "[⚒]" in string:
                 sleeping.append(nickname)
 
     in_dict_do_not_ready = []
