@@ -9,6 +9,15 @@ from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 
+def get_profile_buttons(player):
+    buttons = [
+        [
+            InlineKeyboardButton("История гильдий", callback_data="pr_guild_history_{}".format(player.id)),
+        ],
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 def get_edit_guild_buttons(guild):
     buttons = [
         [

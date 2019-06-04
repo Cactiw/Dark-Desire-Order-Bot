@@ -11,6 +11,7 @@ from castle_files.libs.guild import Guild
 
 from castle_files.bin.buttons import send_general_buttons
 from castle_files.bin.service_functions import check_access
+from castle_files.bin.buttons import get_profile_buttons
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -82,7 +83,7 @@ def profile(bot, update, user_data=None):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     response = get_profile_text(player, user_data=user_data)
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_profile_buttons(player))
 
 
 def view_profile(bot, update):
@@ -138,6 +139,7 @@ def view_profile(bot, update):
         # Сообщение со статусом
         bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(player.status),
                          parse_mode='HTML', reply_to_message_id=mes.message_id)
+    buttons = get_profile_buttons(player)
     if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and\
             not filter_is_merc(mes) and requested_player_id not in trade_divisions_access_list:
         guild = Guild.get_guild(guild_id=player.guild)
@@ -145,10 +147,43 @@ def view_profile(bot, update):
                          text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "
                               "служит {}".format("в гильдии <b>{}</b>".format(guild.tag) if guild is not None else
                                                  "как вольный наёмник (без гильдии)"),
-                         parse_mode='HTML')
+                         parse_mode='HTML', reply_markup=buttons)
         return
     response = get_profile_text(player, self_request=False)
-    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
+
+
+def guild_history(bot, update):
+    data = update.callback_query.data
+    mes = update.callback_query.message
+    requested_player_id = re.search("_(\\d+)", data)
+    if requested_player_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Попробуйте вызвать сообщение заного.")
+        return
+    requested_player_id = int(requested_player_id.group(1))
+    player = Player.get_player(player_id=update.callback_query.from_user.id)
+    if player is None:
+        return
+    player_guild = Guild.get_guild(player.guild) if player.guild is not None else None
+    if player.id != requested_player_id and (player_guild is None or not player_guild.check_high_access(player.id)):
+        bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
+        return
+    requested_player = Player.get_player(requested_player_id, notify_on_error=False)
+    if requested_player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+        return
+    response = "Гильдии, в которых состоял <b>{}</b>:\n<em>Выше — позже</em>\n\n".format(requested_player.nickname)
+    for i, guild_id in enumerate(requested_player.guild_history):
+        guild = Guild.get_guild(guild_id)
+        if guild is None:
+            continue
+        commander = Player.get_player(guild.commander_id)
+        if commander is None:
+            continue
+        response += "<b>{}</b>, <code>{:3<}</code>: Командир: <b>{}</b> - @{}" \
+                    "\n".format(i + 1, guild.tag, commander.nickname, commander.username)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 # Функция для добавления или обновления профиля в базе данных, вызывается, когда бот получает хиро в лс

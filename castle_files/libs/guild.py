@@ -11,6 +11,8 @@ import traceback
 import time
 import json
 
+MAX_GUILD_HISTORY_LENGTH = 10
+
 # Словарь, пара элементов: { id гильдии: класс Guild } )
 # Гильдии записываются в словарь при выборке из базы данных, хранятся примерно 30 минут (?), потом выгружаются
 guilds = {}
@@ -113,6 +115,14 @@ class Guild:
 
         player_to_add.guild = self.id
         player_to_add.guild_tag = self.tag
+
+        if player_to_add.guild_history is None:
+            player_to_add.guild_history = []
+            player_to_add.guild_history.append(self.id)
+        elif player_to_add.guild_history[-1] != self.id:
+            if len(player_to_add.guild_history) > MAX_GUILD_HISTORY_LENGTH:
+                player_to_add.guild_history.pop()
+            player_to_add.guild_history.insert(0, self.id)
 
         player_to_add.update()
         self.sort_players_by_exp()
