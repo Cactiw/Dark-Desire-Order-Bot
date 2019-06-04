@@ -172,6 +172,8 @@ def guild_history(bot, update):
     if requested_player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
+    if requested_player.guild_history is None:
+        requested_player.guild_history = []
     response = "Гильдии, в которых состоял <b>{}</b>:\n<em>Выше — позже</em>\n\n".format(requested_player.nickname)
     for i, guild_id in enumerate(requested_player.guild_history):
         guild = Guild.get_guild(guild_id)
