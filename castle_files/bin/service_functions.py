@@ -1,4 +1,5 @@
-from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor, moscow_tz
+from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor, moscow_tz, \
+    local_tz
 from mwt import MWT
 
 import datetime
@@ -38,6 +39,40 @@ def get_time_remaining_to_battle():
         time_from_first_battle -= datetime.timedelta(hours=8)
     time_remaining = datetime.timedelta(hours=8) - time_from_first_battle
     return time_remaining
+
+
+def count_week_by_battle_id(battle_id):
+    week = 0
+    battle_id -= 1
+    while battle_id > 0:
+        week += 1
+        battle_id -= 21
+    return week
+
+
+# Функция, которая считает id битвы по сообщению, крайне желательно переписать нормально, похоже на костыль
+# Если message = None, то считает текущее battle_id
+def count_battle_id(message):
+    first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
+    interval = datetime.timedelta(hours=8)
+    if message is None:
+        forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    else:
+        try:
+            forward_message_date = local_tz.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+        except ValueError:
+            try:
+                forward_message_date = message.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
+            except ValueError:
+                forward_message_date = message.forward_date
+        except AttributeError:
+            forward_message_date = local_tz.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    time_from_first_battle = forward_message_date - first_battle
+    battle_id = 0
+    while time_from_first_battle > interval:
+        time_from_first_battle -= interval
+        battle_id = battle_id + 1
+    return battle_id
 
 
 def dict_invert(d):

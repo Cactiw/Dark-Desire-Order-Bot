@@ -55,7 +55,11 @@ def get_profile_text(player, self_request=True, user_data=None):
         response += "<b>{}</b><code>{}</code><code>{}</code>" \
                     "\n".format(equipment.name, " +{}⚔️ ".format(equipment.attack) if equipment.attack != 0 else "",
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
-    response += "\nРегистрация в боте: <code>{}</code>\n".format(player.created.strftime("%d/%m/%y %H:%M:%S") if
+
+    r1, r2, r3 = player.get_reports_count()
+    response += "\nРепорты(эта неделя / прошлая / всего): <code>{}</code> / <code>{}</code> / <code>{}</code>" \
+                "\n".format(r1, r2, r3)
+    response += "Регистрация в боте: <code>{}</code>\n".format(player.created.strftime("%d/%m/%y %H:%M:%S") if
                                                                  player.created is not None else "Оппозит")
     response += "Последнее обновление профиля: " \
                 "<code>{}</code>\n".format(player.last_updated.strftime("%d/%m/%y %H:%M:%S") if

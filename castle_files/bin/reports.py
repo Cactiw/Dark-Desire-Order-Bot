@@ -1,4 +1,5 @@
 from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn
+from castle_files.bin.service_functions import count_battle_id
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -6,27 +7,6 @@ import re
 import datetime
 
 REPORT_REPUTATION_COUNT = 5
-
-
-# Функция, которая считает id битвы по сообщению, крайне желательно переписать нормально, похоже на костыль
-def count_battle_id(message):
-    first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
-    interval = datetime.timedelta(hours=8)
-    try:
-        forward_message_date = local_tz.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    except ValueError:
-        try:
-            forward_message_date = message.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
-        except ValueError:
-            forward_message_date = message.forward_date
-    except AttributeError:
-        forward_message_date = local_tz.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    time_from_first_battle = forward_message_date - first_battle
-    battle_id = 0
-    while time_from_first_battle > interval:
-        time_from_first_battle -= interval
-        battle_id = battle_id + 1
-    return battle_id
 
 
 def count_battle_time(battle_id):
@@ -90,6 +70,7 @@ def add_report(bot, update):
             forward_message_date = mes.forward_date
     except AttributeError:
         forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    player.count_reports()
     reputation = REPORT_REPUTATION_COUNT
 
     if forward_message_date < datetime.datetime(year=2019, month=5, day=29, hour=12):

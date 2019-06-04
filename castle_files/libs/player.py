@@ -3,6 +3,7 @@
 """
 from castle_files.work_materials.globals import conn, dispatcher
 from castle_files.work_materials.equipment_constants import get_equipment_by_code
+from castle_files.bin.service_functions import count_week_by_battle_id, count_battle_id
 
 from psycopg2 import ProgrammingError
 import logging
@@ -41,6 +42,37 @@ class Player:
         self.reputation = reputation
         self.created = created
         self.status = status
+
+        self.__current_reports_count = -1
+        self.__previous_reports_count = -1
+        self.__total_reports_count = -1
+        self.__reports_counted_battle_id = -1
+
+    # Метод для подсчёта количества репортов за эту, прошлую неделю и всего
+    def count_reports(self):
+        self.__current_reports_count, self.__previous_reports_count, self.__total_reports_count = 0, 0, 0
+        request = "select battle_id from reports where player_id = %s"
+        cursor.execute(request, (self.id,))
+        row = cursor.fetchone()
+        self.__reports_counted_battle_id = count_battle_id(None)
+        current_week = count_week_by_battle_id(self.__reports_counted_battle_id)
+        while row is not None:
+            week = count_week_by_battle_id(row[0])
+            if week == current_week:
+                self.__current_reports_count += 1
+            elif week == current_week - 1:
+                self.__previous_reports_count += 1
+            self.__total_reports_count += 1
+            row = cursor.fetchone()
+
+    # Возвращает список из трёх чисел - число репортов за эту неделю, за прошлую и всего.
+    # Если до этого подсчёт не выполнялся, то производит его
+    def get_reports_count(self):
+        if count_battle_id(None) != self.__reports_counted_battle_id or \
+                not (self.__total_reports_count >= 0 and self.__current_reports_count >= 0 and
+                     self.__previous_reports_count >= 0):
+            self.count_reports()
+        return [self.__current_reports_count, self.__previous_reports_count, self.__total_reports_count]
 
     """
     Метод получения игрока по его id. Сначала проверяется, находится ли игрок в словаре players, то есть был ли
