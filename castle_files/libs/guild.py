@@ -116,7 +116,7 @@ class Guild:
         player_to_add.guild = self.id
         player_to_add.guild_tag = self.tag
 
-        if player_to_add.guild_history is None:
+        if player_to_add.guild_history is None or not player_to_add.guild_history:
             player_to_add.guild_history = []
             player_to_add.guild_history.append(self.id)
         elif player_to_add.guild_history[-1] != self.id:
