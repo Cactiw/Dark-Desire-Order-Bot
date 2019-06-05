@@ -95,7 +95,7 @@ def pult_send(bot, update):
     target = pult_status.get("target")
     time_to_send = pult_status.get("time")
     tactics_num = pult_status.get("tactics")
-    potions = pult.potions_active
+    potions = pult.potions_active.copy()
     if target == -1:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Необходимо выбрать цель")
         return
