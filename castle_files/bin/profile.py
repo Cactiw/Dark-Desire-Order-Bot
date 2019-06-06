@@ -42,8 +42,8 @@ def get_profile_text(player, self_request=True, user_data=None):
     response += "🔘: <code>{}</code>\n".format(player.reputation)
     if player.status is not None:
         response += "Статус: <b>{}</b>\n".format(player.status)
-    response += "🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>\n".format(player.lvl, player.attack,
-                                                                                      player.defense)
+    response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
+                "\n".format(player.lvl, player.exp or "Пожалуйста, обновите профиль", player.attack, player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:
@@ -215,6 +215,7 @@ def hero(bot, update, user_data):
     defense = int(re.search("🛡Защита: (\\d+)", text).group(1))
     stamina = int(re.search("🔋Выносливость: \\d+/(\\d+)", text).group(1))
     pet = re.search("Питомец:\n.(\\s.+\\(\\d+ lvl\\))", text)
+    exp = int(re.search("🔥Опыт: (\\d+)", text).group(1))
     last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     if pet:
         pet = pet.group(1)
@@ -266,7 +267,8 @@ def hero(bot, update, user_data):
                                                        "установите его в настройках аккаунта Telegram")
             return
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
-                        stamina, pet, player_equipment, castle=castle, last_updated=last_updated, created=last_updated)
+                        stamina, pet, player_equipment, castle=castle, last_updated=last_updated, created=last_updated,
+                        exp=exp)
         # Добавляем игрока в бд
         player.insert_into_database()
         player = player.reload_from_database()
@@ -296,6 +298,7 @@ def hero(bot, update, user_data):
         player.equipment = player_equipment
         player.castle = castle
         player.last_updated = last_updated
+        player.exp = exp
         player.update()
         bot.send_message(chat_id=mes.chat_id, text="Профиль успешно обновлён, <b>{}</b>!".format(player.nickname),
                          parse_mode='HTML')

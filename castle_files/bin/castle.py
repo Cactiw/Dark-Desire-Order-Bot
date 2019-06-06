@@ -323,8 +323,8 @@ def get_tops_text(player, stat, stat_text, game_class=None):
                       "res_count desc;".format(stat, "and game_class = '{}'"
                                                      "".format(game_class) if game_class is not None else "")
     else:
-        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' {}" \
-                  "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
+        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' and {} is not null {}" \
+                  "order by {} desc".format(stat, stat, "and game_class = '{}' ".format(game_class) if
                                             game_class is not None else "", stat)
     cursor.execute(request)
     row = cursor.fetchone()
@@ -334,8 +334,8 @@ def get_tops_text(player, stat, stat_text, game_class=None):
         num += 1
         class_icon = classes_to_emoji.get(row[2]) or '❔'
         if row[4] == player.id:
-            response_new = "<b>{}) {}</b><code>{:<3}</code><b> 🏅: {} {}{}</b> 🔻\n".format(num, stat_text, row[1],
-                                                                                          row[3], class_icon, row[0])
+            response_new = "<b>{}) {}</b><code>{:<3}</code><b> 🏅: {} {}{}</b> 🔻" \
+                           "\n".format(num, stat_text, row[1] or "???", row[3], class_icon, row[0])
             found = True
             if num <= TOP_NUM_PLAYERS:
                 response += response_new
@@ -344,7 +344,7 @@ def get_tops_text(player, stat, stat_text, game_class=None):
             response += "\n...\n" + response_old + response_new
         else:
             response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}{}" \
-                           "\n".format(num, stat_text, row[1], row[3], class_icon, row[0])
+                           "\n".format(num, stat_text, row[1] or "???", row[3], class_icon, row[0])
             if num <= TOP_NUM_PLAYERS:
                 response += response_old
             else:
@@ -360,7 +360,7 @@ def get_tops_text(player, stat, stat_text, game_class=None):
 def top_stat(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense", "🌲Дерево": "wood", "⛰Камень": "stone",
+    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense", "🔥Опыт": "exp", "🌲Дерево": "wood", "⛰Камень": "stone",
                      "🏚Стройка": "construction"}
     stat = text_to_stats.get(mes.text)
     response = get_tops_text(player, stat, mes.text[0])
@@ -369,7 +369,7 @@ def top_stat(bot, update):
 
 
 def send_new_top(bot, update):
-    stat_to_text = {"attack": "⚔️", "defense": "🛡", "wood": "🌲", "stone": "⛰", "construction": "🏚"}
+    stat_to_text = {"attack": "⚔️", "defense": "🛡", "exp": "🔥", "wood": "🌲", "stone": "⛰", "construction": "🏚"}
     mes = update.callback_query.message
     data = update.callback_query.data
     parse = re.search("top_([^_]+)_(.*)", data)

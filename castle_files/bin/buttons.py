@@ -272,6 +272,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("⚔️Атака"),
                 KeyboardButton("🛡Защита"),
+                KeyboardButton("🔥Опыт"),
             ],
             [
                 KeyboardButton("🌲Дерево"),
