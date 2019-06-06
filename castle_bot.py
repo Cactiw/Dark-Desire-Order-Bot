@@ -34,6 +34,7 @@ from castle_files.work_materials.filters.trade_union_filters import filter_trade
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
 from castle_files.bin.service_functions import cancel, fill_allowed_list
+from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl, \
     set_status, guild_history
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
@@ -150,6 +151,10 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add', add))
     dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
+
+    # Хендлеры академки
+    dispatcher.add_handler(CommandHandler('add_teacher', add_teacher))
+    dispatcher.add_handler(CommandHandler('del_teacher', del_teacher))
 
     dispatcher.add_handler(CommandHandler('d2', drop_table))
     dispatcher.add_handler(CommandHandler('d3', drop_table))
@@ -280,6 +285,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
+    dispatcher.add_handler(CommandHandler('chat_info', chat_info))
+
     dispatcher.add_handler(MessageHandler(Filters.all & ~filter_has_access & ~filter_is_merc, unknown_input,
                                           pass_user_data=True))
     # Restricted access---------------------------------------------------------------------------------------------
@@ -288,7 +295,6 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
-    dispatcher.add_handler(CommandHandler('chat_info', chat_info))
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_is_merc, unknown_input, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))

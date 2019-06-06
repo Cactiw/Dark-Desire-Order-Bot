@@ -3,9 +3,8 @@
 (например, приём и обновление /hero)
 """
 
-from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs
+from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
-from castle_files.work_materials.filters.general_filters import filter_is_merc
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -17,11 +16,10 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 import re
 import logging
+import traceback
 import datetime
 import random
 
-
-trade_divisions_access_list = [439637823, 320365073]  # Игроки, которым дал доступ к хуизу в связи с альянсами
 
 status_messages = [
     "В таверне вы слышали, как этот человек отзывался на имя <b>{}</b>",
@@ -43,7 +41,7 @@ def get_profile_text(player, self_request=True, user_data=None):
     if player.status is not None:
         response += "Статус: <b>{}</b>\n".format(player.status)
     response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
-                "\n".format(player.lvl, player.exp or "Пожалуйста, обновите профиль", player.attack, player.defense)
+                "\n".format(player.lvl, player.exp or "???", player.attack, player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:
@@ -86,6 +84,17 @@ def profile(bot, update, user_data=None):
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_profile_buttons(player))
 
 
+trade_divisions_access_list = [439637823, 320365073]  # Игроки, которым дал доступ к хуизу в связи с альянсами
+
+
+def check_whois_access(user_id):
+    try:
+        return check_access(user_id) or user_id == MERC_ID or user_id in trade_divisions_access_list or \
+               Guild.get_guild(guild_tag="АКАДЕМИЯ").check_high_access(user_id)
+    except Exception:
+        return False
+
+
 def view_profile(bot, update):
     mes = update.message
     requested_player_id = mes.from_user.id
@@ -93,8 +102,8 @@ def view_profile(bot, update):
     if requested_player is None:
         return
     guild = Guild.get_guild(guild_id=requested_player.guild)
-    if not check_access(requested_player_id) and not filter_is_merc(mes) and \
-            requested_player_id not in trade_divisions_access_list:
+    print(check_whois_access(requested_player_id))
+    if not check_whois_access(requested_player_id):
         if guild is None or not guild.check_high_access(requested_player_id):
             bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
                              reply_to_message_id=mes.message_id)
@@ -140,8 +149,7 @@ def view_profile(bot, update):
         bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(player.status),
                          parse_mode='HTML', reply_to_message_id=mes.message_id)
     buttons = get_profile_buttons(player)
-    if (player.guild is None or player.guild != requested_player.guild) and not check_access(requested_player_id) and\
-            not filter_is_merc(mes) and requested_player_id not in trade_divisions_access_list:
+    if (player.guild is None or player.guild != requested_player.guild) and not check_whois_access(requested_player_id):
         guild = Guild.get_guild(guild_id=player.guild)
         bot.send_message(chat_id=mes.from_user.id,
                          text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "

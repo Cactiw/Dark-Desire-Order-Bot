@@ -5,6 +5,7 @@
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
+from castle_files.bin.academy import change_headmaster
 from castle_files.bin.service_functions import check_access
 from castle_files.bin.reports import count_battle_id, count_battle_time
 
@@ -624,6 +625,9 @@ def change_guild_commander(bot, update, user_data):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена. Начните сначала.")
         return
     print(player.guild_tag, player.guild_tag, guild.tag)
+    if guild.tag == "АКАДЕМИЯ":
+        change_headmaster(bot, update, player, guild, user_data)
+        return
     if player.guild_tag is not None and player.guild_tag != guild.tag:
         bot.send_message(chat_id=mes.chat_id, text="Командир может командовать только своей гильдией")
 
