@@ -70,6 +70,8 @@ def back(bot, update, user_data):
         "hall_of_fame": "central_square",
         "tops": "hall_of_fame",
 
+        "manuscript": "technical_tower"
+
     }
     status = user_data.get("status")
     if status is None:

@@ -121,7 +121,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     if status is None or status == "default":
         status = "central_square"
         user_data.update({"status": status})
-    if status == "central_square":
+    if status in ["central_square"]:  # , "":
         buttons = [
             [
                 KeyboardButton(Location.get_location(1).name),
@@ -130,6 +130,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 ],
             [
                 KeyboardButton("🔭 Башня ТехМаг наук"),  # ❗
+                KeyboardButton("🏤Мандапа Славы"),
                 KeyboardButton("🏚 Стройплощадка"),
                 # KeyboardButton("🏚 Не построено"),
             ],
@@ -138,9 +139,11 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 # KeyboardButton("↩️ Назад"),
             ]
         ]
-        hall = Location.get_location(8)
+        # Стройка Мандапы Славы окончена
+        """hall = Location.get_location(8)
         if hall is not None and hall.is_constructed():
             buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
+        """
     elif status == 'barracks':
         buttons = [
             [
@@ -237,6 +240,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         buttons = [
             [
                 # KeyboardButton("🔖Обратиться к магу"),
+                KeyboardButton("📰Манускрипт"),
                 KeyboardButton("🗂Архив объявлений"),
             ],
             [
@@ -281,6 +285,22 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("🌲Дерево"),
                 KeyboardButton("⛰Камень"),
                 KeyboardButton("🏚Стройка"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'manuscript':
+        buttons = [
+            [
+                KeyboardButton("↔️Указатели"),
+                KeyboardButton("👤Игроки"),
+                KeyboardButton("👥Гильдии"),
+            ],
+            [
+                KeyboardButton("🖋Триггеры"),
+                KeyboardButton("📦Сток"),
+                KeyboardButton("🏠Профсоюзы"),
             ],
             [
                 KeyboardButton("↩️ Назад"),

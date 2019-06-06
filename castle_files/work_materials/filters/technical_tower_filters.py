@@ -15,6 +15,31 @@ class FilterTechnicalTower(BaseFilter):
 filter_technical_tower = FilterTechnicalTower()
 
 
+class FilterManuscript(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text.startswith("📰Манускрипт") and \
+            user_data.get("status") == 'technical_tower'
+
+
+filter_manuscript = FilterManuscript()
+
+
+class FilterViewManuscriptCategory(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and \
+            message.text in ["↔️Указатели", "👤Игроки", "👥Гильдии", "🖋Триггеры", "📦Сток", "🏠Профсоюзы"] and \
+            user_data.get("status") == 'manuscript'
+
+
+filter_view_manuscript_category = FilterViewManuscriptCategory()
+
+
 class FilterUpdateHistory(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
