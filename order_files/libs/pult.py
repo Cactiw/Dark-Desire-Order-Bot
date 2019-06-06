@@ -29,7 +29,8 @@ class Pult:
         self.deferred_time = deferred_time
         self.variant = variant
         Pult.pults.update({self.id: self})
-        Pult.last_pult_id = self.id
+        if not self.variant:
+            Pult.last_pult_id = self.id
 
     @staticmethod
     def get_pult(chat_id, message_id):

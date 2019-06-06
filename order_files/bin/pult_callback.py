@@ -114,6 +114,21 @@ def get_variants_markup():
     return InlineKeyboardMarkup(buttons)
 
 
+def remove_variant(bot, update):
+    mes = update.message
+    order_id = re.search("_(\\d+)", mes.text)
+    if order_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис")
+        return
+    order_id = int(order_id.group(1))
+    order = Pult.variants.get(order_id)
+    if order is None:
+        bot.send_message(chat_id=mes.chat_id, text="Вариант не найден")
+        return
+    Pult.variants.pop(order_id)
+    bot.send_message(chat_id=mes.chat_id, text="Вариант успешно удалён.")
+
+
 def pult_variants(bot, update):
     response = get_variants_text()
     buttons = get_variants_markup()
