@@ -173,9 +173,12 @@ def guild_history(bot, update):
     if player is None:
         return
     player_guild = Guild.get_guild(player.guild) if player.guild is not None else None
-    if player.id != requested_player_id and (player_guild is None or not player_guild.check_high_access(player.id)):
-        bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
-        return
+    if player.id != requested_player_id:
+        if (player_guild is None and not check_whois_access(player.id)) or \
+                (player_guild is not None and not player_guild.check_high_access(player.id)):
+            bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+            bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
+            return
     requested_player = Player.get_player(requested_player_id, notify_on_error=False)
     if requested_player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
