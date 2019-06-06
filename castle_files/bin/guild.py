@@ -26,7 +26,7 @@ MAX_MESSAGE_LENGTH = 4000
 # Создание новой гильдии
 def create_guild(bot, update):
     guild_tag = update.message.text.partition(' ')[2]
-    if len(guild_tag) <= 0 or len(guild_tag) > 3:
+    if len(guild_tag) <= 0 or len(guild_tag) > 10:
         bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис. Укажите тэг новой гильдии.")
         return
     if any(c in guild_tag for c in ['\f', '\n', '\r', '\t', '\v', ' ']):
