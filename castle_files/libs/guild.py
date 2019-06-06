@@ -189,6 +189,10 @@ class Guild:
         return guild
 
     @staticmethod
+    def get_academy():
+        return Guild.get_guild(guild_tag="АКАДЕМИЯ")
+
+    @staticmethod
     def fill_guild_ids():
         Guild.guild_ids.clear()
         request = "select guild_id from guilds order by guild_id asc"

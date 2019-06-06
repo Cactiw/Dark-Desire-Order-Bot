@@ -156,6 +156,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add_teacher', add_teacher))
     dispatcher.add_handler(CommandHandler('del_teacher', del_teacher))
 
+    dispatcher.add_handler(CommandHandler('view_academy', guild_info))
+
     dispatcher.add_handler(CommandHandler('d2', drop_table))
     dispatcher.add_handler(CommandHandler('d3', drop_table))
     dispatcher.add_handler(CommandHandler('d4', drop_table))
