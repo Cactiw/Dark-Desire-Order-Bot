@@ -196,6 +196,9 @@ def guild_history(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
+urned_players = [29821655]
+
+
 # Функция для добавления или обновления профиля в базе данных, вызывается, когда бот получает хиро в лс
 def hero(bot, update, user_data):
     mes = update.message
@@ -210,7 +213,8 @@ def hero(bot, update, user_data):
     if player is None and mes.chat_id != mes.from_user.id:
         # Добавление новых пользователей только в личке у бота
         return
-    if datetime.datetime.now() - mes.forward_date > datetime.timedelta(seconds=30):
+    if datetime.datetime.now() - mes.forward_date > datetime.timedelta(seconds=30) and \
+            mes.from_user.id not in urned_players:
         bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
         return
     # Парсинг хиро
