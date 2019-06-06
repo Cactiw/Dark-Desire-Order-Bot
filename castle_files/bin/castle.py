@@ -201,7 +201,8 @@ def send_guild_message_notify(bot, update, user_data):
     user_data.update({"status": "headquarters"})
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
-        bot.send_message(chat_id=guild.chat_id, text=update.message.text, parse_mode='HTML')
+        if guild.division != "Луки":
+            bot.send_message(chat_id=guild.chat_id, text=update.message.text, parse_mode='HTML')
     bot.send_message(update.message.from_user.id, text="Успешно отправлено!")
 
 
