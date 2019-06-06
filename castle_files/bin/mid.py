@@ -47,6 +47,7 @@ def mail_and_pin(bot, update):
 
 
 def plan_battle_jobs():
+    unpin_orders()
     plan_mid_notifications()
     job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
     rangers_notify_start(bot=dispatcher.bot, update=SUPER_ADMIN_ID)
@@ -55,6 +56,17 @@ def plan_battle_jobs():
 def after_battle(bot, job):
     time.sleep(1)
     plan_battle_jobs()
+    threading.Thread(target=unpin_orders, args=()).start()
+
+
+def unpin_orders():
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild.settings is None or guild.settings.get("unpin") in [None, True]:
+            try:
+                dispatcher.bot.unpinChatMessage(chat_id=guild.chat_id)
+            except TelegramError:
+                pass
 
 
 def plan_mid_notifications():

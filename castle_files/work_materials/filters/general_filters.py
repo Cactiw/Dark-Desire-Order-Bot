@@ -17,6 +17,8 @@ filter_is_chat_wars_forward = FilterIsChatWarsForward()
 
 class FilterIsPM(BaseFilter):
     def filter(self, message):
+        if message.from_user is None:
+            return False
         return message.chat_id == message.from_user.id
 
 

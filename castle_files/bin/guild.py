@@ -177,11 +177,19 @@ def get_guild_settings_text(guild):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw = settings.get("withdraw")
+    withdraw, unpin = settings.get("withdraw"), settings.get("unpin")
     if withdraw is None:
         withdraw = True
         settings.update({"withdraw": withdraw})
-    response += "🏷Выдача ресурсов <b>{}</b>".format("✅включена" if withdraw else "❌отключена")
+    response += "<code>{:<19}</code> <b>{}</b>\n".format("🏷Выдача ресурсов",
+                                                         "✅включена" if withdraw else "❌отключена")
+
+    if unpin is None:
+        unpin = True
+        settings.update({"unpin": unpin})
+    response += "<code>{:<19}</code> <b>{}</b>\n".format("📌Открепление пина",
+                                                         "✅включено" if unpin else "❌отключено")
+
     return response
 
 
@@ -216,9 +224,14 @@ def guild_setting(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
-def edit_guild_withdraw(bot, update):
+def edit_guild_setting(bot, update):
+    data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin"}
     mes = update.callback_query.message
     data = update.callback_query.data
+    setting = data_to_setting.get(data.partition("_")[0])
+    if setting is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+        return
     guild_id = re.search("_(\\d+)", data)
     if guild_id is None:
         bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
@@ -244,11 +257,11 @@ def edit_guild_withdraw(bot, update):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw = settings.get("withdraw")
-    if withdraw is None:
-        withdraw = True
-        settings.update({"withdraw": withdraw})
-    settings.update({"withdraw": not withdraw})
+    cur = settings.get(setting)
+    if cur is None:
+        cur = True
+        settings.update({setting: cur})
+    settings.update({setting: not cur})
     guild.update_to_database()
     response = get_guild_settings_text(guild)
     buttons = get_guild_settings_buttons(guild)

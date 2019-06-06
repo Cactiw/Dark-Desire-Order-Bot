@@ -71,6 +71,9 @@ def get_guild_settings_buttons(guild):
             InlineKeyboardButton("{} выдачу ресурсов".format("Отключить" if guild.settings is not None and
                                                                         guild.settings.get("withdraw") else "Включить"),
                                  callback_data="gswith_{}".format(guild.id)),
+            InlineKeyboardButton("{} снятие пина".format("Отключить" if guild.settings is not None and
+                                                                        guild.settings.get("unpin") else "Включить"),
+                                 callback_data="gsunpin_{}".format(guild.id)),
             ]
     ]
     return InlineKeyboardMarkup(buttons)
