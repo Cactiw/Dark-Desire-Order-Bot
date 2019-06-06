@@ -47,7 +47,6 @@ def mail_and_pin(bot, update):
 
 
 def plan_battle_jobs():
-    unpin_orders()
     plan_mid_notifications()
     job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
     rangers_notify_start(bot=dispatcher.bot, update=SUPER_ADMIN_ID)
