@@ -22,7 +22,8 @@ def mailing(bot, update):
     text = mes.text.partition("mailing ")[2]
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
-        bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
+        if guild.division != "Луки":
+            bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
     bot.send_message(update.message.chat_id, text="Успешно отправлено!", reply_to_message_id=mes.message_id)
 
 
@@ -35,6 +36,8 @@ def mail_and_pin(bot, update):
     text = mes.text.partition("mailing_pin")[2]
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
+        if guild.division == "Луки":
+            continue
         try:
             message = bot.sync_send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
             bot.pinChatMessage(chat_id=message.chat_id, message_id=message.message_id)
