@@ -125,6 +125,15 @@ def get_profile_text(player, self_request=True, user_data=None):
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
 
     r1, r2, r3 = player.get_reports_count()
+
+    try:
+        if guild is not None and guild.commander_id == player.id:
+            response += "\n<b>🎗Командир гильдии</b>\n"
+        if guild is not None and player.id in guild.assistants:
+            response += "\n<b>🎗Зам командира гильдии</b>\n"
+    except Exception:
+        logging.error(traceback.format_exc())
+
     response += "\nРепорты(эта неделя / прошлая / всего): <code>{}</code> / <code>{}</code> / <code>{}</code>" \
                 "\n".format(r1, r2, r3)
     response += "Регистрация в боте: <code>{}</code>\n".format(player.created.strftime("%d/%m/%y %H:%M:%S") if
