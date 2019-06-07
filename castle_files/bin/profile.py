@@ -40,6 +40,8 @@ class_chats_inverted = dict_invert(class_chats)
 
 
 def revoke_all_class_links(bot, update):
+    if not check_access(update.message.from_user.id):
+        return
     barracks = Location.get_location(1)
     barracks.special_info.update({"class_links": {}})
     barracks.update_location_to_database()
