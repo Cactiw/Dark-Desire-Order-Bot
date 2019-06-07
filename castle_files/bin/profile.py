@@ -3,16 +3,20 @@
 (например, приём и обновление /hero)
 """
 
-from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID
+from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
+    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
+from castle_files.libs.castle.location import Location
 
 from castle_files.bin.buttons import send_general_buttons
-from castle_files.bin.service_functions import check_access
+from castle_files.bin.service_functions import check_access, dict_invert
 from castle_files.bin.buttons import get_profile_buttons
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
+
+from telegram.error import TelegramError
 
 import re
 import logging
@@ -32,9 +36,66 @@ status_messages = [
     "Хантер?"
 ]
 
+class_chats_inverted = dict_invert(class_chats)
+
+
+def revoke_all_class_links(bot, update):
+    barracks = Location.get_location(1)
+    barracks.special_info.update({"class_links": {}})
+    barracks.update_location_to_database()
+    bot.send_message(chat_id=update.message.chat_id, text="Все ссылки сброшены!")
+
+
+def revoke_class_link(game_class):
+    chat_id = class_chats.get(game_class)
+    if chat_id is None:
+        return -1
+    barracks = Location.get_location(1)
+    class_links = barracks.special_info.get("class_links")
+    if class_links is None:
+        class_links = {}
+        barracks.special_info.update({"class_links": class_links})
+    try:
+        invite_link = dispatcher.bot.exportChatInviteLink(chat_id)
+        if invite_link is not None:
+            invite_link = invite_link[22:]  # Обрезаю https://t.me/joinchat/
+            class_links.update({game_class: invite_link})
+            barracks.update_location_to_database()
+    except TelegramError:
+        logging.error(traceback.format_exc())
+        return 1
+
+
+def class_chat_check(bot, update):
+    mes = update.message
+    if mes.new_chat_members is not None:
+        users = mes.new_chat_members
+    else:
+        users = [update.message.from_user]
+    for user in users:
+        user_id = user.id
+        player = Player.get_player(user.id)
+        if mes.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id]:
+            continue
+        if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id:
+            try:
+                cl = class_chats_inverted.get(mes.chat_id)
+                bot.kickChatMember(chat_id=mes.chat_id, user_id=user_id)
+                bot.send_message(chat_id=mes.chat_id,
+                                 text="Это чат <b>{}</b>. Он не для тебя.".format(cl), parse_mode='HTML')
+            except TelegramError:
+                return
+
 
 def get_profile_text(player, self_request=True, user_data=None):
-    response = "<b>{}</b> - Воин {}\n".format(player.nickname, "🖤Скалы" if player.castle == '🖤' else player.castle)
+    barracks = Location.get_location(1)
+    class_links = barracks.special_info.get("class_links")
+    if class_links is None:
+        class_links = {}
+        barracks.special_info.update({"class_links": class_links})
+    response = "<b>{}</b> - {} {}\n".format(player.nickname, classes_to_emoji.get(player.game_class) +
+                                            player.game_class if player.game_class is not None else "Воин",
+                                            "🖤Скалы" if player.castle == '🖤' else player.castle)
     response += "{}id: <code>{}</code>, ".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
     response += "🔘: <code>{}</code>\n".format(player.reputation)
@@ -46,6 +107,14 @@ def get_profile_text(player, self_request=True, user_data=None):
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
+        if player.game_class is not None:
+            try:
+                if class_links.get(player.game_class) is None:
+                    revoke_class_link(player.game_class)
+                invite_link = class_links.get(player.game_class)
+                response += "<a href=\"{}\">Классовый чат</a>\n".format("https://t.me/joinchat/" + invite_link)
+            except Exception:
+                logging.error(traceback.format_exc())
     response += "\nЭкипировка:\n"
     eq_list = list(player.equipment.values())
     for equipment in eq_list:
