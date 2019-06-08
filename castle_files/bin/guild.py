@@ -79,7 +79,11 @@ def guild_info(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
         return
     if 'academy' in mes.text:
+        if mes.chat_id != mes.from_user.id:
+            return
         guild = Guild.get_academy()
+        if player.id not in guild.members and player.id not in guild.assistants and player.id != guild.commander_id:
+            return
     else:
         if player.guild is None:
             bot.send_message(chat_id=mes.chat_id,
@@ -292,6 +296,10 @@ def list_players(bot, update, guild_id=None):
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
+    if guild.tag == 'АКАДЕМИЯ':
+        user_id = update.callback_query.from_user.id
+        if user_id != guild.commander_id and user_id not in guild.assistants:
+            return
     response = "Список игроков в гильдии <b>{}</b>\n".format(guild.tag)
     guild.sort_players_by_exp()
     guild.calculate_attack_and_defense()
