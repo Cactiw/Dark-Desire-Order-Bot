@@ -22,7 +22,7 @@ order_backup_queue = multiprocessing.Queue()
 
 class AsyncBot(Bot):
 
-    def __init__(self, token, workers = 4, request_kwargs = None):
+    def __init__(self, token, workers=8, request_kwargs = None):
         counter_rlock = threading.RLock()
         self.counter_lock = threading.Condition(counter_rlock)
         #self.message_queue = multiprocessing.Queue()

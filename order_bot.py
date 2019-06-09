@@ -70,7 +70,6 @@ def order_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(send_variant, pattern="var_send_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(inline_callback, pass_update_queue=False, pass_user_data=False))
 
-
     recashe_order_chats()
     refill_deferred_orders()
     # Необходимо подождать, пока другой процесс не завершит работу с локациями
@@ -78,6 +77,21 @@ def order_bot_processing():
     fill_mid_players(other_process=True)
 
     processes = []
+
+    """
+    Добавление тестовых чатов в бд
+    test_chat_ids = [-1001419462057, -1001230820040, -1001487614244, -1001477072492, -1001476724068, -1001475739761,
+                     -1001435026865, -1001430784849, -1001412038190, -1001390152554, -1001368035955, -1001348741075,
+                     -1001283912560, -1001282019466, -1001272172746, -1001236826600, -1001217590373, -1001220824226,
+                     -1001215437199, -1001196550784, -1001186436424, -1001177668090, -1001165412104, -1001159542230,
+                     -1001144095371, -1001475801291, -1001357874112, -1001468227123, -1001239921467, -1001218916668,
+                     -1001404335288, -1001230615424, -1001295507776, -1001256515324, -1001490739745, -1001263667429,
+                     -1001246220946, -1001270092742]
+    tmp_cursor = conn.cursor()
+    for i, chat_id in enumerate(test_chat_ids):
+        request = "insert into guilds(guild_tag, chat_id) values (%s, %s)"
+        tmp_cursor.execute(request, (str(i), chat_id))
+    """
 
     update_monitor = threading.Thread(target=castle_update_monitor, name="Order Database Update Monitor")
     update_monitor.start()
