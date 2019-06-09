@@ -116,7 +116,7 @@ def get_profile_text(player, self_request=True, user_data=None):
                 if class_links.get(player.game_class) is None:
                     revoke_class_link(player.game_class)
                 invite_link = class_links.get(player.game_class)
-                response += "<a href=\"{}\">Классовый чат</a>\n".format("https://t.me/joinchat/" + invite_link)
+                response += "<a href=\"{}\">\n📚Классовый чат</a>\n".format("https://t.me/joinchat/" + invite_link)
             except Exception:
                 logging.error(traceback.format_exc())
     response += "\nЭкипировка:\n"
