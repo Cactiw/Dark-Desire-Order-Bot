@@ -27,10 +27,10 @@ emoji_to_class = dict_invert(classes_to_emoji)
 def change_rp(bot, update, user_data):
     if update.message.from_user.id != update.message.chat_id:
         return
+    user_data.update({"status": DEFAULT_CASTLE_STATUS})
     rp_off = user_data.get("rp_off")
     if rp_off:
         user_data.pop("rp_off")
-        user_data.update({"status": DEFAULT_CASTLE_STATUS})
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
     user_data.update({"status": "rp_off", "rp_off": True})
@@ -70,16 +70,28 @@ def back(bot, update, user_data):
         "hall_of_fame": "central_square",
         "tops": "hall_of_fame",
 
-        "manuscript": "technical_tower"
+        "manuscript": "technical_tower",
 
     }
+
+    statuses_rp_off = {
+        "tops": DEFAULT_CASTLE_STATUS,
+
+        "manuscript": DEFAULT_CASTLE_STATUS,
+    }
+
     status = user_data.get("status")
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
     if status in ["sawmill", "quarry", "construction"]:
         bot.send_message(chat_id=update.message.from_user.id, text="Операция отменена.")
-    new_status = statuses_back.get(status)
+    rp_off = user_data.get("rp_off") or False
+    new_status = None
+    if rp_off:
+        new_status = statuses_rp_off.get(status)
+    if new_status is None:
+        new_status = statuses_back.get(status)
     new_location = Location.get_id_by_status(new_status)
     user_data.update({"status": new_status, "location_id": new_location})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)

@@ -3,7 +3,7 @@
 """
 from telegram.ext import BaseFilter
 from castle_files.work_materials.filters.general_filters import filter_is_pm
-from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, DEFAULT_CASTLE_STATUS
 from castle_files.bin.service_functions import check_access
 
 
@@ -238,7 +238,7 @@ class FilterTops(BaseFilter):
         if user_data is None:
             return False
         return filter_is_pm(message) and message.text.startswith("📈Топы") and \
-            user_data.get("status") == 'hall_of_fame'
+            user_data.get("status") in ['hall_of_fame', DEFAULT_CASTLE_STATUS, "rp_off"]
 
 
 filter_tops = FilterTops()

@@ -111,17 +111,21 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     status = user_data.get("status")
     rp_off = user_data.get("rp_off")
     buttons = None
-    if rp_off:
+    if rp_off and status in ["central_square", "rp_off"]:
         buttons = [
             [
                 KeyboardButton("👀 Профиль"),
                 KeyboardButton("👥 Гильдия"),
+            ],
+            [
+                KeyboardButton("📈Топы"),
+                KeyboardButton("📰Инструкция"),
             ]
         ]
-    if status is None or status == "default":
+    elif status is None or status == "default":
         status = "central_square"
         user_data.update({"status": status})
-    if status in ["central_square"]:  # , "":
+    elif status in ["central_square"]:  # , "":
         buttons = [
             [
                 KeyboardButton(Location.get_location(1).name),
@@ -317,7 +321,8 @@ def get_text_to_general_buttons(user_data, player=None):
     rp_off = user_data.get("rp_off")
     if location_id is None:
         user_data.update({"location_id": 0})
-    if rp_off:
+    print(rp_off, status)
+    if rp_off and status in ["central_square", "rp_off"]:
         return "Доброго времени суток!\nВыберите действие:"
     if status is None or status == "default":
         return "Вы входите в замок Скалы. Выберите, куда направиться!"
