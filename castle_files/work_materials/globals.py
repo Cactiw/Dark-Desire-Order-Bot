@@ -11,8 +11,10 @@ castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel']
 classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',
                     'Sentinel': '🛡'}
-class_chats = {'Alchemist': -1001266047716, 'Blacksmith': -1001417227000, 'Collector': -1001302539982,
-               'Ranger': -1001234986771, 'Knight': -1001488789603, 'Sentinel': -1001183827542}
+"""class_chats = {'Alchemist': -1001266047716, 'Blacksmith': -1001417227000, 'Collector': -1001302539982,
+               'Ranger': -1001234986771, 'Knight': -1001488789603, 'Sentinel': -1001183827542}"""
+class_chats = {'Alchemist': -1001438734208, 'Blacksmith': -1001164490198, 'Collector': -1001439849094,
+               'Ranger': -1001189370559, 'Knight': -1001479145097, 'Sentinel': -1001165430197}
 
 bot = AsyncBot(token=Production_castle_token, workers=8, request_kwargs=request_kwargs)
 updater = AsyncUpdater(bot=bot)
