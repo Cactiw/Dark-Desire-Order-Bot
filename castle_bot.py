@@ -189,7 +189,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
 
     # Кик из классовых чатов
-    # dispatcher.add_handler(MessageHandler(Filters.all & filter_in_class_chat, class_chat_check))
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_in_class_chat, class_chat_check))
     dispatcher.add_handler(CommandHandler('revoke_all_class_links', revoke_all_class_links))
 
     # Хендлеры для виртуального замка
