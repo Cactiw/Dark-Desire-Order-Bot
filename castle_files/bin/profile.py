@@ -182,7 +182,6 @@ def view_profile(bot, update):
     if requested_player is None:
         return
     guild = Guild.get_guild(guild_id=requested_player.guild)
-    print(check_whois_access(requested_player_id))
     if not check_whois_access(requested_player_id):
         if guild is None or not guild.check_high_access(requested_player_id):
             bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
@@ -222,8 +221,14 @@ def view_profile(bot, update):
         return
     player = Player.get_player(player_id)
     if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
-        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
-        return
+        if player is not None and player.guild is not None:
+            guild = Guild.get_guild(player.guild)
+            if guild is not None:
+                if requested_player_id in guild.assistants or requested_player_id == guild.commander_id:
+                    pass
+                else:
+                    bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+                    return
     if reply and player.status is not None:
         # Сообщение со статусом
         bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(player.status),
