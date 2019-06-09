@@ -370,15 +370,16 @@ def leave_guild(bot, update):
     if update.message is not None:
         mes = update.message
         user_id = mes.from_user.id
+        guild_id = None
     else:
         mes = update.callback_query.message
         user_id = update.callback_query.from_user.id
-    data = update.callback_query.data
-    guild_id = re.search("_(\\d+)", data)
-    if guild_id is None:
-        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
-        return
-    guild_id = int(guild_id.group(1))
+        data = update.callback_query.data
+        guild_id = re.search("_(\\d+)", data)
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+            return
+        guild_id = int(guild_id.group(1))
     player = Player.get_player(user_id)
     if player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
@@ -386,6 +387,8 @@ def leave_guild(bot, update):
     if player.guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
         return
+    if guild_id is None:
+        guild_id = player.guild
     guild = Guild.get_guild(guild_id=guild_id)
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
