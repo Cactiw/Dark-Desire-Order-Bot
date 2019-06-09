@@ -161,7 +161,8 @@ def profile(bot, update, user_data=None):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     response = get_profile_text(player, user_data=user_data)
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_profile_buttons(player))
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_profile_buttons(player),
+                     disable_web_page_preview=True)
 
 
 trade_divisions_access_list = [439637823, 320365073]  # Игроки, которым дал доступ к хуизу в связи с альянсами
