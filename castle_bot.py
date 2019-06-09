@@ -179,6 +179,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
     dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
 
+    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
+
     # Хендлеры для чата гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_list, notify_guild_attack))
     dispatcher.add_handler(CommandHandler('notify_guild_sleeping', notify_guild_to_battle))
@@ -290,8 +292,6 @@ def castle_bot_processing():
     # Хендлеры далее специально ниже всех остальных, ибо невозможно проверять статус на эту исполнение этих команд
     dispatcher.add_handler(MessageHandler(Filters.text & filter_castle_gates, castle_gates, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_central_square, central_square, pass_user_data=True))
-
-    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
     dispatcher.add_handler(CommandHandler('chat_info', chat_info))
 
