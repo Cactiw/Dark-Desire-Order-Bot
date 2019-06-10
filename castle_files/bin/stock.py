@@ -150,6 +150,7 @@ def deposit(bot, update):
     mes = update.message
     response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
     for string in mes.text.splitlines():
+        # parse = re.search("/aa_(\\d+)", string)
         parse = re.search("/lot_(\\S+) (.*) \\((\\d+)\\)", string)
         if parse is not None:
             # Кинут аукцион

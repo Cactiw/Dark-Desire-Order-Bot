@@ -4,7 +4,7 @@
 from telegram.ext import BaseFilter
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_is_chat_wars_forward
 
-from castle_files.work_materials.resource_constants import resources_reverted
+from castle_files.work_materials.resource_constants import resources_reverted, resources
 
 import re
 
@@ -78,3 +78,16 @@ class FilterPlayerMisc(BaseFilter):
 
 
 filter_player_misc = FilterPlayerMisc()
+
+
+# Сообщение - форвард доступных вещей для продажи с аука из чв3 и в личке
+class FilterPlayerAlch(BaseFilter):
+    def filter(self, message):
+        try:
+            return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+                   message.text.splitlines()[0].partition(" (")[0] in list(resources)
+        except Exception:
+            return False
+
+
+filter_player_alch = FilterPlayerAlch()
