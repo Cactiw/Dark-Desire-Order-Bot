@@ -103,7 +103,9 @@ def get_profile_text(player, self_request=True, user_data=None):
                                             "🖤Скалы" if player.castle == '🖤' else player.castle)
     response += "{}id: <code>{}</code>, ".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
-    response += "🔘: <code>{}</code>\n".format(player.reputation)
+    if user_data is None:
+        user_data = dispatcher.user_data.get(player.id)
+    response += "🔘: <code>{}</code>\n".format(player.reputation) if not user_data.get("rp_off") else "\n"
     if player.status is not None:
         response += "Статус: <b>{}</b>\n".format(player.status)
     response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
@@ -247,6 +249,7 @@ def view_profile(bot, update):
                                                  "как вольный наёмник (без гильдии)"),
                          parse_mode='HTML', reply_markup=buttons)
         return
+    buttons = get_profile_buttons(player, whois_access=True)
     response = get_profile_text(player, self_request=False)
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
 
@@ -287,6 +290,10 @@ def guild_history(bot, update):
                     "\n".format(i + 1, guild.tag, commander.nickname, commander.username)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def reports_history(bot, update):
+    pass
 
 
 urned_players = [29821655]

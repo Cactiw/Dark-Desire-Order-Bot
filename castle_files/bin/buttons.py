@@ -9,12 +9,15 @@ from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 
-def get_profile_buttons(player):
+def get_profile_buttons(player, whois_access=False):
     buttons = [
         [
             InlineKeyboardButton("История гильдий", callback_data="pr_guild_history_{}".format(player.id)),
         ],
     ]
+    if whois_access:
+        buttons[0].append(InlineKeyboardButton("Репорты",
+                                               callback_data="pr_reports_history_{}".format(player.id)),)
     return InlineKeyboardMarkup(buttons)
 
 
@@ -286,18 +289,18 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("🔥Опыт"),
             ],
             [
-                KeyboardButton("🌲Дерево"),
-                KeyboardButton("⛰Камень"),
-                KeyboardButton("🏚Стройка"),
-            ],
-            [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+        if not rp_off:
+            buttons.insert(1, [
+                KeyboardButton("🌲Дерево"),
+                KeyboardButton("⛰Камень"),
+                KeyboardButton("🏚Стройка"),
+            ])
     elif status == 'manuscript':
         buttons = [
             [
-                KeyboardButton("↔️Указатели"),
                 KeyboardButton("👤Игроки"),
                 KeyboardButton("👥Гильдии"),
             ],
@@ -310,6 +313,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+        if not rp_off:
+            buttons[0].insert(0, KeyboardButton("↔️Указатели"))
     if only_buttons or buttons is None:
         return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
