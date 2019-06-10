@@ -18,7 +18,7 @@ def count_battle_time(battle_id):
     return target_battle
 
 
-def add_report(bot, update):
+def add_report(bot, update, user_data):
     mes = update.message
     s = mes.text
     player = Player.get_player(mes.from_user.id)
@@ -78,8 +78,9 @@ def add_report(bot, update):
 
     player.reputation += reputation
     player.update()
-    bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!\nПолучено "
-                                                    "{}🔘!".format(reputation))
+    response = "Репорт учтён. Спасибо!\n" \
+               "{}".format("Получено {}🔘!".format(reputation) if not user_data.get("rp_off") else "")
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"

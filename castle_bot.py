@@ -123,7 +123,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
 
     # Приём репортов
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile, pass_user_data=True))
 
