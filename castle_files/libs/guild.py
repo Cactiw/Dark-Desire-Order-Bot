@@ -203,7 +203,7 @@ class Guild:
             row = cursor.fetchone()
 
     # Метод для обновления информации о гильдии в БД
-    def update_to_database(self):
+    def update_to_database(self, need_order_recashe=True):
         request = "update guilds set guild_name = %s, members = %s, commander_id = %s, division = %s, chat_id = %s, " \
                   "chat_name = %s, invite_link = %s, orders_enabled = %s, pin_enabled = %s,disable_notification = %s, " \
                   "assistants = %s, settings = %s where guild_tag = %s"
@@ -214,7 +214,8 @@ class Guild:
         except Exception:
             logging.error(traceback.format_exc())
             return -1
-        update_request_queue.put(["update_guild", self.id])
+        if need_order_recashe:
+            update_request_queue.put(["update_guild", self.id])
         return 0
 
     def create_guild(self):

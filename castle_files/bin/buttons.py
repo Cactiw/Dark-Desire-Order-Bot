@@ -72,12 +72,17 @@ def get_guild_settings_buttons(guild):
     buttons = [
         [
             InlineKeyboardButton("{} выдачу ресурсов".format("Отключить" if guild.settings is not None and
-                                                                        guild.settings.get("withdraw") else "Включить"),
+                                                             guild.settings.get("withdraw") else "Включить"),
                                  callback_data="gswith_{}".format(guild.id)),
             InlineKeyboardButton("{} снятие пина".format("Отключить" if guild.settings is not None and
-                                                                        guild.settings.get("unpin") else "Включить"),
+                                                         guild.settings.get("unpin") else "Включить"),
                                  callback_data="gsunpin_{}".format(guild.id)),
-            ]
+        ],
+        [
+            InlineKeyboardButton("{} напоминалку в 12".format("Отключить" if guild.settings is not None and
+                                                              guild.settings.get("arena_notify") else "Включить"),
+                                 callback_data="gsarenanotify_{}".format(guild.id)),
+        ]
     ]
     return InlineKeyboardMarkup(buttons)
 
@@ -105,6 +110,15 @@ def get_tops_buttons(stat, curr='all'):
             InlineKeyboardButton("{}🛡".format('✅' if curr == '🛡' else ""), callback_data="top_{}_🛡".format(stat)),
         ]
     ]
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_vote_buttons(vote, choice=None):
+    buttons = []
+    for i, var in enumerate(vote.variants):
+        buttons.append([InlineKeyboardButton(text=var, callback_data="vote_{}_{}".format(vote.id, i))])
+    if choice is not None:
+        buttons[choice][0].text = '✅' + buttons[choice][0].text
     return InlineKeyboardMarkup(buttons)
 
 

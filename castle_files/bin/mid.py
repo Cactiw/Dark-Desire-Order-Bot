@@ -68,6 +68,26 @@ def unpin_orders():
                 pass
 
 
+def plan_arena_notify():
+    time_to_send = datetime.time(hour=12, minute=0, second=0)
+    time_now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
+    day_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).date()
+    date_to_send = datetime.datetime.combine(day_to_send, datetime.time(hour=0))
+    if time_to_send < time_now:
+        date_to_send += datetime.timedelta(days=1)
+    date_to_send = date_to_send.date()
+    send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
+    send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
+    job.run_once(arena_notify, when=send_time, context=[])
+
+
+def arena_notify(bot, job):
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild.settings is None or guild.settings.get("arena_notify") in [None, True]:
+            bot.send_message(chat_id=guild.chat_id, text="Через час обнуление арен и дневного лимита опыта за крафт.")
+
+
 def plan_mid_notifications():
     time_before_battle_to_notify = [
         datetime.timedelta(minutes=2),

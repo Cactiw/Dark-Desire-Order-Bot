@@ -189,7 +189,7 @@ def get_guild_settings_text(guild):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw, unpin = settings.get("withdraw"), settings.get("unpin")
+    withdraw, unpin, arena_notify = settings.get("withdraw"), settings.get("unpin"), settings.get("arena_notify")
     if withdraw is None:
         withdraw = True
         settings.update({"withdraw": withdraw})
@@ -201,6 +201,12 @@ def get_guild_settings_text(guild):
         settings.update({"unpin": unpin})
     response += "<code>{:<19}</code> <b>{}</b>\n".format("📌Открепление пина",
                                                          "✅включено" if unpin else "❌отключено")
+
+    if arena_notify is None:
+        arena_notify = True
+        settings.update({"arena_notify": arena_notify})
+    response += "<code>{:<19}</code> <b>{}</b>\n".format("📌Напоминалка в 12",
+                                                         "✅включена" if arena_notify else "❌отключена")
 
     return response
 
@@ -237,7 +243,7 @@ def guild_setting(bot, update):
 
 
 def edit_guild_setting(bot, update):
-    data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin"}
+    data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin", "gsarenanotify": "arena_notify"}
     mes = update.callback_query.message
     data = update.callback_query.data
     setting = data_to_setting.get(data.partition("_")[0])
@@ -274,7 +280,7 @@ def edit_guild_setting(bot, update):
         cur = True
         settings.update({setting: cur})
     settings.update({setting: not cur})
-    guild.update_to_database()
+    guild.update_to_database(need_order_recashe=False)
     response = get_guild_settings_text(guild)
     buttons = get_guild_settings_buttons(guild)
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, reply_markup=buttons,
