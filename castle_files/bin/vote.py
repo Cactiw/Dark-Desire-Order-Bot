@@ -12,6 +12,7 @@ from castle_files.libs.vote import Vote
 from telegram.error import TelegramError, BadRequest
 
 import datetime
+import json
 import re
 
 
@@ -54,9 +55,10 @@ def finish_vote(bot, update, user_data):
     name, variants, text = user_data.get("vote_name"), user_data.get("vote_variants"), user_data.get("vote_text")
     if not all([name, variants, text]):
         bot.send_message(chat_id=mes.chat_id, text="Все этапы должны быть заполнены перед запуском голосования")
-    choices = []
+    choices = {}
     for i in range(len(variants)):
-        choices.append([0])
+        choices.update({i: []})
+    choices = json.dumps(choices)
     request = "insert into votes(name, text, variants, choices) VALUES (%s, %s, %s, %s) returning id"
     cursor.execute(request, (name, text, variants, choices))
     row = cursor.fetchone()
@@ -246,11 +248,7 @@ def set_vote_variant(bot, update):
     for ch in vote.choices:
         if player.id in ch:
             ch.remove(player.id)
-            if not ch:
-                ch.append(0)
     vote.choices[variant].append(player.id)
-    if 0 in vote.choices[variant]:
-        vote.choices[variant].remove(0)
     vote.update()
     choice = None
     for i, ch in enumerate(vote.choices):

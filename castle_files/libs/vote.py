@@ -4,6 +4,8 @@
 
 from castle_files.work_materials.globals import conn
 
+import json
+
 cursor = conn.cursor()
 
 
@@ -26,11 +28,15 @@ class Vote:
         if row is None:
             return None
         name, text, variants, choices, started, duration = row
-        return Vote(vote_id, name, text, variants, choices, started=started, duration=duration)
+        return Vote(vote_id, name, text, variants, choices=list(choices.values()), started=started, duration=duration)
 
     def update(self):
         request = "update votes set name = %s, text = %s, variants = %s, choices = %s, started = %s, duration = %s " \
                   "where id = %s"
-        cursor.execute(request, (self.name, self.text, self.variants, self.choices, self.started, self.duration,
+        choices = {}
+        for i, ch in enumerate(self.choices):
+            choices.update({i: ch})
+        choices = json.dumps(choices)
+        cursor.execute(request, (self.name, self.text, self.variants, choices, self.started, self.duration,
                                  self.id))
 
