@@ -97,6 +97,14 @@ def guild_info(bot, update):
     commander = Player.get_player(guild.commander_id)
     response = "[<b>{}</b>]  {}\n".format(guild.tag, guild.name or "")
     response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
+    if guild.invite_link is None:
+        try:
+            guild.invite_link = bot.exportChatInviteLink(guild.chat_id)
+            if guild.invite_link is not None:
+                guild.invite_link = guild.invite_link[22:]  # Обрезаю https://t.me/joinchat/
+                guild.update_to_database()
+        except TelegramError:
+            pass
     response += "Чат отряда: {}, id: {}" \
                 "\n{}\n".format(guild.chat_name or "Не задан",
                                 "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
