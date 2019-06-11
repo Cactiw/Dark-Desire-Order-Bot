@@ -3,6 +3,7 @@
 """
 from castle_files.work_materials.item_consts import items
 from castle_files.work_materials.resource_constants import resources, resources_reverted
+from castle_files.work_materials.equipment_constants import equipment_names
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -45,6 +46,9 @@ def send_withdraw(bot, update):
                 mode = "quantity"
                 potions = potions_dict.get(string)
                 if potions is None:
+                    if string not in list(resources) and string not in list(equipment_names) and string not in \
+                            list(resources_reverted) and re.match("[rk]\\d\\d?", string) is None:
+                        continue
                     names = [string]  # Список из имён, к которым далее следует количество для выдачи
                     give.update({string: 1})
                 else:
