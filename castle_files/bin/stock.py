@@ -4,6 +4,7 @@
 from castle_files.work_materials.item_consts import items
 from castle_files.work_materials.resource_constants import resources, resources_reverted
 from castle_files.work_materials.equipment_constants import equipment_names
+from castle_files.work_materials.alch_constants import alch_recipes
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -186,6 +187,35 @@ def withdraw_resources(bot, update, user_data):
     if res_already_counted > 0:
         response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+# Скинут /alch, выводит банки, которые можно скрафтить
+def alch_possible_craft(bot, update):
+    mes = update.message
+    alch = {}
+    for string in mes.text.splitlines()[1:]:
+        parse = re.search("/aa_(\\d+) .* x (\\d+)", string)
+        if parse is None:
+            continue
+        code = parse.group(1)
+        count = int(parse.group(2))
+        res = resources_reverted.get(code)
+        alch.update({res.lower(): count})
+    response = "Зелья и травы, которые можно скрафтить:\n"
+    for name, potion in list(alch_recipes.items()):
+        code = potion.get("code")
+        recipe = potion.get("recipe")
+        craft_count = 999999999
+        for item, count in list(recipe.items()):
+            has = alch.get(item) or 0
+            can_craft = has // int(count)
+            if can_craft < craft_count:
+                craft_count = can_craft
+        if craft_count > 0:
+            response += "<a href=\"https://t.me/share/url?url={}\">{} ({})</a>" \
+                       "\n".format("/brew_{} {}".format(code, craft_count), name, craft_count)
+    response += "\n<em>Нажмите на название, чтобы переслать в бота.</em>"
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def deposit(bot, update):
