@@ -9,7 +9,7 @@ from castle_files.work_materials.filters.trigger_filters import filter_is_trigge
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
     filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction, \
-    filter_player_misc, filter_player_alch, filter_give_resource
+    filter_player_misc, filter_player_alch, filter_give_resource, filter_player_alch_craft
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
@@ -44,7 +44,7 @@ from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, plan_ar
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
-    deposit
+    deposit, alch_possible_craft
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -141,6 +141,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('set_withdraw_res', set_withdraw_res, pass_user_data=True, pass_args=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_resources, withdraw_resources,
                                           pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_alch_craft, alch_possible_craft))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_stock_resources, deposit))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_auction, deposit))
