@@ -13,6 +13,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.bin.buttons import send_general_buttons
 from castle_files.bin.service_functions import check_access, dict_invert
 from castle_files.bin.buttons import get_profile_buttons
+from castle_files.bin.reports import count_battle_time
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -166,8 +167,8 @@ def profile(bot, update, user_data=None):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     response = get_profile_text(player, user_data=user_data)
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_profile_buttons(player),
-                     disable_web_page_preview=True)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML',
+                     reply_markup=get_profile_buttons(player, whois_access=True), disable_web_page_preview=True)
 
 
 trade_divisions_access_list = [439637823, 320365073, 334443202, 407981701]
@@ -293,7 +294,38 @@ def guild_history(bot, update):
 
 
 def reports_history(bot, update):
-    pass
+    data = update.callback_query.data
+    mes = update.callback_query.message
+    player = Player.get_player(player_id=update.callback_query.from_user.id)
+    if player is None:
+        return
+
+    requested_player_id = re.search("_(\\d+)", data)
+    if requested_player_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Попробуйте вызвать сообщение заного.")
+        return
+    requested_player_id = int(requested_player_id.group(1))
+
+    requested_player = Player.get_player(requested_player_id, notify_on_error=False)
+    if requested_player is None:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+        return
+    if not check_whois_access(player.id) and (requested_player.guild is None or requested_player.guild != player.guild):
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+        bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
+        return
+    response = "Отчёты по последним битвам <b>{}</b>\n".format(requested_player.nickname)
+    request = "select battle_id, attack, defense, exp, gold, stock from reports where player_id = %s limit 30"
+    cursor.execute(request, (requested_player.id,))
+    row = cursor.fetchone()
+    while row is not None:
+        response += "🕒{} ⚔️: <code>{:<3}</code>, 🛡: <code>{:<3}</code>, 🔥:<code>{:<4}</code>, 💰: <code>{:<3}</code>, " \
+                    "📦: <code>{:<3}</code>" \
+                    "\n".format(count_battle_time(row[0]).strftime("%H:%M %d/%m"), row[1], row[2], row[3], row[4],
+                                row[5])
+        row = cursor.fetchone()
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 urned_players = [29821655]

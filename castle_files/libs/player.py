@@ -53,7 +53,7 @@ class Player:
     # Метод для подсчёта количества репортов за эту, прошлую неделю и всего
     def count_reports(self):
         self.__current_reports_count, self.__previous_reports_count, self.__total_reports_count = 0, 0, 0
-        request = "select battle_id from reports where player_id = %s"
+        request = "select battle_id from reports where player_id = %s and exp != 0"
         cursor.execute(request, (self.id,))
         row = cursor.fetchone()
         self.__reports_counted_battle_id = count_battle_id(None)
