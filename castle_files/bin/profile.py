@@ -115,14 +115,14 @@ def get_profile_text(player, self_request=True, user_data=None):
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
-        if player.game_class is not None and player.castle == '🖤':
-            try:
-                if class_links.get(player.game_class) is None:
-                    revoke_class_link(player.game_class)
-                invite_link = class_links.get(player.game_class)
-                response += "<a href=\"{}\">\n📚Классовый чат</a>\n".format("https://t.me/joinchat/" + invite_link)
-            except Exception:
-                logging.error(traceback.format_exc())
+    if player.game_class is not None and player.castle == '🖤':
+        try:
+            if class_links.get(player.game_class) is None:
+                revoke_class_link(player.game_class)
+            invite_link = class_links.get(player.game_class)
+            response += "<a href=\"{}\">\n📚Классовый чат</a>\n".format("https://t.me/joinchat/" + invite_link)
+        except Exception:
+            logging.error(traceback.format_exc())
     response += "\nЭкипировка:\n"
     eq_list = list(player.equipment.values())
     for equipment in eq_list:
