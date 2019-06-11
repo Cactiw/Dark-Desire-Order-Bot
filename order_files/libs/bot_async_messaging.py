@@ -59,23 +59,17 @@ class AsyncBot(Bot):
         lock.acquire()
         try:
             while True:
-                lock.acquire()
                 messages_per_current_chat = self.messages_per_chat.get(chat_id)
                 if messages_per_current_chat is None:
                     messages_per_current_chat = 0
                 if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT and messages_per_current_chat < MESSAGE_PER_CHAT_LIMIT:
                     self.messages_per_second += 1
-                    self.messages_per_chat.update({chat_id : messages_per_current_chat + 1})
+                    self.messages_per_chat.update({chat_id: messages_per_current_chat + 1})
                     lock.release()
                     break
-                lock.release()
                 lock.wait()
-        finally:
-            try:
-                lock.release()
-            except RuntimeError:
-                logging.error(traceback.format_exc())
-                pass
+        except Exception:
+            logging.error(traceback.format_exc())
         message = None
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)
@@ -164,8 +158,10 @@ class AsyncBot(Bot):
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
             reply_markup = order_in_queue.reply_markup
+            print("trying to send message", time.time())
             message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
                                                  reply_markup=reply_markup)
+            print("message sent", time.time())
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass
@@ -175,6 +171,7 @@ class AsyncBot(Bot):
             else:
                 if pin:
                     try:
+                        print("trying to pin message", time.time())
                         super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id,
                                                              disable_notification=not notification)
                     except Unauthorized:
@@ -183,6 +180,7 @@ class AsyncBot(Bot):
                     except BadRequest:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
+            print("message pinned", time.time())
             OK = response == ""
             order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
             order_backup_queue.put(order_backup)
