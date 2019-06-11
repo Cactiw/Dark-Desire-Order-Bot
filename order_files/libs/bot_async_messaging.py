@@ -74,6 +74,7 @@ class AsyncBot(Bot):
             try:
                 lock.release()
             except RuntimeError:
+                logging.error(traceback.format_exc())
                 pass
         message = None
         try:
@@ -88,9 +89,13 @@ class AsyncBot(Bot):
             release.start()
             return BADREQUEST_ERROR_CODE
         except TimedOut:
+            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
+            release.start()
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except NetworkError:
+            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
+            release.start()
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
