@@ -91,3 +91,12 @@ class FilterPlayerAlch(BaseFilter):
 
 
 filter_player_alch = FilterPlayerAlch()
+
+
+# Дай x y
+class FilterGiveResource(BaseFilter):
+    def filter(self, message):
+        return message.text.lower().startswith("дай")
+
+
+filter_give_resource = FilterGiveResource()

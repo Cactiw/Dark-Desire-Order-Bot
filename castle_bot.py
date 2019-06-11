@@ -9,7 +9,7 @@ from castle_files.work_materials.filters.trigger_filters import filter_is_trigge
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
     filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction, \
-    filter_player_misc, filter_player_alch
+    filter_player_misc, filter_player_alch, filter_give_resource
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
@@ -196,6 +196,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('ro', mute, pass_args=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_give_resource, send_withdraw))
 
     # Кик из классовых чатов
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_class_chat, class_chat_check))

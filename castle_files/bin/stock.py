@@ -12,33 +12,71 @@ import re
 
 
 def send_withdraw(bot, update):
+    mes = update.message
     response = "/g_withdraw "
+    give = {}
     res_count = 0
     player = Player.get_player(update.message.from_user.id)
     if player is None:
         return
-    if player.guild is not None:
-        guild = Guild.get_guild(guild_id=player.guild)
-        if guild.settings is not None:
-            if guild.settings.get("withdraw") is False:
-                return
-    for string in update.message.text.splitlines():
-        parse = re.search("(\\d+) x ([^\n$]+)", string)
-        if parse is None:
-            continue
-        count = int(parse.group(1))
-        name = parse.group(2)
-        code = resources.get(name)
-        if code is None:
-            for num, elem in list(items.items()):
-                if name == elem[1]:
-                    code = "k" + num
-                elif elem[0] in name:
-                    code = "r" + num
+    if "дай" in mes.text.lower():
+        # Выдача ресурсов по Дай x y
+        potions_dict = {
+            "фр": ["p01", "p02", "p03"], "фд": ["p04", "p05", "p06"], "грид": ["p07, p08, p09"],
+            "натуру": ["p10", "p11", "p12"], "ману": ["p13, p14, p15"], "твайлайт": ["p16", "p17", "p18"],
+            "морф": ["p19", "p20", "p21"]}
+        parse = mes.text.lower().split()[1:]
+        mode = "name"
+        names = []
+        for string in parse:
+            if mode == "quantity":
+                mode = "name"
+                try:
+                    quantity = int(string)
+                    if not names:
+                        continue
+                    for name in names:
+                        give.update({name: quantity})
+                except ValueError:
+                    pass
                 else:
                     continue
-        if code is None:
-            continue
+            if mode == "name":
+                mode = "quantity"
+                potions = potions_dict.get(string)
+                if potions is None:
+                    names = [string]  # Список из имён, к которым далее следует количество для выдачи
+                    give.update({string: 1})
+                else:
+                    names = []
+                    for p in potions:
+                        give.update({p: 1})
+                        names.append(p)
+    else:
+        if player.guild is not None:
+            guild = Guild.get_guild(guild_id=player.guild)
+            if guild.settings is not None:
+                if guild.settings.get("withdraw") is False:
+                    return
+        for string in update.message.text.splitlines():
+            parse = re.search("(\\d+) x ([^\n$]+)", string)
+            if parse is None:
+                continue
+            count = int(parse.group(1))
+            name = parse.group(2)
+            code = resources.get(name)
+            if code is None:
+                for num, elem in list(items.items()):
+                    if name == elem[1]:
+                        code = "k" + num
+                    elif elem[0] in name:
+                        code = "r" + num
+                    else:
+                        continue
+            if code is None:
+                continue
+            give.update({code: count})
+    for code, count in list(give.items()):
         response += "{} {} ".format(code, count)
         res_count += 1
         if res_count >= 8:
