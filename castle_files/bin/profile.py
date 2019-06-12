@@ -316,7 +316,8 @@ def reports_history(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
         return
     response = "Отчёты по последним битвам <b>{}</b>:\n".format(requested_player.nickname)
-    request = "select battle_id, attack, defense, exp, gold, stock from reports where player_id = %s limit 30"
+    request = "select battle_id, attack, defense, exp, gold, stock from reports where player_id = %s order by " \
+              "battle_id desc limit 30"
     cursor.execute(request, (requested_player.id,))
     row = cursor.fetchone()
     while row is not None:
