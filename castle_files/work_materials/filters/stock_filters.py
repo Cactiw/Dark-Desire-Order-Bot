@@ -80,7 +80,7 @@ class FilterPlayerMisc(BaseFilter):
 filter_player_misc = FilterPlayerMisc()
 
 
-# Сообщение - форвард доступных вещей для продажи с аука из чв3 и в личке
+# Сообщение - форвард алхимии из чв3 и в личке
 class FilterPlayerAlch(BaseFilter):
     def filter(self, message):
         try:
@@ -91,3 +91,25 @@ class FilterPlayerAlch(BaseFilter):
 
 
 filter_player_alch = FilterPlayerAlch()
+
+
+# Сообщение - форвард /alch из чв3 и в личке
+class FilterPlayerAlchCraft(BaseFilter):
+    def filter(self, message):
+        try:
+            return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+                   message.text.startswith("📦Склад:") and message.text.splitlines()[1].startswith("/aa_")
+        except Exception:
+            return False
+
+
+filter_player_alch_craft = FilterPlayerAlchCraft()
+
+
+# Дай x y
+class FilterGiveResource(BaseFilter):
+    def filter(self, message):
+        return message.text.lower().startswith("дай ")
+
+
+filter_give_resource = FilterGiveResource()

@@ -22,6 +22,8 @@ filter_chat_allowed = FilterInAllowedChat()
 
 class FilterSuperAdmin(BaseFilter):
     def filter(self, message):
+        if message.from_user is None:
+            return False
         return message.from_user.id == admin_ids[0]
 
 

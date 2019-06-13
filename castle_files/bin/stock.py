@@ -3,6 +3,8 @@
 """
 from castle_files.work_materials.item_consts import items
 from castle_files.work_materials.resource_constants import resources, resources_reverted
+from castle_files.work_materials.equipment_constants import equipment_names
+from castle_files.work_materials.alch_constants import alch_recipes
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -12,33 +14,74 @@ import re
 
 
 def send_withdraw(bot, update):
+    mes = update.message
     response = "/g_withdraw "
+    give = {}
     res_count = 0
     player = Player.get_player(update.message.from_user.id)
     if player is None:
         return
-    if player.guild is not None:
-        guild = Guild.get_guild(guild_id=player.guild)
-        if guild.settings is not None:
-            if guild.settings.get("withdraw") is False:
-                return
-    for string in update.message.text.splitlines():
-        parse = re.search("(\\d+) x ([^\n$]+)", string)
-        if parse is None:
-            continue
-        count = int(parse.group(1))
-        name = parse.group(2)
-        code = resources.get(name)
-        if code is None:
-            for num, elem in list(items.items()):
-                if name == elem[1]:
-                    code = "k" + num
-                elif elem[0] in name:
-                    code = "r" + num
+    if "дай" in mes.text.lower():
+        # Выдача ресурсов по Дай x y
+        potions_dict = {
+            "фр": ["p01", "p02", "p03"], "фд": ["p04", "p05", "p06"], "грид": ["p07, p08, p09"],
+            "натуру": ["p10", "p11", "p12"], "ману": ["p13, p14, p15"], "твайлайт": ["p16", "p17", "p18"],
+            "морф": ["p19", "p20", "p21"]}
+        parse = mes.text.lower().split()[1:]
+        mode = "name"
+        names = []
+        for string in parse:
+            if mode == "quantity":
+                mode = "name"
+                try:
+                    quantity = int(string)
+                    if not names:
+                        continue
+                    for name in names:
+                        give.update({name: quantity})
+                except ValueError:
+                    pass
                 else:
                     continue
-        if code is None:
-            continue
+            if mode == "name":
+                mode = "quantity"
+                potions = potions_dict.get(string)
+                if potions is None:
+                    if string not in list(resources) and string not in list(equipment_names) and string not in \
+                            list(resources_reverted) and re.match("[rk]\\d\\d?", string) is None:
+                        continue
+                    names = [string]  # Список из имён, к которым далее следует количество для выдачи
+                    give.update({string: 1})
+                else:
+                    names = []
+                    for p in potions:
+                        give.update({p: 1})
+                        names.append(p)
+    else:
+        if player.guild is not None:
+            guild = Guild.get_guild(guild_id=player.guild)
+            if guild.settings is not None:
+                if guild.settings.get("withdraw") is False:
+                    return
+        for string in update.message.text.splitlines():
+            parse = re.search("(\\d+) x ([^\n$]+)", string)
+            if parse is None:
+                continue
+            count = int(parse.group(1))
+            name = parse.group(2)
+            code = resources.get(name)
+            if code is None:
+                for num, elem in list(items.items()):
+                    if name == elem[1]:
+                        code = "k" + num
+                    elif elem[0] in name:
+                        code = "r" + num
+                    else:
+                        continue
+            if code is None:
+                continue
+            give.update({code: count})
+    for code, count in list(give.items()):
         response += "{} {} ".format(code, count)
         res_count += 1
         if res_count >= 8:
@@ -144,6 +187,35 @@ def withdraw_resources(bot, update, user_data):
     if res_already_counted > 0:
         response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+# Скинут /alch, выводит банки, которые можно скрафтить
+def alch_possible_craft(bot, update):
+    mes = update.message
+    alch = {}
+    for string in mes.text.splitlines()[1:]:
+        parse = re.search("/aa_(\\d+) .* x (\\d+)", string)
+        if parse is None:
+            continue
+        code = parse.group(1)
+        count = int(parse.group(2))
+        res = resources_reverted.get(code)
+        alch.update({res.lower(): count})
+    response = "Зелья и травы, которые можно скрафтить:\n"
+    for name, potion in list(alch_recipes.items()):
+        code = potion.get("code")
+        recipe = potion.get("recipe")
+        craft_count = 999999999
+        for item, count in list(recipe.items()):
+            has = alch.get(item) or 0
+            can_craft = has // int(count)
+            if can_craft < craft_count:
+                craft_count = can_craft
+        if craft_count > 0:
+            response += "<a href=\"https://t.me/share/url?url={}\">{} ({})</a>" \
+                       "\n".format("/brew_{} {}".format(code, craft_count), name, craft_count)
+    response += "\n<em>Нажмите на название, чтобы переслать в бота.</em>"
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def deposit(bot, update):

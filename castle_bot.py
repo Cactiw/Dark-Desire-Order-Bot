@@ -9,7 +9,7 @@ from castle_files.work_materials.filters.trigger_filters import filter_is_trigge
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
     filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction, \
-    filter_player_misc, filter_player_alch
+    filter_player_misc, filter_player_alch, filter_give_resource, filter_player_alch_craft
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, filter_delete_guild
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
@@ -39,12 +39,12 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
-    set_status, guild_history, revoke_all_class_links, class_chat_check
+    set_status, guild_history, revoke_all_class_links, class_chat_check, reports_history
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, plan_arena_notify
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
-    deposit
+    deposit, alch_possible_craft
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -142,6 +142,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_resources, withdraw_resources,
                                           pass_user_data=True))
 
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_alch_craft, alch_possible_craft))
+
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_stock_resources, deposit))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_auction, deposit))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_misc, deposit))
@@ -196,6 +198,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('ro', mute, pass_args=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_give_resource, send_withdraw))
 
     # Кик из классовых чатов
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_class_chat, class_chat_check))
@@ -355,6 +358,7 @@ def castle_bot_processing():
 
     # Хендлеры для инлайн кнопок профиля
     dispatcher.add_handler(CallbackQueryHandler(guild_history, pattern="pr_guild_history_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(reports_history, pattern="pr_reports_history_\\d+"))
 
     # Хендлеры для инлайн кнопок гильдий
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
