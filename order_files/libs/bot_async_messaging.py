@@ -66,7 +66,6 @@ class AsyncBot(Bot):
                 # logging.info("woke up")
         finally:
             pass
-
         message = None
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
         release.start()
@@ -151,7 +150,6 @@ class AsyncBot(Bot):
             message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
                                                  reply_markup=reply_markup)
             # logging.info("worker {}, message sent".format(num))
-
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass
@@ -161,7 +159,6 @@ class AsyncBot(Bot):
             else:
                 if pin:
                     try:
-                        print("trying to pin message", time.time())
                         super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id,
                                                              disable_notification=not notification)
                     except Unauthorized:
@@ -170,7 +167,6 @@ class AsyncBot(Bot):
                     except BadRequest:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
-            print("message pinned", time.time())
             OK = response == ""
             order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
             order_backup_queue.put(order_backup)
@@ -180,7 +176,7 @@ class AsyncBot(Bot):
         return 0
 
 
-class MessageInQueue():
+class MessageInQueue:
 
     def __init__(self, *args, **kwargs):
         self.args = args
