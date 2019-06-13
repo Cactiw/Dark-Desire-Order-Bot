@@ -665,6 +665,7 @@ def delete_guild(bot, update):
                             text="Гильдия <b>{}</b> успешно удалена".format(guild.tag), parse_mode='HTML')
     except TelegramError:
         pass
+    guild.fill_guild_ids()
 
 
 def cancel_delete_guild(bot, update):
