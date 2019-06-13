@@ -88,6 +88,8 @@ def plan_arena_notify():
 def arena_notify(bot, job):
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
+        if guild is None or guild.division == "Луки":
+            continue
         if guild.settings is None or guild.settings.get("arena_notify") in [None, True]:
             bot.send_message(chat_id=guild.chat_id, text="Через час обнуление арен и дневного лимита опыта за крафт.")
 
