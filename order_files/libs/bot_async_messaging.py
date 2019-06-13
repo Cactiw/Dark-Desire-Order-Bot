@@ -76,7 +76,7 @@ class AsyncBot(Bot):
             # release.start()
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
-            # logging.error(traceback.format_exc())
+            logging.error(traceback.format_exc())
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
             # release.start()
             return BADREQUEST_ERROR_CODE

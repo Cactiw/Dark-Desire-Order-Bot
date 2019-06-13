@@ -188,7 +188,10 @@ def rebuild_pult(action, pult, context):
     if action == "change_tactics":
         for i in range (0, len(pult.tactics)):
             pult.tactics[i] = tactics_const[i]
-        pult.tactics[context] = '✅' + pult.tactics[context]
+        if context == pult.status.get("tactics"):
+            pass
+        else:
+            pult.tactics[context] = '✅' + pult.tactics[context]
         new_markup = build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
                                 deferred_time=pult.deferred_time, variant=pult.variant)
         return new_markup

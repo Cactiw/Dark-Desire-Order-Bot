@@ -336,6 +336,8 @@ def pult_tactics_callback(bot, update):
     pult_status = pult.status
     data = update.callback_query.data
     new_tactics = int(data[3:])
+    if new_tactics == pult_status.get("tactics"):
+        new_tactics = -1
     new_markup = rebuild_pult("change_tactics", pult, new_tactics)
     pult_status.update({"tactics": new_tactics})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
