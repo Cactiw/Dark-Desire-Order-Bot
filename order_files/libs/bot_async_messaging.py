@@ -10,7 +10,7 @@ import traceback
 
 from order_files.libs.order import Order, OrderBackup
 
-MESSAGE_PER_SECOND_LIMIT = 28
+MESSAGE_PER_SECOND_LIMIT = 25
 MESSAGE_PER_CHAT_LIMIT = 3
 
 UNAUTHORIZED_ERROR_CODE = 2
@@ -22,15 +22,13 @@ order_backup_queue = multiprocessing.Queue()
 
 class AsyncBot(Bot):
 
-    def __init__(self, token, workers=8, request_kwargs = None):
-        counter_rlock = threading.RLock()
-        self.counter_lock = threading.Condition(counter_rlock)
-        #self.message_queue = multiprocessing.Queue()
+    def __init__(self, token, workers=8, request_kwargs=None):
+        self.__rlock = threading.RLock()
+        self.counter_lock = threading.Condition(self.__rlock)
         self.order_queue = multiprocessing.Queue()
         self.processing = True
         self.num_workers = workers
         self.messages_per_second = 0
-        self.messages_per_chat = {}
         self.workers = []
         if request_kwargs is None:
             request_kwargs = {}
@@ -56,50 +54,44 @@ class AsyncBot(Bot):
     def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
         lock = self.counter_lock
-        lock.acquire()
         try:
+            lock.acquire()
             while True:
-                lock.acquire()
-                messages_per_current_chat = self.messages_per_chat.get(chat_id)
-                if messages_per_current_chat is None:
-                    messages_per_current_chat = 0
-                if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT and messages_per_current_chat < MESSAGE_PER_CHAT_LIMIT:
+                if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT:
                     self.messages_per_second += 1
-                    self.messages_per_chat.update({chat_id : messages_per_current_chat + 1})
                     lock.release()
                     break
-                lock.release()
+                # logging.info("sleeping")
                 lock.wait()
+                # logging.info("woke up")
         finally:
-            try:
-                lock.release()
-            except RuntimeError:
-                logging.error(traceback.format_exc())
-                pass
+            pass
         message = None
+        release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
+        release.start()
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except Unauthorized:
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
+            # release.start()
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
-            logging.error(traceback.format_exc())
+            # logging.error(traceback.format_exc())
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
+            # release.start()
             return BADREQUEST_ERROR_CODE
         except TimedOut:
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
+            # release.start()
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except NetworkError:
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
+            # release.start()
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-        release.start()
+        # release.start()
         return message
 
     def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None):
@@ -109,7 +101,7 @@ class AsyncBot(Bot):
 
     def start(self):
         for i in range(0, self.num_workers):
-            worker = threading.Thread(target = self.__work, args = ())
+            worker = threading.Thread(target=self.__work, args=(i,))
             worker.start()
             self.workers.append(worker)
 
@@ -143,19 +135,9 @@ class AsyncBot(Bot):
     def __releasing_resourse(self, chat_id):
         with self.counter_lock:
             self.messages_per_second -= 1
-            mes_per_chat = self.messages_per_chat.get(chat_id)
-            if mes_per_chat is None:
-                self.counter_lock.notify_all()
-                return
-            if mes_per_chat == 1:
-                self.messages_per_chat.pop(chat_id)
-                self.counter_lock.notify_all()
-                return
-            mes_per_chat -= 1
-            self.messages_per_chat.update({chat_id : mes_per_chat})
             self.counter_lock.notify_all()
 
-    def __work(self):
+    def __work(self, num):
         order_in_queue = self.order_queue.get()
         while self.processing and order_in_queue:
             response = ""
@@ -164,8 +146,10 @@ class AsyncBot(Bot):
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
             reply_markup = order_in_queue.reply_markup
+            # logging.info("worker {}, starting to send".format(num))
             message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
                                                  reply_markup=reply_markup)
+            # logging.info("worker {}, message sent".format(num))
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass

@@ -37,6 +37,7 @@ def inline_callback(bot, update):
 
 
 def not_allowed(bot, update):
+    return
     mes = update.message
     title = update.message.chat.title
     if title is None:
@@ -50,9 +51,9 @@ def not_allowed(bot, update):
 
 
 def order_bot_processing():
-    dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
+    # dispatcher.add_handler(CommandHandler('add_pin', add_pin, filters=filter_is_admin))
     dispatcher.add_handler(MessageHandler(~filter_super_admin & ~(filter_chat_allowed & filter_is_admin), not_allowed))
-    dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
+    # dispatcher.add_handler(CommandHandler('⚔', attackCommand, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('pult', pult, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('order', pult, filters=filter_is_admin))
     dispatcher.add_handler(CommandHandler('variant', pult, filters=filter_is_admin))
@@ -62,10 +63,10 @@ def order_bot_processing():
     dispatcher.add_handler(CommandHandler('pin_setup', pin_setup, filters=filter_is_admin))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_order & filter_is_admin, remove_order))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_variant & filter_is_admin, remove_variant))
-    dispatcher.add_handler(MessageHandler(Filters.command & filter_pinset & filter_is_admin, pinset))
-    dispatcher.add_handler(MessageHandler(Filters.command & filter_pinpin & filter_is_admin, pinpin))
-    dispatcher.add_handler(MessageHandler(Filters.command & filter_pinmute & filter_is_admin, pinmute))
-    dispatcher.add_handler(MessageHandler(Filters.command & filter_pindivision & filter_is_admin, pindivision))
+    # dispatcher.add_handler(MessageHandler(Filters.command & filter_pinset & filter_is_admin, pinset))
+    # dispatcher.add_handler(MessageHandler(Filters.command & filter_pinpin & filter_is_admin, pinpin))
+    # dispatcher.add_handler(MessageHandler(Filters.command & filter_pinmute & filter_is_admin, pinmute))
+    # dispatcher.add_handler(MessageHandler(Filters.command & filter_pindivision & filter_is_admin, pindivision))
 
     dispatcher.add_handler(CallbackQueryHandler(send_variant, pattern="var_send_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(inline_callback, pass_update_queue=False, pass_user_data=False))
