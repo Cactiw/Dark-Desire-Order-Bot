@@ -51,7 +51,7 @@ def count_week_by_battle_id(battle_id):
 
 
 # Функция, которая считает id битвы по сообщению, крайне желательно переписать нормально, похоже на костыль
-# Если message = None, то считает текущее battle_id
+# Если message = None, то считает battle_id последней ПРОШЕДШЕЙ битвы.
 def count_battle_id(message):
     first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
     interval = datetime.timedelta(hours=8)
