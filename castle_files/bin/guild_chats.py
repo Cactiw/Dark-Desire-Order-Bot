@@ -121,7 +121,7 @@ def top_notify(bot, job):
                                             "]" in elem[0].nickname else elem[0].nickname, '🎗' if
                                             elem[0].id == guild.commander_id else ""),  # "<code>  </code>" if
                     # elem[0].id == guild.commander_id else "",
-                                            top[0], elem[i + 1])
+                                            "", top[0], elem[i + 1])
                 elif j == MAX_TOP_PLAYERS_SHOW:
                     response += "...\n"
 
