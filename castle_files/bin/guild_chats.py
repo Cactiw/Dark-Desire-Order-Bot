@@ -1,7 +1,7 @@
 from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID, \
     moscow_tz, local_tz, conn
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids, \
-    count_battle_id
+    count_battle_id, count_battles_in_this_week
 
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
@@ -89,6 +89,7 @@ def plan_top_notify():
 # Рассылка ежедневных топов по ги
 def top_notify(bot, job):
     cursor = conn.cursor()
+    total_battles = count_battles_in_this_week()
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None or guild.division == "Луки" or not guild.members or guild.tag != 'СКИ':  # TODO Убрать ски
@@ -107,21 +108,22 @@ def top_notify(bot, job):
                 gold += row[1]
                 stock += row[2]
                 row = cursor.fetchone()
-            players.append([player, exp, gold, stock])
+            reports = player.get_reports_count()[0]
+            players.append([player, exp, gold, stock, "{}/{} ({}%)".format(reports, total_battles, reports * 100 //
+                                                                           total_battles)])
         response = "📈Топ <b>{}</b> за день по битвам:\n".format(guild.tag)
 
-        tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:"]
+        tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах в эту неделю:"]
         for i, top in enumerate(tops):
             response += "\n<b>{}</b>\n".format(top)
-            players.sort(key=lambda x: x[i + 1], reverse=True)
+            players.sort(key=lambda x: x[i + 1] if isinstance(x[i + 1], int) else int(x[i + 1].partition("/")[0]),
+                         reverse=True)
             for j, elem in enumerate(players):
                 if j < MAX_TOP_PLAYERS_SHOW or j == len(players) - 1:
-                    response += "<code>{}</code>){}<code>{:<16}</code>{} — {}<code>{}</code>" \
+                    response += "<code>{}</code>){}<code>{:<16}</code> — {}<code>{}</code>" \
                                 "\n".format(j + 1, elem[0].castle, "{}{}".format(elem[0].nickname.partition("]")[2] if
                                             "]" in elem[0].nickname else elem[0].nickname, '🎗' if
-                                            elem[0].id == guild.commander_id else ""),  # "<code>  </code>" if
-                    # elem[0].id == guild.commander_id else "",
-                                            "", top[0], elem[i + 1])
+                                            elem[0].id == guild.commander_id else ""), top[0], elem[i + 1])
                 elif j == MAX_TOP_PLAYERS_SHOW:
                     response += "...\n"
 

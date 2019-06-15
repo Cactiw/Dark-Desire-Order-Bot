@@ -50,6 +50,14 @@ def count_week_by_battle_id(battle_id):
     return week
 
 
+def count_battles_in_this_week():
+    battle_id = count_battle_id(None)
+    battle_id -= 1
+    while battle_id > 0:
+        battle_id -= 21
+    return 21 + battle_id
+
+
 # Функция, которая считает id битвы по сообщению, крайне желательно переписать нормально, похоже на костыль
 # Если message = None, то считает battle_id последней ПРОШЕДШЕЙ битвы.
 def count_battle_id(message):
