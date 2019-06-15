@@ -83,8 +83,6 @@ def plan_arena_notify():
 def plan_top_notify():
     plan_notify(top_notify, 18, 0, 0)
 
-    top_notify(dispatcher.bot, None)  # TODO убрать
-
 
 # Рассылка ежедневных топов по ги
 def top_notify(bot, job):
@@ -92,7 +90,7 @@ def top_notify(bot, job):
     total_battles = count_battles_in_this_week()
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
-        if guild is None or guild.division == "Луки" or not guild.members or guild.tag != 'СКИ':  # TODO Убрать ски
+        if guild is None or guild.division == "Луки" or not guild.members:  # or guild.tag != 'СКИ':
             continue
         players = []
         for player_id in guild.members:
