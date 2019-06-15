@@ -14,7 +14,7 @@ LOGS_CHAT_ID = -1001461190292
 
 MAX_MESSAGE_LENGTH = 4096
 
-bot = AsyncBot(token=Production_order_token, workers=25, request_kwargs=request_kwargs)
+bot = AsyncBot(token=Production_order_token, workers=50, request_kwargs=request_kwargs)
 """ Понимаю, что 16 - колоссальное число,
     Однако тесты показали, что именно так достигается оптимальное время """
 updater = AsyncUpdater(bot=bot)
