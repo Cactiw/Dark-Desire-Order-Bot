@@ -116,10 +116,11 @@ def top_notify(bot, job):
             players.sort(key=lambda x: x[i + 1], reverse=True)
             for j, elem in enumerate(players):
                 if j < MAX_TOP_PLAYERS_SHOW or j == len(players) - 1:
-                    response += "{}) {}<b>{}</b>{} — {}<code>{}</code>" \
-                                "\n".format(j + 1, elem[0].castle, elem[0].nickname.partition("]")[2] if
+                    response += "{}) {}<code>{:<16}</code>{} — {}<code>{}</code>" \
+                                "\n".format(j + 1, elem[0].castle, "{}{}".format(elem[0].nickname.partition("]")[2] if
                                             "]" in elem[0].nickname else elem[0].nickname, '🎗' if
-                                            elem[0].id == guild.commander_id else "", top[0], elem[i + 1])
+                                            elem[0].id == guild.commander_id else ""), "<code>  </code>" if
+                    elem[0].id == guild.commander_id else "", top[0], elem[i + 1])
                 elif j == MAX_TOP_PLAYERS_SHOW:
                     response += "...\n"
 
