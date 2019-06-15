@@ -82,6 +82,9 @@ def get_guild_settings_buttons(guild):
             InlineKeyboardButton("{} напоминалку в 12".format("Отключить" if guild.settings is not None and
                                                               guild.settings.get("arena_notify") else "Включить"),
                                  callback_data="gsarenanotify_{}".format(guild.id)),
+            InlineKeyboardButton("{} пинги к битве".format("Отключить" if guild.settings is not None and
+                                                           guild.settings.get("battle_notify") else "Включить"),
+                                 callback_data="gsbattlenotify_{}".format(guild.id)),
         ]
     ]
     return InlineKeyboardMarkup(buttons)

@@ -189,7 +189,8 @@ def get_guild_settings_text(guild):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw, unpin, arena_notify = settings.get("withdraw"), settings.get("unpin"), settings.get("arena_notify")
+    withdraw, unpin, arena_notify, battle_notify = settings.get("withdraw"), settings.get("unpin"), \
+        settings.get("arena_notify"), settings.get("battle_notify")
     if withdraw is None:
         withdraw = True
         settings.update({"withdraw": withdraw})
@@ -205,9 +206,14 @@ def get_guild_settings_text(guild):
     if arena_notify is None:
         arena_notify = True
         settings.update({"arena_notify": arena_notify})
-    response += "<code>{:<19}</code> <b>{}</b>\n".format("📌Напоминалка в 12",
+    response += "<code>{:<19}</code> <b>{}</b>\n".format("🔔Напоминалка в 12",
                                                          "✅включена" if arena_notify else "❌отключена")
 
+    if battle_notify is None:
+        battle_notify = True
+        settings.update({"battle_notify": battle_notify})
+    response += "<code>{:<21}</code> <b>{}</b>\n".format("⚔️️Пинги к битве",  # Не имею ни малейшего понятия, почему 21
+                                                         "✅включены" if battle_notify else "❌отключены")
     return response
 
 
@@ -243,7 +249,8 @@ def guild_setting(bot, update):
 
 
 def edit_guild_setting(bot, update):
-    data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin", "gsarenanotify": "arena_notify"}
+    data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin", "gsarenanotify": "arena_notify",
+                       "gsbattlenotify": "battle_notify"}
     mes = update.callback_query.message
     data = update.callback_query.data
     setting = data_to_setting.get(data.partition("_")[0])

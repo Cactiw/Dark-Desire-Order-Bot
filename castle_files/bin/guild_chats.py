@@ -160,7 +160,8 @@ def notify_guild_attack(bot, update):
     if row is None:
         return
     guild = Guild.get_guild(guild_id=row[0])
-    if guild is None:
+    set = guild.settings.get("battle_notify")
+    if guild is None or set is False:
         return
     if mes.chat_id != guild.chat_id:
         return
