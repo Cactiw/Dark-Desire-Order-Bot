@@ -40,7 +40,7 @@ from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
     set_status, guild_history, revoke_all_class_links, class_chat_check, reports_history
-from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, plan_arena_notify
+from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
@@ -49,7 +49,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting
-from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute
+from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, plan_daily_tasks
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -385,7 +385,7 @@ def castle_bot_processing():
     fill_allowed_list()
     fill_triggers_lists()
     plan_battle_jobs()
-    plan_arena_notify()
+    plan_daily_tasks()
     fill_union_chats()
     load_construction_jobs()
     # Запуск потоков и процессов
