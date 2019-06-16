@@ -159,11 +159,12 @@ def guild_reports(bot, update):
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
-    if not guild.check_high_access(requested_player_id) and update.message is not None:
+    if not guild.check_high_access(requested_player_id) and update.callback_query is not None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
         return
     guild.sort_players_by_exp()
-    response = "Статистика гильдии по битве {}:\n".format(count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
+    response = "Статистика гильдии <b>{}</b> по битве <b>{}</b> (№ <b>{}</b>):" \
+               "\n".format(guild.tag, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"), battle_id)
     unsent_reports = []
     for player_id in guild.members:
         request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
