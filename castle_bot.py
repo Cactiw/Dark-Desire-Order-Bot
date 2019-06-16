@@ -161,6 +161,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('add_assistant', add_assistant))
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
 
+    dispatcher.add_handler(CommandHandler('guild_reports', guild_reports))
+
     # Хендлеры академки
     dispatcher.add_handler(CommandHandler('add_teacher', add_teacher))
     dispatcher.add_handler(CommandHandler('del_teacher', del_teacher))

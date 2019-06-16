@@ -118,28 +118,48 @@ def guild_info(bot, update):
 
 
 def guild_reports(bot, update):
-    mes = update.callback_query.message
-    data = update.callback_query.data
-    guild_id = re.search("_(\\d+)", data)
-    if guild_id is None:
-        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
-        return
-    guild_id = int(guild_id.group(1))
-    requested_player = Player.get_player(update.callback_query.from_user.id)
-    battle_id = count_battle_id(mes)
-    if requested_player is None:
-        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
-        return
-    if guild_id is None:
-        bot.send_message(chat_id=mes.chat_id,
-                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
-                              "командира добавить вас в гильдейском чате.")
-        return
-    guild = Guild.get_guild(guild_id=guild_id)
+    if update.message is not None:
+        # Сообщение с вызовом списка репортов.
+        mes = update.message
+        requested_player_id = mes.from_user.id
+        if not check_access(mes.from_user.id):
+            bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
+            return
+        try:
+            guild_tag = mes.text.split()[1]
+        except IndexError:
+            bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+            return
+        guild = Guild.get_guild(guild_tag=guild_tag)
+        try:
+            battle_id = int(mes.text.split()[2])
+        except (IndexError, ValueError):
+            battle_id = count_battle_id(message=None)
+    else:
+        # Нажатие на кнопку "репорты" в меню гильдии.
+        mes = update.callback_query.message
+        data = update.callback_query.data
+        requested_player_id = update.callback_query.from_user.id
+        guild_id = re.search("_(\\d+)", data)
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+            return
+        guild_id = int(guild_id.group(1))
+        requested_player = Player.get_player(requested_player_id)
+        battle_id = count_battle_id(mes)
+        if requested_player is None:
+            bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+            return
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                                  "командира добавить вас в гильдейском чате.")
+            return
+        guild = Guild.get_guild(guild_id=guild_id)
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
-    if not guild.check_high_access(update.callback_query.from_user.id):
+    if not guild.check_high_access(requested_player_id):
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
         return
     guild.sort_players_by_exp()
@@ -166,9 +186,10 @@ def guild_reports(bot, update):
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
-    if response != "":
+    if response != "" and update.callback_query is not None:
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
-    response = "\nНе сдали репорты:\n"
+        response = ""
+    response += "\nНе сдали репорты:\n"
     for player_id in unsent_reports:
         player = Player.get_player(player_id)
         if player is None:
@@ -180,7 +201,8 @@ def guild_reports(bot, update):
         response += response_new
     response += "\nВсего: <b>{}/{}</b> репортов".format(guild.members_count - len(unsent_reports), len(guild.members))
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
-    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    if update.callback_query is not None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 def get_guild_settings_text(guild):
