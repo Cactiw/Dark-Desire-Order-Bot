@@ -159,7 +159,7 @@ def guild_reports(bot, update):
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
-    if not guild.check_high_access(requested_player_id):
+    if not guild.check_high_access(requested_player_id) and update.message is not None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
         return
     guild.sort_players_by_exp()
