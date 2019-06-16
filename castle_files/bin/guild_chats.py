@@ -111,14 +111,14 @@ def top_notify(bot, job):
                                                                            total_battles)])
         response = "📈Топ <b>{}</b> за день по битвам:\n".format(guild.tag)
 
-        tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах в эту неделю:"]
+        tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах на этой неделе:"]
         for i, top in enumerate(tops):
             response += "\n<b>{}</b>\n".format(top)
             players.sort(key=lambda x: x[i + 1] if isinstance(x[i + 1], int) else int(x[i + 1].partition("/")[0]),
                          reverse=True)
             for j, elem in enumerate(players):
                 if j < MAX_TOP_PLAYERS_SHOW or j == len(players) - 1:
-                    response += "<code>{}</code>){}<code>{:<16}</code> — {}<code>{}</code>" \
+                    response += "<code>{}</code>){}<code>{:<10}</code> — {}<code>{}</code>" \
                                 "\n".format(j + 1, elem[0].castle, "{}{}".format(elem[0].nickname.partition("]")[2] if
                                             "]" in elem[0].nickname else elem[0].nickname, '🎗' if
                                             elem[0].id == guild.commander_id else ""), top[0], elem[i + 1])
