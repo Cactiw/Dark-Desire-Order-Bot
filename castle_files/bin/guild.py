@@ -353,8 +353,10 @@ def list_players(bot, update, guild_id=None):
         if player is None:
             logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
             continue
-        response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
-                       "".format(player.nickname, player.lvl, player.attack, player.defense, )
+        rp1, rp2, rp3 = player.get_reports_count()
+        response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code> " \
+                       "🎖: <code>{}</code>/<code>{}</code>" \
+                       "".format(player.nickname, player.lvl, player.attack, player.defense, rp1, rp2)
         if high_access:
             response_new += "\nПоказать профиль: /view_profile_{}" \
                        "\nУдалить из гильдии: /remove_player_{}".format(player.id, player.id)
