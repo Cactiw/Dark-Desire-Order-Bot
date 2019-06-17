@@ -392,13 +392,18 @@ def remove_player(bot, update):
     player_to_remove = Player.get_player(player_id)
     player_to_remove_guild = guild
     if player_to_remove is None or player_to_remove.id not in guild.members:
-        if player_to_remove.guild is not None:
-            player_to_remove_guild = Guild.get_guild(player_to_remove.guild)
-            if player_id == player_to_remove_guild.commander_id or player_id in player_to_remove_guild.assistants:
-                pass
-            else:
-                bot.send_message(chat_id=mes.chat_id, text="Вы можете удалять игроков только в своей гильдии.")
-                return
+        player_to_remove_guild = Guild.get_guild(player_to_remove.guild)
+        if player_to_remove_guild is not None and player_to_remove_guild.is_academy() and \
+                player_to_remove_guild.check_high_access(current_player.id):
+            pass
+        else:
+            if player_to_remove.guild is not None:
+                player_to_remove_guild = Guild.get_guild(player_to_remove.guild)
+                if player_id == player_to_remove_guild.commander_id or player_id in player_to_remove_guild.assistants:
+                    pass
+                else:
+                    bot.send_message(chat_id=mes.chat_id, text="Вы можете удалять игроков только в своей гильдии.")
+                    return
     guild = player_to_remove_guild
     guild.delete_player(player_to_remove)
     bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно удалён из гильдии "
