@@ -80,6 +80,7 @@ from castle_files.bin.common_functions import unknown_input
 from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
 
+from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 import castle_files.work_materials.globals as file_globals
@@ -89,7 +90,12 @@ import threading
 import multiprocessing
 
 
-def start(bot, update):
+def start(bot, update, user_data):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is not None:
+        unknown_input(bot, update, user_data)
+        return
     bot.send_message(chat_id=update.message.chat_id, text="Привет! Пришли мне форвард /hero из @chatwarsbot!")
 
 
@@ -99,7 +105,7 @@ def skip(bot, update):
 
 def castle_bot_processing():
     # dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
-    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('start', start, filters=filter_is_pm, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
