@@ -2,6 +2,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 
 from castle_files.work_materials.globals import dispatcher, updater, conn
 
+from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
     filter_is_profile, filter_not_registered, filter_forbidden, filter_set_class, filter_in_class_chat
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
@@ -36,6 +37,7 @@ from castle_files.work_materials.filters.trade_union_filters import filter_trade
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
+from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -108,6 +110,10 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_profile, add_class_from_player))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_set_class, update_ranger_class_skill_lvl))
+
+    # API
+    dispatcher.add_handler(CommandHandler('auth', auth, filters=filter_is_pm))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
     # Профсоюзы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
@@ -411,11 +417,15 @@ def castle_bot_processing():
     parse_stats_pr.start()
     processes.append(parse_stats_pr)
 
+    api = threading.Thread(target=start_api, args=[])
+    api.start()
+    processes.append(api)
+
     updater.start_polling(clean=False)
     ask_to_revoke_duty_link()
 
     updater.idle()
     file_globals.processing = False
+    cwapi.stop()
     save_user_data.join()
-
     conn.close()
