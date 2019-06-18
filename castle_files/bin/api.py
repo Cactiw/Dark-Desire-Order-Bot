@@ -38,6 +38,28 @@ def grant_auth_token(bot, update):
     cwapi.grant_token(mes.from_user.id, code)
 
 
+def update(bot, update):
+    mes = update.message
+    try:
+        cwapi.update_player(mes.from_user.id)
+    except RuntimeError:
+        bot.send_message(chat_id=mes.chat_id, text="Ошика. Проверьте наличие доступа у бота. "
+                                                   "Возможно, стоит сделать /auth ещё раз.")
+        return
+    bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление профиля. В скором времени данные будут обновлены.")
+
+
+def update_guild(bot, update):
+    mes = update.message
+    try:
+        cwapi.update_guild_info(mes.from_user.id)
+    except RuntimeError:
+        bot.send_message(chat_id=mes.chat_id, text="Ошика. Проверьте наличие доступа у бота. "
+                                                   "Возможно, стоит сделать /auth ещё раз.")
+        return
+    bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
+
+
 """
 def on_conn_open(connection):
     print("conn opened")

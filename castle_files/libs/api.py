@@ -45,7 +45,8 @@ class CW3API:
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
 
-        self.callbacks = {"createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token}
+        self.callbacks = {"createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
+                          "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info}
 
     def connect(self):
         self.connecting = True
@@ -107,6 +108,20 @@ class CW3API:
         player.update()
         self.bot.send_message(chat_id=player_id, text="API успешно подключено.")
 
+    def on_request_profile(self, channel, method, header, body):
+        if body.get("result") != "Ok":
+            logging.error("error while requesting profile, {}".format(body))
+            return
+        print(body)
+
+    def on_guild_info(self, channel, method, header, body):
+        if body.get("result") != "Ok":
+            logging.error("error while requesting guild info, {}".format(body))
+            return
+        print(body)
+        print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+
+
     #
     # Запрос доступа к апи
     def request_auth_token(self, user_id):
@@ -124,6 +139,32 @@ class CW3API:
         self.publish_message({
             "action": "grantToken",
             "payload": payload
+        })
+
+    # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
+    def update_player(self, player_id):
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+            "token": token,
+            "action": "requestProfile"
+        })
+
+    # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
+    def update_guild_info(self, player_id):
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+            "token": token,
+            "action": "guildInfo"
         })
 
     def get_message(self):
@@ -185,6 +226,19 @@ class CW3API:
             except Exception:
                 logging.error(traceback.format_exc())
             request = self.requests_queue.get()
+
+    # Метод, который будет вызван обрыве соединения, если оно оборвалось
+    def on_conn_close(self, connection, reply_code, reply_text):
+        if self.active is False:
+            return
+        self.channel = None
+        logging.warning("Connection closed, {}, {}, reconnection in 5 seconds".format(reply_code, reply_text))
+        self.connection.add_timeout(5, self.reconnect)
+
+    def reconnect(self):
+        self.connection.ioloop.stop()
+        self.connect()
+        self.connection.ioloop.start()
 
     def start(self):
         logger.warning("Starting the API")
