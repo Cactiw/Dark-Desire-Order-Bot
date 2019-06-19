@@ -16,6 +16,8 @@ MESSAGE_PER_CHAT_LIMIT = 3
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
 
+advanced_callback = multiprocessing.Queue()
+
 
 order_backup_queue = multiprocessing.Queue()
 
@@ -54,6 +56,7 @@ class AsyncBot(Bot):
     def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
         lock = self.counter_lock
+        wait_start = time.time()
         try:
             lock.acquire()
             while True:
@@ -66,6 +69,8 @@ class AsyncBot(Bot):
                 # logging.info("woke up")
         finally:
             pass
+        wait_end = time.time()
+        advanced_callback.put({"chat_id": kwargs.get("chat_id"), "wait_start": wait_start, "wait_end": wait_end})
         message = None
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
         release.start()
@@ -147,8 +152,10 @@ class AsyncBot(Bot):
             text = order_in_queue.text
             reply_markup = order_in_queue.reply_markup
             # logging.info("worker {}, starting to send".format(num))
+            begin = time.time()
             message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
                                                  reply_markup=reply_markup)
+            sent = time.time()
             # logging.info("worker {}, message sent".format(num))
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
@@ -167,6 +174,8 @@ class AsyncBot(Bot):
                     except BadRequest:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
+            pin_end = time.time()
+            advanced_callback.put({"chat_id": chat_id, "begin": begin, "sent": sent, "pin_end": pin_end})
             OK = response == ""
             order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
             order_backup_queue.put(order_backup)
