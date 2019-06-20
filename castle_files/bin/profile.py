@@ -117,7 +117,7 @@ def get_profile_text(player, self_request=True, user_data=None):
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
     if self_request:
-        if player.game_class is not None and player.castle == '🖤':
+        if player.game_class is not None and player.castle == '🖤' and player.game_class not in ['Master', 'Esquire']:
             try:
                 if class_links.get(player.game_class) is None:
                     revoke_class_link(player.game_class)
