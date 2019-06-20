@@ -1,7 +1,7 @@
 """
 Функции, связанные с голосованиями
 """
-from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID, classes_list
 
 from castle_files.bin.buttons import get_vote_buttons
 from castle_files.bin.service_functions import check_access
@@ -12,6 +12,8 @@ from castle_files.libs.vote import Vote
 from telegram.error import TelegramError, BadRequest
 
 import datetime
+import logging
+import traceback
 import json
 import re
 
@@ -84,7 +86,7 @@ def view_vote(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
     vote_id = int(vote_id.group(1))
-    request = "select name, text, variants, started, duration from votes where id = %s"
+    request = "select name, text, variants, started, duration, classes from votes where id = %s"
     cursor.execute(request, (vote_id,))
     row = cursor.fetchone()
     if row is None:
@@ -96,10 +98,56 @@ def view_vote(bot, update):
                                                   "Не началось.")
     response += "Длительность: <code>{}</code>\n".format(row[4] if row[4] is not None else
                                                         "Не задано.")
+    cl_text = ""
+    if all(row[5]) or not row[5]:
+        cl_text = "ВСЕ"
+    else:
+        for i, b in enumerate(row[5]):
+            cl_text += classes_list[b] if b else ""
+    response += "Классы: <code>{}</code>\n".format(cl_text)
     if row[3] is None:
         response += "Изменить длительность: /change_vote_duration_{}\n".format(vote_id)
         response += "Начать голосование: /start_vote_{}\n".format(vote_id)
+        response += "\nИзменить классы для голосований: /set_vote_classes_{} [Классы, которые ПРИНИМАЮТ участие " \
+                    "в голосовании]\n\n<em>Классы ТОЛЬКО как в списке: {}</em>".format(vote_id, classes_list)
+    print(response)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def set_vote_classes(bot, update):
+    mes = update.message
+    if not check_access(mes.from_user.id):
+        return
+    vote_id = re.search("_(\\d+)", mes.text)
+    if vote_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+        return
+    vote_id = int(vote_id.group(1))
+    vote = Vote.get_vote(vote_id)
+    if vote is None:
+        bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
+        return
+    vote.classes = []
+    for i in classes_list:
+        vote.classes.append(False)
+    try:
+        classes = list(mes.text.split()[1:])
+    except IndexError:
+        for i in range(len(vote.classes)):
+            vote.classes[i] = True
+        bot.send_message(chat_id=mes.chat_id, text="Голосование <b>{}</b> разрешено для всех классов".format(vote.name),
+                         parse_mode='HTML')
+        return
+    for cl in classes:
+        try:
+            print(cl, classes_list.index(cl))
+            vote.classes[classes_list.index(cl)] = True
+        except ValueError:
+            continue
+    print(vote.classes)
+    vote.update()
+    bot.send_message(chat_id=mes.chat_id, text="Классы голосования <b>{}</b> обновлены.".format(vote.name),
+                     parse_mode='HTML')
 
 
 def request_change_vote_duration(bot, update, user_data):
@@ -163,6 +211,9 @@ def start_vote(bot, update):
     if vote.duration is None:
         bot.send_message(chat_id=mes.chat_id, text="Необходимо задать длительность голосования.")
         return
+    if vote.started is not None:
+        bot.send_message(chat_id=mes.chat_id, text="Голосование уже началось!")
+        return
     vote.started = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     vote.update()
     bot.send_message(chat_id=mes.chat_id, text="Голосование <b>{}</b> началось!".format(vote.name), parse_mode='HTML')
@@ -171,11 +222,21 @@ def start_vote(bot, update):
 def votes(bot, update):
     mes = update.message
     response = "Доступные голосования в замке:\n\n"
-    request = "select id, name, text from votes where started is not null and started + duration > now() " \
+    request = "select id, name, text, classes from votes where started is not null and started + duration > now() " \
               "AT TIME ZONE 'Europe/Moscow'"
     cursor.execute(request)
     row = cursor.fetchone()
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
     while row is not None:
+        try:
+            if row[3] is not None and row[3] and (player.game_class is None or
+                                                  row[3][classes_list.index(player.game_class)] is False):
+                row = cursor.fetchone()
+                continue
+        except Exception:
+            logging.error(traceback.format_exc())
         response += "<b>{}</b>\n{}\n<code>Принять участие в голосовании:</code> /vote_{}" \
                     "\n\n".format(row[1], row[2], row[0])
         row = cursor.fetchone()
@@ -183,7 +244,13 @@ def votes(bot, update):
 
 
 def get_vote_text(vote, choice=None):
-    response = "<b>{}</b>:\n{}\n\nДоступные варианты:\n\n".format(vote.name, vote.text)
+    response = "<b>{}</b>:\n{}\n\n".format(vote.name, vote.text)
+    if vote.classes is not None and vote.classes and not all(vote.classes):
+        cl_text = ""
+        for i, b in enumerate(vote.classes):
+            cl_text += classes_list[b] if b else ""
+        response += "Классы: <code>{}</code>\n\n".format(cl_text)
+    response += "Доступные варианты:\n\n"
     for variant in vote.variants:
         response += variant + "\n\n"
     response += "Ваш выбор: {}\n".format(vote.variants[choice] if choice is not None else "Не сделан")
@@ -210,6 +277,17 @@ def vote(bot, update):
     if vote is None:
         bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
         return
+    try:
+        if vote.classes is not None and vote.classes and (player.game_class is None or
+                                                          vote.classes[classes_list.index(player.game_class)] is False):
+            bot.send_message(chat_id=mes.chat_id, text="Голосование недоступно для вашего класса.\n\n<em>В случае, "
+                                                       "если ваш класс указан неверно, его можно обновить, "
+                                                       "прислав форвард ответа </em>@ChatWarsBot<em> на </em>/me",
+                             parse_mode='HTML')
+            bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+            return
+    except Exception:
+        logging.error(traceback.format_exc())
     choice = None
     for i, ch in enumerate(vote.choices):
         if player.id in ch:
@@ -242,6 +320,17 @@ def set_vote_variant(bot, update):
     if vote is None:
         bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
         return
+    try:
+        if vote.classes is not None and vote.classes and (player.game_class is None or
+                                        vote.classes[classes_list.index(player.game_class)] is False):
+            bot.send_message(chat_id=mes.chat_id, text="Голосование недоступно для вашего класса.\n\n<em>В случае, "
+                                                       "если ваш класс указан неверно, его можно обновить, "
+                                                       "прислав форвард ответа </em>@ChatWarsBot<em> на </em>/me",
+                             parse_mode='HTML')
+            bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+            return
+    except Exception:
+        logging.error(traceback.format_exc())
     if vote.started + vote.duration < datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None):
         bot.send_message(chat_id=mes.chat_id, text="Голосование уже завершено.")
         return
