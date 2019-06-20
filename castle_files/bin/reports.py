@@ -133,7 +133,7 @@ def battle_stats(bot, update):
         total_attack += values[1]
         total_defense += values[2]
         total_gold += values[3]
-        response += "<code>{:<3}</code>-👣{}⚔️:{}🛡:{}💰:{}" \
+        response += "<code>{:<3}</code>-👣{} ⚔️{} 🛡{} 💰{}" \
                     "\n".format(guild.tag, values[0], values[1], values[2], values[3])
     response += "\nВсего: {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, " \
                     "💰: <b>{}</b>\n".format(total_reports, total_attack, total_defense, total_gold)
