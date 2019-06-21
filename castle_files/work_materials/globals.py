@@ -11,6 +11,8 @@ castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel']
 classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',
                     'Sentinel': '🛡'}
+classes_to_emoji_inverted = dict(zip(classes_to_emoji.values(), classes_to_emoji.keys()))
+
 """class_chats = {'Alchemist': -1001266047716, 'Blacksmith': -1001417227000, 'Collector': -1001302539982,
                'Ranger': -1001234986771, 'Knight': -1001488789603, 'Sentinel': -1001183827542}"""
 class_chats = {'Alchemist': -1001438734208, 'Blacksmith': -1001164490198, 'Collector': -1001439849094,

@@ -2,13 +2,14 @@
 Библиотека для работы с АПИ ЧВ3
 """
 
-from castle_files.work_materials.globals import dispatcher
+from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz
 from castle_files.libs.player import Player
 
 import threading
 import logging
 import traceback
 import time
+import datetime
 import json
 import pika
 
@@ -21,7 +22,8 @@ logger.setLevel(logging.INFO)
 class CW3API:
     MAX_REQUESTS_PER_SECOND = 30
 
-    def __init__(self, cwuser, cwpass, workers=4):
+    def __init__(self, cwuser, cwpass, workers=1):
+        # TODO Разобраться с несколькими работниками (нельзя использовать 1 канал на всех)
         self.__lock = threading.Lock()
         self.lock = threading.Condition(self.__lock)
         self.cwuser = cwuser
@@ -45,8 +47,12 @@ class CW3API:
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
 
-        self.callbacks = {"createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
-                          "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info}
+        self.callbacks = {
+            "createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
+            "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info,
+            "requestGearInfo": self.on_gear_info, "authAdditionalOperation": self.on_request_additional_operation,
+            "grantAdditionalOperation": self.on_grant_additional_operational
+        }
 
     def connect(self):
         self.connecting = True
@@ -56,6 +62,7 @@ class CW3API:
         logger.warning("Connection opened")
         self.connection = connection
         self.connection.channel(on_open_callback=self.__on_channel_open)
+        self.connection.add_on_close_callback(self.on_conn_close)
 
     def __on_channel_open(self, channel):
         self.connected = True
@@ -108,11 +115,80 @@ class CW3API:
         player.update()
         self.bot.send_message(chat_id=player_id, text="API успешно подключено.")
 
+    def on_request_additional_operation(self, channel, method, header, body):
+        if body.get("result") != "Ok":
+            logging.error("error while requesting additional operation, {}".format(body))
+            return
+        try:
+            player_id = body.get("payload").get("userId")
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                return
+            player.api_info.update({"requestId": body.get("uuid")})
+            player.update()
+        except Exception:
+            logging.error(traceback.format_exc())
+
+    def on_grant_additional_operational(self, channel, method, header, body):
+        try:
+            payload = body.get("payload")
+            player_id = payload.get("userId")
+            request_id = payload.get("requestId")
+            player = Player.get_player(player_id, notify_on_error=False)
+            if "requestId" in player.api_info and player.api_info.get("requestId") == request_id:
+                player.api_info.pop("requestId")
+                player.update()
+            if body.get("result") != "Ok":
+                logging.error("error while granting additional operation, {}".format(body))
+                return
+            access = player.api_info.get("access")
+            if access is None:
+                access = []
+                player.api_info.update({"access": access})
+            access.append("gear")  # TODO Если будет больше 1 операции, то сделать отслеживание доступа.
+            player.update()
+            self.bot.send_message(chat_id=player_id, text="Действие API успешно разрешено.")
+        except Exception:
+            logging.error(traceback.format_exc())
+
+
+
+
     def on_request_profile(self, channel, method, header, body):
         if body.get("result") != "Ok":
             logging.error("error while requesting profile, {}".format(body))
             return
-        print(body)
+        print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+        try:
+            payload = body.get("payload")
+            user_id = payload.get("userId")
+            player = Player.get_player(user_id, notify_on_error=False)
+            if player is None:
+                return
+            profile = payload.get("profile")
+            player.attack = profile.get("atk")
+            player.castle = profile.get("castle")
+            try:
+                player.game_class = classes_to_emoji_inverted.get(profile.get("class"))
+            except Exception:
+                logging.error(traceback.format_exc())
+            player.defense = profile.get("def")
+            player.exp = profile.get("exp")
+            player.guild_tag = profile.get("guild_tag")
+            player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
+                               "") + profile.get("userName")
+            player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+
+            player.update_to_database()
+            print("Profile updated throug the API for {}".format(player.nickname))
+        except Exception:
+            logging.error(traceback.format_exc())
+
+    def on_gear_info(self, channel, method, header, body):
+        if body.get("result") != "Ok":
+            logging.error("error while requesting guild info, {}".format(body))
+            return
+        print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
 
     def on_guild_info(self, channel, method, header, body):
         if body.get("result") != "Ok":
@@ -141,6 +217,38 @@ class CW3API:
             "payload": payload
         })
 
+    def auth_additional_operation(self, user_id, operation):
+        player = Player.get_player(user_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+            "token": token,
+            "action": "authAdditionalOperation",
+            "payload": {"operation": operation}
+        })
+
+    def grant_additional_operation(self, user_id, request_id, auth_code, player=None):
+        if player is None:
+            player = Player.get_player(user_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        if token is None:
+            raise RuntimeError
+
+        payload = {
+            "requestId": request_id,
+            "authCode": "{}".format(auth_code)
+        }
+        self.publish_message({
+            "token": token,
+            "action": "grantAdditionalOperation",
+            "payload": payload
+        })
+
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
     def update_player(self, player_id):
         player = Player.get_player(player_id, notify_on_error=False)
@@ -152,6 +260,30 @@ class CW3API:
         self.publish_message({
             "token": token,
             "action": "requestProfile"
+        })
+
+    def update_gear(self, player_id):
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+            "token": token,
+            "action": "requestGearInfo"
+        })
+
+    def update_stock(self, player_id):
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+            "token": token,
+            "action": "requestStock"
         })
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
@@ -228,12 +360,16 @@ class CW3API:
             request = self.requests_queue.get()
 
     # Метод, который будет вызван обрыве соединения, если оно оборвалось
-    def on_conn_close(self, connection, reply_code, reply_text):
+    def on_conn_close(self, *args):  # connection, reply_code, reply_text):
+        print("in on_conn_close")
         if self.active is False:
             return
         self.channel = None
-        logging.warning("Connection closed, {}, {}, reconnection in 5 seconds".format(reply_code, reply_text))
-        self.connection.add_timeout(5, self.reconnect)
+        # logging.warning("Connection closed, {}, {}, reconnection in 5 seconds".format(reply_code, reply_text))
+        logging.warning("Connection closed, {}, reconnection in 5 seconds".format(args))
+        time.sleep(5)
+        self.reconnect()
+        # self.connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
         self.connection.ioloop.stop()

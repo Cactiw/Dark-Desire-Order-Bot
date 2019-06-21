@@ -4,6 +4,7 @@
 """
 
 from castle_files.libs.api import CW3API
+from castle_files.libs.player import Player
 
 from config import cwuser, cwpass
 
@@ -35,18 +36,52 @@ def grant_auth_token(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка.")
         return
     code = int(code.group(1))
-    cwapi.grant_token(mes.from_user.id, code)
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    request_id = player.api_info.get("requestId")
+    if request_id is not None:
+        cwapi.grant_additional_operation(mes.from_user.id, request_id, code, player=player)
+    else:
+        cwapi.grant_token(mes.from_user.id, code)
 
 
 def update(bot, update):
     mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
     try:
         cwapi.update_player(mes.from_user.id)
+        try:
+            gear_access = "gear" in player.api_info.get("access")
+        except (TypeError, IndexError):
+            gear_access = False
+        if gear_access is False:
+            cwapi.auth_additional_operation(mes.from_user.id, "GetGearInfo")
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Для возможности обновления информации о снаряжении, пожалуйста, "
+                                  "Пришлите форвард сообщения, полученного от @ChatWarsBot.")
+        else:
+            cwapi.update_gear(mes.from_user.id)
     except RuntimeError:
         bot.send_message(chat_id=mes.chat_id, text="Ошика. Проверьте наличие доступа у бота. "
                                                    "Возможно, стоит сделать /auth ещё раз.")
         return
     bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление профиля. В скором времени данные будут обновлены.")
+
+
+def update_stock(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    token = player.api_info.get("token") if player.api_info is not None else None
+    if token is None:
+        auth(bot, update)
+        return
+    cwapi.up
+
 
 
 def update_guild(bot, update):
