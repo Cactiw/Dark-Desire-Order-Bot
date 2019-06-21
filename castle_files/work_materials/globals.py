@@ -6,6 +6,8 @@ from config import Production_castle_token, request_kwargs, psql_creditals
 from libs.updater_async import AsyncUpdater
 from castle_files.libs.bot_async_messaging import AsyncBot
 
+from libs.database import Conn
+
 castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 
 classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel', 'Master', 'Esquire']
@@ -22,9 +24,8 @@ updater = AsyncUpdater(bot=bot)
 dispatcher = updater.dispatcher
 job = updater.job_queue
 
-conn = psycopg2.connect("dbname={0} user={1} password={2}".format(psql_creditals['dbname'], psql_creditals['user'],
-                                                                  psql_creditals['pass']))
-conn.set_session(autocommit=True)
+conn = Conn(psql_creditals)
+conn.start()
 cursor = conn.cursor()
 
 DEFAULT_CASTLE_STATUS = 'central_square'

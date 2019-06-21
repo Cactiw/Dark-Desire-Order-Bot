@@ -392,6 +392,7 @@ def castle_bot_processing():
 
     # Загрузка user_data с диска
     load_data()
+    # Всякие действия при старте бота
     Guild.fill_guild_ids()
     fill_mid_players()
     fill_allowed_list()
