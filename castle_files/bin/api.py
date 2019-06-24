@@ -52,18 +52,18 @@ def update(bot, update):
     if player is None:
         return
     try:
-        cwapi.update_player(mes.from_user.id)
+        cwapi.update_player(mes.from_user.id, player=player)
         try:
             gear_access = "gear" in player.api_info.get("access")
         except (TypeError, IndexError):
             gear_access = False
         if gear_access is False:
-            cwapi.auth_additional_operation(mes.from_user.id, "GetGearInfo")
+            cwapi.auth_additional_operation(mes.from_user.id, "GetGearInfo", player=player)
             bot.send_message(chat_id=mes.chat_id,
                              text="Для возможности обновления информации о снаряжении, пожалуйста, "
                                   "Пришлите форвард сообщения, полученного от @ChatWarsBot.")
         else:
-            cwapi.update_gear(mes.from_user.id)
+            cwapi.update_gear(mes.from_user.id, player=player)
     except RuntimeError:
         bot.send_message(chat_id=mes.chat_id, text="Ошика. Проверьте наличие доступа у бота. "
                                                    "Возможно, стоит сделать /auth ещё раз.")
@@ -80,7 +80,8 @@ def update_stock(bot, update):
     if token is None:
         auth(bot, update)
         return
-    cwapi.up
+    cwapi.update_stock(player.id, player=player)
+    bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление стока. В скором времени данные будут обновлены.")
 
 
 

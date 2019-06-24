@@ -3,7 +3,7 @@
 """
 from castle_files.work_materials.item_consts import items
 from castle_files.work_materials.resource_constants import resources, resources_reverted
-from castle_files.work_materials.equipment_constants import equipment_names
+from castle_files.work_materials.equipment_constants import equipment_names, get_equipment_by_name
 from castle_files.work_materials.alch_constants import alch_recipes
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
@@ -11,6 +11,37 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
 import re
+
+
+def get_item_code_by_name(name):
+    for num, elem in list(items.items()):
+        if name == elem[1]:
+            code = "k" + num
+            return code
+        elif elem[0] in name and "recipe" in name:
+            code = "r" + num
+            return code
+        else:
+            continue
+    item = get_equipment_by_name(name)
+    if item is not None:
+        return item.code
+    item = alch_recipes.get(name.lower())
+    if item is not None:
+        return item.get("code")
+    item = resources.get(name)
+    return item
+
+
+def stock_sort_comparator(item_code):
+    # --> item_code: str || int
+    if isinstance(item_code, int) or item_code.isdigit():
+        return [0, int(item_code)]
+    if item_code[0] in ["k", "r"]:
+        return [1, int(item_code[1:])]
+    if item_code[0] == "p":
+        return [2, int(item_code[1:])]
+    return [3, item_code]
 
 
 def send_withdraw(bot, update):

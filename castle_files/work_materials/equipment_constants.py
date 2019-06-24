@@ -242,6 +242,8 @@ fill_names()
 
 
 def get_equipment_by_code(code):
+    if code is None:
+        return None
     eq_type = code[0]
     eq_code = code[1:]
     eq_list = list(equipment.values())
@@ -250,3 +252,14 @@ def get_equipment_by_code(code):
             if eq.code == eq_code and eq.type == eq_type:
                 return copy.deepcopy(eq)
     return None
+
+
+def get_equipment_by_name(eq_name):
+    names_list = list(equipment_names.items())
+    code = None
+    for name, item_code in names_list:
+        if name in eq_name:
+            code = item_code
+            break
+    eq = get_equipment_by_code(code)
+    return eq

@@ -4,6 +4,8 @@
 
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
+from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator
 
 import threading
 import logging
@@ -21,6 +23,7 @@ logger.setLevel(logging.INFO)
 
 class CW3API:
     MAX_REQUESTS_PER_SECOND = 30
+    api_info = {}
 
     def __init__(self, cwuser, cwpass, workers=1):
         # TODO Разобраться с несколькими работниками (нельзя использовать 1 канал на всех)
@@ -46,12 +49,13 @@ class CW3API:
         self.EXCHANGE = "{}_ex".format(cwuser)
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
+        self.SEX_DIGEST = "{}_sex_digest".format(self.cwuser)
 
         self.callbacks = {
             "createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
             "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info,
             "requestGearInfo": self.on_gear_info, "authAdditionalOperation": self.on_request_additional_operation,
-            "grantAdditionalOperation": self.on_grant_additional_operational
+            "grantAdditionalOperation": self.on_grant_additional_operational, "requestStock":self.on_stock_info
         }
 
     def connect(self):
@@ -72,12 +76,38 @@ class CW3API:
         logger.warning("Consuming")
         tag = self.channel.basic_consume(self.INBOUND, self.__on_message)
         self.consumer_tags.append(tag)
+        # tag = self.channel.basic_consume(self.SEX_DIGEST, self.on_sex_digest)
+        # self.consumer_tags.append(tag)
+
+        channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
 
     def __on_cancel(self, obj=None):
         print(obj)
         logger.warning("Consumer cancelled")
 
+    def on_sex_digest(self, channel, method, header, body):
+        try:
+            prices = {}
+            body = json.loads(body)
+            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            for item in body:
+                name = item.get("name")
+                try:
+                    price = item.get("prices")[0]
+                except IndexError:
+                    continue
+                code = get_item_code_by_name(name)
+                if code is None:
+                    logging.error("Item code is None for {}".format(name))
+                    continue
+                prices.update({code: price})
+            self.api_info.update({"prices": prices})
+            print(json.dumps(self.api_info, sort_keys=1, indent=4, ensure_ascii=False))
+        except Exception:
+            logging.error(traceback.format_exc())
+
     def __on_message(self, channel, method, header, body):
+        # print(json.dumps(json.loads(body), sort_keys=1, indent=4, ensure_ascii=False))
         print(method, header, body)
         print(json.loads(body))
         print(method.consumer_tag, method.delivery_tag)
@@ -113,7 +143,10 @@ class CW3API:
             player.api_info = {}
         player.api_info.update({"token": token})
         player.update()
-        self.bot.send_message(chat_id=player_id, text="API успешно подключено.")
+        self.bot.send_message(chat_id=player_id,
+                              text="API успешно подключено.\nДля возможности обновления информации о снаряжении, "
+                                   "пожалуйста, Пришлите форвард сообщения, полученного от @ChatWarsBot.")
+        self.auth_additional_operation(player_id, "GetGearInfo")
 
     def on_request_additional_operation(self, channel, method, header, body):
         if body.get("result") != "Ok":
@@ -188,7 +221,59 @@ class CW3API:
         if body.get("result") != "Ok":
             logging.error("error while requesting guild info, {}".format(body))
             return
+        try:
+            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            payload = body.get("payload")
+            player_id = payload.get("userId")
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                return
+            gear_info = payload.get("gearInfo")
+            player_equipment = {
+                "main_hand": None,
+                "second_hand": None,
+                "head": None,
+                "gloves": None,
+                "armor": None,
+                "boots": None,
+                "cloaks": None
+            }
+            for item in list(gear_info.values()):
+                name = item.get("name")
+                if name is None:
+                    continue
+                eq = get_equipment_by_name(name)
+                if eq is None:
+                    logging.warning("Equipment with name {} is None".format(name))
+                    continue
+                attack = item.get("atk") or 0
+                defense = item.get("def") or 0
+                eq.name, eq.attack, eq.defense = name, attack, defense
+                player_equipment.update({eq.place: eq})
+            player.equipment = player_equipment
+            player.update()
+        except Exception:
+            logging.error(traceback.format_exc())
+
+    def on_stock_info(self, channel, method, header, body):
+        if body.get("result") != "Ok":
+            logging.error("error while requesting guild info, {}".format(body))
+            return
         print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+        payload = body.get("payload")
+        player_id = payload.get("userId")
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            return
+        player_stock = {}
+        stock = payload.get("stock")
+        for name, count in list(stock.items()):
+            code = get_item_code_by_name(name)
+            player_stock.update({code or name: count})
+        player_stock = {k: player_stock[k] for k in sorted(player_stock, key=stock_sort_comparator)}
+        player.stock = player_stock
+        player.update()
+        print(player_stock)
 
     def on_guild_info(self, channel, method, header, body):
         if body.get("result") != "Ok":
@@ -197,8 +282,8 @@ class CW3API:
         print(body)
         print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
 
-
     #
+
     # Запрос доступа к апи
     def request_auth_token(self, user_id):
         self.publish_message({
@@ -217,8 +302,11 @@ class CW3API:
             "payload": payload
         })
 
-    def auth_additional_operation(self, user_id, operation):
-        player = Player.get_player(user_id, notify_on_error=False)
+    def auth_additional_operation(self, user_id, operation, player=None):
+        if player is None:
+            player = Player.get_player(user_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
         if player is None:
             raise RuntimeError
         token = player.api_info.get("token")
@@ -250,8 +338,11 @@ class CW3API:
         })
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
-    def update_player(self, player_id):
-        player = Player.get_player(player_id, notify_on_error=False)
+    def update_player(self, player_id, player=None):
+        if player is None:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
         if player is None:
             raise RuntimeError
         token = player.api_info.get("token")
@@ -262,8 +353,11 @@ class CW3API:
             "action": "requestProfile"
         })
 
-    def update_gear(self, player_id):
-        player = Player.get_player(player_id, notify_on_error=False)
+    def update_gear(self, player_id, player=None):
+        if player is None:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
         if player is None:
             raise RuntimeError
         token = player.api_info.get("token")
@@ -274,10 +368,11 @@ class CW3API:
             "action": "requestGearInfo"
         })
 
-    def update_stock(self, player_id):
-        player = Player.get_player(player_id, notify_on_error=False)
+    def update_stock(self, player_id, player=None):
         if player is None:
-            raise RuntimeError
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
         token = player.api_info.get("token")
         if token is None:
             raise RuntimeError
@@ -287,8 +382,11 @@ class CW3API:
         })
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
-    def update_guild_info(self, player_id):
-        player = Player.get_player(player_id, notify_on_error=False)
+    def update_guild_info(self, player_id, player=None):
+        if player is None:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
         if player is None:
             raise RuntimeError
         token = player.api_info.get("token")
