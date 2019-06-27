@@ -89,7 +89,10 @@ def guild_top_battles(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    guild = Guild.get_guild(player.guild)
+    if 'academy' in mes.text:
+        guild = Guild.get_academy()
+    else:
+        guild = Guild.get_guild(player.guild)
     if guild is None:
         bot.send_message(chat_id=update.message.chat_id, text='Гильдейские топы доступны только членам гильдий.')
         return

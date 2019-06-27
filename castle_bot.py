@@ -171,6 +171,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('guild_reports', guild_reports))
 
     dispatcher.add_handler(CommandHandler('guild_top_battles', guild_top_battles, filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('academy_top_battles', guild_top_battles, filters=filter_is_pm))
 
     # Хендлеры академки
     dispatcher.add_handler(CommandHandler('add_teacher', add_teacher))
