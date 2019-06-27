@@ -50,6 +50,7 @@ class CW3API:
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
         self.SEX_DIGEST = "{}_sex_digest".format(self.cwuser)
+        self.YELLOW_PAGES = "{}_yellow_pages".format(self.cwuser)
 
         self.callbacks = {
             "createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
@@ -78,8 +79,11 @@ class CW3API:
         self.consumer_tags.append(tag)
         # tag = self.channel.basic_consume(self.SEX_DIGEST, self.on_sex_digest)
         # self.consumer_tags.append(tag)
+        # tag = self.channel.basic_consume(self.YELLOW_PAGES, self.on_yellow_pages)
+        # self.consumer_tags.append(tag)
 
-        channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
+        # channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
+        channel.basic_get(self.YELLOW_PAGES, callback=self.on_yellow_pages)
 
     def __on_cancel(self, obj=None):
         print(obj)
@@ -103,6 +107,15 @@ class CW3API:
                 prices.update({code: price})
             self.api_info.update({"prices": prices})
             print(json.dumps(self.api_info, sort_keys=1, indent=4, ensure_ascii=False))
+        except Exception:
+            logging.error(traceback.format_exc())
+
+    def on_yellow_pages(self, channel, method, header, body):
+        try:
+            body = json.loads(body)
+            shops = body
+            self.api_info.update({"shops": shops})
+            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
             logging.error(traceback.format_exc())
 

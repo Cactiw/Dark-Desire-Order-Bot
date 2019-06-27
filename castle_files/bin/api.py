@@ -96,6 +96,44 @@ def update_guild(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
 
 
+def repair_comparator(shop, castle):
+    shop_castle = shop.get("ownerCastle")
+    gold = shop.get("maintenanceCost")
+    if shop_castle == castle:
+        return -1000 + gold
+    return gold
+
+
+def repair(bot, update):
+    mes = update.message
+    shops = cwapi.api_info.get("shops")
+    if shops is None or not shops:
+        bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
+        return
+    player = Player.get_player(mes.from_user.id)
+    player_castle = player.castle if player is not None else '🖤'
+    sh = []
+    for shop in shops:
+        if shop.get("maintenanceEnabled"):
+            sh.append(shop)
+    sh.sort(key=lambda x: repair_comparator(x, player_castle), reverse=True)
+
+    response = "Доступные магазины для обслуживания:\n"
+    castle_stage = sh[0].get("ownerCastle") if sh else '🖤'
+    for shop in sh:
+        castle, link, gold, mana, discount, name = shop.get("ownerCastle"), shop.get("link"), shop.get("maintenanceCost"), \
+                                             shop.get("mana"), shop.get("castleDiscount"), shop.get("name")
+        if castle_stage != castle == player_castle:
+            castle_stage = player_castle
+            response += "\n"
+        response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💰{} 💧{} {}" \
+                    "\n".format(castle, "/ws_" + link, "/ws_" + link, gold, mana,
+                                "🏰: -{}%".format(discount) if discount is not None else "")
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+
+
+
+
 """
 def on_conn_open(connection):
     print("conn opened")
