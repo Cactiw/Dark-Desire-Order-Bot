@@ -7,7 +7,7 @@ from order_files.work_materials.filters.pult_filters import filter_remove_order,
 
 
 from order_files.bin.pult_callback import pult, pult_callback, pult_variants, send_variant, remove_variant
-from order_files.bin.order import attackCommand, menu, remove_order, refill_deferred_orders
+from order_files.bin.order import attackCommand, menu, remove_order, refill_deferred_orders, plan_battle_jobs
 
 from order_files.bin.guild_chats import add_pin, pin_setup, recashe_order_chats, pindivision, pinmute, pinpin, pinset
 
@@ -76,6 +76,7 @@ def order_bot_processing():
     # Необходимо подождать, пока другой процесс не завершит работу с локациями
     time.sleep(1)
     fill_mid_players(other_process=True)
+    plan_battle_jobs()
 
     processes = []
 

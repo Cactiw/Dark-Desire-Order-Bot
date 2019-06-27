@@ -4,7 +4,7 @@ from telegram.error import (TelegramError, BadRequest)
 from order_files.work_materials.pult_constants import *
 from order_files.libs.pult import rebuild_pult, Pult
 from order_files.libs.deferred_order import DeferredOrder
-from order_files.bin.order import send_order, send_order_job
+from order_files.bin.order import send_order, send_order_job, count_next_battle_time
 from order_files.work_materials.pult_constants import divisions as divisions_const, potions as potions_consts, \
     tactics_order_to_emoji
 
@@ -371,12 +371,3 @@ def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
     finally:
         bot.answerCallbackQuery(callback_query_id=callback_query_id)
 
-
-def count_next_battle_time():
-    next_battle = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None, hour=1, minute=0, second=0,
-                                                              microsecond=0)
-
-    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
-    while next_battle < now:
-        next_battle += datetime.timedelta(hours=8)
-    return next_battle
