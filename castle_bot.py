@@ -37,7 +37,8 @@ from castle_files.work_materials.filters.trade_union_filters import filter_trade
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
-from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair
+from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
+    stock
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -116,6 +117,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('update_guild', update_guild, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('update_stock', update_stock, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('update', update, filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('stock', stock, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('repair', repair, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 

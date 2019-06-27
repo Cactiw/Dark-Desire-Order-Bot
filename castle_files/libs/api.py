@@ -82,8 +82,8 @@ class CW3API:
         # tag = self.channel.basic_consume(self.YELLOW_PAGES, self.on_yellow_pages)
         # self.consumer_tags.append(tag)
 
-        # channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
-        channel.basic_get(self.YELLOW_PAGES, callback=self.on_yellow_pages)
+        channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
+        # channel.basic_get(self.YELLOW_PAGES, callback=self.on_yellow_pages)
 
     def __on_cancel(self, obj=None):
         print(obj)
@@ -91,6 +91,7 @@ class CW3API:
 
     def on_sex_digest(self, channel, method, header, body):
         try:
+            channel.basic_ack(method.delivery_tag)
             prices = {}
             body = json.loads(body)
             print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
@@ -112,6 +113,7 @@ class CW3API:
 
     def on_yellow_pages(self, channel, method, header, body):
         try:
+            channel.basic_ack(method.delivery_tag)
             body = json.loads(body)
             shops = body
             self.api_info.update({"shops": shops})
