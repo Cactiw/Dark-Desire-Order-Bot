@@ -32,7 +32,6 @@ def build_menu(buttons,
 
 def plan_battle_jobs():
     job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
-    job.run_once(after_battle, 0.1)
 
 
 def after_battle(bot, job):
