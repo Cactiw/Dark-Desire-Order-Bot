@@ -4,7 +4,7 @@ import psycopg2
 
 from order_files.libs.bot_async_messaging import AsyncBot
 from libs.updater_async import AsyncUpdater
-from config import Production_order_token, psql_creditals, request_kwargs
+from config import Production_order_token, Production_pult_token, psql_creditals, request_kwargs
 
 from libs.database import Conn
 
@@ -16,7 +16,8 @@ LOGS_CHAT_ID = -1001461190292
 
 MAX_MESSAGE_LENGTH = 4096
 
-bot = AsyncBot(token=Production_order_token, workers=25, request_kwargs=request_kwargs)
+bot = AsyncBot(token=Production_pult_token, order_token=Production_order_token,
+               workers=25, request_kwargs=request_kwargs)
 """ Понимаю, что 16 - колоссальное число,
     Однако тесты показали, что именно так достигается оптимальное время """
 updater = AsyncUpdater(bot=bot)
