@@ -57,7 +57,7 @@ class AsyncBot(Bot):
         try:
             while True:
                 lock.acquire()
-                if chat_id in self.spam_chats_count and kwargs.get("resending") is True:
+                if chat_id in self.spam_chats_count and not kwargs.get("resending"):
                     spam_was = self.spam_chats_count.get(chat_id)
                     if time.time() - spam_was > 30 * 60:
                         self.spam_chats_count.pop(chat_id)
@@ -80,7 +80,7 @@ class AsyncBot(Bot):
                     lock.release()
                     break
                 else:
-                    if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT:
+                    if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT and not kwargs.get("resending"):
                         # Сообщения в эту секунду ещё можно отправлять
                         if messages_per_current_chat_per_minute >= MESSAGE_PER_CHAT_MINUTE_LIMIT:
                             self.spam_chats_count.update({chat_id: time.time()})
