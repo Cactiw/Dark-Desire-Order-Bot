@@ -25,6 +25,12 @@ class Conn:
     def close(self):
         self.connection.close()
 
+    def __del__(self):
+        try:
+            self.connection.close()
+        except Exception:
+            pass
+
 
 class Cursor:
     def __init__(self, conn):

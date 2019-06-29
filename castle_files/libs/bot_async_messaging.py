@@ -3,6 +3,7 @@ from telegram.utils.request import Request
 from telegram.error import (TelegramError, Unauthorized, BadRequest,
                             TimedOut, ChatMigrated, NetworkError)
 import multiprocessing
+import queue
 import threading
 import time
 import logging
@@ -10,7 +11,7 @@ import traceback
 
 MESSAGE_PER_SECOND_LIMIT = 29
 MESSAGE_PER_CHAT_LIMIT = 3
-MESSAGE_PER_CHAT_MINUTE_LIMIT = 20
+MESSAGE_PER_CHAT_MINUTE_LIMIT = 19
 
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
@@ -30,6 +31,7 @@ class AsyncBot(Bot):
         self.messages_per_second = 0
         self.messages_per_chat = {}
         self.messages_per_chat_per_minute = {}
+        self.spam_chats_count = {}
         self.workers = []
         self.resending_workers = []
         if request_kwargs is None:
@@ -55,6 +57,15 @@ class AsyncBot(Bot):
         try:
             while True:
                 lock.acquire()
+                if chat_id in self.spam_chats_count and kwargs.get("resending") is True:
+                    spam_was = self.spam_chats_count.get(chat_id)
+                    if time.time() - spam_was > 30 * 60:
+                        self.spam_chats_count.pop(chat_id)
+                    else:
+                        self.spam_chats_count.update({chat_id: time.time()})
+                        self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
+                        lock.release()
+                        return None
                 messages_per_current_chat = self.messages_per_chat.get(chat_id)
                 messages_per_current_chat_per_minute = self.messages_per_chat_per_minute.get(chat_id)
                 if messages_per_current_chat is None:
@@ -71,6 +82,8 @@ class AsyncBot(Bot):
                 else:
                     if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT:
                         # Сообщения в эту секунду ещё можно отправлять
+                        if messages_per_current_chat_per_minute >= MESSAGE_PER_CHAT_MINUTE_LIMIT:
+                            self.spam_chats_count.update({chat_id: time.time()})
                         # Кладём в другую очередь
                         self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
                         lock.release()
@@ -89,6 +102,7 @@ class AsyncBot(Bot):
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
             release.start()
             release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
+            release.setDaemon(True)
             release.start()
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
@@ -96,12 +110,14 @@ class AsyncBot(Bot):
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
             release.start()
             release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
+            release.setDaemon(True)
             release.start()
             return BADREQUEST_ERROR_CODE
         except (TimedOut, NetworkError):
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
             release.start()
             release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
+            release.setDaemon(True)
             release.start()
             logging.error(traceback.format_exc())
             return None
@@ -120,6 +136,7 @@ class AsyncBot(Bot):
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
         release.start()
         release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
+        release.setDaemon(True)
         release.start()
         return message
 
@@ -136,8 +153,24 @@ class AsyncBot(Bot):
         self.processing = False
         for i in range(0, self.num_workers):
             self.message_queue.put(None)
+            self.waiting_chats_message_queue.put(None)
         for i in self.workers:
             i.join()
+        for i in self.resending_workers:
+            i.join()
+        time.sleep(1)
+        try:
+            while True:
+                self.message_queue.get_nowait()
+        except queue.Empty:
+            pass
+        try:
+            while True:
+                self.waiting_chats_message_queue.get_nowait()
+        except queue.Empty:
+            pass
+        self.message_queue.close()
+        self.waiting_chats_message_queue.close()
 
     def __del__(self):
         self.processing = False
@@ -182,7 +215,7 @@ class AsyncBot(Bot):
 
     def __work(self):
         message_in_queue = self.message_queue.get()
-        while self.processing and message_in_queue:
+        while self.processing and message_in_queue is not None:
             args = message_in_queue.args
             kwargs = message_in_queue.kwargs
             self.actually_send_message(*args, **kwargs)
@@ -193,9 +226,10 @@ class AsyncBot(Bot):
 
     def __resend_work(self):
         message_in_queue = self.waiting_chats_message_queue.get()
-        while self.processing and message_in_queue:
+        while self.processing and message_in_queue is not None:
             args = message_in_queue.args
             kwargs = message_in_queue.kwargs
+            kwargs.update({"resending": True})
             mes = self.actually_send_message(*args, **kwargs)
             if mes is None:
                 time.sleep(0.1)

@@ -1,4 +1,5 @@
 import multiprocessing
+import threading
 import logging
 
 from order_bot import order_bot_processing
@@ -16,6 +17,9 @@ log_file.setLevel(logging.ERROR)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO, handlers=[log_file, console])
 
+# mpl = multiprocessing.log_to_stderr()
+# mpl.setLevel(logging.INFO)
+
 
 # script_work()  # Для авторизации на новой машине
 
@@ -28,7 +32,7 @@ castle_bot_process = multiprocessing.Process(target=castle_bot_processing)
 castle_bot_process.start()
 processes.append(castle_bot_process)
 try:
-    processes[1].join()
+    processes[0].join()
 except KeyboardInterrupt:
     pass
 print("ended")

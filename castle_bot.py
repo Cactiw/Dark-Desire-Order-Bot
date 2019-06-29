@@ -81,6 +81,8 @@ from castle_files.bin.common_functions import unknown_input
 from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
 
+from castle_files.bin.telethon_script import castles_stats_queue
+
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -428,6 +430,8 @@ def castle_bot_processing():
 
     updater.idle()
     file_globals.processing = False
+    castles_stats_queue.put(None)
     save_user_data.join()
 
     conn.close()
+    exit(0)

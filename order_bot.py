@@ -17,6 +17,8 @@ from order_files.work_materials.globals import dispatcher, updater, conn, LOGS_C
 
 from castle_files.bin.castle import fill_mid_players
 
+from globals import update_request_queue
+
 import threading
 import time
 
@@ -108,3 +110,4 @@ def order_bot_processing():
             dispatcher.bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
     # Разрываем подключение.
     conn.close()
+    update_request_queue.put(None)

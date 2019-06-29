@@ -18,7 +18,7 @@ classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '�
 class_chats = {'Alchemist': -1001438734208, 'Blacksmith': -1001164490198, 'Collector': -1001439849094,
                'Ranger': -1001189370559, 'Knight': -1001479145097, 'Sentinel': -1001165430197}
 
-bot = AsyncBot(token=Production_castle_token, workers=8, request_kwargs=request_kwargs)
+bot = AsyncBot(token=Production_castle_token, workers=16, request_kwargs=request_kwargs)
 updater = AsyncUpdater(bot=bot)
 
 dispatcher = updater.dispatcher
