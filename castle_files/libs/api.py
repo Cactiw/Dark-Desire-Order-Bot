@@ -84,13 +84,13 @@ class CW3API:
             self.channel = channel
         else:
             self.in_channel = channel
-            tag = self.in_channel.basic_consume(self.INBOUND, self.__on_message)
+            tag = self.in_channel.basic_consume(self.INBOUND, on_message_callback=self.__on_message)
             self.consumer_tags.append(tag)
-            tag = self.in_channel.basic_consume(self.SEX_DIGEST, callback=self.on_sex_digest)
+            tag = self.in_channel.basic_consume(self.SEX_DIGEST, on_message_callback=self.on_sex_digest)
             self.consumer_tags.append(tag)
-            tag = self.in_channel.basic_consume(self.DEALS, callback=self.on_deals)
+            tag = self.in_channel.basic_consume(self.DEALS, on_message_callback=self.on_deals)
             self.consumer_tags.append(tag)
-            tag = self.in_channel.basic_consume(self.YELLOW_PAGES, callback=self.on_yellow_pages)
+            tag = self.in_channel.basic_consume(self.YELLOW_PAGES, on_message_callback=self.on_yellow_pages)
             self.consumer_tags.append(tag)
         logger.warning("Consuming")
         # tag = self.channel.basic_consume(self.SEX_DIGEST, self.on_sex_digest)
@@ -368,6 +368,8 @@ class CW3API:
                 response += response_added + response_lost
                 response += "\n<b>Всего:</b> <code>{}</code>💰".format(gold_added + gold_lost)
                 self.bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')
+                player.api_info.pop("change_stock_send")
+                player.update()
 
             print(player.stock)
         except Exception:
