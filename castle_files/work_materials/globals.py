@@ -2,7 +2,7 @@ import pytz
 import tzlocal
 import psycopg2
 
-from config import Production_castle_token, request_kwargs, psql_creditals
+from config import Production_castle_token, request_kwargs, psql_creditals, cwuser
 from libs.updater_async import AsyncUpdater
 from castle_files.libs.bot_async_messaging import AsyncBot
 
@@ -13,6 +13,8 @@ castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel', 'Master', 'Esquire']
 classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',
                     'Sentinel': '🛡', 'Esquire': '🗡', 'Master': '⛏'}
+classes_to_emoji_inverted = dict(zip(classes_to_emoji.values(), classes_to_emoji.keys()))
+
 """class_chats = {'Alchemist': -1001266047716, 'Blacksmith': -1001417227000, 'Collector': -1001302539982,
                'Ranger': -1001234986771, 'Knight': -1001488789603, 'Sentinel': -1001183827542}"""
 class_chats = {'Alchemist': -1001438734208, 'Blacksmith': -1001164490198, 'Collector': -1001439849094,
@@ -24,6 +26,7 @@ updater = AsyncUpdater(bot=bot)
 dispatcher = updater.dispatcher
 job = updater.job_queue
 
+API_APP_NAME = cwuser
 conn = Conn(psql_creditals)
 conn.start()
 cursor = conn.cursor()

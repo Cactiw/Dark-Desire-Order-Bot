@@ -5,7 +5,7 @@
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
     classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id
-from castle_files.work_materials.equipment_constants import get_equipment_by_code, equipment_names
+from castle_files.work_materials.equipment_constants import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
@@ -391,18 +391,9 @@ def hero(bot, update, user_data):
         eq_attack = int(clear_name.group(4)) if clear_name.group(4) is not None and clear_name.group(4) != "" else 0
         eq_defense = int(clear_name.group(5)) if clear_name.group(5) != "" else 0
         clear_name = clear_name.group(2)
-        names_list = list(equipment_names.items())
-        code = None
-        for name, item_code in names_list:
-            if name in clear_name:
-                code = item_code
-                break
-        if code is None:
-            # logging.warning("Item code is None for item {}".format(clear_name))
-            continue
-        eq = get_equipment_by_code(code)
+        eq = get_equipment_by_name(clear_name)
         if eq is None:
-            logging.warning("Equipment with code {} is None".format(code))
+            logging.warning("Equipment with name {} is None".format(clear_name))
             continue
         eq.name = full_name
         eq.attack = eq_attack
