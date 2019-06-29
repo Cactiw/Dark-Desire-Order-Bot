@@ -83,30 +83,42 @@ class Player:
     он загружен из БД ранее. Если да, то он возвращается, ежели нет, то происходит его загрузка из БД
     """
     @staticmethod
-    def get_player(player_id, notify_on_error=True):
-        player = players.get(player_id)
-        if player is not None:
-            # Игрок уже загружен из базы данных
-            player.last_access_time = time.time()
-            return player
+    def get_player(player_id=None, player_in_game_id=None, notify_on_error=True, new_cursor=False):
+        if new_cursor:
+            cur_cursor = conn.cursor()
+        else:
+            cur_cursor = cursor
+        if player_id is not None:
+            player = players.get(player_id)
+            if player is not None:
+                # Игрок уже загружен из базы данных
+                player.last_access_time = time.time()
+                return player
+            arg = player_id
+        else:
+            arg = player_in_game_id
         # Загрузка игрока из базы данных
         request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, " \
                   "game_class, class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, " \
-                  "exp, api_info, stock from players where id = %s"
-        cursor.execute(request, (player_id,))
+                  "exp, api_info, stock, id from players where "
+        if player_id is not None:
+            request += "id = %s"
+        elif player_in_game_id is not None:
+            request += "api_info ->> 'in_game_id' = %s"
+        cur_cursor.execute(request, (arg,))
         try:
-            row = cursor.fetchone()
+            row = cur_cursor.fetchone()
         except ProgrammingError:
             return None
         if row is None:
-            if notify_on_error:
+            if notify_on_error and player_id is not None:
                 dispatcher.bot.send_message(chat_id=player_id,
                                             text="Вы не зарегистрированы. Для регистрации необходимо "
                                                  "прислать ответ @ChatWarsBot на команду /hero")
             return None
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class, \
             class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, exp, api_info, \
-            stock = row
+            stock, player_id = row
         if api_info is None:
             api_info = {}
         eq = {}

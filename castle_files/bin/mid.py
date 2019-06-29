@@ -5,7 +5,7 @@ from castle_files.libs.guild import Guild
 from order_files.bin.pult_callback import count_next_battle_time
 
 from castle_files.bin.guild_chats import rangers_notify_start
-from castle_files.bin.api import grassroots_update_players
+from castle_files.bin.api import grassroots_update_players, grassroots_update_stock
 
 from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID
 
@@ -52,10 +52,22 @@ def mail_and_pin(bot, update):
 
 def plan_battle_jobs():
     plan_mid_notifications()
-    job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
-    job.run_once(grassroots_update_players, moscow_tz.localize(count_next_battle_time()).astimezone(
-        tz=local_tz).replace(tzinfo=None) - datetime.timedelta(hours=1, minutes=41, seconds=30))
-    job.run_once(grassroots_update_players, 0.1)
+    next_battle_time = moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None)
+
+    job.run_once(after_battle, next_battle_time)
+    job.run_once(grassroots_update_players, next_battle_time - datetime.timedelta(hours=1, minutes=41, seconds=30))
+
+    job.run_once(grassroots_update_stock, next_battle_time - datetime.timedelta(hours=0, minutes=7, seconds=39),
+                 context={"change_send": False})
+    job.run_once(grassroots_update_stock, next_battle_time - datetime.timedelta(hours=0, minutes=3, seconds=12),
+                 context={"change_send": False})
+    job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=7, seconds=0),
+                 context={"change_send": True})
+    job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
+
+
+    # job.run_once(grassroots_update_players, 0)
+
     rangers_notify_start(bot=dispatcher.bot, update=SUPER_ADMIN_ID)
 
 

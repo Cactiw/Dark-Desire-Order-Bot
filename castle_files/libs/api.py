@@ -5,7 +5,8 @@
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
-from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator
+from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator, \
+    get_item_name_by_code
 
 import threading
 import logging
@@ -39,6 +40,7 @@ class CW3API:
         #                   # self.connected == False, то это значит, что соединение оборвалось само.
         self.connection = None
         self.channel = None
+        self.in_channel = None
         self.bot = dispatcher.bot
         self.consumer_tags = []
         self.num_workers = workers  # Число работников, работающих над отправкой запросов
@@ -51,12 +53,16 @@ class CW3API:
         self.INBOUND = "{}_i".format(self.cwuser)
         self.SEX_DIGEST = "{}_sex_digest".format(self.cwuser)
         self.YELLOW_PAGES = "{}_yellow_pages".format(self.cwuser)
+        self.DEALS = "{}_deals".format(self.cwuser)
+
+        self.sent = 0
+        self.got_responses = 0
 
         self.callbacks = {
             "createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
             "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info,
             "requestGearInfo": self.on_gear_info, "authAdditionalOperation": self.on_request_additional_operation,
-            "grantAdditionalOperation": self.on_grant_additional_operational, "requestStock":self.on_stock_info
+            "grantAdditionalOperation": self.on_grant_additional_operational, "requestStock": self.on_stock_info
         }
 
     def connect(self):
@@ -67,23 +73,35 @@ class CW3API:
         logger.warning("Connection opened")
         self.connection = connection
         self.connection.channel(on_open_callback=self.__on_channel_open)
+        self.connection.channel(on_open_callback=self.__on_channel_open)
         self.connection.add_on_close_callback(self.on_conn_close)
 
     def __on_channel_open(self, channel):
         self.connected = True
         self.connecting = False
         logger.warning("Channel opened")
-        self.channel = channel
+        if self.channel is None:
+            self.channel = channel
+        else:
+            self.in_channel = channel
+            tag = self.in_channel.basic_consume(self.INBOUND, self.__on_message)
+            self.consumer_tags.append(tag)
+            tag = self.in_channel.basic_consume(self.SEX_DIGEST, callback=self.on_sex_digest)
+            self.consumer_tags.append(tag)
+            tag = self.in_channel.basic_consume(self.DEALS, callback=self.on_deals)
+            self.consumer_tags.append(tag)
+            tag = self.in_channel.basic_consume(self.YELLOW_PAGES, callback=self.on_yellow_pages)
+            self.consumer_tags.append(tag)
         logger.warning("Consuming")
-        tag = self.channel.basic_consume(self.INBOUND, self.__on_message)
-        self.consumer_tags.append(tag)
         # tag = self.channel.basic_consume(self.SEX_DIGEST, self.on_sex_digest)
         # self.consumer_tags.append(tag)
         # tag = self.channel.basic_consume(self.YELLOW_PAGES, self.on_yellow_pages)
         # self.consumer_tags.append(tag)
 
-        channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
+        # channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
         # channel.basic_get(self.YELLOW_PAGES, callback=self.on_yellow_pages)
+        # channel.basic_get(self.DEALS, callback=self.on_deals)
+        # self.channel.basic_consume(self.DEALS, self.on_deals)
 
     def __on_cancel(self, obj=None):
         print(obj)
@@ -121,8 +139,30 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
+    def on_deals(self, channel, method, header, body):
+        try:
+            channel.basic_ack(method.delivery_tag)
+            body = json.loads(body)
+            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            seller_id = body.get("sellerId")
+            # seller_id = '251066f65507439b9c6838462423f998'  Test
+            player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=True)
+            if player is None:
+                return
+            print(player.id, player.nickname)
+            print("player is not None")
+            item, price, qty, b_castle, b_name = body.get("item"), body.get("price"), body.get("qty"), \
+                                                 body.get("buyerCastle"), body.get("buyerName"),
+            response = "🛒Вы продали <b>{}</b> <b>{}</b>.\nПолучено <b>{}</b>💰 ({} x {}💰).\n" \
+                       "Покупатель: {}<b>{}</b>".format(qty, item, price * qty, qty, price, b_castle, b_name)
+            self.bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')
+            # cursor = conn.cursor()
+        except Exception:
+            logging.error(traceback.format_exc())
+
     def __on_message(self, channel, method, header, body):
         # print(json.dumps(json.loads(body), sort_keys=1, indent=4, ensure_ascii=False))
+        self.got_responses += 1
         print(method, header, body)
         print(json.loads(body))
         print(method.consumer_tag, method.delivery_tag)
@@ -150,13 +190,14 @@ class CW3API:
         payload = body.get("payload")
         player_id = payload.get("userId")
         token = payload.get("token")
-        player = Player.get_player(player_id, notify_on_error=False)
+        in_game_id = payload.get("id")
+        player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
         if not all([player, token, player_id]):
             logging.error("Value is None: {} {} {}".format(player, token, player_id))
             return
         if player.api_info is None:
             player.api_info = {}
-        player.api_info.update({"token": token})
+        player.api_info.update({"token": token, "in_game_id": in_game_id})
         player.update()
         self.bot.send_message(chat_id=player_id,
                               text="API успешно подключено.\nДля возможности обновления информации о снаряжении, "
@@ -169,7 +210,7 @@ class CW3API:
             return
         try:
             player_id = body.get("payload").get("userId")
-            player = Player.get_player(player_id, notify_on_error=False)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
             if player is None:
                 return
             player.api_info.update({"requestId": body.get("uuid")})
@@ -182,7 +223,7 @@ class CW3API:
             payload = body.get("payload")
             player_id = payload.get("userId")
             request_id = payload.get("requestId")
-            player = Player.get_player(player_id, notify_on_error=False)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
             if "requestId" in player.api_info and player.api_info.get("requestId") == request_id:
                 player.api_info.pop("requestId")
                 player.update()
@@ -193,7 +234,8 @@ class CW3API:
             if access is None:
                 access = []
                 player.api_info.update({"access": access})
-            access.append("gear")  # TODO Если будет больше 1 операции, то сделать отслеживание доступа.
+            if "gear" not in access:
+                access.append("gear")  # TODO Если будет больше 1 операции, то сделать отслеживание доступа.
             player.update()
             self.bot.send_message(chat_id=player_id, text="Действие API успешно разрешено.")
         except Exception:
@@ -210,7 +252,7 @@ class CW3API:
         try:
             payload = body.get("payload")
             user_id = payload.get("userId")
-            player = Player.get_player(user_id, notify_on_error=False)
+            player = Player.get_player(user_id, notify_on_error=False, new_cursor=True)
             if player is None:
                 return
             profile = payload.get("profile")
@@ -240,7 +282,7 @@ class CW3API:
             print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             player_id = payload.get("userId")
-            player = Player.get_player(player_id, notify_on_error=False)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
             if player is None:
                 return
             gear_info = payload.get("gearInfo")
@@ -271,24 +313,65 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_stock_info(self, channel, method, header, body):
-        if body.get("result") != "Ok":
-            logging.error("error while requesting guild info, {}".format(body))
-            return
-        print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
-        payload = body.get("payload")
-        player_id = payload.get("userId")
-        player = Player.get_player(player_id, notify_on_error=False)
-        if player is None:
-            return
-        player_stock = {}
-        stock = payload.get("stock")
-        for name, count in list(stock.items()):
-            code = get_item_code_by_name(name)
-            player_stock.update({code or name: count})
-        player_stock = {k: player_stock[k] for k in sorted(player_stock, key=stock_sort_comparator)}
-        player.stock = player_stock
-        player.update()
-        print(player_stock)
+        try:
+            if body.get("result") != "Ok":
+                logging.error("error while requesting guild info, {}".format(body))
+                return
+            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            payload = body.get("payload")
+            player_id = payload.get("userId")
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
+            if player is None:
+                return
+            old_stock = player.stock
+            player_stock = {}
+            stock = payload.get("stock")
+            for name, count in list(stock.items()):
+                code = get_item_code_by_name(name)
+                player_stock.update({code or name: count})
+            player_stock = {k: player_stock[k] for k in sorted(player_stock, key=stock_sort_comparator)}
+            player.stock = player_stock
+            player.update()
+            if player.api_info.get("change_stock_send"):
+                # Уведомление игрока о изменении в стоке
+                response = "Изменения в стоке:\n"
+                prices = self.api_info.get("prices") or {}
+                changes = {}
+                for code, count in list(old_stock.items()):
+                    new_count = player.stock.get(code) or 0
+                    change = new_count - count
+                    if change != 0:
+                        changes.update({code: change})
+                for code, count in list(player.stock.items()):
+                    if code in changes:
+                        continue
+                    old_count = old_stock.get(code)
+                    change = count - old_count
+                    if change != 0:
+                        changes.update({code: change})
+                response_added, response_lost = "\n<b>➕Приобретено:</b>\n", "\n<b>➖Потеряно:</b>\n"
+                gold_added, gold_lost = 0, 0
+                changes_sorted = {k: v for k, v in sorted(list(changes.items()),
+                                                          key=lambda x: (prices.get(x[0]) or 10000) * x[1])}
+                for code, change in list(changes_sorted.items()):
+                    price = prices.get(code) or 0
+                    if change > 0:
+                        response_added += "+{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
+                                                                 "{}💰".format(price * change) if price != 0 else "❔")
+                        gold_added += change * price
+                    else:
+                        response_lost += "{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
+                                                               "{}💰".format(price * change) if price != 0 else "❔")
+                        gold_lost += change * price
+                response_added += "<b>В сумме</b>: <code>{}</code>💰\n".format(gold_added) if gold_added > 0 else ""
+                response_lost += "<b>В сумме</b>: <code>{}</code>💰\n".format(gold_lost) if gold_lost < 0 else ""
+                response += response_added + response_lost
+                response += "\n<b>Всего:</b> <code>{}</code>💰".format(gold_added + gold_lost)
+                self.bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')
+
+            print(player.stock)
+        except Exception:
+            logging.error(traceback.format_exc())
 
     def on_guild_info(self, channel, method, header, body):
         if body.get("result") != "Ok":
@@ -395,6 +478,7 @@ class CW3API:
             "token": token,
             "action": "requestStock"
         })
+        print("published")
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
     def update_guild_info(self, player_id, player=None):
@@ -421,24 +505,33 @@ class CW3API:
 
     # Голая отправка запроса, без ограничений
     def __publish_message(self, message):
-        if not self.connected:
-            if self.connecting:
-                for i in range(5):
-                    time.sleep(1)
-                    if self.connected:
-                        break
-                if not self.connected:
-                    raise RuntimeError
         print("sending request", message)
         print(json.dumps(message))
         # properties = pika.BasicProperties(app_id='cactiw_castle_skalen', content_type='application/json')
-        return self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY,
-                                          body=json.dumps(message), properties=None)
+        try:
+            print("SENDING PID = ", threading.current_thread().ident)
+            self.sent += 1
+            return self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY,
+                                              body=json.dumps(message), properties=None)
+        except AttributeError:
+            logging.warning(traceback.format_exc())
+            self.sent -= 1
+            self.publish_message(message)
 
     # Функция для отправки запроса с учётом всех ограничений
     def actually_publish_message(self, message):
         try:
             self.lock.acquire()
+            print(self.connected, self.channel)
+            if self.active is False:
+                return
+            if not self.connected or self.channel is None:
+                for i in range(10):
+                    time.sleep(1)
+                    if self.connected:
+                        break
+                if not self.connected:
+                    raise RuntimeError
             while True:
                 if self.__requests_per_second < CW3API.MAX_REQUESTS_PER_SECOND:
                     self.__requests_per_second += 1
@@ -478,6 +571,8 @@ class CW3API:
         if self.active is False:
             return
         self.channel = None
+        self.in_channel = None
+        self.connected = False
         # logging.warning("Connection closed, {}, {}, reconnection in 5 seconds".format(reply_code, reply_text))
         logging.warning("Connection closed, {}, reconnection in 5 seconds".format(args))
         time.sleep(5)
@@ -503,21 +598,24 @@ class CW3API:
             print("closing connection")
             if self.consumer_tags:
                 for tag in self.consumer_tags:
-                    self.channel.basic_cancel(self.__on_cancel, tag)
+                    self.in_channel.basic_cancel(self.__on_cancel, tag)
             self.channel.close()
+            self.in_channel.close()
             self.connection.close()
             # Loop until we're fully closed, will stop on its own
             self.connection.ioloop.start()
 
     def stop(self):
         print("closing connection")
+        print("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
         self.active = False
         for i in range(self.num_workers):
             self.requests_queue.put(None)
         if self.consumer_tags:
             for tag in self.consumer_tags:
-                self.channel.basic_cancel(tag, self.__on_cancel)
+                self.in_channel.basic_cancel(tag, self.__on_cancel)
         self.channel.close()
+        self.in_channel.close()
         self.connection.close()
         print("starting loop")
         self.connection.ioloop.stop()

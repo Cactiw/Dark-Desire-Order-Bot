@@ -188,6 +188,7 @@ def grassroots_update_players(bot, job):
     count = 0
     while row is not None:
         cwapi.update_player(row[0])
+        cwapi.update_stock(row[0])
         gear_access = "gear" in row[1].get("access") or False
         if gear_access:
             cwapi.update_gear(row[0])
@@ -197,94 +198,19 @@ def grassroots_update_players(bot, job):
                      parse_mode='HTML')
 
 
+def grassroots_update_stock(bot, job):
+    print("starting updating")
+    change_send = job.context.get("change_send") or False
+    cursor = conn.cursor()
+    request = "select id, api_info from players where api_info ->> 'token' is not null"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        player = Player.get_player(row[0], notify_on_error=False)
+        if change_send:
+            player.api_info.update({"change_stock_send": True})
+            player.update()
+        cwapi.update_stock(player.id, player=player)
+        row = cursor.fetchone()
 
 
-"""
-def on_conn_open(connection):
-    print("conn opened")
-    connection.channel(on_open_callback=on_channel_open)
-
-
-def on_channel_open(new_channel):
-    global channel
-    channel = new_channel
-    print("channel_opened")
-    # print(channel.basic_publish(exchange="{}_ex".format(cwuser), routing_key="{}_o".format(cwuser),
-                                # body=json.dumps({"action": "getInfo"})))
-    tag = channel.basic_consume("{}_i".format(cwuser), receive_callback)
-    print("consuming, tag =", tag)
-    time.sleep(1)
-    channel.basic_cancel(tag)
-
-
-def receive_callback(channel, method, header, body):
-
-    print(method, header, body)
-    print(json.loads(body))
-    channel.basic_ack(method.delivery_tag)
-    tag = channel.basic_consume("{}_i".format(cwuser), receive_callback)
-    print("consuming, tag =", tag)
-
-
-credentials = pika.PlainCredentials(cwuser, cwpass)
-url = f'amqps://{cwuser}:{cwpass}@api.chtwrs.com:5673/?socket_timeout=5'
-parameters = pika.URLParameters(url)
-
-# connection = pika.BlockingConnection(parameters)
-connection = pika.SelectConnection(parameters, on_open_callback=on_conn_open)
-try:
-    connection.ioloop.start()
-except KeyboardInterrupt:
-    print("closing connection")
-    # channel.basic_cancel(on_cancel, tag)
-    channel.close()
-    connection.close()
-    # Loop until we're fully closed, will stop on its own
-    connection.ioloop.start()
-
-# channel = connection.channel()
-getInfo = json.dumps({'action': 'getInfo'})
-create_auth_code = json.dumps({
-    "action": "createAuthCode",
-    "payload": {
-        "userId": 231900398
-        }
-    })
-"""
-"""success = channel.basic_publish(exchange=f"{cwuser}_ex",
-                                routing_key=f"{cwuser}_o",
-                                body=create_auth_code)
-
-print(success)
-if success or True:
-    method_frame, header_frame, body = channel.basic_get(f"{cwuser}_i")
-    print(method_frame, header_frame, body)
-    if method_frame:
-        print(json.loads(body))
-        channel.basic_ack(method_frame.delivery_tag)
-else:
-    print('Failed to publish message')
-"""
-"""
-# method_frame, header_frame, body = channel.basic_get(f"{cwuser}_i")
-
-
-def consumer(channel):
-    print("consuming")
-    method_frame, header_frame, body = channel.consume(f"{cwuser}_i")
-    print(method_frame, header_frame, body)
-    if method_frame:
-        print(json.loads(body))
-        channel.basic_ack(method_frame.delivery_tag)
-    return
-"""
-
-"""
-threading.Thread(target=consumer, args=[channel]).start()
-print("waiting")
-time.sleep(10)
-print("publish")
-channel.basic_publish(exchange=f"{cwuser}_ex",
-                      routing_key=f"{cwuser}_o",
-                      body=getInfo)
-"""
