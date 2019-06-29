@@ -1,6 +1,8 @@
 import castle_files.work_materials.globals as file_globals
 from castle_files.bin.construction import construction_jobs
 
+from castle_files.libs.api import CW3API
+
 import time
 import pickle
 import logging
@@ -13,6 +15,9 @@ def load_data():
     try:
         f = open('castle_files/backup/user_data', 'rb')
         file_globals.dispatcher.user_data = pickle.load(f)
+        f.close()
+        f = open('castle_files/backup/api_info', 'rb')
+        CW3API.api_info = pickle.load(f)
         f.close()
         print("Data picked up")
     except FileNotFoundError:
@@ -36,6 +41,9 @@ def save_data():
         try:
             f = open('castle_files/backup/user_data', 'wb+')
             pickle.dump(file_globals.dispatcher.user_data, f)
+            f.close()
+            f = open('castle_files/backup/api_info', 'wb+')
+            pickle.dump(CW3API.api_info, f)
             f.close()
             dump = {}
             for k, v in list(construction_jobs.items()):

@@ -68,7 +68,11 @@ resources = {
     "Flammia Nut": "66",
     "Plexisop": "67",
     "Mammoth Dill": "68",
-    "Silver dust": "69"
+    "Silver dust": "69",
+    "Hay": "618",
+    "Corn": "619",
+    "Hamsters": "620",
+    "Cheese": "621",
 }
 
 resources_reverted = dict_invert(resources)

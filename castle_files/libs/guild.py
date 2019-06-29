@@ -150,7 +150,11 @@ class Guild:
 
     # Метод получения гильдии из БД
     @staticmethod
-    def get_guild(guild_id=None, guild_tag=None):
+    def get_guild(guild_id=None, guild_tag=None, new_cursor=False):
+        if new_cursor:
+            cur_cursor = conn.cursor()
+        else:
+            cur_cursor = cursor
         guild = None
         if guild_tag is not None:
             for guild_id, current_guild in list(guilds.items()):
@@ -166,13 +170,13 @@ class Guild:
                   "invite_link, orders_enabled, pin_enabled, disable_notification, assistants, settings from guilds "
         if guild_tag is not None:
             request += "where guild_tag = %s"
-            cursor.execute(request, (guild_tag,))
+            cur_cursor.execute(request, (guild_tag,))
         elif guild_id is not None:
             request += "where guild_id = %s"
-            cursor.execute(request, (guild_id,))
+            cur_cursor.execute(request, (guild_id,))
         else:
             return None
-        row = cursor.fetchone()
+        row = cur_cursor.fetchone()
         if row is None:
             return None
         guild_tag, guild_id, name, chat_id, members, commander_id, division, chat_name, invite_link, orders_enabled, \
