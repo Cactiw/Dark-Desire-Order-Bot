@@ -2,16 +2,20 @@ import logging, time
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 from order_files.work_materials.globals import cursor, order_chats, deferred_orders, job, moscow_tz, CALLBACK_CHAT_ID, \
-    local_tz, conn
+    local_tz, conn, admin_ids, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.work_materials.pult_constants import divisions as division_const, castles, defense_to_order, \
     potions_to_order
 from order_files.libs.bot_async_messaging import order_backup_queue
 from order_files.libs.pult import Pult
+from order_files.libs.bot_async_messaging import advanced_callback
 from order_files.bin.buttons import get_order_buttons
+
+import order_bot
 
 import order_files.work_materials.globals as globals
 import datetime
+import threading
 
 
 def build_menu(buttons,
@@ -24,6 +28,20 @@ def build_menu(buttons,
     if footer_buttons:
         menu.append(footer_buttons)
     return menu
+
+
+def plan_battle_jobs():
+    job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
+
+
+def after_battle(bot, job):
+    time.sleep(1)
+    plan_battle_jobs()
+    Pult.variants.clear()
+    for logs_to_send in [order_bot.logs[i:i + MAX_MESSAGE_LENGTH] for i in range(
+            0, len(order_bot.logs), MAX_MESSAGE_LENGTH)]:
+        bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
+    order_bot.logs = ""
 
 
 def menu(bot, update):
@@ -75,6 +93,42 @@ def attackCommand(bot, update):
     return
 
 
+def wait_debug(bot, orders_count):
+    orders = {}
+    orders_full = 0
+    while orders_full < orders_count:
+        data = advanced_callback.get()
+        chat_id = data.get("chat_id")
+        d = orders.get(chat_id)
+        if d is None:
+            d = {}
+            orders.update({chat_id: d})
+        for t in ["begin", "sent", "pin_end", "wait_start", "wait_end"]:
+            if t in list(data):
+                d.update({t: data.get(t)})
+        # print(chat_id, d, *(k in d for k in ["begin", "sent", "pin_end", "wait_start", "wait_end"]))
+        if all(k in d for k in ["begin", "sent", "pin_end", "wait_start", "wait_end"]):
+            orders_full += 1
+        # print(orders_full)
+    response = "Рассылка в <b>{}</b>:\n".format(time.time())
+    for chat_id, data in list(orders.items()):
+        begin, wait_start, wait_end, sent, pin_end = data.get("begin"), data.get("wait_start"), data.get("wait_end"),\
+                                                     data.get("sent"), data.get("pin_end")
+        if not all([begin, wait_start, wait_end, sent, pin_end]):
+            continue
+        new_response = "Chat_id: <code>{}</code>\nНачало в <b>{}</b>\nНачало ожидания в <b>{}</b>, конец ожидания в " \
+                       "<b>{}</b>\nОтправлено в <b>{}</b>\nЗапинено в <b>{}</b>" \
+                       "\nВремя ожидания: <b>{}</b>\nВремя отправки: <b>{}</b>\nВремя пина: <b>{}</b>" \
+                       "\nОбщее время пина: <b>{}</b>" \
+                       "\n\n".format(chat_id, begin, wait_start, wait_end, sent, pin_end, wait_end - wait_start,
+                                     sent - wait_end, pin_end - sent, pin_end - wait_end)
+        if len(response + new_response) > 4096:
+            bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
+            response = ""
+        response += new_response
+    bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
+
+
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
@@ -105,6 +159,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                 bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
                                notification=not chat[2], reply_markup=buttons)
                 orders_sent += 1
+    threading.Thread(target=wait_debug, args=(bot, orders_sent)).start()
     response = ""
     orders_OK = 0
     orders_failed = 0
@@ -226,3 +281,15 @@ def refill_deferred_orders():
             deferred_orders.append(current)
         row = cursor.fetchone()
     logging.info("Orders refilled")
+
+
+
+def count_next_battle_time():
+    next_battle = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None, hour=1, minute=0, second=0,
+                                                              microsecond=0)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    while next_battle < now:
+        next_battle += datetime.timedelta(hours=8)
+    return next_battle
+

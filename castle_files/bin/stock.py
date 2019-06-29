@@ -73,6 +73,12 @@ def send_withdraw(bot, update):
     player = Player.get_player(update.message.from_user.id)
     if player is None:
         return
+    if player.guild is not None:
+        guild = Guild.get_guild(guild_id=player.guild)
+        if guild.settings is not None:
+            if guild.settings.get("withdraw") is False:
+                if guild.chat_id == mes.chat_id:
+                    return
     if "дай" in mes.text.lower():
         # Выдача ресурсов по Дай x y
         potions_dict = {
@@ -110,11 +116,6 @@ def send_withdraw(bot, update):
                         give.update({p: 1})
                         names.append(p)
     else:
-        if player.guild is not None:
-            guild = Guild.get_guild(guild_id=player.guild)
-            if guild.settings is not None:
-                if guild.settings.get("withdraw") is False:
-                    return
         for string in update.message.text.splitlines():
             parse = re.search("(\\d+) x ([^\n$]+)", string)
             if parse is None:

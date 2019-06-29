@@ -6,10 +6,12 @@ from order_files.libs.bot_async_messaging import AsyncBot
 from libs.updater_async import AsyncUpdater
 from config import Production_order_token, psql_creditals, request_kwargs
 
+from libs.database import Conn
+
 admin_ids = [231900398, 205356091, 352318827]
 allowed_chats = [231900398, -1001139194354, -376246101]
 
-CALLBACK_CHAT_ID = 231900398
+CALLBACK_CHAT_ID = -1001351185651
 LOGS_CHAT_ID = -1001461190292
 
 MAX_MESSAGE_LENGTH = 4096
@@ -22,8 +24,8 @@ updater = AsyncUpdater(bot=bot)
 dispatcher = updater.dispatcher
 job = updater.job_queue
 
-conn = psycopg2.connect("dbname={0} user={1} password={2}".format(psql_creditals['dbname'], psql_creditals['user'], psql_creditals['pass']))
-conn.set_session(autocommit = True)
+conn = Conn(psql_creditals)
+conn.start()
 cursor = conn.cursor()
 
 order_chats = []

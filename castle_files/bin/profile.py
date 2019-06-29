@@ -100,8 +100,8 @@ def get_profile_text(player, self_request=True, user_data=None):
     if class_links is None:
         class_links = {}
         barracks.special_info.update({"class_links": class_links})
-    response = "<b>{}</b> - {} {}\n".format(player.nickname, classes_to_emoji.get(player.game_class) +
-                                            player.game_class if player.game_class is not None else "Воин",
+    response = "<b>{}</b> - {} {}\n".format(player.nickname, (classes_to_emoji.get(player.game_class) +
+                                            player.game_class) if player.game_class is not None else "Воин",
                                             "🖤Скалы" if player.castle == '🖤' else player.castle)
     response += "{}id: <code>{}</code>, ".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
@@ -117,7 +117,7 @@ def get_profile_text(player, self_request=True, user_data=None):
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
     if self_request:
-        if player.game_class is not None and player.castle == '🖤':
+        if player.game_class is not None and player.castle == '🖤' and player.game_class not in ['Master', 'Esquire']:
             try:
                 if class_links.get(player.game_class) is None:
                     revoke_class_link(player.game_class)

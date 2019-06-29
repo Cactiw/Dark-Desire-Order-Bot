@@ -84,47 +84,76 @@ def plan_top_notify():
     plan_notify(top_notify, 18, 0, 0)
 
 
+def guild_top_battles(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    if 'academy' in mes.text:
+        guild = Guild.get_academy()
+    else:
+        guild = Guild.get_guild(player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text='Гильдейские топы доступны только членам гильдий.')
+        return
+    if not guild.check_high_access(player.id):
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Гильдейские топы доступны только командирам и замам гильдий.')
+        return
+    response = get_top_text(guild, 3)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
+    if max_players is None:
+        max_players = 1000
+    if curr_cursor is None:
+        curr_cursor = cursor
+    total_battles = count_battles_in_this_week()
+    players = []
+    for player_id in guild.members:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            continue
+        request = "select exp, gold, stock from reports where player_id = %s and battle_id >= %s"
+        curr_cursor.execute(request, (player_id, count_battle_id(message=None) - battles_for_count + 1))  # За последние 3 битвы
+        row = curr_cursor.fetchone()
+        exp, gold, stock = 0, 0, 0
+        while row is not None:
+            exp += row[0]
+            gold += row[1]
+            stock += row[2]
+            row = curr_cursor.fetchone()
+        reports = player.get_reports_count()[0]
+        players.append([player, exp, gold, stock, "{}/{} ({}%)".format(reports, total_battles, reports * 100 //
+                                                                       total_battles)])
+    response = "📈Топ <b>{}</b> за день по битвам:\n".format(guild.tag)
+
+    tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах на этой неделе:"]
+    for i, top in enumerate(tops):
+        response += "\n<b>{}</b>\n".format(top)
+        players.sort(key=lambda x: x[i + 1] if isinstance(x[i + 1], int) else int(x[i + 1].partition("/")[0]),
+                     reverse=True)
+        for j, elem in enumerate(players):
+            if j < max_players or j == len(players) - 1:
+                response += "<code>{}</code>){}<code>{:<10}</code> — {}<code>{}</code>" \
+                            "\n".format(j + 1, elem[0].castle,
+                                        "{}{}".format(elem[0].nickname.partition("]")[2] if "]" in elem[0].nickname else
+                                                      elem[0].nickname, '🎗' if elem[0].id == guild.commander_id else
+                                                                        ""), top[0], elem[i + 1])
+            elif j == max_players:
+                response += "...\n"
+    return response
+
+
 # Рассылка ежедневных топов по ги
 def top_notify(bot, job):
     cursor = conn.cursor()
-    total_battles = count_battles_in_this_week()
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None or guild.division == "Луки" or not guild.members:  # or guild.tag != 'СКИ':
             continue
-        players = []
-        for player_id in guild.members:
-            player = Player.get_player(player_id, notify_on_error=False)
-            if player is None:
-                continue
-            request = "select exp, gold, stock from reports where player_id = %s and battle_id >= %s"
-            cursor.execute(request, (player_id, count_battle_id(message=None) - 2))  # За последние 3 битвы
-            row = cursor.fetchone()
-            exp, gold, stock = 0, 0, 0
-            while row is not None:
-                exp += row[0]
-                gold += row[1]
-                stock += row[2]
-                row = cursor.fetchone()
-            reports = player.get_reports_count()[0]
-            players.append([player, exp, gold, stock, "{}/{} ({}%)".format(reports, total_battles, reports * 100 //
-                                                                           total_battles)])
-        response = "📈Топ <b>{}</b> за день по битвам:\n".format(guild.tag)
-
-        tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах на этой неделе:"]
-        for i, top in enumerate(tops):
-            response += "\n<b>{}</b>\n".format(top)
-            players.sort(key=lambda x: x[i + 1] if isinstance(x[i + 1], int) else int(x[i + 1].partition("/")[0]),
-                         reverse=True)
-            for j, elem in enumerate(players):
-                if j < MAX_TOP_PLAYERS_SHOW or j == len(players) - 1:
-                    response += "<code>{}</code>){}<code>{:<10}</code> — {}<code>{}</code>" \
-                                "\n".format(j + 1, elem[0].castle, "{}{}".format(elem[0].nickname.partition("]")[2] if
-                                            "]" in elem[0].nickname else elem[0].nickname, '🎗' if
-                                            elem[0].id == guild.commander_id else ""), top[0], elem[i + 1])
-                elif j == MAX_TOP_PLAYERS_SHOW:
-                    response += "...\n"
-
+        response = get_top_text(guild, 3, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
         if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
             bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
 
@@ -160,7 +189,7 @@ def notify_guild_attack(bot, update):
     if row is None:
         return
     guild = Guild.get_guild(guild_id=row[0])
-    set = guild.settings.get("battle_notify")
+    set = guild.settings.get("battle_notify") if guild.settings is not None else True
     if guild is None or set is False:
         return
     if mes.chat_id != guild.chat_id:
@@ -238,8 +267,7 @@ def mute(bot, update, args):
     try:
         ban_for = (float(args[0]) * 60)
     except ValueError:
-        bot.send_message(chat_id=update.message.chat_id,
-                         text='Неверный синтаксис')
+        bot.send_message(chat_id=update.message.chat_id, text='Неверный синтаксис')
         return
     current += ban_for
     try:

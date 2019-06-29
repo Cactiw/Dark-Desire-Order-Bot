@@ -62,6 +62,15 @@ class FilterEditVoteDuration(BaseFilter):
 filter_edit_vote_duration = FilterEditVoteDuration()
 
 
+# Изменение классов голосования
+class FilterEditVoteClasses(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.text.startswith("/set_vote_classes_")
+
+
+filter_edit_vote_classes = FilterEditVoteClasses()
+
+
 # Начало голосования
 class FilterStartVote(BaseFilter):
     def filter(self, message):

@@ -32,7 +32,7 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
     filter_request_duty_feedback, filter_send_duty_feedback, filter_reply_to_duty_feedback, filter_ban_in_duty_chat
 from castle_files.work_materials.filters.vote_filters import filter_add_vote_text, filter_add_vote_variant, \
     filter_edit_vote_duration, filter_request_edit_vote_duration, filter_start_vote, filter_view_vote, filter_vote, \
-    filter_vote_results
+    filter_vote_results, filter_edit_vote_classes
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
@@ -52,7 +52,8 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting
-from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, plan_daily_tasks
+from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
+    plan_daily_tasks, guild_top_battles
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -69,7 +70,7 @@ from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feed
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, view_vote, \
     request_change_vote_duration, change_vote_duration, start_vote, finish_vote, votes, vote, set_vote_variant, \
-    vote_results
+    vote_results, set_vote_classes
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -83,6 +84,7 @@ from castle_files.bin.common_functions import unknown_input
 from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
 
+from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 import castle_files.work_materials.globals as file_globals
@@ -92,7 +94,12 @@ import threading
 import multiprocessing
 
 
-def start(bot, update):
+def start(bot, update, user_data):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is not None:
+        unknown_input(bot, update, user_data)
+        return
     bot.send_message(chat_id=update.message.chat_id, text="Привет! Пришли мне форвард /hero из @chatwarsbot!")
 
 
@@ -102,7 +109,7 @@ def skip(bot, update):
 
 def castle_bot_processing():
     # dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
-    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('start', start, filters=filter_is_pm, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
@@ -175,6 +182,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('guild_reports', guild_reports))
 
+    dispatcher.add_handler(CommandHandler('guild_top_battles', guild_top_battles, filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('academy_top_battles', guild_top_battles, filters=filter_is_pm))
+
     # Хендлеры академки
     dispatcher.add_handler(CommandHandler('add_teacher', add_teacher))
     dispatcher.add_handler(CommandHandler('del_teacher', del_teacher))
@@ -230,6 +240,7 @@ def castle_bot_processing():
                                           request_change_vote_duration, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_edit_vote_duration,
                                           change_vote_duration, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_edit_vote_classes, set_vote_classes))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_start_vote, start_vote))
     dispatcher.add_handler(CommandHandler('votes', votes))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_vote_results, vote_results))
@@ -394,6 +405,7 @@ def castle_bot_processing():
 
     # Загрузка user_data с диска
     load_data()
+    # Всякие действия при старте бота
     Guild.fill_guild_ids()
     fill_mid_players()
     fill_allowed_list()

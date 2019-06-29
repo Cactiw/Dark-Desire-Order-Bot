@@ -101,7 +101,7 @@ class Guild:
     def sort_players_by_exp(self):
         try:
             self.members.sort(key=lambda player_id: Player.get_player(player_id).lvl, reverse=True)
-            self.update_to_database()
+            self.update_to_database(need_order_recashe=False)
         except (TypeError, AttributeError, ValueError):
             logging.error(traceback.format_exc())
 
@@ -195,6 +195,9 @@ class Guild:
     @staticmethod
     def get_academy():
         return Guild.get_guild(guild_tag="АКАДЕМИЯ")
+
+    def is_academy(self):
+        return self.tag == "АКАДЕМИЯ"
 
     @staticmethod
     def fill_guild_ids():
