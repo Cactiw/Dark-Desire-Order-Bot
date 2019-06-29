@@ -93,15 +93,6 @@ class CW3API:
             tag = self.in_channel.basic_consume(self.YELLOW_PAGES, on_message_callback=self.on_yellow_pages)
             self.consumer_tags.append(tag)
         logger.warning("Consuming")
-        # tag = self.channel.basic_consume(self.SEX_DIGEST, self.on_sex_digest)
-        # self.consumer_tags.append(tag)
-        # tag = self.channel.basic_consume(self.YELLOW_PAGES, self.on_yellow_pages)
-        # self.consumer_tags.append(tag)
-
-        # channel.basic_get(self.SEX_DIGEST, callback=self.on_sex_digest)
-        # channel.basic_get(self.YELLOW_PAGES, callback=self.on_yellow_pages)
-        # channel.basic_get(self.DEALS, callback=self.on_deals)
-        # self.channel.basic_consume(self.DEALS, self.on_deals)
 
     def __on_cancel(self, obj=None):
         print(obj)
@@ -112,7 +103,7 @@ class CW3API:
             channel.basic_ack(method.delivery_tag)
             prices = {}
             body = json.loads(body)
-            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             for item in body:
                 name = item.get("name")
                 try:
@@ -125,7 +116,7 @@ class CW3API:
                     continue
                 prices.update({code: price})
             self.api_info.update({"prices": prices})
-            print(json.dumps(self.api_info, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(self.api_info, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
             logging.error(traceback.format_exc())
 
@@ -135,7 +126,7 @@ class CW3API:
             body = json.loads(body)
             shops = body
             self.api_info.update({"shops": shops})
-            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
             logging.error(traceback.format_exc())
 
@@ -143,7 +134,7 @@ class CW3API:
         try:
             channel.basic_ack(method.delivery_tag)
             body = json.loads(body)
-            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             seller_id = body.get("sellerId")
             # seller_id = '251066f65507439b9c6838462423f998'  Test
             player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=True)
