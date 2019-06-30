@@ -331,7 +331,8 @@ def castle_bot_processing():
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_reply_to_duty_feedback, send_reply_to_duty_request))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_audience, request_king_audience))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_audience, request_king_audience,
+                                          pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_accept_audience, accept_king_audience))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_decline_audience, decline_king_audience))
 

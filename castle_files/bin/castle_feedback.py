@@ -16,16 +16,23 @@ MID_REQUEST_FORBID_MINUTES = 15
 
 
 # Запрос на аудиенцию у Короля (возможно, когда-нибудь уберу прямые запросы в базу данных)
-def request_king_audience(bot, update):
+def request_king_audience(bot, update, user_data):
     if update.message.from_user.id == king_id:
         bot.send_message(chat_id=update.message.from_user.id, text="Это уже похоже на онанизм. Впрочем, навряд ли Вам "
                                                                    "нужно разрешение, чтобы говорить с самим собой.")
+        return
+    last_audience = user_data.get("last_king_audience")
+    if last_audience is not None and datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - last_audience < \
+            datetime.timedelta(hours=8):
+        bot.send_message(chat_id=update.message.from_user.id,
+                         text="\"Аудиенцию можно просить не чаще одного раза в 8 часов\", — сообщил дворецкий")
         return
     request = "insert into king_audiences(request_player_id, king_player_id, date_created) " \
               "values (%s, %s, %s) returning audience_id"
     cursor.execute(request, (update.message.from_user.id, king_id,
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
     row = cursor.fetchone()
+    user_data.update({"last_king_audience": datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)})
     bot.send_message(chat_id=king_id,
                      text="@{} просит аудиенции! \nПринять: /accept_king_audience_{}\nОтказать: "
                           "/decline_king_audience_{}".format(update.message.from_user.username, row[0], row[0]))
