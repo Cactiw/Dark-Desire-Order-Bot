@@ -82,7 +82,6 @@ def plan_arena_notify():
 
 def plan_top_notify():
     plan_notify(top_notify, 18, 0, 0)
-    top_notify(dispatcher.bot, None)  # TODO убрать
 
 
 def guild_top_battles(bot, update):
@@ -152,18 +151,18 @@ def top_notify(bot, job):
     cursor = conn.cursor()
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
-        if guild is None or guild.division == "Луки" or not guild.members or guild.tag != 'СКИ':  # TODO  убрать
+        if guild is None or guild.division == "Луки" or not guild.members:  # or guild.tag != 'СКИ':
             continue
         response = get_top_text(guild, 3, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
         if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
             bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
 
-    total_battles = count_battles_in_this_week() + 1  # TODO убрать
+    total_battles = count_battles_in_this_week()
     if total_battles == 21:
         # Рассылка еженедельного топа
         for guild_id in Guild.guild_ids:
             guild = Guild.get_guild(guild_id=guild_id)
-            if guild is None or guild.division == "Луки" or not guild.members or guild.tag != 'СКИ':  # TODO убрать
+            if guild is None or guild.division == "Луки" or not guild.members:  # or guild.tag != 'СКИ':
                 continue
             response = get_top_text(guild, 21, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
             if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
