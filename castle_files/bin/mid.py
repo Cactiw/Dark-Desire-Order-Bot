@@ -5,7 +5,7 @@ from castle_files.libs.guild import Guild
 from order_files.bin.pult_callback import count_next_battle_time
 
 from castle_files.bin.guild_chats import rangers_notify_start
-from castle_files.bin.api import grassroots_update_players, grassroots_update_stock
+from castle_files.bin.api import grassroots_update_players, grassroots_update_stock, send_potion_stats
 
 from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID
 
@@ -65,6 +65,9 @@ def plan_battle_jobs():
                  context={"change_send": False})
     job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=7, seconds=0),
                  context={"change_send": True})
+
+    job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(hours=1), context=[False])
+    job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(minutes=7, seconds=30), context=[True])
     # job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
 
     # job.run_once(grassroots_update_players, 0)

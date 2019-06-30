@@ -15,6 +15,7 @@ import time
 import datetime
 import json
 import pika
+import re
 
 from multiprocessing import Queue
 
@@ -132,18 +133,38 @@ class CW3API:
 
     def on_deals(self, channel, method, header, body):
         try:
-            channel.basic_ack(method.delivery_tag)
+            # channel.basic_ack(method.delivery_tag)
             body = json.loads(body)
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             seller_id = body.get("sellerId")
+            item, qty, castle = body.get("item"), body.get("qty"), body.get("buyerCastle")
+            match = re.match("((vial)|(potion)|(bottle)) of ((rage)|(peace)|(morph))", item.lower())
+            if match is not None:
+                # Это зелье ярости, мира или морфа.
+                type = match.group(0)
+                category = match.group(4)
+                potions_info = self.api_info.get("potions_info")
+                if potions_info is None:
+                    potions_info = {}
+                    self.api_info.update({"potions_info": potions_info})
+                cat = potions_info.get(category)
+                if cat is None:
+                    cat = {}
+                    potions_info.update({category: cat})
+                count_by_castles = cat.get(type)
+                if count_by_castles is None:
+                    count_by_castles = {}
+                    cat.update({type: count_by_castles})
+                count = count_by_castles.get(castle) or 0
+                count_by_castles.update({castle: count + 1})
+
             # seller_id = '251066f65507439b9c6838462423f998'  Test
             player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=True)
             if player is None:
                 return
             print(player.id, player.nickname)
             print("player is not None")
-            item, price, qty, b_castle, b_name = body.get("item"), body.get("price"), body.get("qty"), \
-                                                 body.get("buyerCastle"), body.get("buyerName"),
+            item, price, qty, b_castle, b_name = item, body.get("price"), qty, castle, body.get("buyerName")
             response = "🛒Вы продали <b>{}</b> <b>{}</b>.\nПолучено <b>{}</b>💰 ({} x {}💰).\n" \
                        "Покупатель: {}<b>{}</b>".format(qty, item, price * qty, qty, price, b_castle, b_name)
             self.bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')

@@ -268,3 +268,32 @@ def grassroots_update_stock(bot, job):
         row = cursor.fetchone()
 
 
+def send_potion_stats(bot, job):
+    clear = job.context[0]
+    potions = cwapi.api_info.get("potions_info")
+    if potions is None:
+        bot.send_message(chat_id=SUPER_ADMIN_ID, text="Ошибка. Информация по банкам отсутствует.")
+        return
+    response = "Закупки замков по банкам:\n"
+    total_potions = {}
+    for category, pot in list(potions.items()):
+        response += "<b>{}:</b>\n".format(category)
+        for type, potion in list(pot.items()):
+            for castle, count in list(potion.items()):
+                pt = total_potions.get(castle)
+                if pt is None:
+                    pt = [0, ""]
+                    total_potions.update({castle: pt})
+                # count, res = pt
+                pt[1] += "{} of {}: <code>{}</b>\n".format(type, category, count)
+                pt[0] += count
+    total_potions = {k: v for k, v in sorted(list(total_potions.values()), key=lambda x: x[1][0], reverse=True)}
+    for castle, pot in list(total_potions):
+        response += "{}, всего: <code>{}</code>\n".format(castle, pot[0])
+        response += pot[1]
+        response += "\n"
+    bot.send_message(chat_id=SUPER_ADMIN_ID, text=response, parse_mode='HTML')
+    if clear:
+        cwapi.api_info.update({"potions_info": {}})
+
+
