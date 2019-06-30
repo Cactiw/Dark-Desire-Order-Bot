@@ -7,6 +7,7 @@ from castle_files.libs.api import CW3API
 from castle_files.libs.player import Player
 
 from castle_files.bin.stock import get_item_name_by_code
+from castle_files.bin.reports import count_battle_time, count_battle_id
 
 from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID
 
@@ -274,7 +275,9 @@ def send_potion_stats(bot, job):
     if potions is None:
         bot.send_message(chat_id=SUPER_ADMIN_ID, text="Ошибка. Информация по банкам отсутствует.")
         return
-    response = "Закупки замков по банкам:\n<em>vial/potion/bottle</em>\n\n"
+    battle_id = count_battle_id(None) + 1
+    response = "Закупки замков по банкам к битве № <code>{}</code> ({}):\n<em>vial/potion/bottle</em>\n\n" \
+               "".format(battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     for category, pot in list(potions.items()):
         total_potions = {}
         response += "<b>{}:</b>\n".format(category)
