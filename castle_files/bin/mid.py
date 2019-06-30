@@ -64,8 +64,20 @@ def plan_battle_jobs():
                  context={"change_send": False})
     job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=7, seconds=0),
                  context={"change_send": True})
-    job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(hours=1), context=[False])
-    job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(minutes=7, seconds=30), context=[True])
+
+    time_to_send = next_battle_time - datetime.timedelta(hours=1)
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    if time_to_send > now:
+        job.run_once(send_potion_stats, time_to_send, context=[False])
+
+    time_to_send = next_battle_time - datetime.timedelta(minutes=30)
+    if time_to_send > now:
+        job.run_once(send_potion_stats, time_to_send, context=[False])
+
+    time_to_send = next_battle_time - datetime.timedelta(minutes=7, seconds=30)
+    if time_to_send > now:
+        job.run_once(send_potion_stats, time_to_send, context=[True])
+
     # job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
 
     # job.run_once(grassroots_update_players, 0)
