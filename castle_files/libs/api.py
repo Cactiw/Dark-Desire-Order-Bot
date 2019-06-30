@@ -133,7 +133,7 @@ class CW3API:
 
     def on_deals(self, channel, method, header, body):
         try:
-            # channel.basic_ack(method.delivery_tag)
+            channel.basic_ack(method.delivery_tag)
             body = json.loads(body)
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             seller_id = body.get("sellerId")
