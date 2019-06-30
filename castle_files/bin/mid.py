@@ -53,7 +53,6 @@ def mail_and_pin(bot, update):
 def plan_battle_jobs():
     plan_mid_notifications()
     next_battle_time = moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None)
-
     job.run_once(after_battle, next_battle_time)
     job.run_once(grassroots_update_players, next_battle_time - datetime.timedelta(hours=1, minutes=41, seconds=30))
 
@@ -65,9 +64,7 @@ def plan_battle_jobs():
                  context={"change_send": False})
     job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=7, seconds=0),
                  context={"change_send": True})
-
     job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(hours=1), context=[False])
-    job.run_once(send_potion_stats, 0.1, context=[True])  # TODO убрать
     job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(minutes=7, seconds=30), context=[True])
     # job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
 

@@ -8,7 +8,7 @@ from castle_files.libs.player import Player
 
 from castle_files.bin.stock import get_item_name_by_code
 
-from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID
 
 from config import cwuser, cwpass
 
@@ -275,25 +275,35 @@ def send_potion_stats(bot, job):
     if potions is None:
         bot.send_message(chat_id=SUPER_ADMIN_ID, text="Ошибка. Информация по банкам отсутствует.")
         return
-    response = "Закупки замков по банкам:\n"
-    total_potions = {}
+    response = "Закупки замков по банкам:\n<em>vial/potion/bottle</em>\n\n"
     for category, pot in list(potions.items()):
+        total_potions = {}
         response += "<b>{}:</b>\n".format(category)
-        for type, potion in list(pot.items()):
-            for castle, count in list(potion.items()):
+        types = ["vial", "potion", "bottle"]
+        for type in types:
+            potion = pot.get(type)
+            if potion is None:
+                potion = {k: 0 for k in castles}
+            for castle in castles:
+                count = potion.get(castle) or 0
                 pt = total_potions.get(castle)
                 if pt is None:
                     pt = [0, ""]
                     total_potions.update({castle: pt})
                 # count, res = pt
-                pt[1] += "{} of {}: <code>{}</b>\n".format(type, category, count)
+                pt[1] += "<code>{}</code>/".format(count)
                 pt[0] += count
-    total_potions = {k: v for k, v in sorted(list(total_potions.values()), key=lambda x: x[1][0], reverse=True)}
-    for castle, pot in list(total_potions.items()):
-        response += "{}, всего: <code>{}</code>\n".format(castle, pot[0])
-        response += pot[1]
-        response += "\n"
-    bot.send_message(chat_id=SUPER_ADMIN_ID, text=response, parse_mode='HTML')  # TODO изменить
+        print(total_potions)
+        total_potions = {k: v for k, v in sorted(list(total_potions.items()), key=lambda x: x[1][0], reverse=True)}
+        print(total_potions)
+        for castle, pot in list(total_potions.items()):
+            print(castle, pot)
+            if pot[0] == 0:
+                continue
+            response += "{}, всего: <code>{}</code>\n".format(castle, pot[0])
+            response += pot[1][:-1] + "\n"
+            response += "\n"
+    bot.send_message(chat_id=MID_CHAT_ID, text=response, parse_mode='HTML')
     if clear:
         cwapi.api_info.update({"potions_info": {}})
 
