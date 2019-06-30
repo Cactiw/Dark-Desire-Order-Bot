@@ -16,6 +16,7 @@ import time
 import logging
 import traceback
 import threading
+import copy
 
 import re
 
@@ -108,6 +109,14 @@ def repair_comparator(shop, castle):
     return gold
 
 
+def ws_comparator(shop, castle):
+    shop_castle = shop.get("ownerCastle")
+    mana = shop.get("mana")
+    if shop_castle == castle:
+        return -100000 + mana
+    return mana
+
+
 def repair(bot, update):
     mes = update.message
     shops = cwapi.api_info.get("shops")
@@ -133,6 +142,44 @@ def repair(bot, update):
         response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💰{} 💧{} {}" \
                     "\n".format(castle, "/ws_" + link, "/ws_" + link, gold, mana,
                                 "🏰: -{}%".format(discount) if discount is not None else "")
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+
+
+def ws(bot, update):
+    mes = update.message
+    find_item = mes.text.partition(" ")[2].lower()
+    shops = cwapi.api_info.get("shops")
+    if shops is None or not shops:
+        bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
+        return
+    player = Player.get_player(mes.from_user.id)
+    player_castle = player.castle if player is not None else '🖤'
+    sh = []
+    for shop in shops:
+        offers = []
+        for offer in shop.get("offers"):
+            name = offer.get("item")
+            if find_item in name.lower():
+                offers.append(offer)
+        if offers:
+            cur_shop = copy.deepcopy(shop)
+            cur_shop.update({"offers": offers})
+            sh.append(cur_shop)
+    sh.sort(key=lambda x: ws_comparator(x, player_castle), reverse=True)
+    pl_castle_flag = False
+    response = "<b>Доступные магазины:</b>\n"
+    for shop in sh:
+        castle = shop.get("ownerCastle")
+        if castle == player_castle:
+            if not pl_castle_flag:
+                pl_castle_flag = True
+                response += "---------------------------------\n"
+        response += "<a href=\"https://t.me/share/url?url=/ws_{}\">{}{} 💧{}</a>\n" \
+                    "".format(shop.get("link"), castle, shop.get("ownerName"), shop.get("mana"))
+        for offer in shop.get("offers"):
+            response += "<em>{}, 💧{} 💰{}</em>\n".format(offer.get("item"), offer.get("mana"), offer.get("price"))
+        response += "\n"
+    print(response)
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
 
 
