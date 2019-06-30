@@ -148,6 +148,9 @@ def repair(bot, update):
 def ws(bot, update):
     mes = update.message
     find_item = mes.text.partition(" ")[2].lower()
+    if len(find_item) <= 3:
+        bot.send_message(chat_id=mes.chat_id, text="Минимальная длина запроса — 4 символа")
+        return
     shops = cwapi.api_info.get("shops")
     if shops is None or not shops:
         bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
@@ -165,6 +168,9 @@ def ws(bot, update):
             cur_shop = copy.deepcopy(shop)
             cur_shop.update({"offers": offers})
             sh.append(cur_shop)
+    if not sh:
+        bot.send_message(chat_id=mes.chat_id, text="Магазинов с этим предметом в продаже не найдено")
+        return
     sh.sort(key=lambda x: ws_comparator(x, player_castle), reverse=True)
     pl_castle_flag = False
     response = "<b>Доступные магазины:</b>\n"
@@ -179,7 +185,6 @@ def ws(bot, update):
         for offer in shop.get("offers"):
             response += "<em>{}, 💧{} 💰{}</em>\n".format(offer.get("item"), offer.get("mana"), offer.get("price"))
         response += "\n"
-    print(response)
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
 
 
