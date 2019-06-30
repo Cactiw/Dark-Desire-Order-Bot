@@ -260,7 +260,7 @@ def grassroots_update_stock(bot, job):
     cursor.execute(request)
     row = cursor.fetchone()
     while row is not None:
-        player = Player.get_player(row[0], notify_on_error=False, new_cursor=True)
+        player = Player.get_player(row[0], notify_on_error=False, new_cursor=cursor)
         if change_send:
             player.api_info.update({"change_stock_send": True})
             player.update()
@@ -269,7 +269,6 @@ def grassroots_update_stock(bot, job):
 
 
 def send_potion_stats(bot, job):
-    print(cwapi.api_info)
     clear = job.context[0]
     potions = cwapi.api_info.get("potions_info")
     if potions is None:
@@ -293,11 +292,8 @@ def send_potion_stats(bot, job):
                 # count, res = pt
                 pt[1] += "<code>{}</code>/".format(count)
                 pt[0] += count
-        print(total_potions)
         total_potions = {k: v for k, v in sorted(list(total_potions.items()), key=lambda x: x[1][0], reverse=True)}
-        print(total_potions)
         for castle, pot in list(total_potions.items()):
-            print(castle, pot)
             if pot[0] == 0:
                 continue
             response += "{}, всего: <code>{}</code>\n".format(castle, pot[0])

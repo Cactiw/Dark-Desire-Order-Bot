@@ -1,6 +1,7 @@
 import psycopg2
 import logging
 import traceback
+import threading
 
 
 class Conn:
@@ -35,9 +36,14 @@ class Conn:
 class Cursor:
     def __init__(self, conn):
         self.conn = conn
+        self.pid = threading.current_thread().ident
         self.cursor = conn.connection.cursor() if conn.connection is not None else None
 
     def execute(self, request, *args):
+        if threading.current_thread().ident != self.pid:
+            pass
+            # logging.error("USING CURSOR IN ANOTHER THREAD, curr pid = {}, init pid = {}"
+            #               "".format(threading.current_thread().ident, self.pid))
         if self.cursor is None:
             self.cursor = self.conn.connection.cursor()
         try:
@@ -57,6 +63,10 @@ class Cursor:
             self.cursor.execute(request, *args)
 
     def fetchone(self):
+        if threading.current_thread().ident != self.pid:
+            pass
+            # logging.error("USING CURSOR IN ANOTHER THREAD, curr pid = {}, init pid = {}"
+            #               "".format(threading.current_thread().ident, self.pid))
         try:
             return self.cursor.fetchone()
         except psycopg2.ProgrammingError:

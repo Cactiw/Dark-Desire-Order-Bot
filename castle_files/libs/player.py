@@ -83,9 +83,9 @@ class Player:
     он загружен из БД ранее. Если да, то он возвращается, ежели нет, то происходит его загрузка из БД
     """
     @staticmethod
-    def get_player(player_id=None, player_in_game_id=None, notify_on_error=True, new_cursor=False):
-        if new_cursor and False:
-            cur_cursor = conn.cursor()
+    def get_player(player_id=None, player_in_game_id=None, notify_on_error=True, new_cursor=None):
+        if new_cursor is not None:
+            cur_cursor = new_cursor
         else:
             cur_cursor = cursor
         if player_id is not None:

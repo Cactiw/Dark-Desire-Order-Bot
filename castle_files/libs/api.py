@@ -2,7 +2,7 @@
 Библиотека для работы с АПИ ЧВ3
 """
 
-from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz
+from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator, \
@@ -22,6 +22,8 @@ from multiprocessing import Queue
 logger = logging.getLogger("API")
 logger.setLevel(logging.INFO)
 
+print(threading.current_thread().ident)
+
 
 class CW3API:
     MAX_REQUESTS_PER_SECOND = 30
@@ -39,6 +41,8 @@ class CW3API:
         self.connecting = False  # True, если соединение не установлено, но пытается установиться в данный момент
         self.active = True  # True при запуске, и False в самом конце, если self.active == True и
         #                   # self.connected == False, то это значит, что соединение оборвалось само.
+        self.conn = None
+        self.cursor = None
         self.connection = None
         self.channel = None
         self.in_channel = None
@@ -159,7 +163,7 @@ class CW3API:
                 count_by_castles.update({castle: count + 1})
 
             # seller_id = '251066f65507439b9c6838462423f998'  Test
-            player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=True)
+            player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=self.cursor)
             if player is None:
                 return
             print(player.id, player.nickname)
@@ -203,7 +207,7 @@ class CW3API:
         player_id = payload.get("userId")
         token = payload.get("token")
         in_game_id = payload.get("id")
-        player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
+        player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
         if not all([player, token, player_id]):
             logging.error("Value is None: {} {} {}".format(player, token, player_id))
             return
@@ -222,7 +226,7 @@ class CW3API:
             return
         try:
             player_id = body.get("payload").get("userId")
-            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
             if player is None:
                 return
             player.api_info.update({"requestId": body.get("uuid")})
@@ -235,7 +239,7 @@ class CW3API:
             payload = body.get("payload")
             player_id = payload.get("userId")
             request_id = payload.get("requestId")
-            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
             if "requestId" in player.api_info and player.api_info.get("requestId") == request_id:
                 player.api_info.pop("requestId")
                 player.update()
@@ -264,7 +268,7 @@ class CW3API:
         try:
             payload = body.get("payload")
             user_id = payload.get("userId")
-            player = Player.get_player(user_id, notify_on_error=False, new_cursor=True)
+            player = Player.get_player(user_id, notify_on_error=False, new_cursor=self.cursor)
             if player is None:
                 return
             profile = payload.get("profile")
@@ -294,7 +298,7 @@ class CW3API:
             print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             player_id = payload.get("userId")
-            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
             if player is None:
                 return
             gear_info = payload.get("gearInfo")
@@ -332,7 +336,7 @@ class CW3API:
             print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             player_id = payload.get("userId")
-            player = Player.get_player(player_id, notify_on_error=False, new_cursor=True)
+            player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
             if player is None:
                 return
             old_stock = player.stock
@@ -601,6 +605,9 @@ class CW3API:
     def start(self):
         logger.warning("Starting the API")
         self.active = True
+        self.conn = Conn(psql_creditals)
+        self.conn.start()
+        self.cursor = self.conn.cursor()
         self.connect()
         for i in range(self.num_workers):
             worker = threading.Thread(target=self.__work)
@@ -616,6 +623,7 @@ class CW3API:
             self.channel.close()
             self.in_channel.close()
             self.connection.close()
+            self.conn.close()
             # Loop until we're fully closed, will stop on its own
             self.connection.ioloop.start()
 
@@ -631,6 +639,7 @@ class CW3API:
         self.channel.close()
         self.in_channel.close()
         self.connection.close()
+        self.conn.close()
         print("starting loop")
         self.connection.ioloop.stop()
         print("loop ended")
