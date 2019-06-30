@@ -141,8 +141,8 @@ class CW3API:
             match = re.match("((vial)|(potion)|(bottle)) of ((rage)|(peace)|(morph))", item.lower())
             if match is not None:
                 # Это зелье ярости, мира или морфа.
-                type = match.group(0)
-                category = match.group(4)
+                type = match.group(1)
+                category = match.group(5)
                 potions_info = self.api_info.get("potions_info")
                 if potions_info is None:
                     potions_info = {}

@@ -67,6 +67,7 @@ def plan_battle_jobs():
                  context={"change_send": True})
 
     job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(hours=1), context=[False])
+    job.run_once(send_potion_stats, 0.1, context=[True])  # TODO убрать
     job.run_once(send_potion_stats, next_battle_time - datetime.timedelta(minutes=7, seconds=30), context=[True])
     # job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
 
