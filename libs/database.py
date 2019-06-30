@@ -57,10 +57,19 @@ class Cursor:
             self.cursor.execute(request, *args)
 
     def fetchone(self):
-        return self.cursor.fetchone()
+        try:
+            return self.cursor.fetchone()
+        except psycopg2.ProgrammingError:
+            return None
 
     def fetchmany(self):
-        return self.cursor.fetchmany()
+        try:
+            return self.cursor.fetchmany()
+        except psycopg2.ProgrammingError:
+            return None
 
     def fetchall(self):
-        return self.cursor.fetchall()
+        try:
+            return self.cursor.fetchall()
+        except psycopg2.ProgrammingError:
+            return None
