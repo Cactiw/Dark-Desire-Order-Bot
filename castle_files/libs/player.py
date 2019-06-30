@@ -84,7 +84,7 @@ class Player:
     """
     @staticmethod
     def get_player(player_id=None, player_in_game_id=None, notify_on_error=True, new_cursor=False):
-        if new_cursor:
+        if new_cursor and False:
             cur_cursor = conn.cursor()
         else:
             cur_cursor = cursor
@@ -116,6 +116,7 @@ class Player:
                                             text="Вы не зарегистрированы. Для регистрации необходимо "
                                                  "прислать ответ @ChatWarsBot на команду /hero")
             return None
+        # print(row)
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class, \
             class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, exp, api_info, \
             stock, player_id = row
