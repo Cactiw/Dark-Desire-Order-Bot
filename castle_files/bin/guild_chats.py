@@ -21,6 +21,7 @@ ping_by_chat_id = {}
 ranger_aiming_minutes = [0, 180, 165, 150, 135, 120, 105, 95, 85, 75, 65, 60, 55, 50, 45, 40]
 
 MAX_TOP_PLAYERS_SHOW = 5
+MAX_TOP_PLAYERS_SHOW_WEEK = 10
 
 
 def parse_stats():
@@ -136,7 +137,7 @@ def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
                      reverse=True)
         for j, elem in enumerate(players):
             if j < max_players or j == len(players) - 1:
-                response += "<code>{}</code>){}<code>{}</code> — {}<code>{}</code>" \
+                response += "{}){}{} — {}<code>{}</code>" \
                             "\n".format(j + 1, elem[0].castle,
                                         "{}{}".format(elem[0].nickname.partition("]")[2] if "]" in elem[0].nickname else
                                                       elem[0].nickname, '🎗' if elem[0].id == guild.commander_id else
@@ -158,13 +159,13 @@ def top_notify(bot, job):
             bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
 
     total_battles = count_battles_in_this_week()
-    if total_battles == 21:
+    if total_battles >= 21:
         # Рассылка еженедельного топа
         for guild_id in Guild.guild_ids:
             guild = Guild.get_guild(guild_id=guild_id)
             if guild is None or guild.division == "Луки" or not guild.members:  # or guild.tag != 'СКИ':
                 continue
-            response = get_top_text(guild, 21, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
+            response = get_top_text(guild, 21, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW_WEEK)
             if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
                 bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
 
