@@ -82,6 +82,7 @@ def plan_arena_notify():
 
 def plan_top_notify():
     plan_notify(top_notify, 18, 0, 0)
+    top_notify(dispatcher.bot, None)  # TODO убрать
 
 
 def guild_top_battles(bot, update):
@@ -127,7 +128,7 @@ def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
         reports = player.get_reports_count()[0]
         players.append([player, exp, gold, stock, "{}/{} ({}%)".format(reports, total_battles, reports * 100 //
                                                                        total_battles)])
-    response = "📈Топ <b>{}</b> за день по битвам:\n".format(guild.tag)
+    response = "📈Топ <b>{}</b> за {} по битвам:\n".format(guild.tag, "день" if battles_for_count == 3 else "неделю")
 
     tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах на этой неделе:"]
     for i, top in enumerate(tops):
@@ -136,7 +137,7 @@ def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
                      reverse=True)
         for j, elem in enumerate(players):
             if j < max_players or j == len(players) - 1:
-                response += "<code>{}</code>){}<code>{:<10}</code> — {}<code>{}</code>" \
+                response += "<code>{}</code>){}<code>{}</code> — {}<code>{}</code>" \
                             "\n".format(j + 1, elem[0].castle,
                                         "{}{}".format(elem[0].nickname.partition("]")[2] if "]" in elem[0].nickname else
                                                       elem[0].nickname, '🎗' if elem[0].id == guild.commander_id else
@@ -151,11 +152,22 @@ def top_notify(bot, job):
     cursor = conn.cursor()
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
-        if guild is None or guild.division == "Луки" or not guild.members:  # or guild.tag != 'СКИ':
+        if guild is None or guild.division == "Луки" or not guild.members or guild.tag != 'СКИ':  # TODO  убрать
             continue
         response = get_top_text(guild, 3, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
         if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
             bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+
+    total_battles = count_battles_in_this_week() + 1  # TODO убрать
+    if total_battles == 21:
+        # Рассылка еженедельного топа
+        for guild_id in Guild.guild_ids:
+            guild = Guild.get_guild(guild_id=guild_id)
+            if guild is None or guild.division == "Луки" or not guild.members or guild.tag != 'СКИ':  # TODO убрать
+                continue
+            response = get_top_text(guild, 21, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
+            if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
+                bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
 
 
 # Рассылка с напоминанием о арене и крафте в чаты ги в 12 по мск

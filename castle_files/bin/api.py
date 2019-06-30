@@ -57,6 +57,7 @@ def update(bot, update):
         return
     try:
         cwapi.update_player(mes.from_user.id, player=player)
+        cwapi.update_stock(mes.from_user.id, player=player)
         try:
             gear_access = "gear" in player.api_info.get("access")
         except (TypeError, IndexError):
@@ -206,7 +207,7 @@ def grassroots_update_stock(bot, job):
     cursor.execute(request)
     row = cursor.fetchone()
     while row is not None:
-        player = Player.get_player(row[0], notify_on_error=False)
+        player = Player.get_player(row[0], notify_on_error=False, new_cursor=True)
         if change_send:
             player.api_info.update({"change_stock_send": True})
             player.update()
