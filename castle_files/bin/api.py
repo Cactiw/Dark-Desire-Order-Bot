@@ -190,7 +190,8 @@ def grassroots_update_players(bot, job):
     while row is not None:
         cwapi.update_player(row[0])
         cwapi.update_stock(row[0])
-        gear_access = "gear" in row[1].get("access") or False
+        access = row[1].get("access") or []
+        gear_access = "gear" in access
         if gear_access:
             cwapi.update_gear(row[0])
         count += 1

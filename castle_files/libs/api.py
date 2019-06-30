@@ -336,7 +336,7 @@ class CW3API:
                 for code, count in list(player.stock.items()):
                     if code in changes:
                         continue
-                    old_count = old_stock.get(code)
+                    old_count = old_stock.get(code) or 0
                     change = count - old_count
                     if change != 0:
                         changes.update({code: change})
