@@ -10,9 +10,8 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
 
-from castle_files.bin.buttons import send_general_buttons
+from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
 from castle_files.bin.service_functions import check_access, dict_invert
-from castle_files.bin.buttons import get_profile_buttons
 from castle_files.bin.reports import count_battle_time
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
@@ -170,7 +169,8 @@ def profile(bot, update, user_data=None):
     player = Player.get_player(mes.from_user.id)
     response = get_profile_text(player, user_data=user_data)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML',
-                     reply_markup=get_profile_buttons(player, whois_access=True), disable_web_page_preview=True)
+                     reply_markup=get_profile_buttons(player, whois_access=True, self_request=True),
+                     disable_web_page_preview=True)
 
 
 trade_divisions_access_list = [439637823, 320365073, 334443202, 407981701]
@@ -443,6 +443,64 @@ def hero(bot, update, user_data):
             guild = Guild.get_guild(player.guild)
             guild.calculate_attack_and_defense()
             guild.sort_players_by_exp()
+
+
+def get_profile_settings_text(player):
+    response = "<b>{}</b>\n<em>⚙Настройки:</em>\n\n".format(player.nickname)
+    settings = player.settings
+    if settings is None:
+        settings = {}
+        player.settings = settings
+    sold_notify, stock_change, rangers_notify = settings.get("sold_notify"), settings.get("stock_change"),\
+        settings.get("rangers_notify")
+    if sold_notify is None:
+        sold_notify = True
+    response += "<code>{:<26}</code> <b>{}</b>\n".format("🛒Уведомления о продаже",
+                                                         "✅включены" if sold_notify else "❌отключены")
+    if stock_change is None:
+        stock_change = True
+    response += "<code>{:<26}</code> <b>{}</b>\n".format("📦Изменения в стоке",
+                                                         "✅включены" if stock_change else "❌отключены")
+    if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+        if rangers_notify is None:
+            rangers_notify = True
+        response += "<code>{:<26}</code> <b>{}</b>\n".format("📦Пинг на аим",
+                                                             "✅включён" if rangers_notify else "❌отключён")
+    return response
+
+
+def profile_settings(bot, update):
+    data = update.callback_query.data
+    mes = update.callback_query.message
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        return
+    response = get_profile_settings_text(player)
+    buttons = get_profile_settings_buttons(player)
+    bot.send_message(chat_id=update.callback_query.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    print(response)
+    pass
+
+
+def change_profile_setting(bot, update):
+    data = update.callback_query.data
+    mes = update.callback_query.message
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        return
+    set = {"prsstocknotify": "stock_change", "prssoldnotify": "sold_notify", "prsaimping": "rangers_notify"}
+    setting = set.get(data.partition("_")[0])
+    state = player.settings.get(setting)
+    if state is None:
+        state = True
+    player.settings.update({setting: not state})
+    player.update()
+    response = get_profile_settings_text(player)
+    buttons = get_profile_settings_buttons(player)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML',
+                        reply_markup=buttons)
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 def add_class_from_player(bot, update):

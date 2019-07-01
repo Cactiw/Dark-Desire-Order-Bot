@@ -164,7 +164,7 @@ class CW3API:
 
             # seller_id = '251066f65507439b9c6838462423f998'  Test
             player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=self.cursor)
-            if player is None:
+            if player is None or (player.settings is not None and player.settings.get("sold_notify") is False):
                 return
             print(player.id, player.nickname)
             print("player is not None")
@@ -348,7 +348,13 @@ class CW3API:
             player_stock = {k: player_stock[k] for k in sorted(player_stock, key=stock_sort_comparator)}
             player.stock = player_stock
             player.update()
-            if player.api_info.get("change_stock_send"):
+            if player.settings is None:
+                send_change = True
+            else:
+                send_change = player.settings.get("stock_change")
+                if send_change is None:
+                    send_change = True
+            if player.api_info.get("change_stock_send") and send_change is True:
                 # Уведомление игрока о изменении в стоке
                 response = "Изменения в стоке:\n"
                 prices = self.api_info.get("prices") or {}

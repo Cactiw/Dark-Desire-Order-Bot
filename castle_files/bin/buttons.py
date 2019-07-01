@@ -9,7 +9,7 @@ from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 
-def get_profile_buttons(player, whois_access=False):
+def get_profile_buttons(player, whois_access=False, self_request=False):
     buttons = [
         [
             InlineKeyboardButton("История гильдий", callback_data="pr_guild_history_{}".format(player.id)),
@@ -18,6 +18,23 @@ def get_profile_buttons(player, whois_access=False):
     if whois_access:
         buttons[0].append(InlineKeyboardButton("Репорты",
                                                callback_data="pr_reports_history_{}".format(player.id)),)
+    if self_request:
+        buttons.append([
+            InlineKeyboardButton("⚙️Настройки", callback_data="pr_settings_{}".format(player.id)),
+        ])
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_profile_settings_buttons(player):
+    buttons = [
+        [
+            InlineKeyboardButton("🛒Уведомления о продаже", callback_data="prssoldnotify_{}".format(player.id)),
+            InlineKeyboardButton("📦Изменения стока", callback_data="prsstocknotify_{}".format(player.id)),
+        ],
+    ]
+    if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+        buttons.append([InlineKeyboardButton("🔄Пинг на аим", callback_data="prsaimping_{}".format(player.id)),
+])
     return InlineKeyboardMarkup(buttons)
 
 

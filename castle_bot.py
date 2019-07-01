@@ -42,7 +42,8 @@ from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, updat
 from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
-    set_status, guild_history, revoke_all_class_links, class_chat_check, reports_history
+    set_status, guild_history, revoke_all_class_links, class_chat_check, reports_history, profile_settings, \
+    change_profile_setting
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
@@ -388,6 +389,9 @@ def castle_bot_processing():
     # Хендлеры для инлайн кнопок профиля
     dispatcher.add_handler(CallbackQueryHandler(guild_history, pattern="pr_guild_history_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(reports_history, pattern="pr_reports_history_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(profile_settings, pattern="pr_settings_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(change_profile_setting, pattern="prs.*_\\d+"))
 
     # Хендлеры для инлайн кнопок гильдий
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
