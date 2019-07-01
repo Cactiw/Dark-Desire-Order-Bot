@@ -464,7 +464,7 @@ def get_profile_settings_text(player):
     if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
         if rangers_notify is None:
             rangers_notify = True
-        response += "<code>{:<26}</code> <b>{}</b>\n".format("📦Пинг на аим",
+        response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на аим",
                                                              "✅включён" if rangers_notify else "❌отключён")
     return response
 
