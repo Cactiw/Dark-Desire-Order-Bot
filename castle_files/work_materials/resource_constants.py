@@ -69,6 +69,7 @@ resources = {
     "Plexisop": "67",
     "Mammoth Dill": "68",
     "Silver dust": "69",
+    "Bottle of Poison": "508",
     "Hay": "618",
     "Corn": "619",
     "Hamsters": "620",
