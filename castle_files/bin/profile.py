@@ -322,8 +322,7 @@ def reports_history(bot, update):
     cursor.execute(request, (requested_player.id,))
     row = cursor.fetchone()
     while row is not None:
-        response += "🕒{} ⚔️: <code>{:<3}</code>, 🛡: <code>{:<3}</code>, 🔥:<code>{:<4}</code>, 💰: <code>{:<3}</code>, " \
-                    "📦: <code>{:<3}</code>" \
+        response += "🕒{} ⚔️:<code>{:<3},🛡:{:<3},🔥:{:<4},💰:{:<3},📦:{:<3}</code>" \
                     "\n".format(count_battle_time(row[0]).strftime("%H:%M %d/%m"), row[1], row[2], row[3], row[4],
                                 row[5])
         row = cursor.fetchone()
