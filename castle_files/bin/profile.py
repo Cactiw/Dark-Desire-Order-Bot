@@ -446,7 +446,7 @@ def hero(bot, update, user_data):
 
 
 def get_profile_settings_text(player):
-    response = "<b>{}</b>\n<em>⚙Настройки:</em>\n\n".format(player.nickname)
+    response = "{}<b>{}</b>\n<em>⚙Настройки:</em>\n\n".format(player.castle, player.nickname)
     settings = player.settings
     if settings is None:
         settings = {}
