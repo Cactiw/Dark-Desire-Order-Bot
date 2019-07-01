@@ -217,25 +217,25 @@ def get_guild_settings_text(guild):
     if withdraw is None:
         withdraw = True
         settings.update({"withdraw": withdraw})
-    response += "<code>{:<19}</code> <b>{}</b>\n".format("🏷Выдача ресурсов",
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("🏷Выдача ресурсов",
                                                          "✅включена" if withdraw else "❌отключена")
 
     if unpin is None:
         unpin = True
         settings.update({"unpin": unpin})
-    response += "<code>{:<19}</code> <b>{}</b>\n".format("📌Открепление пина",
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("📌Открепление пина",
                                                          "✅включено" if unpin else "❌отключено")
 
     if arena_notify is None:
         arena_notify = True
         settings.update({"arena_notify": arena_notify})
-    response += "<code>{:<19}</code> <b>{}</b>\n".format("🔔Напоминалка в 12",
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("🔔Напоминалка в 12",
                                                          "✅включена" if arena_notify else "❌отключена")
 
     if battle_notify is None:
         battle_notify = True
         settings.update({"battle_notify": battle_notify})
-    response += "<code>{:<21}</code> <b>{}</b>\n".format("⚔️️Пинги к битве",  # Не имею ни малейшего понятия, почему 21
+    response += "<code>{:<20}</code> <b>{}</b>\n".format("⚔️️Пинги к битве",  # Не имею ни малейшего понятия, почему 20
                                                          "✅включены" if battle_notify else "❌отключены")
     return response
 
