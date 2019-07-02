@@ -68,6 +68,9 @@ def plan_battle_jobs():
     job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=7, seconds=0),
                  context={"change_send": True})
 
+    job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=0, seconds=1),
+                 context={"change_send": False})
+
     job.run_once(update_stock_for_fails, next_battle_time + datetime.timedelta(hours=0, minutes=10, seconds=0),
                  context={"change_send": True})
 
