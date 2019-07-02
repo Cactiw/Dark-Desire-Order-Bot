@@ -269,6 +269,18 @@ def grassroots_update_stock(bot, job):
         row = cursor.fetchone()
 
 
+def update_stock_for_fails(bot, job):
+    cursor = conn.cursor()
+    request = "select id, api_info from players where api_info ->> 'token' is not null and (api_info ->> " \
+              "'change_stock_send')::boolean is true"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        player = Player.get_player(row[0], notify_on_error=False, new_cursor=cursor)
+        cwapi.update_stock(player.id, player=player)
+        row = cursor.fetchone()
+
+
 def send_potion_stats(bot, job):
     clear = job.context[0]
     potions = cwapi.api_info.get("potions_info")

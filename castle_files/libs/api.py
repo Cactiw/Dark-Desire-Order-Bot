@@ -354,6 +354,8 @@ class CW3API:
                 send_change = player.settings.get("stock_change")
                 if send_change is None:
                     send_change = True
+            logging.error("Got stock through api for {}, {} {}"
+                          "".format(player.nickname, player.api_info.get("change_stock_send"), send_change))
             if player.api_info.get("change_stock_send") and send_change is True:
                 # Уведомление игрока о изменении в стоке
                 response = "Изменения в стоке:\n"
