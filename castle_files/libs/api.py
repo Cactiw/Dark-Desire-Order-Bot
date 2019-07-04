@@ -637,7 +637,7 @@ class CW3API:
 
     def stop(self):
         print("closing connection")
-        print("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
+        logging.error("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
         self.active = False
         for i in range(self.num_workers):
             self.requests_queue.put(None)
