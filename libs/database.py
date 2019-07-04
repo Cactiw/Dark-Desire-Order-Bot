@@ -47,7 +47,7 @@ class Cursor:
         if threading.current_thread().ident != self.pid:
             self.requests += request + "\n"
             self.error_threading_count += 1
-            if self.error_threading_count >= 3:
+            if self.error_threading_count >= 3 or True:
                 logging.error("USING CURSOR {} IN ANOTHER THREAD (err_count = {}), curr pid = {}, "
                               "init pid = {}, request = {}\n"
                               "{}".format(self.id, self.error_threading_count, threading.current_thread().ident,
