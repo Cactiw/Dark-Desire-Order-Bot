@@ -8,7 +8,6 @@ class Conn:
     def __init__(self, credentials):
         self.credentials = credentials
         self.connection = None
-        self.cursors = {}
 
     def start(self):
         if self.connection is not None:
@@ -22,9 +21,7 @@ class Conn:
         self.connection.set_session(autocommit=True)
 
     def cursor(self):
-        cursor = Cursor(self)
-        self.cursors.update({threading.current_thread().ident: cursor.cursor})
-        return cursor
+        return Cursor(self)
 
     def close(self):
         self.connection.close()
@@ -40,21 +37,13 @@ class Cursor:
     def __init__(self, conn):
         self.conn = conn
         self.pid = threading.current_thread().ident
-        self.cursor = None
-        self.load_cursor()
-
-    def load_cursor(self):
-        self.cursor = self.conn.cursors.get(self.pid)
-        if self.cursor is None:
-            print("reloading cursor")
-            self.cursor = self.conn.connection.cursor() if self.conn.connection is not None else None
+        self.cursor = conn.connection.cursor() if conn.connection is not None else None
 
     def execute(self, request, *args):
         if threading.current_thread().ident != self.pid:
             pass
             # logging.error("USING CURSOR IN ANOTHER THREAD, curr pid = {}, init pid = {}"
             #               "".format(threading.current_thread().ident, self.pid))
-        self.load_cursor()
         if self.cursor is None:
             self.cursor = self.conn.connection.cursor()
         try:
@@ -74,7 +63,6 @@ class Cursor:
             self.cursor.execute(request, *args)
 
     def fetchone(self):
-        self.load_cursor()
         if threading.current_thread().ident != self.pid:
             pass
             # logging.error("USING CURSOR IN ANOTHER THREAD, curr pid = {}, init pid = {}"
@@ -85,14 +73,12 @@ class Cursor:
             return None
 
     def fetchmany(self):
-        self.load_cursor()
         try:
             return self.cursor.fetchmany()
         except psycopg2.ProgrammingError:
             return None
 
     def fetchall(self):
-        self.load_cursor()
         try:
             return self.cursor.fetchall()
         except psycopg2.ProgrammingError:
