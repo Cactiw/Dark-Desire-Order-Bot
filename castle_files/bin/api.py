@@ -271,10 +271,9 @@ def grassroots_update_stock(bot, job):
             count += 1
         cwapi.update_stock(player.id, player=player)
         row = cursor.fetchone()
-    if count > 0:
-        bot.send_message(chat_id=SUPER_ADMIN_ID,
-                         text="Запрошено обновление {} стоков, установлено {} флагов для отправки"
-                              "".format(count_all, count))
+    bot.send_message(chat_id=SUPER_ADMIN_ID,
+                     text="Запрошено обновление {} стоков, установлено {} флагов для отправки"
+                          "".format(count_all, count))
 
 
 def update_stock_for_fails(bot, job):
