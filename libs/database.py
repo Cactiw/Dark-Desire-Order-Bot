@@ -2,6 +2,7 @@ import psycopg2
 import logging
 import traceback
 import threading
+import random
 
 
 class Conn:
@@ -37,13 +38,21 @@ class Cursor:
     def __init__(self, conn):
         self.conn = conn
         self.pid = threading.current_thread().ident
+        self.id = random.randint(1, 10000000)  # Не использовать, исключительно для отладки, генерация небезопасна!
+        self.error_threading_count = 0
+        self.requests = ""
         self.cursor = conn.connection.cursor() if conn.connection is not None else None
 
     def execute(self, request, *args):
         if threading.current_thread().ident != self.pid:
-            pass
-            # logging.error("USING CURSOR IN ANOTHER THREAD, curr pid = {}, init pid = {}"
-            #               "".format(threading.current_thread().ident, self.pid))
+            self.requests += request + "\n"
+            self.error_threading_count += 1
+            if self.error_threading_count >= 3 or True:
+                logging.error("USING CURSOR {} IN ANOTHER THREAD (err_count = {}), curr pid = {}, "
+                              "init pid = {}, request = {}\n"
+                              "{}".format(self.id, threading.current_thread().ident, self.error_threading_count,
+                                          self.pid, request, self.requests))
+                self.pid = threading.current_thread().ident
         if self.cursor is None:
             self.cursor = self.conn.connection.cursor()
         try:
@@ -83,3 +92,6 @@ class Cursor:
             return self.cursor.fetchall()
         except psycopg2.ProgrammingError:
             return None
+
+    def close(self):
+        self.cursor.close()

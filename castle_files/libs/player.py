@@ -85,10 +85,14 @@ class Player:
     """
     @staticmethod
     def get_player(player_id=None, player_in_game_id=None, notify_on_error=True, new_cursor=None):
+        """
         if new_cursor is not None:
             cur_cursor = new_cursor
         else:
             cur_cursor = cursor
+        """
+        cur_cursor = conn.cursor()  # Without this is unstable, however i don`t know how many time does it take
+        #                           # to process this instruction
         if player_id is not None:
             player = players.get(player_id)
             if player is not None:
@@ -139,6 +143,7 @@ class Player:
                         reputation=reputation, created=created, status=status, guild_history=guild_history, exp=exp,
                         api_info=api_info, stock=stock, settings=settings)
         players.update({player_id: player})  # Кладу игрока в память для дальнейшего ускоренного использования
+        cur_cursor.close()  # Remove this if you want to use other cursors
         return player
 
     # Преобразование экипировки игрока в готовый для записи в БД json-объект
@@ -176,6 +181,8 @@ class Player:
 
     # Метод для обновления уже существующей информации о игроке в БД
     def update_to_database(self):
+        cursor = conn.cursor()  # Without this is unstable, however i don`t know how many time does it take
+        #                           # to process this instruction
         request = "update players set username = %s, nickname = %s, guild_tag = %s, guild = %s, lvl= %s, " \
                   "attack = %s, defense = %s, stamina = %s, pet = %s, equipment = %s, game_class = %s, " \
                   "class_skill_lvl = %s, castle = %s, last_updated = %s, reputation = %s, created = %s, status = %s, " \
@@ -191,6 +198,7 @@ class Player:
                                  self.castle, self.last_updated, self.reputation, self.created, self.status,
                                  self.guild_history, self.exp, json.dumps(self.api_info), json.dumps(self.stock),
                                  json.dumps(self.settings), self.id))
+        cursor.close()
         return 0
 
     def update(self):
