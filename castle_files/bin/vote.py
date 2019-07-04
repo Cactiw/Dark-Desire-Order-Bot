@@ -103,7 +103,7 @@ def view_vote(bot, update):
         cl_text = "ВСЕ"
     else:
         for i, b in enumerate(row[5]):
-            cl_text += classes_list[b] if b else ""
+            cl_text += classes_list[i] if b else ""
     response += "Классы: <code>{}</code>\n".format(cl_text)
     if row[3] is None:
         response += "Изменить длительность: /change_vote_duration_{}\n".format(vote_id)
