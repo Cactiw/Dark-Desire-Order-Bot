@@ -260,13 +260,21 @@ def grassroots_update_stock(bot, job):
     request = "select id, api_info from players where api_info ->> 'token' is not null"
     cursor.execute(request)
     row = cursor.fetchone()
+    count = 0
+    count_all = 0
     while row is not None:
         player = Player.get_player(row[0], notify_on_error=False, new_cursor=cursor)
+        count_all += 1
         if change_send:
             player.api_info.update({"change_stock_send": True})
             player.update()
+            count += 1
         cwapi.update_stock(player.id, player=player)
         row = cursor.fetchone()
+    if count > 0:
+        bot.send_message(chat_id=SUPER_ADMIN_ID,
+                         text="Запрошено обновление {} стоков, установлено {} флагов для отправки"
+                              "".format(count_all, count))
 
 
 def update_stock_for_fails(bot, job):
