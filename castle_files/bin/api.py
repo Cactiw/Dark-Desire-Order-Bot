@@ -288,8 +288,8 @@ def send_potion_stats(bot, job):
         bot.send_message(chat_id=SUPER_ADMIN_ID, text="Ошибка. Информация по банкам отсутствует.")
         return
     battle_id = count_battle_id(None) + 1
-    response = "Закупки замков по банкам к битве № <code>{}</code> ({}):\n<em>vial/potion/bottle</em>\n\n" \
-               "".format(battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
+    response = "Закупки замков по банкам к битве № <code>{}</code> ({}):\n\n<em>total | vial / potion / bottle</em>" \
+               "\n\n".format(battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     for category, pot in list(potions.items()):
         total_potions = {}
         response += "<b>{}:</b>\n".format(category)
@@ -305,15 +305,13 @@ def send_potion_stats(bot, job):
                     pt = [0, ""]
                     total_potions.update({castle: pt})
                 # count, res = pt
-                pt[1] += "<code>{}</code>/".format(count)
+                pt[1] += "<code>{:>2}</code> / ".format(count)
                 pt[0] += count
         total_potions = {k: v for k, v in sorted(list(total_potions.items()), key=lambda x: x[1][0], reverse=True)}
         for castle, pot in list(total_potions.items()):
             if pot[0] == 0:
                 continue
-            response += "{}, всего: <code>{}</code>\n".format(castle, pot[0])
-            response += pot[1][:-1] + "\n"
-            response += "\n"
+            response += "{}: <code>{:>2}</code> | {}\n".format(castle, pot[0], pot[1][:-1])
     bot.send_message(chat_id=MID_CHAT_ID, text=response, parse_mode='HTML')
     if clear:
         cwapi.api_info.update({"potions_info": {}})
