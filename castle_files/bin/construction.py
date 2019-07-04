@@ -8,7 +8,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
 from castle_files.libs.my_job import MyJob
 
-from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs
+from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn
 
 import time
 import pickle
@@ -57,6 +57,7 @@ def treasury(bot, update, user_data):
 
 
 def resource_return(bot, job):
+    cursor = conn.cursor()
     if job.context[1].get("status") not in ["sawmill", "quarry"]:
         return
     statuses_to_res = {"sawmill": "wood", "quarry": "stone"}
@@ -178,6 +179,7 @@ def construct(bot, update, user_data):
 
 
 def construction_return(bot, job):
+    cursor = conn.cursor()
     player_id = job.context[0]
     user_data = job.context[1]
     if user_data.get("status") not in ["construction"]:
