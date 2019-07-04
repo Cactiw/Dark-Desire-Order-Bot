@@ -93,7 +93,7 @@ def plan_battle_jobs():
     if time_to_send > now:
         job.run_once(send_potion_stats, time_to_send, context=[True])
 
-    # rangers_notify_start(bot=dispatcher.bot, update=SUPER_ADMIN_ID)  # временно отключил
+    rangers_notify_start(bot=dispatcher.bot, update=SUPER_ADMIN_ID)
 
 
 def after_battle(bot, job):

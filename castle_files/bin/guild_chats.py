@@ -317,6 +317,7 @@ def rangers_notify_start(bot, update):
             row = cursor.fetchone()
             continue
         if player.settings is not None and player.settings.get("rangers_notify") is False:
+            row = cursor.fetchone()
             continue
         guild = Guild.get_guild(guild_id=player.guild)
         if guild is None:
