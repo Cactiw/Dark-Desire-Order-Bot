@@ -348,15 +348,26 @@ def list_players(bot, update, guild_id=None):
     guild.sort_players_by_exp()
     guild.calculate_attack_and_defense()
     high_access = guild.check_high_access(update.callback_query.from_user.id)
+    if high_access:
+        response += "<em>🖇 — полный доступ к АПИ, 📎 — без экипировки</em>\n\n"
     for player_id in guild.members:
         player = Player.get_player(player_id)
         if player is None:
             logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
             continue
+        api_text = ""
+        if high_access:
+            token = player.api_info.get("token")
+            if token is not None:
+                access = player.api_info.get("access") or []
+                if "gear" in access:
+                    api_text = "🖇"
+                else:
+                    api_text = "📎"
         rp1, rp2, rp3 = player.get_reports_count()
-        response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code> " \
-                       "🎖: <code>{}</code>/<code>{}</code>" \
-                       "".format(player.nickname, player.lvl, player.attack, player.defense, rp1, rp2)
+        response_new = "<b>{}</b>{}\n🏅:<code>{},⚔:{},🛡:{}," \
+                       "🎖:{}/{}</code>" \
+                       "".format(player.nickname, api_text, player.lvl, player.attack, player.defense, rp1, rp2)
         if high_access:
             response_new += "\nПоказать профиль: /view_profile_{}" \
                        "\nУдалить из гильдии: /remove_player_{}".format(player.id, player.id)
