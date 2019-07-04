@@ -91,10 +91,12 @@ class Player:
             cur_cursor = cursor
         if player_id is not None:
             player = players.get(player_id)
+            """
             if player is not None:
                 # Игрок уже загружен из базы данных
                 player.last_access_time = time.time()
                 return player
+            """
             arg = player_id
         else:
             arg = player_in_game_id
