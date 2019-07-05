@@ -151,10 +151,13 @@ class Guild:
     # Метод получения гильдии из БД
     @staticmethod
     def get_guild(guild_id=None, guild_tag=None, new_cursor=False):
+        """
         if new_cursor:
             cur_cursor = conn.cursor()
         else:
             cur_cursor = cursor
+        """
+        cur_cursor = conn.cursor()
         guild = None
         if guild_tag is not None:
             for guild_id, current_guild in list(guilds.items()):
@@ -190,6 +193,7 @@ class Guild:
         # Сохранение гильдии в словарь для дальнейшего быстрого доступа
         guilds.update({guild.id: guild})
         guild.last_access_time = time.time()
+        cur_cursor.close()
         return guild
 
     @staticmethod
@@ -211,6 +215,7 @@ class Guild:
 
     # Метод для обновления информации о гильдии в БД
     def update_to_database(self, need_order_recashe=True):
+        cursor = conn.cursor()
         request = "update guilds set guild_name = %s, members = %s, commander_id = %s, division = %s, chat_id = %s, " \
                   "chat_name = %s, invite_link = %s, orders_enabled = %s, pin_enabled = %s,disable_notification = %s, " \
                   "assistants = %s, settings = %s where guild_tag = %s"
@@ -223,6 +228,7 @@ class Guild:
             return -1
         if need_order_recashe:
             update_request_queue.put(["update_guild", self.id])
+        cursor.close()
         return 0
 
     def create_guild(self):

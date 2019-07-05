@@ -298,6 +298,7 @@ def ranger_notify(bot, job):
 
 
 def rangers_notify_start(bot, update):
+    cursor = conn.cursor()
     time_to_battle = get_time_remaining_to_battle()
     print("time_to_battle", time_to_battle)
     try:
@@ -341,5 +342,6 @@ def rangers_notify_start(bot, update):
 
         row = cursor.fetchone()
         count += 1
+    cursor.close()
     bot.send_message(chat_id=callback_chat_id, text="Запланировано оповещение <b>{0}</b> бедных лучников".format(count),
                      parse_mode='HTML')
