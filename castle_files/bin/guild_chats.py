@@ -58,9 +58,10 @@ def parse_stats():
 
 # Запускается один раз при старте бота; осуществляет планирование всех рассылок, привязанных ко времени и
 # прочие задания.
-def plan_daily_tasks():
+def plan_daily_tasks(bot=None, job=None):
     plan_arena_notify()
     plan_top_notify()
+    plan_notify(plan_daily_tasks, 0, 0, 10)
 
 
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
@@ -83,7 +84,6 @@ def plan_arena_notify():
 
 def plan_top_notify():
     plan_notify(top_notify, 18, 0, 0)
-    job.run_once(top_notify, 1)
 
 
 def guild_top_battles(bot, update):
