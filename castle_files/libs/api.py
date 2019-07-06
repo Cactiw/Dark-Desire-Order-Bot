@@ -194,7 +194,7 @@ class CW3API:
 
     def on_create_auth_code(self, channel, method, header, body):
         print("in callback", body)
-        if body.get("result") is not "Ok":
+        if body.get("result") != "Ok":
             logging.error("error while creating auth code, {}".format(body))
             return
 
