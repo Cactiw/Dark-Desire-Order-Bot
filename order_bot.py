@@ -13,7 +13,8 @@ from order_files.bin.guild_chats import add_pin, pin_setup, recashe_order_chats,
 
 from order_files.bin.castle_update_monitor import castle_update_monitor
 
-from order_files.work_materials.globals import dispatcher, updater, conn, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
+from order_files.work_materials.globals import dispatcher, updater, conn, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH, \
+    order_async_bot
 
 from castle_files.bin.castle import fill_mid_players
 
@@ -101,6 +102,8 @@ def order_bot_processing():
     update_monitor.start()
     processes.append(update_monitor)
 
+    order_async_bot.start()
+
     updater.start_polling(clean=False)
 
     # Останавливаем бота, если были нажаты Ctrl + C
@@ -111,3 +114,4 @@ def order_bot_processing():
     # Разрываем подключение.
     conn.close()
     update_request_queue.put(None)
+    order_async_bot.stop()

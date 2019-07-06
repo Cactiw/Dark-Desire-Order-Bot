@@ -2,7 +2,7 @@ import logging, time
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 from order_files.work_materials.globals import cursor, order_chats, deferred_orders, job, moscow_tz, CALLBACK_CHAT_ID, \
-    local_tz, conn, admin_ids, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
+    local_tz, conn, admin_ids, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH, order_async_bot
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.work_materials.pult_constants import divisions as division_const, castles, defense_to_order, \
     potions_to_order
@@ -143,27 +143,27 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
     buttons = get_order_buttons(castle_target, defense)
-    orders_sent = 0
     if divisions == 'ALL':
-        for chat in order_chats:
-            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
-                           notification=not chat[2], reply_markup=buttons)
-            orders_sent += 1
+        chats = order_chats
+        order_async_bot.send_order(order_id=globals.order_id, chats=chats, response=response, reply_markup=buttons)
+        orders_sent = len(chats)
     else:
+        chats = []
         current_divisions = []
         for i in range(0, len(divisions)):
             if divisions[i]:
                 current_divisions.append(division_const[i])
         for chat in order_chats:
             if chat[3] in current_divisions:
-                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
-                               notification=not chat[2], reply_markup=buttons)
-                orders_sent += 1
+                chats.append(chat)
+        order_async_bot.send_order(order_id=globals.order_id, chats=chats, response=response, reply_markup=buttons)
+        orders_sent = len(chats)
     threading.Thread(target=wait_debug, args=(bot, orders_sent)).start()
     response = ""
     orders_OK = 0
     orders_failed = 0
     while orders_OK + orders_failed < orders_sent:
+        print(orders_OK, orders_failed, orders_OK + orders_failed, orders_sent)
         current = order_backup_queue.get()
         if current.order_id == globals.order_id:
             if current.OK:
