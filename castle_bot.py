@@ -81,7 +81,7 @@ from castle_files.bin.reports import add_report, battle_stats
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
 from castle_files.bin.telethon_script import script_work
-from castle_files.bin.common_functions import unknown_input
+from castle_files.bin.common_functions import unknown_input, sql
 
 from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
@@ -380,6 +380,8 @@ def castle_bot_processing():
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_change_guild_division, change_guild_division,
                                           pass_user_data=True))
+
+    dispatcher.add_handler(CommandHandler('sql', sql))
 
     dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
     # End of the restrictions---------------------------------------------------------------------------------------
