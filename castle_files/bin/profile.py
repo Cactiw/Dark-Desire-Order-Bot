@@ -85,10 +85,14 @@ def class_chat_check(bot, update):
         if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id or \
                 player.castle != '🖤':
             try:
+                text = "Это чат <b>{}</b>. Он не для тебя."
+                if mes.chat_id == class_chats.get('Sentinel'):
+                    text = "Ты зашел в чат Б-гоизбранных Стражей Скалы. Но этот чат не для тебя, ничтожество. " \
+                           "Иди погуляй, алебарду тебе в задницу"
                 cl = class_chats_inverted.get(mes.chat_id)
                 bot.kickChatMember(chat_id=mes.chat_id, user_id=user_id)
                 bot.send_message(chat_id=mes.chat_id,
-                                 text="Это чат <b>{}</b>. Он не для тебя.".format(cl), parse_mode='HTML')
+                                 text=text.format(cl), parse_mode='HTML')
             except TelegramError:
                 return
 
