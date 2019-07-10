@@ -44,7 +44,7 @@ def get_message_type_and_data(message):
 
 
 def send_trigger_with_type_and_data(bot, update, trigger_type, data):
-    action = [bot.send_message,  bot.send_video,   bot.send_audio, bot.send_photo, bot.send_document, bot.send_sticker,
+    action = [bot.send_message, bot.send_video, bot.send_audio, bot.send_photo, bot.send_document, bot.send_sticker,
               bot.send_voice, bot.sendVideoNote]
     if trigger_type >= len(action):
         # Неверный тип триггера

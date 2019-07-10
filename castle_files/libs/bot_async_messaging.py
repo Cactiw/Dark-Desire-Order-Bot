@@ -10,7 +10,7 @@ import logging
 import traceback
 
 MESSAGE_PER_SECOND_LIMIT = 29
-MESSAGE_PER_CHAT_LIMIT = 3
+MESSAGE_PER_CHAT_LIMIT = 2
 MESSAGE_PER_CHAT_MINUTE_LIMIT = 19
 
 UNAUTHORIZED_ERROR_CODE = 2
@@ -42,15 +42,60 @@ class AsyncBot(Bot):
         self._request = Request(**request_kwargs)
         super(AsyncBot, self).__init__(token=token, request=self._request)
 
+        self.types_to_methods = {0: self.send_message, 1: self.send_video, 2: self.send_audio, 3: self.send_photo, 
+                                 4: self.send_document, 5: self.send_sticker, 6: self.send_voice, 7: self.sendVideoNote}
+        self.methods_ty_types = {v: k for k, v in list(self.types_to_methods.items())}
+        self.types_to_original_methods = {
+            0: super(AsyncBot, self).send_message, 1: super(AsyncBot, self).send_video,
+            2: super(AsyncBot, self).send_audio, 3: super(AsyncBot, self).send_photo,
+            4: super(AsyncBot, self).send_document, 5: super(AsyncBot, self).send_sticker,
+            6: super(AsyncBot, self).send_voice, 7: super(AsyncBot, self).sendVideoNote
+        }
+
     def send_message(self, *args, **kwargs):
         message = MessageInQueue(*args, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def send_video(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=1, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def send_audio(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=2, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def send_photo(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=3, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def send_document(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=4, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def send_sticker(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=5, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def send_voice(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=6, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
+    def sendVideoNote(self, *args, **kwargs):
+        message = MessageInQueue(*args, message_type=7, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
 
-    def actually_send_message(self, *args, **kwargs):
+    def actually_send_message(self, *args, message_type=0, **kwargs):
         chat_id = kwargs.get('chat_id')
         lock = self.counter_lock
         lock.acquire()
@@ -84,6 +129,14 @@ class AsyncBot(Bot):
                         # Сообщения в эту секунду ещё можно отправлять
                         if messages_per_current_chat_per_minute >= MESSAGE_PER_CHAT_MINUTE_LIMIT:
                             self.spam_chats_count.update({chat_id: time.time()})
+                        if chat_id > 0:
+                            # Личка, маленькие чаты -- отправляем любое число сообщений
+                            self.messages_per_second += 1
+                            self.messages_per_chat.update({chat_id: messages_per_current_chat + 1})
+                            self.messages_per_chat_per_minute.update(
+                                {chat_id: messages_per_current_chat_per_minute + 1})
+                            lock.release()
+                            break
                         # Кладём в другую очередь
                         self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
                         lock.release()
@@ -97,7 +150,14 @@ class AsyncBot(Bot):
                 pass
         message = None
         try:
-            message = super(AsyncBot, self).send_message(*args, **kwargs)
+            try:
+                method = self.types_to_original_methods.get(message_type)
+                if method is None:
+                    method = super(AsyncBot, self).send_message
+            except Exception:
+                logging.error(traceback.format_exc())
+                method = super(AsyncBot, self).send_message
+            message = method(*args, **kwargs)
         except Unauthorized:
             release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
             release.start()
@@ -120,19 +180,28 @@ class AsyncBot(Bot):
             release.setDaemon(True)
             release.start()
             logging.error(traceback.format_exc())
-            return None
+            # return None
 
-            # Временно отключена повторная попытка отправить
+            # Временно отключена повторная попытка отправить -- уже нет
+            # Сообщение отправляется ещё раз, иначе -- отправляется в другую очередь
             retry = kwargs.get('retry')
             if retry is None:
                 retry = 0
-            if retry == 3:
-                self.send_message(*args, **kwargs)
+            if retry >= 1:
+                # Кладём в другую очередь
+                self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
                 return
             retry += 1
             kwargs.update({"retry": retry})
             time.sleep(0.1)
-            message = super(AsyncBot, self).send_message(*args, **kwargs)
+            try:
+                method = self.types_to_original_methods.get(message_type)
+                if method is None:
+                    method = super(AsyncBot, self).send_message
+            except Exception:
+                logging.error(traceback.format_exc())
+                method = super(AsyncBot, self).send_message
+            message = method(*args, **kwargs)
         release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
         release.start()
         release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
@@ -217,8 +286,9 @@ class AsyncBot(Bot):
         message_in_queue = self.message_queue.get()
         while self.processing and message_in_queue is not None:
             args = message_in_queue.args
+            message_type = message_in_queue.message_type
             kwargs = message_in_queue.kwargs
-            self.actually_send_message(*args, **kwargs)
+            self.actually_send_message(*args, message_type=message_type, **kwargs)
             message_in_queue = self.message_queue.get()
             if message_in_queue is None:
                 return 0
@@ -241,6 +311,7 @@ class AsyncBot(Bot):
 
 class MessageInQueue:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, message_type=0, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        self.message_type = message_type
