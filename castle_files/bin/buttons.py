@@ -241,11 +241,11 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         else:
             buttons = [
                 [
-                    KeyboardButton("Обратиться к 💂‍♂Стражам"),
-                ],
-                [
                     KeyboardButton("🌲Лесопилка"),
                     KeyboardButton("⛰Каменоломня"),
+                ],
+                [
+                    KeyboardButton("Обратиться к 💂‍♂Стражам"),
                 ],
                 [
                     KeyboardButton("↩️ Назад"),
