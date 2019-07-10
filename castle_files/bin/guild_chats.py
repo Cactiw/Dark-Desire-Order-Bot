@@ -108,7 +108,7 @@ def guild_top_battles(bot, update):
 
 def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
     if max_players is None:
-        max_players = 1000
+        max_players = 10000
     if curr_cursor is None:
         curr_cursor = cursor
     total_battles = count_battles_in_this_week()
@@ -137,7 +137,7 @@ def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
         players.sort(key=lambda x: x[i + 1] if isinstance(x[i + 1], int) else int(x[i + 1].partition("/")[0]),
                      reverse=True)
         for j, elem in enumerate(players):
-            if j < max_players or j == len(players) - 1:
+            if (j < max_players or j == len(players) - 1) or (i == (len(tops) - 1) and battles_for_count == 21):
                 response += "{}){}{} — {}<code>{}</code>" \
                             "\n".format(j + 1, elem[0].castle,
                                         "{}{}".format(elem[0].nickname.partition("]")[2] if "]" in elem[0].nickname else
