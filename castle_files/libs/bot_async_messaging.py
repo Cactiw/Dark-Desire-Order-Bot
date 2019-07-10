@@ -10,7 +10,7 @@ import logging
 import traceback
 
 MESSAGE_PER_SECOND_LIMIT = 29
-MESSAGE_PER_CHAT_LIMIT = 2
+MESSAGE_PER_CHAT_LIMIT = 3
 MESSAGE_PER_CHAT_MINUTE_LIMIT = 19
 
 UNAUTHORIZED_ERROR_CODE = 2
@@ -127,16 +127,17 @@ class AsyncBot(Bot):
                 else:
                     if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT and not kwargs.get("resending"):
                         # Сообщения в эту секунду ещё можно отправлять
+                        if chat_id > 0:
+                            # Личка, маленькие чаты -- отправляем любое число сообщений в минуту
+                            if messages_per_current_chat < MESSAGE_PER_CHAT_LIMIT:
+                                self.messages_per_second += 1
+                                self.messages_per_chat.update({chat_id: messages_per_current_chat + 1})
+                                self.messages_per_chat_per_minute.update(
+                                    {chat_id: messages_per_current_chat_per_minute + 1})
+                                lock.release()
+                                break
                         if messages_per_current_chat_per_minute >= MESSAGE_PER_CHAT_MINUTE_LIMIT:
                             self.spam_chats_count.update({chat_id: time.time()})
-                        if chat_id > 0:
-                            # Личка, маленькие чаты -- отправляем любое число сообщений
-                            self.messages_per_second += 1
-                            self.messages_per_chat.update({chat_id: messages_per_current_chat + 1})
-                            self.messages_per_chat_per_minute.update(
-                                {chat_id: messages_per_current_chat_per_minute + 1})
-                            lock.release()
-                            break
                         # Кладём в другую очередь
                         self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
                         lock.release()
