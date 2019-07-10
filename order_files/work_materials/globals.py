@@ -4,7 +4,7 @@ import psycopg2
 
 from order_files.libs.bot_async_messaging import AsyncBot
 from libs.updater_async import AsyncUpdater
-from config import Production_order_token, psql_creditals, request_kwargs
+from config import Production_order_token, psql_creditals, request_kwargs, ServerIP, CONNECT_TYPE
 
 from libs.database import Conn
 

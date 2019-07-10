@@ -26,6 +26,13 @@ class AsyncUpdater(Updater):
             logging.info("can not start bot, {}".format(traceback.format_exc()))
         super(AsyncUpdater, self).start_polling(*args, **kwargs)
 
+    def start_webhook(self, *args, **kwargs):
+        try:
+            self.bot.start()
+        except Exception:
+            logging.error("can not start bot, {}".format(traceback.format_exc()))
+        super(AsyncUpdater, self).start_webhook(*args, **kwargs)
+
     def stop(self):
         try:
             self.bot.stop()

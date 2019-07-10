@@ -2,7 +2,7 @@ import pytz
 import tzlocal
 import psycopg2
 
-from config import Production_castle_token, request_kwargs, psql_creditals, cwuser
+from config import Production_castle_token, request_kwargs, psql_creditals, cwuser, ServerIP, CONNECT_TYPE
 from libs.updater_async import AsyncUpdater
 from castle_files.libs.bot_async_messaging import AsyncBot
 

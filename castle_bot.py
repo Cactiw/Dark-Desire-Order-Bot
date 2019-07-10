@@ -1,6 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-from castle_files.work_materials.globals import dispatcher, updater, conn
+from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
+    CONNECT_TYPE
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -447,7 +448,18 @@ def castle_bot_processing():
     api.start()
     processes.append(api)
 
-    updater.start_polling(clean=False)
+    if CONNECT_TYPE == 'webhook':
+        updater.start_webhook(listen='0.0.0.0',
+                              port=80,
+                              url_path=Production_castle_token,
+                              key='./private.key',
+                              cert='./cert.pem',
+                              webhook_url='https://{}:80/{}'.format(ServerIP, Production_castle_token))
+        # updater.bot.setWebhook('https://{}:443/{}'.format(ServerIP, Production_castle_token),
+        #                                                   # certificate='./cert.pem')
+    else:
+        updater.start_polling(clean=False)
+
     ask_to_revoke_duty_link()
 
     updater.idle()
