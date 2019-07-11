@@ -62,45 +62,57 @@ class AsyncBot(Bot):
         return 0
 
     def send_video(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=1, **kwargs)
+        kwargs.update({"message_type": 1})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def send_audio(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=2, **kwargs)
+        kwargs.update({"message_type": 2})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def send_photo(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=3, **kwargs)
+        kwargs.update({"message_type": 3})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def send_document(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=4, **kwargs)
+        kwargs.update({"message_type": 4})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def send_sticker(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=5, **kwargs)
+        kwargs.update({"message_type": 5})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def send_voice(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=6, **kwargs)
+        kwargs.update({"message_type": 6})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def sendVideoNote(self, *args, **kwargs):
-        message = MessageInQueue(*args, message_type=7, **kwargs)
+        kwargs.update({"message_type": 7})
+        message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
 
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
 
-    def actually_send_message(self, *args, message_type=0, **kwargs):
+    def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
+        if chat_id is None:
+            chat_id = args[0]
+        message_type = kwargs.get('message_type')
+        if message_type is None:
+            message_type = 0
         lock = self.counter_lock
         lock.acquire()
         try:
@@ -306,9 +318,8 @@ class AsyncBot(Bot):
         message_in_queue = self.message_queue.get()
         while self.processing and message_in_queue is not None:
             args = message_in_queue.args
-            message_type = message_in_queue.message_type
             kwargs = message_in_queue.kwargs
-            self.actually_send_message(*args, message_type=message_type, **kwargs)
+            self.actually_send_message(*args, **kwargs)
             message_in_queue = self.message_queue.get()
             if message_in_queue is None:
                 return 0
@@ -331,7 +342,6 @@ class AsyncBot(Bot):
 
 class MessageInQueue:
 
-    def __init__(self, *args, message_type=0, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self.message_type = message_type
