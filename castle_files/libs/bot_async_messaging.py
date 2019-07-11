@@ -196,7 +196,6 @@ class AsyncBot(Bot):
             body = {"chat_id": chat_id, "time": time.time()}
             self.second_reset_queue.put(body)
             self.minute_reset_queue.put(body)
-            print("Body put")
         return message
 
     def start(self):
@@ -209,7 +208,6 @@ class AsyncBot(Bot):
             self.resending_workers.append(worker)
         threading.Thread(target=self.__release_monitor, args=(self.second_reset_queue, 1)).start()
         threading.Thread(target=self.__release_monitor, args=(self.minute_reset_queue, 60)).start()
-        print("started zeroing")
 
     def stop(self):
         self.processing = False
