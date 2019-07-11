@@ -32,6 +32,10 @@ class AsyncBot(Bot):
         self.messages_per_chat = {}
         self.messages_per_chat_per_minute = {}
         self.spam_chats_count = {}
+
+        self.second_reset_queue = multiprocessing.Queue()
+        self.minute_reset_queue = multiprocessing.Queue()
+
         self.workers = []
         self.resending_workers = []
         if request_kwargs is None:
@@ -160,26 +164,11 @@ class AsyncBot(Bot):
                 method = super(AsyncBot, self).send_message
             message = method(*args, **kwargs)
         except Unauthorized:
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
-            release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
-            release.setDaemon(True)
-            release.start()
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
             logging.error(traceback.format_exc())
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
-            release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
-            release.setDaemon(True)
-            release.start()
             return BADREQUEST_ERROR_CODE
         except (TimedOut, NetworkError):
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            release.start()
-            release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
-            release.setDaemon(True)
-            release.start()
             logging.error(traceback.format_exc())
             # return None
 
@@ -203,11 +192,11 @@ class AsyncBot(Bot):
                 logging.error(traceback.format_exc())
                 method = super(AsyncBot, self).send_message
             message = method(*args, **kwargs)
-        release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-        release.start()
-        release = threading.Timer(interval=60, function=self.__releasing_minute_resourse, args=[chat_id])
-        release.setDaemon(True)
-        release.start()
+        finally:
+            body = {"chat_id": chat_id, "time": time.time()}
+            self.second_reset_queue.put(body)
+            self.minute_reset_queue.put(body)
+            print("Body put")
         return message
 
     def start(self):
@@ -218,9 +207,14 @@ class AsyncBot(Bot):
             resending_worker = threading.Thread(target=self.__resend_work, args=())
             resending_worker.start()
             self.resending_workers.append(worker)
+        threading.Thread(target=self.__release_monitor, args=(self.second_reset_queue, 1)).start()
+        threading.Thread(target=self.__release_monitor, args=(self.minute_reset_queue, 60)).start()
+        print("started zeroing")
 
     def stop(self):
         self.processing = False
+        self.second_reset_queue.put(None)
+        self.minute_reset_queue.put(None)
         for i in range(0, self.num_workers):
             self.message_queue.put(None)
             self.waiting_chats_message_queue.put(None)
@@ -241,6 +235,8 @@ class AsyncBot(Bot):
             pass
         self.message_queue.close()
         self.waiting_chats_message_queue.close()
+        self.second_reset_queue.close()
+        self.minute_reset_queue.close()
 
     def __del__(self):
         self.processing = False
@@ -268,6 +264,31 @@ class AsyncBot(Bot):
             mes_per_chat -= 1
             self.messages_per_chat.update({chat_id: mes_per_chat})
             self.counter_lock.notify_all()
+
+    def __release_monitor(self, release_queue, interval):
+        data = release_queue.get()
+        while self.processing and data is not None:
+            chat_id = data.get("chat_id")
+            set_time = data.get("time")
+            if chat_id is None or time is None:
+                data = release_queue.get()
+                continue
+            remaining_time = interval - (time.time() - set_time)
+            if remaining_time > 0:
+                while remaining_time > 5:
+                    time.sleep(5)
+                    remaining_time -= 5
+                    if not self.processing:
+                        return
+                time.sleep(remaining_time)
+            if interval == 60:
+                self.__releasing_minute_resourse(chat_id)
+            else:
+                self.__releasing_resourse(chat_id)
+            try:
+                data = release_queue.get()
+            except Exception:
+                return
 
     def __releasing_minute_resourse(self, chat_id):
         with self.counter_lock:

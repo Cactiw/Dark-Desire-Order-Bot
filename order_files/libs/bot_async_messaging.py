@@ -31,6 +31,7 @@ class AsyncBot(Bot):
         self.processing = True
         self.num_workers = workers
         self.messages_per_second = 0
+        self.second_reset_queue = multiprocessing.Queue()
         self.workers = []
         if request_kwargs is None:
             request_kwargs = {}
@@ -72,31 +73,21 @@ class AsyncBot(Bot):
         wait_end = time.time()
         advanced_callback.put({"chat_id": kwargs.get("chat_id"), "wait_start": wait_start, "wait_end": wait_end})
         message = None
-        release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-        release.start()
+        body = {"chat_id": chat_id, "time": time.time()}
+        self.second_reset_queue.put(body)
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except Unauthorized:
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            # release.start()
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
             logging.error(traceback.format_exc())
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            # release.start()
             return BADREQUEST_ERROR_CODE
         except TimedOut:
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            # release.start()
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except NetworkError:
-            release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-            # release.start()
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
-        release = threading.Timer(interval=1, function=self.__releasing_resourse, args=[chat_id])
-        # release.start()
         return message
 
     def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None):
@@ -105,6 +96,7 @@ class AsyncBot(Bot):
         self.order_queue.put(order)
 
     def start(self):
+        threading.Thread(target=self.__release_monitor, args=[]).start()
         for i in range(0, self.num_workers):
             worker = threading.Thread(target=self.__work, args=(i,))
             worker.start()
@@ -112,6 +104,7 @@ class AsyncBot(Bot):
 
     def stop(self):
         self.processing = False
+        self.second_reset_queue.put(None)
         for i in range(0, self.num_workers):
             self.order_queue.put(None)
         for i in self.workers:
@@ -141,6 +134,23 @@ class AsyncBot(Bot):
         with self.counter_lock:
             self.messages_per_second -= 1
             self.counter_lock.notify_all()
+
+    def __release_monitor(self):
+        data = self.second_reset_queue.get()
+        while self.processing and data is not None:
+            chat_id = data.get("chat_id")
+            set_time = data.get("time")
+            if chat_id is None or time is None:
+                data = self.second_reset_queue.get()
+                continue
+            remaining_time = 1 - (time.time() - set_time)
+            if remaining_time > 0:
+                time.sleep(remaining_time)
+            self.__releasing_resourse(chat_id)
+            try:
+                data = self.second_reset_queue.get()
+            except Exception:
+                return
 
     def __work(self, num):
         order_in_queue = self.order_queue.get()
