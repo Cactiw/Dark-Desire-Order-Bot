@@ -126,9 +126,9 @@ def send_withdraw(bot, update):
             code = resources.get(name)
             if code is None:
                 for num, elem in list(items.items()):
-                    if name == elem[1]:
+                    if name.lower() == elem[1].lower():
                         code = "k" + num
-                    elif elem[0] in name:
+                    elif elem[0].lower() in name.lower():
                         code = "r" + num
                     else:
                         continue
