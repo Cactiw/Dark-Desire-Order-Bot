@@ -61,7 +61,7 @@ def parse_stats():
 def plan_daily_tasks(bot=None, job=None):
     plan_arena_notify()
     plan_top_notify()
-    plan_notify(plan_daily_tasks, 0, 0, 10)
+    # plan_notify(plan_daily_tasks, 0, 0, 10)
 
 
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
@@ -170,6 +170,9 @@ def top_notify(bot, job):
             if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
                 bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
 
+    time.sleep(1)
+    plan_top_notify()
+
 
 # Рассылка с напоминанием о арене и крафте в чаты ги в 12 по мск
 def arena_notify(bot, job):
@@ -180,6 +183,8 @@ def arena_notify(bot, job):
             continue
         if guild.settings is None or guild.settings.get("arena_notify") in [None, True]:
             bot.send_message(chat_id=guild.chat_id, text="Через час обнуление арен и дневного лимита опыта за крафт.")
+    time.sleep(1)
+    plan_arena_notify()
 
 
 def notify_guild_attack(bot, update):
