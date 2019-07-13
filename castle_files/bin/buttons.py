@@ -6,6 +6,7 @@ from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup,
 from castle_files.bin.service_functions import check_access
 from castle_files.libs.castle.location import Location, status_to_location
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 
@@ -159,6 +160,12 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("📰Инструкция"),
             ]
         ]
+        if player is not None:
+            if player.guild is not None:
+                guild = Guild.get_guild(player.guild)
+                if guild is not None:
+                    if guild.check_high_access(player.id):
+                        buttons[0].append(KeyboardButton("📜Список гильдий"))
     elif status is None or status == "default":
         status = "central_square"
         user_data.update({"status": status})
@@ -190,11 +197,17 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("👀 Посмотреть в зеркало"),
                 KeyboardButton("👥 Посмотреть ведомость гильдии"),
-                ],
+            ],
             [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+        if player is not None:
+            if player.guild is not None:
+                guild = Guild.get_guild(player.guild)
+                if guild is not None:
+                    if guild.check_high_access(player.id):
+                        buttons.insert(1, [KeyboardButton("📜Изучить список гильдий")])
     elif status == 'throne_room':
         buttons = [
             [

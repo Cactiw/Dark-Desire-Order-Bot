@@ -71,6 +71,37 @@ def list_guilds(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
+def guild_commanders(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    if player is None:
+        return
+    guild = Guild.get_guild(player.guild)
+    if not (check_access(player.id) or (guild is not None and guild.check_high_access(player.id))):
+        return
+    response = "Список 🎖гильдий, 🎗командиров и 🎖замов:\n"
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild is None:
+            logging.warning("Guild is None for the id {}".format(guild_id))
+            continue
+        commander = Player.get_player(guild.commander_id, notify_on_error=False)
+        response_new = "<b>{}</b>{}\n🎗: @{}".format(guild.tag, " --- " + guild.name if guild.name is not None else "",
+                                                    commander.username if commander is not None else "Нет")
+        if guild.assistants:
+            response_new += "\n🎖: "
+        for player_id in guild.assistants:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                continue
+            response_new += "@{} ".format(player.username)
+        response_new += "\n--------------------------\n"
+        if len(response + response_new) > MAX_MESSAGE_LENGTH:
+            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += response_new
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+
+
 # @dispatcher.run_async # Не работает
 def guild_info(bot, update):
     mes = update.message

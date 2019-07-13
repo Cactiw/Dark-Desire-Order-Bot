@@ -110,6 +110,9 @@ class Player:
             request += "id = %s"
         elif player_in_game_id is not None:
             request += "api_info ->> 'in_game_id' = %s"
+        if arg is None:
+            # Ничего не подано на вход
+            return None
         cur_cursor.execute(request, (arg,))
         try:
             row = cur_cursor.fetchone()

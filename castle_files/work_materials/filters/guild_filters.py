@@ -50,6 +50,14 @@ class FilterViewGuild(BaseFilter):
 filter_view_guild = FilterViewGuild()
 
 
+class FilterViewGuildsCommanders(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.text in ["📜Список гильдий", "📜Изучить список гильдий"]
+
+
+filter_view_guilds_commanders = FilterViewGuildsCommanders()
+
+
 class FilterRemovePlayer(BaseFilter):
     def filter(self, message):
         return filter_is_pm(message) and message.text.startswith("/remove_player_")
