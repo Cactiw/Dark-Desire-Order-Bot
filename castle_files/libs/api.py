@@ -279,6 +279,7 @@ class CW3API:
             except Exception:
                 logging.error(traceback.format_exc())
             player.defense = profile.get("def")
+            player.lvl = profile.get("lvl")
             player.exp = profile.get("exp")
             player.guild_tag = profile.get("guild_tag")
             player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
