@@ -165,7 +165,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 guild = Guild.get_guild(player.guild)
                 if guild is not None:
                     if guild.check_high_access(player.id):
-                        buttons[0].append(KeyboardButton("📜Список гильдий"))
+                        pass
+                        # buttons[0].append(KeyboardButton("📜Список гильдий"))
     elif status is None or status == "default":
         status = "central_square"
         user_data.update({"status": status})
@@ -207,7 +208,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 guild = Guild.get_guild(player.guild)
                 if guild is not None:
                     if guild.check_high_access(player.id):
-                        buttons.insert(1, [KeyboardButton("📜Изучить список гильдий")])
+                        pass
+                        # buttons.insert(1, [KeyboardButton("📜Изучить список гильдий")])
     elif status == 'throne_room':
         buttons = [
             [
