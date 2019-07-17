@@ -68,7 +68,9 @@ def back(bot, update, user_data):
         "treasury": "throne_room",
 
         "hall_of_fame": "central_square",
-        "tops": "hall_of_fame",
+        # "tops": "hall_of_fame",
+
+        "tops": "central_square",
 
         "manuscript": "technical_tower",
 
