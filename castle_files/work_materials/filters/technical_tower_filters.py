@@ -45,8 +45,9 @@ class FilterUpdateHistory(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🗂Архив объявлений") and \
-            user_data.get("status") == 'technical_tower'
+        return filter_is_pm(message) and (message.text.startswith("🗂Архив объявлений") and
+                                          user_data.get("status") == 'technical_tower') or \
+               message.text.startswith("🗂Обновления")
 
 
 filter_update_history = FilterUpdateHistory()
