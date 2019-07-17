@@ -282,8 +282,11 @@ class CW3API:
             player.lvl = profile.get("lvl")
             player.exp = profile.get("exp")
             player.guild_tag = profile.get("guild_tag")
-            player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
-                               "") + profile.get("userName")
+            if "🎗" in player.nickname:
+                pass
+            else:
+                player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
+                                   "") + profile.get("userName")
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
             player.update_to_database()
