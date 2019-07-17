@@ -181,7 +181,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_view_profile, view_profile))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_player, remove_player))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guilds_commanders, guild_commanders))
+    # dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guilds_commanders, guild_commanders))
 
     dispatcher.add_handler(CommandHandler('leave_guild', leave_guild))
 
