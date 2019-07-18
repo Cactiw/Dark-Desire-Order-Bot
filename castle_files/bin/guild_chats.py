@@ -83,7 +83,7 @@ def plan_arena_notify():
 
 
 def plan_top_notify():
-    plan_notify(top_notify, 18, 0, 0)
+    plan_notify(top_notify, 19, 0, 0)
 
 
 def guild_top_battles(bot, update):
