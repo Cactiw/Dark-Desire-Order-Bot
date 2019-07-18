@@ -39,8 +39,6 @@ class FilterRequestMidFeedback(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        print(filter_is_pm(message) and ((message.text.startswith("Обратиться к командному составу") and
-            user_data.get("status") == 'throne_room') or message.text.startswith('🔖Связь с МИД')))
         return filter_is_pm(message) and ((message.text.startswith("Обратиться к командному составу") and
             user_data.get("status") == 'throne_room') or message.text.startswith('🔖Связь с МИД'))
 
