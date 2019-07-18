@@ -78,6 +78,8 @@ def back(bot, update, user_data):
 
     statuses_rp_off = {
         "tops": DEFAULT_CASTLE_STATUS,
+        "mid_feedback": DEFAULT_CASTLE_STATUS,
+
 
         "manuscript": DEFAULT_CASTLE_STATUS,
     }

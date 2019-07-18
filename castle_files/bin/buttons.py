@@ -154,9 +154,10 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("👀 Профиль"),
                 KeyboardButton("👥 Гильдия"),
+                KeyboardButton("📈Топы"),
             ],
             [
-                KeyboardButton("📈Топы"),
+                KeyboardButton("🔖Связь с МИД"),
                 KeyboardButton("🗂Обновления"),
                 KeyboardButton("📰Инструкция"),
             ]

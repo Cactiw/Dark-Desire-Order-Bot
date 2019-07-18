@@ -1,8 +1,10 @@
 """
 В этом модуле находятся все функции для фидбека в виртуальном замке, например, аудиенция у короля, обращение в мид
 """
-from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID
+from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID, \
+    DEFAULT_CASTLE_STATUS
 from castle_files.bin.buttons import get_general_buttons
+from castle_files.bin.castle import back
 from castle_files.libs.castle.location import Location
 
 from order_files.bin.pult_callback import count_next_battle_time
@@ -114,6 +116,9 @@ def send_mid_feedback(bot, update, user_data):
         return
     threading.Thread(target=forward_then_reply_to_mid, args=(bot, update.message)).start()
     user_data.update({"status": "throne_room"})
+    rp_off = user_data.get("rp_off")
+    if rp_off:
+        user_data.update({"status": DEFAULT_CASTLE_STATUS})
     reply_markup = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Ваше обращение к Совету было озвучено. Если оно было по делу, то ожидайте ответа, "
