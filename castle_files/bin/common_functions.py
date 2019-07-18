@@ -5,7 +5,7 @@
 from castle_files.bin.buttons import send_general_buttons
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
-from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, dispatcher
 
 from castle_files.libs.player import Player
 
@@ -21,6 +21,15 @@ def unknown_input(bot, update, user_data):
         if player is None:
             return
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def direct_send_message(ids, text):
+    i = 0
+    for id in ids:
+        i += 1
+        dispatcher.bot.send_message(chat_id=id, text=text, parse_mode='HTML')
+    dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="<b>{}</b> сообщений отправлено".format(i),
+                                parse_mode='HTML')
 
 
 def sql(bot, update):
