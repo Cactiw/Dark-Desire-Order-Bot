@@ -314,14 +314,19 @@ def hall_of_fame(bot, update, user_data):
     if not hall.is_constructed() and update.message.from_user.id != SUPER_ADMIN_ID:
         unknown_input(bot, update, user_data)
         return
+    tops(bot, update, user_data, response="Вы входите в Мандапу Славы - почетное место, где увековечены герои Скалы, "
+                                          "их подвиги и заслуги перед замком. На стене развешены лучшие из лучших.\n\n")
+    """
     user_data.update({"status": "hall_of_fame", "location_id": 8})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+    """
 
 
-def tops(bot, update, user_data):
+def tops(bot, update, user_data, response=""):
     user_data.update({"status": "tops"})
     buttons = get_general_buttons(user_data)
-    bot.send_message(chat_id=update.message.chat_id, text="Выберите категорию:", reply_markup=buttons)
+    response += "Выберите категорию:"
+    bot.send_message(chat_id=update.message.chat_id, text=response, reply_markup=buttons)
 
 
 def get_tops_text(player, stat, stat_text, game_class=None):
