@@ -366,6 +366,11 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         ]
         if not rp_off:
             buttons[0].insert(0, KeyboardButton("↔️Указатели"))
+    elif status == 'tea_party':
+        buttons = [
+            KeyboardButton("Отправиться на разведку"),
+            KeyboardButton("Рыть котлован"),
+        ]
     if only_buttons or buttons is None:
         return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
