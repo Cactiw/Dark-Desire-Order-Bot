@@ -225,10 +225,10 @@ def stock(bot, update):
             name = code
         else:
             name = get_item_name_by_code(code)
-        response += "{} x {} ≈ {}" \
-                    "\n".format("{} | {}".format(code, name) if code != name else name, count,
-                                "<b>{}</b>💰({}💰x{})".format(price * count, price, count) if isinstance(price, int) else
-                                price)
+        response += "<a href=\"https://t.me/share/url?url=/{}\">{} x {}</a> ≈ {}" \
+                    "\n".format("g_deposit {} {}".format(code, count), "{} | {}".format(code, name) if code != name else
+                                name, count, "<b>{}</b>💰({}💰x{})".format(price * count, price,
+                                                                          count) if isinstance(price, int) else price)
         total_gold += price * count if isinstance(price, int) else 0
     response += "\n\n<b>Всего: {}💰</b>".format(total_gold)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
