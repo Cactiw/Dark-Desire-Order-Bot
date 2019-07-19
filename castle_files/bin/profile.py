@@ -184,7 +184,8 @@ def profile(bot, update, user_data=None):
                      disable_web_page_preview=True)
 
 
-trade_divisions_access_list = [439637823, 320365073, 334443202, 407981701]
+trade_divisions_access_list = [439637823, 320365073, 334443202, 407981701, 421007491, 440203516, 165503452, 98625707,
+                               210685625]
 # Игроки, которым дал доступ к хуизу в связи с альянсами
 
 
