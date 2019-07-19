@@ -22,6 +22,9 @@ import time
 def mailing(bot, update):
     mes = update.message
     text = mes.text.partition(" ")[2]
+    if len(text) <= 2:
+        bot.send_message(update.message.chat_id, text="Слишком коротко.", reply_to_message_id=mes.message_id)
+        return
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
