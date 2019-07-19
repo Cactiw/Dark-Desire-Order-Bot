@@ -2,6 +2,7 @@
 Всякие функции, связанные с мидом - рассылки по гильдиям и так далее
 """
 from castle_files.libs.guild import Guild
+from castle_files.libs.castle.location import Location
 from order_files.bin.pult_callback import count_next_battle_time
 
 from castle_files.bin.guild_chats import rangers_notify_start
@@ -20,14 +21,23 @@ import time
 
 def mailing(bot, update):
     mes = update.message
-    text = mes.text.partition("mailing ")[2]
+    text = mes.text.partition(" ")[2]
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
             continue
         if guild.division is None or guild.division != "Луки":
             bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
-    bot.send_message(update.message.chat_id, text="Успешно отправлено!", reply_to_message_id=mes.message_id)
+    if mes.text.startswith('/debrief'):
+        throne = Location.get_location(2)
+        format_values = throne.special_info.get("enter_text_format_values")
+        format_values[1] = text
+        throne.special_info.update({"enter_text_format_values": format_values})
+        throne.update_location_to_database()
+        bot.send_message(update.message.chat_id, text="Успешно отправлено!\n"
+                                                      "Дебриф изменён", reply_to_message_id=mes.message_id)
+    else:
+        bot.send_message(update.message.chat_id, text="Успешно отправлено!", reply_to_message_id=mes.message_id)
 
 
 def mailing_pin(bot, update):
