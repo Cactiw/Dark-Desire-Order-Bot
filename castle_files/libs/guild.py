@@ -132,10 +132,13 @@ class Guild:
             self.__attack += player_to_add.attack
             self.__defense += player_to_add.defense
 
+    # Удаление игрока из гильдии
     def delete_player(self, player):
         if player.id in self.members:
             self.members.remove(player.id)
         self.members_count = len(self.members)
+        if player.id in self.assistants:
+            self.assistants.remove(player.id)
 
         player.guild = None
         player.update()
@@ -167,8 +170,10 @@ class Guild:
         elif guild_id is not None:
             guild = guilds.get(guild_id)
         if guild is not None:
+            # Гильдия нашлась в кэше
             guild.last_access_time = time.time()
             return guild
+        # Гильдии нет в кэше, получение гильдии из базы данных
         request = "select guild_tag, guild_id, guild_name, chat_id, members, commander_id, division, chat_name, " \
                   "invite_link, orders_enabled, pin_enabled, disable_notification, assistants, settings from guilds "
         if guild_tag is not None:
