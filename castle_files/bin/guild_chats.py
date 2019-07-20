@@ -27,32 +27,63 @@ MAX_TOP_PLAYERS_SHOW_WEEK = 10
 def parse_stats():
     data = castles_stats_queue.get()
     while data:
-        response_all = "Игроки, попавшие в топ:\n"
-        for castle_results_string in data.split("\n\n"):
-            for guild_id in Guild.guild_ids:
-                guild = Guild.get_guild(guild_id=guild_id)
-                tag = guild.tag
-                if tag in castle_results_string:
-                    response = ""
-                    try:
-                        attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
-                    except TypeError:
-                        attacked_castle = "???"
-                    nicknames_list = re.findall(".\\[{}\\][^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
-                    print(nicknames_list)
-                    for nickname in nicknames_list:
-                        if response == "":
-                            response = "Игроки, попавшие в топ:\n"
-                        response += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
-                                                              attacked_castle, nickname[:-1])
-
-                        response_all += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
+        if 'Результаты сражений:' in data:
+            # Результаты битвы замков
+            response_all = "Игроки, попавшие в топ:\n"
+            for castle_results_string in data.split("\n\n"):
+                for guild_id in Guild.guild_ids:
+                    guild = Guild.get_guild(guild_id=guild_id)
+                    tag = guild.tag
+                    if tag in castle_results_string:
+                        response = ""
+                        try:
+                            attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
+                        except TypeError:
+                            attacked_castle = "???"
+                        nicknames_list = re.findall(".\\[{}\\][^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
+                        print(nicknames_list)
+                        for nickname in nicknames_list:
+                            if response == "":
+                                response = "Игроки, попавшие в топ:\n"
+                            response += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
                                                                   attacked_castle, nickname[:-1])
 
-                    if response != "":
-                        dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
-        if response_all != "Игроки, попавшие в топ:\n":
-            dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
+                            response_all += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
+                                                                      attacked_castle, nickname[:-1])
+
+                        if response != "":
+                            dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+            if response_all != "Игроки, попавшие в топ:\n":
+                dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
+        else:
+            #  Сообщение о пиратстве
+            response_by_tags = {}
+            data = data.replace("Attackers:", "   🗡Атакующие:")
+            data = data.replace("Defenders:", "   🛡Обороняющиеся:")
+            guild_list = re.split("[⚔🛡] ..?Гильдия", data)
+            for guild_str in guild_list:
+                new_str = guild_str
+                new_str = "{}".format('⚔️' if 'атакована' in new_str else '🛡') + new_str
+                tags = re.findall("[🍁☘🖤🐢🦇🌹🍆](\\w+)", guild_str)
+                tags = list(set(tags))
+                for tag in tags:
+                    new_str = new_str.replace(tag, "<b>{}</b>".format(tag))
+                for tag in tags:
+                    lst = response_by_tags.get(tag)
+                    if lst is None:
+                        lst = "Итоги гильдейских битв с вашим участием:\n\n"
+                        response_by_tags.update({tag: lst})
+                    lst += new_str + "\n"
+                    response_by_tags.update({tag: lst})
+                # dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text=guild_str, parse_mode='HTML')
+            print(guild_list)
+            import json
+            print(json.dumps(response_by_tags, indent=4, ensure_ascii=False))
+            for tag, string in list(response_by_tags.items()):
+                guild = Guild.get_guild(guild_tag=tag)
+                if guild is None:
+                    continue
+                dispatcher.bot.send_message(chat_id=guild.chat_id, text=string, parse_mode='HTML')
         data = castles_stats_queue.get()
 
 

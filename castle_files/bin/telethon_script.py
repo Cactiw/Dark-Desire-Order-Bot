@@ -16,6 +16,8 @@ castles_stats_queue = Queue()
 
 TEST_CHANNEL_ID = 1353017829
 
+guilds_str = ""
+
 
 def script_work():
     global client
@@ -31,8 +33,15 @@ def script_work():
 
 
 def stats_handler(event):
+    global guilds_str
     text = event.message.message
-    if event.message.to_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID) and 'Результаты сражений:' in text:
-        print("put stats in queue")
-        castles_stats_queue.put(text)
-        return
+    if event.message.to_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID) and \
+            ('Результаты сражений:' in text or '⛺️Гильдия' in text):
+        if '⛺️Гильдия' in text:
+            guilds_str += text + "\n"
+        else:
+            print("put stats in queue")
+            castles_stats_queue.put(text)
+            castles_stats_queue.put(guilds_str)
+            guilds_str = ""
+            return
