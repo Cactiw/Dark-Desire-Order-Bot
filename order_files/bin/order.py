@@ -129,32 +129,6 @@ def wait_debug(bot, orders_count):
     bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
 
 
-def wait_order_callback(bot, orders_sent, chat_callback_id, time_begin):
-    response = ""
-    orders_OK = 0
-    orders_failed = 0
-    while orders_OK + orders_failed < orders_sent:
-        current = order_backup_queue.get()
-        if current.order_id == globals.order_id:
-            if current.OK:
-                orders_OK += 1
-            else:
-                orders_failed += 1
-                response += current.text
-        else:
-            order_backup_queue.put(current)
-            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, globals.order_id))
-
-    globals.order_id += 1
-    time_end = datetime.datetime.now()
-    time_delta = time_end - time_begin
-    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
-            "ошибка при отправке в <b>{2}</b> чатов, " \
-            "рассылка заняла <b>{3}</b>\n\n".format(datetime.datetime.now(tz=moscow_tz), orders_OK, orders_failed,
-                                                    time_delta) + response
-    bot.send_message(chat_id=chat_callback_id, text=stats, parse_mode='HTML')
-
-
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
@@ -180,17 +154,34 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
         for i in range(0, len(divisions)):
             if divisions[i]:
                 current_divisions.append(division_const[i])
-        if len(current_divisions) == 1 and current_divisions[0] == 'Луки':
-            # Пин только лукам
-            response = response.replace("⚔", "🏹")
-            buttons.inline_keyboard[0][0].text = buttons.inline_keyboard[0][0].text.replace("⚔", "🏹")
         for chat in order_chats:
             if chat[3] in current_divisions:
                 bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
                                notification=not chat[2], reply_markup=buttons)
                 orders_sent += 1
     threading.Thread(target=wait_debug, args=(bot, orders_sent)).start()
-    threading.Thread(target=wait_order_callback, args=(bot, orders_sent, chat_callback_id, time_begin)).start()
+    response = ""
+    orders_OK = 0
+    orders_failed = 0
+    while orders_OK + orders_failed < orders_sent:
+        current = order_backup_queue.get()
+        if current.order_id == globals.order_id:
+            if current.OK:
+                orders_OK += 1
+            else:
+                orders_failed += 1
+                response += current.text
+        else:
+            order_backup_queue.put(current)
+            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, globals.order_id))
+
+    globals.order_id += 1
+    time_end = datetime.datetime.now()
+    time_delta = time_end - time_begin
+    stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
+            "ошибка при отправке в <b>{2}</b> чатов, " \
+            "рассылка заняла <b>{3}</b>\n\n".format(datetime.datetime.now(tz=moscow_tz), orders_OK, orders_failed, time_delta) + response
+    bot.send_message(chat_id = chat_callback_id, text=stats, parse_mode='HTML')
 
 
 # Начало отправки отложки
