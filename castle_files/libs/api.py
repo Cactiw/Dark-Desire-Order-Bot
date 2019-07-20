@@ -160,7 +160,7 @@ class CW3API:
                     count_by_castles = {}
                     cat.update({type: count_by_castles})
                 count = count_by_castles.get(castle) or 0
-                count_by_castles.update({castle: count + 1})
+                count_by_castles.update({castle: count + qty})
 
             # seller_id = '251066f65507439b9c6838462423f998'  Test
             player = Player.get_player(player_in_game_id=seller_id, notify_on_error=False, new_cursor=self.cursor)
