@@ -154,6 +154,10 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
         for i in range(0, len(divisions)):
             if divisions[i]:
                 current_divisions.append(division_const[i])
+        if len(current_divisions) == 1 and current_divisions[0] == 'Луки':
+            # Пин только лукам
+            response = response.replace("⚔", "🏹")
+            buttons.inline_keyboard[0][0].text = buttons.inline_keyboard[0][0].text.replace("⚔", "🏹")
         for chat in order_chats:
             if chat[3] in current_divisions:
                 bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
