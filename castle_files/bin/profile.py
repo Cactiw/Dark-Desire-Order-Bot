@@ -555,6 +555,20 @@ def update_ranger_class_skill_lvl(bot, update):
                      parse_mode='HTML')
 
 
+def get_rangers(bot, update):
+    mes = update.message
+    if not check_whois_access(mes.from_user.id):
+        return
+    response = "Лучники 🖤Скалы:\n"
+    request = "select '@' || username, nickname, lvl from players where game_class = 'Ranger' order by lvl desc"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        response += "{} <b>{}</b> 🏅:{}\n".format(*row)
+        row = cursor.fetchone()
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+
+
 def set_status(bot, update):
     mes = update.message
     if not check_access(mes.from_user.id):
