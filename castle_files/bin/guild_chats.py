@@ -14,6 +14,7 @@ from telegram.error import TelegramError
 import re
 import time
 import datetime
+import logging
 
 
 ping_by_chat_id = {}
@@ -27,6 +28,7 @@ MAX_TOP_PLAYERS_SHOW_WEEK = 10
 def parse_stats():
     data = castles_stats_queue.get()
     while data:
+        logging.error("Got data in parse: {}".format(data))
         if 'Результаты сражений:' in data:
             # Результаты битвы замков
             response_all = "Игроки, попавшие в топ:\n"
