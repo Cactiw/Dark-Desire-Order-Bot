@@ -26,6 +26,8 @@ updater = AsyncUpdater(bot=bot)
 dispatcher = updater.dispatcher
 job = updater.job_queue
 
+bot.dispatcher = dispatcher
+
 API_APP_NAME = cwuser
 conn = Conn(psql_creditals)
 conn.start()

@@ -272,11 +272,12 @@ def stock(bot, update):
                                                                           count) if isinstance(price, int) else price)
         total_gold += price * count if isinstance(price, int) else 0
         if len(response + new_response) > MAX_MESSAGE_LENGTH:
-            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+            bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += new_response
     response += "\n\n<b>Всего: {}💰</b>".format(total_gold)
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.send_message_group(mes.chat_id)
 
 
 def grassroots_update_players(bot, job):

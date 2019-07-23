@@ -2,6 +2,10 @@ from telegram import Bot
 from telegram.utils.request import Request
 from telegram.error import (TelegramError, Unauthorized, BadRequest,
                             TimedOut, ChatMigrated, NetworkError)
+
+from castle_files.libs.message_group import MessageGroup, message_groups, groups_need_to_be_sent, message_groups_locks
+
+
 import multiprocessing
 import queue
 import threading
@@ -26,6 +30,7 @@ class AsyncBot(Bot):
         self.counter_lock = threading.Condition(counter_rlock)
         self.message_queue = multiprocessing.Queue()
         self.waiting_chats_message_queue = multiprocessing.Queue()
+        self.dispatcher = None
         self.processing = True
         self.num_workers = workers
         self.messages_per_second = 0
@@ -38,6 +43,7 @@ class AsyncBot(Bot):
 
         self.workers = []
         self.resending_workers = []
+        self.group_workers = []
         if request_kwargs is None:
             request_kwargs = {}
         con_pool_size = workers + 4
@@ -60,6 +66,43 @@ class AsyncBot(Bot):
         message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
+
+    # Функция отправки сообщения в конкретную группу,
+    # используйте group_send_message для автоматического получения этой группы
+    def send_message_in_user_group(self, group, *args, **kwargs):
+        message = MessageInQueue(*args, **kwargs)
+        if isinstance(group, int):
+            group = message_groups.get(group)
+        if group is None:
+            raise TypeError
+        group.add_message(message)
+
+    # Отправка в группу для chat_id, которая передаётся вместе с сообщением
+    def group_send_message(self, *args, **kwargs):
+        chat_id = kwargs.get('chat_id')
+        if chat_id is None:
+            chat_id = args[0]
+        self.send_message_in_user_group(self.get_message_group(chat_id), *args, **kwargs)
+
+    # Отправка всех сообщений из группы
+    def send_message_group(self, chat_id):
+        self.get_message_group(chat_id).send_group()
+
+    # Метод для получения группы заданного пользователя, или создания таковой при её отстутствии
+    # Необходим заданный атрибут dispatcher у bot
+    def get_message_group(self, player_id):
+        user_data = self.dispatcher.user_data.get(player_id)
+        id = user_data.get("message_group")
+        if id is None:
+            group = MessageGroup(player_id)
+            user_data.update({"message_group": group.id})
+        else:
+            group = message_groups.get(id)
+        if group is None or group.created_id != player_id:
+            # Запись в user data устарела, группа уже не существует
+            user_data.pop("message_group")
+            return self.get_message_group(player_id)
+        return group
 
     def send_video(self, *args, **kwargs):
         kwargs.update({"message_type": 1})
@@ -218,8 +261,14 @@ class AsyncBot(Bot):
             resending_worker = threading.Thread(target=self.__resend_work, args=())
             resending_worker.start()
             self.resending_workers.append(worker)
+            group_worker = threading.Thread(target=self.__group_work, args=())
+            group_worker.start()
+            self.group_workers.append(group_worker)
         threading.Thread(target=self.__release_monitor, args=(self.second_reset_queue, 1)).start()
         threading.Thread(target=self.__release_monitor, args=(self.minute_reset_queue, 60)).start()
+
+    def set_dispatcher(self, dispatcher):
+        self.dispatcher = dispatcher
 
     def stop(self):
         self.processing = False
@@ -228,6 +277,7 @@ class AsyncBot(Bot):
         for i in range(0, self.num_workers):
             self.message_queue.put(None)
             self.waiting_chats_message_queue.put(None)
+            groups_need_to_be_sent.put(None)
         for i in self.workers:
             i.join()
         for i in self.resending_workers:
@@ -338,6 +388,22 @@ class AsyncBot(Bot):
             if message_in_queue is None:
                 return 0
         return 0
+
+    def __group_work(self):
+        group = groups_need_to_be_sent.get()
+        while self.processing and group is not None:
+            while True:
+                message = group.get_message()
+                if message is 1:
+                    group.busy = False
+                    break
+                if message is None:
+                    group = None
+                    break
+                self.actually_send_message(*message.args, **message.kwargs)
+            if group is not None:
+                group.busy = False
+            group = groups_need_to_be_sent.get()
 
 
 class MessageInQueue:
