@@ -1,13 +1,14 @@
 from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID, \
     moscow_tz, local_tz, conn
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids, \
-    count_battle_id, count_battles_in_this_week
+    count_battle_id, count_battles_in_this_week, plan_work
 
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
 from castle_files.work_materials.globals import dispatcher
 from castle_files.bin.telethon_script import castles_stats_queue
+from castle_files.bin.profile import plan_remember_exp
 
 from telegram.error import TelegramError
 
@@ -96,29 +97,16 @@ def parse_stats():
 def plan_daily_tasks(bot=None, job=None):
     plan_arena_notify()
     plan_top_notify()
-    # plan_notify(plan_daily_tasks, 0, 0, 10)
-
-
-# Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
-def plan_notify(callback, hour, minute, second):
-    time_to_send = datetime.time(hour=hour, minute=minute, second=second)
-    time_now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
-    day_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).date()
-    date_to_send = datetime.datetime.combine(day_to_send, datetime.time(hour=0))
-    if time_to_send < time_now:
-        date_to_send += datetime.timedelta(days=1)
-    date_to_send = date_to_send.date()
-    send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
-    send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
-    job.run_once(callback, when=send_time, context=[])
+    plan_remember_exp()
+    # plan_work(plan_daily_tasks, 0, 0, 10)
 
 
 def plan_arena_notify():
-    plan_notify(arena_notify, 12, 0, 0)
+    plan_work(arena_notify, 12, 0, 0)
 
 
 def plan_top_notify():
-    plan_notify(top_notify, 19, 0, 0)
+    plan_work(top_notify, 19, 0, 0)
 
 
 def guild_top_battles(bot, update):

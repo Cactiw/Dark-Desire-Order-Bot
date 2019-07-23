@@ -4,14 +4,14 @@
 """
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
-    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id
+    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
 
 from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
-from castle_files.bin.service_functions import check_access, dict_invert
+from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id
 from castle_files.bin.reports import count_battle_time
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
@@ -23,6 +23,7 @@ import logging
 import traceback
 import datetime
 import random
+import json
 
 
 status_messages = [
@@ -553,6 +554,58 @@ def update_ranger_class_skill_lvl(bot, update):
     player.update()
     bot.send_message(chat_id=mes.from_user.id, text="Информация о скиллах обновлена, <b>{}</b>".format(player.nickname),
                      parse_mode='HTML')
+
+
+def profile_exp(bot, update):
+    data = update.callback_query.data
+    mes = update.callback_query.message
+    player_id = re.search("_(\\d+)", data)
+    if player_id is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Произошла ошибка. Попробуйте открыть все меню сначала.")
+        return
+    player_id = int(player_id.group(1))
+    player = Player.get_player(player_id)
+    if player is None:
+        return
+    response = "Изменения в опыте <b>{}</b>:\n".format(player.nickname)
+    previous_exp = None
+    print(player.exp_info)
+    if not player.exp_info:
+        response += "<em>Пусто</em>"
+    else:
+        for battle_id, exp in list(player.exp_info.items())[-14:]:
+            battle_id = int(battle_id)
+            if previous_exp is not None:
+                response += "{}: +🔥<code>{}</code>\n".format(count_battle_time(battle_id).strftime("%d/%m/%y"),
+                                                              exp - previous_exp)
+            previous_exp = exp
+        response += "{}: +🔥<code>{}</code>" \
+                    "\n".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y"),
+                                player.exp - previous_exp)
+    bot.send_message(chat_id=update.callback_query.from_user.id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def remember_exp():
+    cursor = conn.cursor()
+    request = "select id, exp, exp_info from players"
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    battle_id = count_battle_id(None)
+    for row in rows:
+        player_id, exp, exp_info = row
+        if exp_info is None:
+            exp_info = {}
+        exp_info.update({battle_id: exp})
+        exp_info = {k: v for k, v in sorted(list(exp_info.items()), key=lambda x: x[0])}
+        request = "update players set exp_info = %s where id = %s"
+        cursor.execute(request, (json.dumps(exp_info, ensure_ascii=False), player_id))
+    plan_remember_exp()
+
+
+def plan_remember_exp():
+    plan_work(remember_exp, 0, 0, 0)
 
 
 def get_rangers(bot, update):

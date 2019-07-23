@@ -21,6 +21,7 @@ def get_profile_buttons(player, whois_access=False, self_request=False):
                                                callback_data="pr_reports_history_{}".format(player.id)),)
     if self_request:
         buttons.append([
+            InlineKeyboardButton("🔥Опыт", callback_data="pr_exp_{}".format(player.id)),
             InlineKeyboardButton("⚙️Настройки", callback_data="pr_settings_{}".format(player.id)),
         ])
     return InlineKeyboardMarkup(buttons)
