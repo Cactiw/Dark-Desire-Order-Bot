@@ -127,18 +127,23 @@ def g_info(bot, update):
         if requested_guild is None:
             bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена")
     commander = Player.get_player(requested_guild.commander_id, notify_on_error=False)
-    response = "<b>{}</b>\nКомандир: {}\n".format(
+    glory, lvl, members = requested_guild.api_info.get("glory"), requested_guild.api_info.get("lvl"), \
+        requested_guild.api_info.get("members")
+    response = "<b>{}</b>\n{}🎗Командир: {}\n".format(
         "{} ({})".format(requested_guild.name, requested_guild.tag) if requested_guild.name is not None else
-        requested_guild.tag, "<b>{}</b> (@{})".format(commander.nickname, commander.username)
+        requested_guild.tag, "🏅: <b>{}</b>, 🎖: <b>{}</b>, 👥: <b>{}</b>\n".format(lvl, glory, members) if
+        all([lvl, glory, members]) else "", "<b>{}</b> (@{})".format(commander.nickname, commander.username)
         if commander is not None else "Нет")
+
     if guild.id == requested_guild.id:
         # Информация о своей гильдии
-        response += "Заместители: "
-        for player_id in guild.assistants:
-            player = Player.get_player(player_id, notify_on_error=False)
-            if player is None:
-                continue
-            response += "@{} ".format(player.username)
+        if guild.assistants:
+            response += "🎖Заместители: "
+            for player_id in guild.assistants:
+                player = Player.get_player(player_id, notify_on_error=False)
+                if player is None:
+                    continue
+                response += "@{} ".format(player.username)
         response += "\n\n"
         stock_size, stock_limit = guild.api_info.get("stock_size"), guild.api_info.get("stock_limit")
         if stock_size is not None and stock_limit is not None:
