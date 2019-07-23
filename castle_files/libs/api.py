@@ -404,11 +404,38 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_guild_info(self, channel, method, header, body):
-        if body.get("result") != "Ok":
-            logging.error("error while requesting guild info, {}".format(body))
-            return
-        print(body)
-        print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+        try:
+            if body.get("result") != "Ok":
+                logging.error("error while requesting guild info, {}".format(body))
+                return
+            print(body)
+            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            payload = body.get("payload")
+            name, glory, lvl, members, stock_size, stock_limit, \
+                player_id, tag = payload.get("name"), payload.get("glory"), payload.get("level"), \
+                payload.get("members"),  payload.get("stockSize"), payload.get("stockLimit"), payload.get("userId"), \
+                payload.get("tag")
+            got_stock = payload.get("stock")
+            stock = {}
+            for i_name, count in list(got_stock.items()):
+                code = get_item_code_by_name(i_name)
+                stock.update({code or i_name: count})
+            stock = {k: stock[k] for k in sorted(stock, key=stock_sort_comparator)}
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None or player.guild is None:
+                logging.warning("Received guild info, but player is None (or guild) for id {}".format(player_id))
+                return
+            guild = Guild.get_guild(player.guild)
+            if guild is None or guild.tag != tag:
+                logging.warning("Received guild info, but guild is None or not euqal for"
+                                " {} (@{})".format(player.nickname, player.username))
+                return
+            guild.name = name
+            guild.api_info.update({"stock": stock, "glory": glory, "lvl": lvl, "members": members,
+                                   "stock_size": stock_size, "stock_limit": stock_limit})
+            guild.update_to_database(need_order_recashe=False)
+        except Exception:
+            logging.error(traceback.format_exc())
 
     #
 

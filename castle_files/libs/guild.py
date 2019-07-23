@@ -25,7 +25,7 @@ class Guild:
     guild_ids = []
 
     def __init__(self, guild_id, tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
-                 orders_enabled, pin_enabled, disable_notification, settings=None):
+                 orders_enabled, pin_enabled, disable_notification, settings=None, api_info=None):
         self.id = guild_id
         self.tag = tag
         self.name = name
@@ -43,6 +43,7 @@ class Guild:
         self.pin_enabled = pin_enabled
         self.disable_notification = disable_notification
         self.settings = settings
+        self.api_info = api_info if api_info is not None else {}
 
         # Приватные поля, равные общей атаке и дефу гильдии,
         # подсчёт проиводится только при необходимости в соответствующих методах
@@ -175,7 +176,8 @@ class Guild:
             return guild
         # Гильдии нет в кэше, получение гильдии из базы данных
         request = "select guild_tag, guild_id, guild_name, chat_id, members, commander_id, division, chat_name, " \
-                  "invite_link, orders_enabled, pin_enabled, disable_notification, assistants, settings from guilds "
+                  "invite_link, orders_enabled, pin_enabled, disable_notification, assistants, settings, api_info" \
+                  " from guilds "
         if guild_tag is not None:
             request += "where guild_tag = %s"
             cur_cursor.execute(request, (guild_tag,))
@@ -188,12 +190,12 @@ class Guild:
         if row is None:
             return None
         guild_tag, guild_id, name, chat_id, members, commander_id, division, chat_name, invite_link, orders_enabled, \
-            pin_enabled, disable_notification, assistants, settings = row
+            pin_enabled, disable_notification, assistants, settings, api_info = row
         if assistants is None:
             assistants = []
         # Инициализация новой гильдии
         guild = Guild(guild_id, guild_tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
-                      orders_enabled, pin_enabled, disable_notification, settings)
+                      orders_enabled, pin_enabled, disable_notification, settings, api_info)
 
         # Сохранение гильдии в словарь для дальнейшего быстрого доступа
         guilds.update({guild.id: guild})
@@ -223,11 +225,12 @@ class Guild:
         cursor = conn.cursor()
         request = "update guilds set guild_name = %s, members = %s, commander_id = %s, division = %s, chat_id = %s, " \
                   "chat_name = %s, invite_link = %s, orders_enabled = %s, pin_enabled = %s,disable_notification = %s, " \
-                  "assistants = %s, settings = %s where guild_tag = %s"
+                  "assistants = %s, settings = %s, api_info = %s where guild_tag = %s"
         try:
             cursor.execute(request, (self.name, self.members, self.commander_id, self.division, self.chat_id,
                                      self.chat_name, self.invite_link, self.orders_enabled, self.pin_enabled,
-                                     self.disable_notification, self.assistants, json.dumps(self.settings), self.tag))
+                                     self.disable_notification, self.assistants, json.dumps(self.settings),
+                                     json.dumps(self.api_info), self.tag))
         except Exception:
             logging.error(traceback.format_exc())
             return -1

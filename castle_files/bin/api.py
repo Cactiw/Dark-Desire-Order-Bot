@@ -5,6 +5,8 @@
 
 from castle_files.libs.api import CW3API
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
+from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
@@ -194,11 +196,47 @@ def stock(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    if not player.stock:
-        bot.send_message(chat_id=mes.chat_id,
-                         text="Отсутствует информация о стоке. Для обновления нажмите /update_stock. "
-                              "Требуется доступ к API.")
-        return
+    if 'guild' in mes.text or mes.text.startswith("/g_stock"):
+        if player.guild is None:
+            bot.send_message(chat_id=mes.from_user.id,
+                             text="Вы не состоите в гильдии. Попросите командира добавить вас")
+            return
+        guild = Guild.get_guild(guild_id=player.guild)
+        if guild is None:
+            bot.send_message(chat_id=mes.from_user.id,
+                             text="Вы не состоите в гильдии. Попросите командира добавить вас")
+            return
+        curr_stock = guild.api_info.get("stock")
+        if curr_stock is None:
+            bot.send_message(chat_id=mes.from_user.id,
+                             text="Отсутствует информация о стоке. Для обновления нажмите /update_guild. "
+                             "Требуется доступ к API.")
+            return
+    else:
+        if not player.stock:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Отсутствует информация о стоке. Для обновления нажмите /update_stock. "
+                                  "Требуется доступ к API.")
+            return
+        curr_stock = player.stock
+    """
+    res:   Ресурсы
+    alch:  Травы
+    misc:  Корм, Зелья, свитки
+    other: Остальное
+    """
+    if 'res' in mes.text:
+        stage = [0]
+    elif 'alch' in mes.text:
+        stage = [1]
+    elif 'misc' in mes.text:
+        stage = [2]
+    elif 'equip' in mes.text:
+        stage = [3]
+    elif 'other' in mes.text:
+        stage = [5]
+    else:
+        stage = []
     response = "<b>📦Склад:\nРесурсы:</b>\n"
     stages = {0: {"name": "Ресурсы:", "to_achieve": lambda code: True},
               1: {"name": "Травы", "to_achieve": lambda code: not code.isdigit() or int(code) >= 39},
@@ -212,24 +250,31 @@ def stock(bot, update):
     next_stage = stages.get(stage_num + 1)
     total_gold = 0
     prices = cwapi.api_info.get("prices") or {}
-    for code, count in list(player.stock.items()):
+    for code, count in list(curr_stock.items()):
         stage_changed = False
+        new_response = ""
         while next_stage.get("to_achieve")(code):
             stage_changed = True
             stage_num += 1
             next_stage = stages.get(stage_num + 1)
+        if stage and stage_num not in stage:
+            continue
         if stage_changed:
-            response += "\n<b>{}</b>\n".format(stages.get(stage_num).get("name"))
+            new_response += "\n<b>{}</b>\n".format(stages.get(stage_num).get("name"))
         price = prices.get(code) or "❔"
         if len(code) > 4:
             name = code
         else:
             name = get_item_name_by_code(code)
-        response += "<a href=\"https://t.me/share/url?url=/{}\">{} x {}</a> ≈ {}" \
+        new_response += "<a href=\"https://t.me/share/url?url=/{}\">{} x {}</a> ≈ {}" \
                     "\n".format("g_deposit {} {}".format(code, count), "{} | {}".format(code, name) if code != name else
                                 name, count, "<b>{}</b>💰({}💰x{})".format(price * count, price,
                                                                           count) if isinstance(price, int) else price)
         total_gold += price * count if isinstance(price, int) else 0
+        if len(response + new_response) > MAX_MESSAGE_LENGTH:
+            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += new_response
     response += "\n\n<b>Всего: {}💰</b>".format(total_gold)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 

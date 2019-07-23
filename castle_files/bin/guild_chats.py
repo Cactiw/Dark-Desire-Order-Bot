@@ -27,7 +27,7 @@ MAX_TOP_PLAYERS_SHOW_WEEK = 10
 
 def parse_stats():
     data = castles_stats_queue.get()
-    while data:
+    while data is not None:
         logging.error("Got data in parse: {}".format(data))
         if 'Результаты сражений:' in data:
             # Результаты битвы замков
@@ -54,6 +54,8 @@ def parse_stats():
                                                                       attacked_castle, nickname[:-1])
 
                         if response != "":
+                            if guild.chat_id is None:
+                                continue
                             dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
             if response_all != "Игроки, попавшие в топ:\n":
                 dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')

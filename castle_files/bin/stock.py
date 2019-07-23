@@ -26,7 +26,7 @@ def get_item_code_by_name(name):
             continue
     item = get_equipment_by_name(name)
     if item is not None:
-        return item.code
+        return item.type + item.code
     item = alch_recipes.get(name.lower())
     if item is not None:
         return item.get("code")
