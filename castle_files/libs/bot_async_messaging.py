@@ -198,10 +198,11 @@ class AsyncBot(Bot):
                                 break
                         if messages_per_current_chat_per_minute >= MESSAGE_PER_CHAT_MINUTE_LIMIT:
                             self.spam_chats_count.update({chat_id: time.time()})
-                        # Кладём в другую очередь
-                        self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
-                        lock.release()
-                        return None
+                        if not kwargs.get("message_in_group"):
+                            # Кладём в другую очередь, если сообщение не в группе сообщений
+                            self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
+                            lock.release()
+                            return None
                 lock.release()
                 lock.wait()
         finally:
@@ -401,7 +402,7 @@ class AsyncBot(Bot):
                 if message is None:
                     group = None
                     break
-                message.kwargs.update({"resending": True})
+                message.kwargs.update({"resending": True, "message_in_group": True})
                 self.actually_send_message(*message.args, **message.kwargs)
             if group is not None:
                 group.busy = False
