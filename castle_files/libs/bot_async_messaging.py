@@ -184,7 +184,8 @@ class AsyncBot(Bot):
                     lock.release()
                     break
                 else:
-                    if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT and not kwargs.get("resending"):
+                    if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT and \
+                            (not kwargs.get("resending") or chat_id > 0):
                         # Сообщения в эту секунду ещё можно отправлять
                         if chat_id > 0:
                             # Личка, маленькие чаты -- отправляем любое число сообщений в минуту
@@ -400,6 +401,7 @@ class AsyncBot(Bot):
                 if message is None:
                     group = None
                     break
+                message.kwargs.update({"resending": True})
                 self.actually_send_message(*message.args, **message.kwargs)
             if group is not None:
                 group.busy = False
