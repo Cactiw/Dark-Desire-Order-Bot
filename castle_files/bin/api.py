@@ -196,7 +196,9 @@ def stock(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
+    is_guild = False
     if 'guild' in mes.text or mes.text.startswith("/g_stock"):
+        is_guild = True
         if player.guild is None:
             bot.send_message(chat_id=mes.from_user.id,
                              text="Вы не состоите в гильдии. Попросите командира добавить вас")
@@ -267,9 +269,10 @@ def stock(bot, update):
         else:
             name = get_item_name_by_code(code)
         new_response += "<a href=\"https://t.me/share/url?url=/{}\">{} x {}</a> ≈ {}" \
-                    "\n".format("g_deposit {} {}".format(code, count), "{} | {}".format(code, name) if code != name else
-                                name, count, "<b>{}</b>💰({}💰x{})".format(price * count, price,
-                                                                          count) if isinstance(price, int) else price)
+                        "\n".format("{} {} {}".format("g_withdraw" if is_guild else "g_deposit", code, count),
+                                    "{} | {}".format(code, name) if code != name else
+                                    name, count, "<b>{}</b>💰({}💰x{})".format(
+                                    price * count, price, count) if isinstance(price, int) else price)
         total_gold += price * count if isinstance(price, int) else 0
         if len(response + new_response) > MAX_MESSAGE_LENGTH:
             bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
