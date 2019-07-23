@@ -62,7 +62,7 @@ class FilterReplyToMidFeedback(BaseFilter):
         return message.chat_id == MID_CHAT_ID and message.reply_to_message is not None and \
                message.reply_to_message.from_user.id == CASTLE_BOT_ID and \
                (message.reply_to_message.forward_from is not None or (
-                       'Запрос к стражнику' in message.reply_to_message.text and '#r' in message.reply_to_message.text))
+                       'Запрос к МИДу' in message.reply_to_message.text and '#r' in message.reply_to_message.text))
 
 
 filter_reply_to_mid_feedback = FilterReplyToMidFeedback()
