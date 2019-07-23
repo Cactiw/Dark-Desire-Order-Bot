@@ -228,9 +228,9 @@ def view_profile(bot, update):
             player_id = row[0]
         else:
             # Поиск по нику в игре
-            request = "select id from players where nickname = %s or nickname like %s"
+            request = "select id from players where lower(nickname) = %s or lower(nickname) like %s"
             # print(request % mes.text.partition(" ")[2] % "%]" + mes.text.partition(" ")[2])
-            cursor.execute(request, (mes.text.partition(" ")[2], "%]" + mes.text.partition(" ")[2]))
+            cursor.execute(request, (mes.text.partition(" ")[2].lower(), "%]" + mes.text.partition(" ")[2].lower()))
             row = cursor.fetchone()
             if row is None:
                 bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")

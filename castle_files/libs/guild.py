@@ -179,8 +179,8 @@ class Guild:
                   "invite_link, orders_enabled, pin_enabled, disable_notification, assistants, settings, api_info" \
                   " from guilds "
         if guild_tag is not None:
-            request += "where guild_tag = %s"
-            cur_cursor.execute(request, (guild_tag,))
+            request += "where lower(guild_tag) = %s"
+            cur_cursor.execute(request, (guild_tag.lower(),))
         elif guild_id is not None:
             request += "where guild_id = %s"
             cur_cursor.execute(request, (guild_id,))
