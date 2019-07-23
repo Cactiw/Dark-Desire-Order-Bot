@@ -197,6 +197,7 @@ def stock(bot, update):
     if player is None:
         return
     is_guild = False
+    guild = None
     if 'guild' in mes.text or mes.text.startswith("/g_stock"):
         is_guild = True
         if player.guild is None:
@@ -278,7 +279,11 @@ def stock(bot, update):
             bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += new_response
-    response += "\n\n<b>Всего: {}💰</b>".format(total_gold)
+    response += "\n\n<b>Всего: {}💰</b>\n".format(total_gold)
+    if is_guild and guild is not None:
+        stock_size, stock_limit = guild.api_info.get("stock_size"), guild.api_info.get("stock_limit")
+        if stock_size is not None and stock_limit is not None:
+            response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>".format(stock_size, stock_limit)
     bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
     bot.send_message_group(mes.chat_id)
 

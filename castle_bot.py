@@ -55,7 +55,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
-    guild_commanders
+    guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     plan_daily_tasks, guild_top_battles
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
@@ -205,6 +205,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('del_teacher', del_teacher))
 
     dispatcher.add_handler(CommandHandler('view_academy', guild_info))
+
+    dispatcher.add_handler(CommandHandler('g_info', g_info))
+    dispatcher.add_handler(CommandHandler('guild_commanders', guild_commanders))
 
     dispatcher.add_handler(CommandHandler('d2', drop_table))
     dispatcher.add_handler(CommandHandler('d3', drop_table))
