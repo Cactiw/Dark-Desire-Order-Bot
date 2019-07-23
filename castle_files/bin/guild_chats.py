@@ -81,8 +81,10 @@ def parse_stats():
                     lst += new_str + "\n"
                     response_by_tags.update({tag: lst})
                 # dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text=guild_str, parse_mode='HTML')
-            print(guild_list)
             import json
+            logging.error("Guild list for parse_stats: {}".format(json.dumps(guild_list, indent=4, ensure_ascii=False)))
+            logging.error("Response by tags: {}".format(json.dumps(response_by_tags, indent=4, ensure_ascii=False)))
+            print(guild_list)
             print(json.dumps(response_by_tags, indent=4, ensure_ascii=False))
             for tag, string in list(response_by_tags.items()):
                 guild = Guild.get_guild(guild_tag=tag)
