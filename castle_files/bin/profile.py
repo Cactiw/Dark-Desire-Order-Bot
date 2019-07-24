@@ -587,7 +587,7 @@ def profile_exp(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
-def remember_exp():
+def remember_exp(bot, job):
     cursor = conn.cursor()
     request = "select id, exp, exp_info from players"
     cursor.execute(request)
