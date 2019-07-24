@@ -1,5 +1,5 @@
 import castle_files.work_materials.globals as file_globals
-from castle_files.bin.construction import construction_jobs
+from castle_files.bin.quests import construction_jobs
 
 from castle_files.libs.api import CW3API
 

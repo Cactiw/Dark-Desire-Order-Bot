@@ -223,6 +223,28 @@ def construction_return(bot, job):
                      reply_markup=buttons, parse_mode='HTML')
 
 
+def tea_party(bot, update, user_data):
+    user_data.update({"status": "tea_party", "location_id": 9})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def tea_party_quest(bot, update, user_data):
+    mes = update.message
+    quests = {"исследование": "exploration",
+              "котлован": "pit"}
+    quest = None
+    for key, v in list(quests.items()):
+        if key.lower() in mes.text.lower():
+            quest = v
+            break
+    if quest is None:
+        logging.error("Quest is None")
+        return
+
+    user_data.update({"status": quest})
+
+
+
 statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return}
 
 

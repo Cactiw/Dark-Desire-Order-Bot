@@ -66,7 +66,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category
-from castle_files.bin.construction import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction,\
+from castle_files.bin.quests import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction,\
     begin_construction, construct, construction_plate
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
@@ -466,8 +466,8 @@ def castle_bot_processing():
     api.start()
     processes.append(api)
 
-    text = """"""
-    # direct_send_message([577845692], text)
+    text = """Привет! На связи ГлавЛук Скалы. Закинь /me (не /hero, /me) в этого бота, чтоб остаться на канале с пинами. Время до 25 августа 14:00 по МСК. Если ты не успел, все равно кидай /me в бота и пиши мне (@faugore) в лс, чтоб попасть обратно на канал. Удачи!"""
+    direct_send_message([485596730, 455422372, 575592214, 683640549, 669515343, 260550882, 187299899], text)
 
     if CONNECT_TYPE == 'webhook':
         updater.start_webhook(listen='0.0.0.0',
