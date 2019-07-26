@@ -126,6 +126,7 @@ def g_info(bot, update):
         requested_guild = Guild.get_guild(guild_tag=guild_tag)
         if requested_guild is None:
             bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена")
+            return
     commander = Player.get_player(requested_guild.commander_id, notify_on_error=False)
     glory, lvl, members = requested_guild.api_info.get("glory"), requested_guild.api_info.get("lvl"), \
         requested_guild.api_info.get("members")
@@ -659,7 +660,7 @@ def del_assistant(bot, update):
     if not guild.check_high_access(player_to_add.id):
         bot.send_message(chat_id=update.message.chat_id, text="Игрок и не являлся замом.")
         return
-    if player_to_add.id == guild.commander_id:
+    if player_to_add.id == guild.commander_id and False:
         bot.send_message(chat_id=update.message.chat_id, text="Нельзя свергнуть командира.")
         return
     guild.assistants.remove(player_to_add.id)
