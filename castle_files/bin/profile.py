@@ -598,7 +598,7 @@ def remember_exp(bot, job):
         if exp_info is None:
             exp_info = {}
         exp_info.update({battle_id: exp})
-        exp_info = {k: v for k, v in sorted(list(exp_info.items()), key=lambda x: x[0])}
+        exp_info = {k: v for k, v in sorted(list(exp_info.items()), key=lambda x: int(x[0]))}
         request = "update players set exp_info = %s where id = %s"
         cursor.execute(request, (json.dumps(exp_info, ensure_ascii=False), player_id))
     plan_remember_exp()
