@@ -19,7 +19,7 @@ def get_item_code_by_name(name):
         if name == elem[1]:
             code = "k" + num
             return code
-        elif elem[0] in name and "recipe" in name:
+        elif elem[0] in name and "recipe" in name.lower():
             code = "r" + num
             return code
         else:

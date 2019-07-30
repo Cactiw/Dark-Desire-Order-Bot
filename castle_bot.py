@@ -47,7 +47,7 @@ from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
     set_status, guild_history, revoke_all_class_links, class_chat_check, reports_history, profile_settings, \
     change_profile_setting, get_rangers, profile_exp
-from castle_files.bin.class_functions import add_trap
+from castle_files.bin.class_functions import add_trap, trap_stats
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
@@ -169,6 +169,7 @@ def castle_bot_processing():
 
     # Классовые штуки, ачивки и тп
     dispatcher.add_handler(MessageHandler(Filters.text & filter_archer_trap, add_trap))
+    dispatcher.add_handler(CommandHandler('trap_stats', trap_stats))
 
     # Всякие команды в личке у бота
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_stock_parts, guild_parts, pass_user_data=True))
