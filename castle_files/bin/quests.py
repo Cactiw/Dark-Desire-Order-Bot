@@ -18,6 +18,8 @@ import json
 import datetime
 import re
 
+import threading
+
 MINING_QUEST_DURATION_SECONDS = 3 * 60
 CONSTRUCTION_DURATION_SECONDS = 5 * 60
 
@@ -228,8 +230,15 @@ def tea_party(bot, update, user_data):
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
+quest_lock = threading.Lock()
+quest_players = {"exploration": [], "pit": []}
+
+
 def tea_party_quest(bot, update, user_data):
     mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
     quests = {"исследование": "exploration",
               "котлован": "pit"}
     quest = None
@@ -242,6 +251,11 @@ def tea_party_quest(bot, update, user_data):
         return
 
     user_data.update({"status": quest})
+    with quest_lock:
+        lst: [Player] = quest_players.get(quest)
+        lst.append(player)
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=mes.chat_id, text="Ты куда-то отправился. Вернуться невозможно. /f", reply_markup=buttons)
 
 
 

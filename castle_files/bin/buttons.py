@@ -239,7 +239,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ]
         ]
-    elif status in ["sawmill", "quarry", "construction"]:
+    elif status in ["sawmill", "quarry", "construction", "exploration", "pit"]:
         buttons = [
             [
                 KeyboardButton("👀 Профиль"),
