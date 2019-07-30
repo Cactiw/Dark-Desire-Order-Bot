@@ -17,6 +17,7 @@ from castle_files.work_materials.filters.guild_filters import filter_edit_guild,
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, \
     filter_delete_guild, filter_view_guilds_commanders
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
+from castle_files.work_materials.filters.mob_filters import filter_mob_message
 from castle_files.work_materials.filters.castle_filters import filter_central_square, filter_barracks, filter_back, \
     filter_throne_room, filter_castle_gates, filter_guide_signs, filter_not_constructed, filter_watch_portraits, \
     filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
@@ -60,6 +61,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     plan_daily_tasks, guild_top_battles
+from castle_files.bin.mobs import mob
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -161,6 +163,9 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
+
+    # Мобы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_mob_message, mob))
 
     # Приём репортов
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report, pass_user_data=True))

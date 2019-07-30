@@ -156,6 +156,17 @@ class AsyncBot(Bot):
         message_type = kwargs.get('message_type')
         if message_type is None:
             message_type = 0
+        # reply_markup = kwargs.get("reply_markup")
+        # if reply_markup is not None:
+        #     if hasattr(reply_markup, "keyboard"):
+        #         keyboard = reply_markup.keyboard
+        #     elif hasattr(reply_markup, "inline_keyboard"):
+        #         keyboard = reply_markup.inline_keyboard
+        #     else:
+        #         keyboard = None
+        #     if keyboard is not None:
+        #         print(keyboard)
+        #     print(reply_markup)
         lock = self.counter_lock
         lock.acquire()
         try:
