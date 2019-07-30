@@ -284,6 +284,8 @@ def stock(bot, update):
         stock_size, stock_limit = guild.api_info.get("stock_size"), guild.api_info.get("stock_limit")
         if stock_size is not None and stock_limit is not None:
             response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>".format(stock_size, stock_limit)
+    elif not is_guild:
+        response += "Последнее обновление: <em>{}</em>\n".format(player.api_info.get("stock_update") or "Неизвестно")
     bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
     bot.send_message_group(mes.chat_id)
 

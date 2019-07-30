@@ -351,6 +351,8 @@ class CW3API:
                 player_stock.update({code or name: count})
             player_stock = {k: player_stock[k] for k in sorted(player_stock, key=stock_sort_comparator)}
             player.stock = player_stock
+            player.api_info.update({"stock_update": datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime(
+                "%d/%m/%y %H:%M")})
             player.update()
             if player.settings is None:
                 send_change = True
