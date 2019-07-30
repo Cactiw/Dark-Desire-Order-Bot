@@ -145,7 +145,7 @@ def repair(bot, update):
         response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💰{} 💧{} {}" \
                     "\n".format(castle, "/ws_" + link, "/ws_" + link, gold, mana,
                                 "🏰: -{}%".format(discount) if discount is not None else "")
-    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def ws(bot, update):
