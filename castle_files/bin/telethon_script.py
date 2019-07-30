@@ -40,6 +40,7 @@ def stats_handler(event):
         logging.error("Received data from telegram, sending: {}".format(text))
         if '⛺️Гильдия' in text:
             guilds_str += text + "\n"
+            logging.info("Adding text to guilds_str = {}".format(guilds_str))
         else:
             print("put stats in queue")
             castles_stats_queue.put(text)
