@@ -266,7 +266,7 @@ def vote(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
         return
     if player.guild is None:
-        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
+        # bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
         # return
         pass
     vote_id = re.search("_(\\d+)", mes.text)
@@ -285,7 +285,10 @@ def vote(bot, update):
                                                        "если ваш класс указан неверно, его можно обновить, "
                                                        "прислав форвард ответа </em>@ChatWarsBot<em> на </em>/me",
                              parse_mode='HTML')
-            bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+            try:
+                bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+            except Exception:
+                pass
             return
     except Exception:
         logging.error(traceback.format_exc())
@@ -309,7 +312,7 @@ def set_vote_variant(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
         return
     if player.guild is None:
-        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
+        # bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
         # return
         pass
     parse = re.search("_(\\d+)_(\\d+)", data)
