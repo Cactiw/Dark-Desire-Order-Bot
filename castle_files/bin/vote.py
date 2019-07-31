@@ -248,7 +248,7 @@ def get_vote_text(vote, choice=None):
     if vote.classes is not None and vote.classes and not all(vote.classes):
         cl_text = ""
         for i, b in enumerate(vote.classes):
-            cl_text += classes_list[b] if b else ""
+            cl_text += classes_list[i] if b else ""
         response += "Классы: <code>{}</code>\n\n".format(cl_text)
     response += "Доступные варианты:\n\n"
     for variant in vote.variants:
@@ -267,7 +267,8 @@ def vote(bot, update):
         return
     if player.guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
-        return
+        # return
+        pass
     vote_id = re.search("_(\\d+)", mes.text)
     if vote_id is None:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
@@ -309,7 +310,8 @@ def set_vote_variant(bot, update):
         return
     if player.guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
-        return
+        # return
+        pass
     parse = re.search("_(\\d+)_(\\d+)", data)
     if parse is None:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
