@@ -70,8 +70,8 @@ class Cursor:
             self.conn.start()
             self.cursor = self.conn.connection.cursor()
             self.cursor.execute(request, *args)
-        except psycopg2.Error:
-            logging.error("{}\nRequest: {} {}".format(traceback.format_exc(), request, args))
+        # except psycopg2.Error:
+        #     logging.error("{}\nRequest: {} {}".format(traceback.format_exc(), request, args))
 
     def fetchone(self):
         if threading.current_thread().ident != self.pid:

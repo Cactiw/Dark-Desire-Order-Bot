@@ -5,8 +5,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 
 class FilterMobMessage(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
-               '/fight' in message.text.lower()
+        return filter_is_chat_wars_forward(message) and '/fight' in message.text.lower()
 
 
 filter_mob_message = FilterMobMessage()
