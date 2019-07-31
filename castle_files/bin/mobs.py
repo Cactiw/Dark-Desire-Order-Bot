@@ -45,10 +45,11 @@ def mob(bot, update):
     else:
         response += "Осталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
                                                                         int(remaining_time.total_seconds() % 60)))
-    request = "insert into mobs(link, mob_names, mob_lvls, date_created, on_channel) values (%s, %s, %s, %s, %s)"
+    request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel) values (" \
+              "%s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
     try:
-        cursor.execute(request, (link, names, lvls, forward_message_date, is_pm))
+        cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm))
     except psycopg2.IntegrityError:
         # logging.error(traceback.format_exc())
         if is_pm:
