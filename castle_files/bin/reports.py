@@ -1,5 +1,6 @@
 from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn
 from castle_files.bin.service_functions import count_battle_id
+from castle_files.bin.stock import get_item_code_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -21,10 +22,34 @@ def count_battle_time(battle_id):
 def add_report(bot, update, user_data):
     mes = update.message
     s = mes.text
-    if 'hit' in s.lower() or 'miss' in s.lower() or 'last hit' in s.lower():
-        return
     player = Player.get_player(mes.from_user.id)
     if player is None:
+        return
+
+    try:
+        forward_message_date: datetime.datetime = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except ValueError:
+        try:
+            forward_message_date = mes.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
+        except ValueError:
+            forward_message_date = mes.forward_date
+    except AttributeError:
+        forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+
+    if 'hit' in s.lower() or 'miss' in s.lower() or 'last hit' in s.lower():
+        earned = re.search("Получено: (.+) \\((\\d+)\\)", s)
+        if earned is not None:
+            name = earned.group(1)
+            count = earned.group(2)
+            code = get_item_code_by_name(name)
+            if code is None:
+                code = name
+            drop = player.mobs_info.get("drop")
+            if drop is None:
+                drop = {}
+                player.mobs_info.update({"drop": drop})
+            drop.update({forward_message_date.timestamp(): {"code": code, "count": 1}})
+            player.update()
         return
     line = re.search(".(.*)\\s⚔:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
     """ 
@@ -63,15 +88,7 @@ def add_report(bot, update, user_data):
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock))
 
-    try:
-        forward_message_date = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    except ValueError:
-        try:
-            forward_message_date = mes.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
-        except ValueError:
-            forward_message_date = mes.forward_date
-    except AttributeError:
-        forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+
     player.count_reports()
     reputation = REPORT_REPUTATION_COUNT
 
