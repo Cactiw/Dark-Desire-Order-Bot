@@ -82,7 +82,7 @@ from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, 
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
-from castle_files.bin.reports import add_report, battle_stats, battle_equip
+from castle_files.bin.reports import add_report, battle_stats, battle_equip, battle_drop
 
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
@@ -172,6 +172,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('battle_equip', battle_equip))
     dispatcher.add_handler(CommandHandler('battle_equip_full', battle_equip))
+    dispatcher.add_handler(CommandHandler('battle_drop', battle_drop))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_hero, profile, pass_user_data=True))
 

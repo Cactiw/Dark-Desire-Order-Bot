@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn
+from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID
 from castle_files.bin.service_functions import count_battle_id
 from castle_files.bin.stock import get_item_code_by_name
 from castle_files.libs.player import Player
@@ -126,11 +126,25 @@ def add_report(bot, update, user_data):
     """
 
 
-
+def battle_drop(bot, update):
+    mes = update.message
+    request = "select battle_id, equip from reports where equip is not null " \
+              "order by battle_id desc limit 20"
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    response = "Последние изменения в экипировке по репортам:\n"
+    for row in rows:
+        found_from = row[1].get("from")
+        response += "{} - <code>{}</code>: <b>{}</b> {}" \
+                    "\n".format(count_battle_time(row[0]), row[1].get("status"), row[1].get("name"),
+                                "(От {})".format(found_from) if found_from is not None else "")
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def battle_equip(bot, update):
     mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID:
+        return
     battle_id = re.search("\\d+", mes.text)
     if battle_id is None:
         battle_id = count_battle_id(mes)
