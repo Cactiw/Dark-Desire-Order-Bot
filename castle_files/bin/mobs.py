@@ -43,8 +43,8 @@ def mob(bot, update):
     if remaining_time < datetime.timedelta(0):
         response += "\nВремени не осталось!"
     else:
-        response += "Осталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
-                                                                        int(remaining_time.total_seconds() % 60)))
+        response += "\nОсталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
+                                                                          int(remaining_time.total_seconds() % 60)))
     request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel) values (" \
               "%s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
