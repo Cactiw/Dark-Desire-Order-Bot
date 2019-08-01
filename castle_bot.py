@@ -61,7 +61,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     plan_daily_tasks, guild_top_battles
-from castle_files.bin.mobs import mob
+from castle_files.bin.mobs import mob, mob_help
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -414,6 +414,9 @@ def castle_bot_processing():
 
     # Хендлеры для инлайн кнопок в топах
     dispatcher.add_handler(CallbackQueryHandler(send_new_top, pattern="top_[^_]+_.*"))
+
+    # Хендлеры для инлайн кнопок мобов
+    dispatcher.add_handler(CallbackQueryHandler(mob_help, pattern="mob_partify_.*"))
 
     # Хендлеры для инлайн кнопок профиля
     dispatcher.add_handler(CallbackQueryHandler(guild_history, pattern="pr_guild_history_\\d+"))

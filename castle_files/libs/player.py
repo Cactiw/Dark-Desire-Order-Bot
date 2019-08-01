@@ -23,7 +23,7 @@ class Player:
     def __init__(self, player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment,
                  game_class=None, class_skill_lvl=None, castle=None, last_updated=None, reputation=0, created=None,
                  status=None, guild_history=None, exp=None, api_info=None, stock=None, settings=None, exp_info=None,
-                 class_info=None):
+                 class_info=None, mobs_info=None):
         self.id = player_id
         self.username = username
         self.nickname = nickname
@@ -50,6 +50,7 @@ class Player:
         self.settings = settings or {}
         self.exp_info = exp_info or {}
         self.class_info = class_info or {}
+        self.mobs_info = mobs_info or {}
 
         self.__current_reports_count = -1
         self.__previous_reports_count = -1
@@ -108,7 +109,7 @@ class Player:
         # Загрузка игрока из базы данных
         request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, " \
                   "game_class, class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, " \
-                  "exp, api_info, stock, id, settings, exp_info, class_info from players where "
+                  "exp, api_info, stock, id, settings, exp_info, class_info, mobs_info from players where "
         if player_id is not None:
             request += "id = %s"
         elif player_in_game_id is not None:
@@ -130,7 +131,7 @@ class Player:
         print(row)
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class, \
             class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, exp, api_info, \
-            stock, player_id, settings, exp_info, class_info = row
+            stock, player_id, settings, exp_info, class_info, mobs_info = row
         if api_info is None:
             api_info = {}
         eq = {}
@@ -147,7 +148,8 @@ class Player:
         player = Player(player_id, username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, eq,
                         game_class, class_skill_lvl=class_skill_lvl, castle=castle, last_updated=last_updated,
                         reputation=reputation, created=created, status=status, guild_history=guild_history, exp=exp,
-                        api_info=api_info, stock=stock, settings=settings, exp_info=exp_info, class_info=class_info)
+                        api_info=api_info, stock=stock, settings=settings, exp_info=exp_info, class_info=class_info,
+                        mobs_info=mobs_info)
         players.update({player_id: player})  # Кладу игрока в память для дальнейшего ускоренного использования
         cur_cursor.close()  # Remove this if you want to use other cursors
         return player
@@ -193,7 +195,7 @@ class Player:
                   "attack = %s, defense = %s, stamina = %s, pet = %s, equipment = %s, game_class = %s, " \
                   "class_skill_lvl = %s, castle = %s, last_updated = %s, reputation = %s, created = %s, status = %s, " \
                   "guild_history = %s, exp = %s, api_info = %s, stock = %s, settings = %s, exp_info = %s, " \
-                  "class_info = %s where id = %s"
+                  "class_info = %s, mobs_info = %s where id = %s"
         eq_to_db = self.equipment_to_json()
 
         # print(self.id, self.username, self.nickname, self.guild_tag, self.guild, self.lvl,
@@ -204,7 +206,7 @@ class Player:
                                  self.castle, self.last_updated, self.reputation, self.created, self.status,
                                  self.guild_history, self.exp, json.dumps(self.api_info), json.dumps(self.stock),
                                  json.dumps(self.settings), json.dumps(self.exp_info, ensure_ascii=False),
-                                 json.dumps(self.class_info), self.id))
+                                 json.dumps(self.class_info), json.dumps(self.mobs_info), self.id))
         cursor.close()
         return 0
 
