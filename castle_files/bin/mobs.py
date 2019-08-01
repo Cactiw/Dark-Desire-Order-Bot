@@ -59,12 +59,13 @@ def mob(bot, update):
     request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel) values (" \
               "%s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
+    helpers = []
     try:
         cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm))
     except psycopg2.IntegrityError:
         # logging.error(traceback.format_exc())
         if is_pm:
-            request = "select on_channel from mobs where link = %s"
+            request = "select on_channel, helpers from mobs where link = %s"
             cursor.execute(request, (link,))
             row = cursor.fetchone()
             if row[0]:
@@ -73,7 +74,8 @@ def mob(bot, update):
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-    response = get_mobs_text(names, lvls, [], forward_message_date)
+            helpers = row[1]
+    response = get_mobs_text(names, lvls, helpers, forward_message_date)
     if is_pm:
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
         bot.send_message(chat_id=mes.chat_id, text="Отправлено на канал. Спасибо!")
