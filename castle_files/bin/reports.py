@@ -21,6 +21,8 @@ def count_battle_time(battle_id):
 def add_report(bot, update, user_data):
     mes = update.message
     s = mes.text
+    if 'hit' in s.lower() or 'miss' in s.lower() or 'last hit' in s.lower():
+        return
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
