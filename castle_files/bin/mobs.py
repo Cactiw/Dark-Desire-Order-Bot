@@ -64,17 +64,17 @@ def mob(bot, update):
         cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm))
     except psycopg2.IntegrityError:
         # logging.error(traceback.format_exc())
+        request = "select on_channel, helpers from mobs where link = %s"
+        cursor.execute(request, (link,))
+        row = cursor.fetchone()
+        helpers = row[1]
         if is_pm:
-            request = "select on_channel, helpers from mobs where link = %s"
-            cursor.execute(request, (link,))
-            row = cursor.fetchone()
             if row[0]:
                 bot.send_message(chat_id=mes.chat_id, text="Данный моб уже на канале",
                                  reply_to_message_id=mes.message_id)
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-            helpers = row[1]
     response = get_mobs_text(names, lvls, helpers, forward_message_date)
     if is_pm:
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
