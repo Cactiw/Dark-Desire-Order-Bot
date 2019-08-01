@@ -6,6 +6,7 @@ from castle_files.libs.guild import Guild
 
 import re
 import datetime
+import json
 
 REPORT_REPUTATION_COUNT = 5
 
@@ -77,6 +78,19 @@ def add_report(bot, update, user_data):
     stock = re.search("📦Stock:\\s+(-?\\d+)", s)
     stock = int(stock.group(1)) if stock is not None else 0
     battle_id = count_battle_id(mes)
+
+    equip = re.search("Found: (.+) \\(from (.+)\\)", s)
+    equip_change = None
+    if equip is not None:
+        name = equip.group(1)
+        found_from = equip.group(2)
+        equip_change = {"status": "Found", "name": name, "from": found_from}
+    else:
+        equip = re.search("Lost: (.+)", s)
+        if equip is not None:
+            name = equip.group(1)
+            equip_change = {"status": "Lost", "name": name}
+
     request = "select report_id from reports where battle_id = %s and player_id = %s"
     cursor.execute(request, (battle_id, player.id))
     row = cursor.fetchone()
@@ -84,10 +98,10 @@ def add_report(bot, update, user_data):
         bot.send_message(chat_id=mes.from_user.id, text="Репорт за эту битву уже учтён!")
         return
     request = "insert into reports(player_id, battle_id, attack, additional_attack, defense, additional_defense, lvl, "\
-              "exp, gold, stock) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+              "exp, gold, stock, equip) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
-                             gold, stock))
-
+                             gold, stock, json.dumps(equip_change, ensure_ascii=False) if equip_change is not None else
+                             None))
 
     player.count_reports()
     reputation = REPORT_REPUTATION_COUNT
@@ -110,6 +124,30 @@ def add_report(bot, update, user_data):
                                     lvl, exp, gold, stock),
                      parse_mode='HTML')
     """
+
+
+
+
+
+def battle_equip(bot, update):
+    mes = update.message
+    battle_id = re.search("\\d+", mes.text)
+    if battle_id is None:
+        battle_id = count_battle_id(mes)
+    else:
+        battle_id = int(battle_id.group(0))
+    full = 'full' in mes.text
+    request = "select player_id, equip from reports where battle_id = %s and equip is not null " \
+              "order by equip ->> 'status'"
+    cursor.execute(request, (battle_id,))
+    rows = cursor.fetchall()
+    response = "Дроп с битвы {} - {} :\n".format(battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
+    for row in rows:
+        name, found_from = row[1].get("name"), row[1].get("from")
+        player = Player.get_player(row[0])
+        response += "{}<b>{}</b> {}\n".format("{} ".format((player.castle + player.nickname) if full else ""),
+                                              name, "(От {})".format(found_from) if found_from is not None else "")
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 # VERY EXPENSIVE OPERATION
