@@ -106,19 +106,22 @@ def mob_help(bot, update):
         bot.send_message(chat_id=update.callback_query.from_user.id, text="Событие не найдено")
         return
     names, lvls, forward_message_date, helpers = row
-    if len(helpers) >= 3:
-        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Уже собралось достаточно помощников!",
-                                show_alert=True)
-        return
-    if update.callback_query.from_user.username in helpers:
-        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помог!", show_alert=True)
-        return
-    helpers.append(update.callback_query.from_user.username)
-    response = get_mobs_text(names, lvls, helpers, forward_message_date)
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton(text="⚔️В бой!",
                                                           url=u"https://t.me/share/url?url=/fight_{}".format(link)),
                                      InlineKeyboardButton(text="🤝Помогаю!",
                                                           callback_data="mob_partify_{}".format(link))]])
+    if update.callback_query.from_user.username in helpers:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помог!", show_alert=True)
+        return
+    if len(helpers) >= 3:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Уже собралось достаточно помощников!",
+                                show_alert=True)
+    else:
+        helpers.append(update.callback_query.from_user.username)
+    if len(helpers) >= 3:
+        buttons[0].pop(1)
+    response = get_mobs_text(names, lvls, helpers, forward_message_date)
+
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
                             reply_markup=buttons, parse_mode='HTML')
