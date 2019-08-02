@@ -4,6 +4,7 @@
 
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, local_tz, cursor
 from castle_files.work_materials.filters.general_filters import filter_is_pm
+from castle_files.libs.player import Player
 
 import datetime
 import re
@@ -15,11 +16,14 @@ import psycopg2
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-def get_mobs_text(mobs, lvls, helpers, forward_message_date):
+def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date):
     response = "Обнаруженные мобы:\n"
+    avg_lvl = 0
     for i, name in enumerate(mobs):
         lvl = lvls[i]
+        avg_lvl += lvl
         response += "<b>{}</b> 🏅: <code>{}</code>\n".format(name, lvl)
+    avg_lvl /= len(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
 
@@ -30,7 +34,12 @@ def get_mobs_text(mobs, lvls, helpers, forward_message_date):
     else:
         response += "\nОсталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
                                                                           int(remaining_time.total_seconds() % 60)))
-    return response
+    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - 5), int(avg_lvl + 5)),
+                                     url=u"https://t.me/share/url?url=/fight_{}".format(link)),
+                InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
+    if len(helpers) >= 3:
+        buttons[0].pop(1)
+    return [response, InlineKeyboardMarkup(buttons)]
 
 
 def mob(bot, update):
@@ -48,10 +57,6 @@ def mob(bot, update):
             lvl = int(parse.group(2))
             names.append(name)
             lvls.append(lvl)
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton(text="⚔️В бой!",
-                                                          url=u"https://t.me/share/url?url=/fight_{}".format(link)),
-                                     InlineKeyboardButton(text="🤝Помогаю!",
-                                                          callback_data="mob_partify_{}".format(link))]])
     try:
         forward_message_date = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     except Exception:
@@ -75,8 +80,9 @@ def mob(bot, update):
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-    response = get_mobs_text(names, lvls, helpers, forward_message_date)
-    if is_pm:
+    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date)
+    player = Player.get_player(mes.from_user.id)
+    if is_pm and (player is None or player.castle == '🖤'):
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
         bot.send_message(chat_id=mes.chat_id, text="Отправлено на канал. Спасибо!")
     else:
@@ -106,8 +112,6 @@ def mob_help(bot, update):
         bot.send_message(chat_id=update.callback_query.from_user.id, text="Событие не найдено")
         return
     names, lvls, forward_message_date, helpers = row
-    buttons = ([[InlineKeyboardButton(text="⚔️В бой!", url=u"https://t.me/share/url?url=/fight_{}".format(link)),
-                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]])
     if update.callback_query.from_user.username in helpers:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помог!", show_alert=True)
         return
@@ -116,10 +120,7 @@ def mob_help(bot, update):
                                 show_alert=True)
     else:
         helpers.append(update.callback_query.from_user.username)
-    if len(helpers) >= 3:
-        buttons[0].pop(1)
-    response = get_mobs_text(names, lvls, helpers, forward_message_date)
-    buttons = InlineKeyboardMarkup(buttons)
+    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date)
 
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
