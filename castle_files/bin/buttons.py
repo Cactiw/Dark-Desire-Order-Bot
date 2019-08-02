@@ -188,19 +188,23 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("🔭 Башня ТехМаг наук"),  # ❗
                 KeyboardButton("🏤Мандапа Славы"),
                 # KeyboardButton("📈Топы"),
-                KeyboardButton("🏚 Стройплощадка"),
                 # KeyboardButton("🏚 Не построено"),
             ],
             [
                 KeyboardButton("↔️ Подойти к указателям"),
+                KeyboardButton("🏚 Стройплощадка"),
                 # KeyboardButton("↩️ Назад"),
             ]
         ]
         # Стройка Мандапы Славы окончена
-        """hall = Location.get_location(8)
-        if hall is not None and hall.is_constructed():
-            buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
-        """
+        # hall = Location.get_location(8)
+        # if hall is not None and hall.is_constructed():
+        #     buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
+
+        tea_party = Location.get_location(9)
+        if tea_party is not None and tea_party.is_constructed():
+            buttons[1].insert(2, KeyboardButton("Чайная лига"))
+
     elif status == 'barracks':
         buttons = [
             [
@@ -390,9 +394,13 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             ]
         ]
     elif status == 'tea_party':
-        buttons = [
-            KeyboardButton("Отправиться на разведку"),
+        buttons = [[
+            KeyboardButton("Разведка"),
             KeyboardButton("Рыть котлован"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ],
         ]
     if only_buttons or buttons is None:
         return buttons
