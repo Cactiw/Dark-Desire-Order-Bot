@@ -74,6 +74,10 @@ def back(bot, update, user_data):
 
         "manuscript": "technical_tower",
 
+        "tea_party": "central_square",
+        "exploration": "tea_party",
+        "pit": "tea_party",
+
     }
 
     statuses_rp_off = {

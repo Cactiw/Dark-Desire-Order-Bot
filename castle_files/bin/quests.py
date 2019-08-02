@@ -16,6 +16,7 @@ import logging
 import traceback
 import json
 import datetime
+import random
 import re
 
 import threading
@@ -239,7 +240,7 @@ def tea_party_quest(bot, update, user_data):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    quests = {"исследование": "exploration",
+    quests = {"разведка": "exploration",
               "котлован": "pit"}
     quest = None
     for key, v in list(quests.items()):
@@ -252,11 +253,59 @@ def tea_party_quest(bot, update, user_data):
 
     user_data.update({"status": quest})
     with quest_lock:
-        lst: [Player] = quest_players.get(quest)
-        lst.append(player)
+        lst: [int] = quest_players.get(quest)
+        # lst.append(player.id)
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=mes.chat_id, text="Ты куда-то отправился. Вернуться невозможно. /f", reply_markup=buttons)
+    job.run_once(two_go_action, 5, {"quest": quest, "player_id": player.id})
+    # job.run_once(two_go_action, random.random() * 180 + 120, {"quest": quest, "player_id": player.id})
 
+
+def two_go_action(bot, cur_job):
+    quest, player_id = cur_job.context.get("quest"), cur_job.context.get("player_id")
+    player = Player.get_player(player_id)
+    with quest_lock:
+        player_list = quest_players.get(quest)
+        if player_list is None:
+            logging.error("No quest configured for {}".format(quest))
+            return
+        if not player_list:
+            player_list.append(player_id)
+            # TODO таймаут ожидания
+            return
+        else:
+            pair_player_id = player_list.pop()
+    pair_player = Player.get_player(pair_player_id)
+    user_data, pair_user_data = dispatcher.user_data.get(player_id), dispatcher.user_data.get(pair_player_id)
+    user_data.update({"status": "two_quest"})
+    pair_user_data.update({"status": "two_quest"})
+    bot.send_message(chat_id=player_id,
+                     text="Ты встретил <b>{}</b> (@{}). У вас 3 минуты, чтобы нажать /go с промежутком менее 30 "
+                          "секунд".format(pair_player.nickname, pair_player.username), parse_mode='HTML')
+    bot.send_message(chat_id=pair_player_id,
+                     text="Ты встретил <b>{}</b> (@{}). У вас 3 минуты, чтобы нажать /go с промежутком менее 30 "
+                          "секунд".format(player.nickname, player.username), parse_mode='HTML')
+    job.run_once(two_action_timeout, 30, {"ids": [player_id, pair_player_id]})
+
+
+GO_SUCCESS_REPUTATION = 10
+GO_NOT_SUCCESS_REPUTATION = 3
+
+
+def two_action_timeout(bot, cur_job):
+    player_id, pair_player_id = cur_job.context.get("ids")
+    player, pair_player = Player.get_player(player_id), Player.get_player(pair_player_id)
+    user_data, pair_user_data = dispatcher.user_data.get(player_id), dispatcher.user_data.get(pair_player_id)
+    user_data.update({"status": "tea_party"})
+    pair_user_data.update({"status": "tea_party"})
+    player.reputation += GO_NOT_SUCCESS_REPUTATION
+    pair_player.reputation += GO_NOT_SUCCESS_REPUTATION
+    player.update()
+    pair_player.update()
+    bot.send_message(chat_id=player_id, text="Вы не смогли скоординироваться. Получено {}🔘"
+                                             "".format(GO_NOT_SUCCESS_REPUTATION))
+    bot.send_message(chat_id=pair_player_id, text="Вы не смогли скоординироваться. Получено {}🔘"
+                                                  "".format(GO_NOT_SUCCESS_REPUTATION))
 
 
 statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return}
