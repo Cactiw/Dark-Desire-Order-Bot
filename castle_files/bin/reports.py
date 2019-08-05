@@ -37,7 +37,7 @@ def add_report(bot, update, user_data):
     except AttributeError:
         forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
 
-    if 'hit' in s.lower() or 'miss' in s.lower() or 'last hit' in s.lower():
+    if 'hit' in s.lower() and 'miss' in s.lower() and 'last hit' in s.lower():
         earned = re.search("Получено: (.+) \\((\\d+)\\)", s)
         if earned is not None:
             name = earned.group(1)
