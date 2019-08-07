@@ -69,7 +69,7 @@ def save_data():
                 """if v.get_time_left() < 0:
                     construction_jobs.pop(k)
                     continue"""
-                dump.update({k: [file_globals.dispatcher.user_data.get(k).get("status"), v.stop_time]})
+                dump.update({k: [file_globals.dispatcher.user_data.get(k).get("status"), v.stop_time, v.job.context]})
             if file_globals.began:
                 f = open('castle_files/backup/construction_jobs', 'wb+')
                 pickle.dump(dump, f)
