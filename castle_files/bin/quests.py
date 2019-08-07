@@ -9,6 +9,7 @@ from castle_files.libs.castle.location import Location, locations
 from castle_files.libs.my_job import MyJob
 
 from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn
+from castle_files.work_materials.quest_texts import quest_texts
 
 import time
 import pickle
@@ -231,6 +232,17 @@ def tea_party(bot, update, user_data):
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
+# Создаёт работу через when секунд (на запуск callback функции), добавляет в construction_jobs для сохранения на диске и
+# автоматического поднятия при перезапуске бота.
+def safe_job_create(callback, when, player_id, context=None, cancel_old=True):
+    j = job.run_once(callback=callback, when=when, context=context)
+    if cancel_old:
+        old_j = construction_jobs.get(player_id)
+        if old_j is not None:
+            old_j.job.schedule_removal()
+    construction_jobs.update({player_id: MyJob(j, when)})
+
+
 quest_lock = threading.Lock()
 quest_players = {"exploration": [], "pit": []}
 
@@ -257,13 +269,19 @@ def tea_party_quest(bot, update, user_data):
         # lst.append(player.id)
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=mes.chat_id, text="Ты куда-то отправился. Вернуться невозможно. /f", reply_markup=buttons)
-    job.run_once(two_go_action, 5, {"quest": quest, "player_id": player.id})
+    safe_job_create(two_go_action, 30, player.id, {"quest": quest, "player_id": player.id})
     # job.run_once(two_go_action, random.random() * 180 + 120, {"quest": quest, "player_id": player.id})
 
 
 def two_go_action(bot, cur_job):
     quest, player_id = cur_job.context.get("quest"), cur_job.context.get("player_id")
     player = Player.get_player(player_id)
+    user_data = dispatcher.user_data.get(player_id)
+
+    status = user_data.get("status")
+    if status != quest:
+        return
+
     with quest_lock:
         player_list = quest_players.get(quest)
         if player_list is None:
@@ -271,12 +289,14 @@ def two_go_action(bot, cur_job):
             return
         if not player_list:
             player_list.append(player_id)
-            # TODO таймаут ожидания
+            safe_job_create(player_awaiting_timeout, 60 * 3, player.id,
+                            context={"quest": quest, "player_id": player.id})
+            user_data.update({"status": "waiting_second_player_for_quest"})
             return
         else:
             pair_player_id = player_list.pop()
     pair_player = Player.get_player(pair_player_id)
-    user_data, pair_user_data = dispatcher.user_data.get(player_id), dispatcher.user_data.get(pair_player_id)
+    pair_user_data = dispatcher.user_data.get(pair_player_id)
     user_data.update({"status": "two_quest"})
     pair_user_data.update({"status": "two_quest"})
     bot.send_message(chat_id=player_id,
@@ -285,30 +305,56 @@ def two_go_action(bot, cur_job):
     bot.send_message(chat_id=pair_player_id,
                      text="Ты встретил <b>{}</b> (@{}). У вас 3 минуты, чтобы нажать /go с промежутком менее 30 "
                           "секунд".format(player.nickname, player.username), parse_mode='HTML')
-    job.run_once(two_action_timeout, 30, {"ids": [player_id, pair_player_id]})
+    safe_job_create(two_action_timeout, 30, player.id, {"ids": [player_id, pair_player_id]})
 
 
 GO_SUCCESS_REPUTATION = 10
 GO_NOT_SUCCESS_REPUTATION = 3
 
 
+# Таймаут подбора второго игрока
+def player_awaiting_timeout(bot, cur_job):
+    quest, player_id = cur_job.context.get("quest"), cur_job.context.get("player_id")
+    player = Player.get_player(player_id)
+    user_data = dispatcher.user_data.get(player_id)
+
+    status = user_data.get("status")
+    if status != "waiting_second_player_for_quest":
+        return
+
+    user_data.update({"status": "tea_party"})
+    buttons = get_general_buttons(user_data, player)
+    player.reputation += GO_NOT_SUCCESS_REPUTATION
+    player.update()
+    bot.send_message(chat_id=player_id, text=random.choice(quest_texts[quest]["one_player"]) +
+                                             "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
+
+
 def two_action_timeout(bot, cur_job):
     player_id, pair_player_id = cur_job.context.get("ids")
     player, pair_player = Player.get_player(player_id), Player.get_player(pair_player_id)
     user_data, pair_user_data = dispatcher.user_data.get(player_id), dispatcher.user_data.get(pair_player_id)
+
+    status = user_data.get("status")
+    if status != "two_quest":
+        return
+
     user_data.update({"status": "tea_party"})
     pair_user_data.update({"status": "tea_party"})
     player.reputation += GO_NOT_SUCCESS_REPUTATION
     pair_player.reputation += GO_NOT_SUCCESS_REPUTATION
     player.update()
     pair_player.update()
+    buttons = get_general_buttons(user_data, player)
     bot.send_message(chat_id=player_id, text="Вы не смогли скоординироваться. Получено {}🔘"
-                                             "".format(GO_NOT_SUCCESS_REPUTATION))
+                                             "".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
     bot.send_message(chat_id=pair_player_id, text="Вы не смогли скоординироваться. Получено {}🔘"
-                                                  "".format(GO_NOT_SUCCESS_REPUTATION))
+                                                  "".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
 
 
-statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return}
+statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return,
+                         "exploration": two_go_action, "pit": two_go_action, "two_quest": two_action_timeout,
+                         "waiting_second_player_for_quest": player_awaiting_timeout}
 
 
 def load_construction_jobs():
@@ -320,16 +366,24 @@ def load_construction_jobs():
             now = time.time()
             remaining_time = v[1] - now
             print("remaining", remaining_time)
+            callback = statuses_to_callbacks.get(v[0])
+            if callback is None:
+                logging.warning("Callback is None for status {}".format(v[0]))
+                continue
+            if v[2] is None:
+                context = [k, dispatcher.user_data.get(k)]
+            else:
+                context = v[2]
             if remaining_time < 0:
                 try:
-                    job.run_once(statuses_to_callbacks.get(v[0]), 0.1, context=[k, dispatcher.user_data.get(k)])
+                    job.run_once(callback, 0.1, context=context)
                 except Exception:
-                    # logging.error(traceback.format_exc())
+                    logging.error(traceback.format_exc())
                     pass
                 continue
             try:
-                construction_jobs.update({k: MyJob(job.run_once(statuses_to_callbacks.get(v[0]), remaining_time,
-                                                                context=[k, dispatcher.user_data.get(k)]),
+                construction_jobs.update({k: MyJob(job.run_once(callback, remaining_time,
+                                                                context=context),
                                                    remaining_time)})
             except Exception:
                 logging.error(traceback.format_exc())
