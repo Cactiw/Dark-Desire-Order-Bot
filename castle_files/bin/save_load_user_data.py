@@ -1,5 +1,5 @@
 import castle_files.work_materials.globals as file_globals
-from castle_files.bin.quests import construction_jobs
+from castle_files.bin.quests import construction_jobs, quest_players, quest_lock
 
 from castle_files.libs.api import CW3API
 
@@ -55,6 +55,10 @@ def save_data():
                 f = open('castle_files/backup/construction_jobs', 'wb+')
                 pickle.dump(dump, f)
                 f.close()
+            f = open('castle_files/backup/quest_players', 'wb+')
+            with quest_lock:
+                pickle.dump(quest_players, f)
+            f.close()
             log.debug("Data write completed\b")
         except Exception:
             logging.error(sys.exc_info()[0])
