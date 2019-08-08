@@ -43,7 +43,7 @@ class FilterRequestMidFeedback(BaseFilter):
         return filter_is_pm(message) and ((message.text in ["Обратиться к командному составу",
                                                             "Contact the command staff"] and
             user_data.get("status") == 'throne_room') or message.text in ['🔖Связь с МИД',
-                                                                          '🔖Communication with MFA'])
+                                                                          '🔖 Headquarters feedback'])
 
 
 filter_request_mid_feedback = FilterRequestMidFeedback()

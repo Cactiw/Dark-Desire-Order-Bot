@@ -171,13 +171,11 @@ class AsyncBot(Bot):
                     else:
                         keyboard = None
                     if keyboard is not None:
-                        print(keyboard)
                         for button_row in keyboard:
                             for button in button_row:
                                 text = buttons_translate.get(button.text)
                                 if text is not None:
                                     button.text = text
-                    print(reply_markup)
 
         lock = self.counter_lock
         lock.acquire()

@@ -45,8 +45,8 @@ filter_is_profile = FilterIsProfile()
 
 class FilterViewHero(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and (message.text.startswith("👀 Посмотреть в зеркало") or
-                                          message.text.startswith("👀 Профиль"))
+        return filter_is_pm(message) and (message.text in [
+            "👀 Посмотреть в зеркало", "👀 Профиль", "👀 Profile", "👀 Look in the mirror"])
 
 
 filter_view_hero = FilterViewHero()

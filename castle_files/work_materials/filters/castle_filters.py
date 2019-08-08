@@ -9,7 +9,7 @@ from castle_files.bin.service_functions import check_access
 
 class FilterBack(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and (message.text in ["↩️Back", "↩️ Назад"] or
+        return filter_is_pm(message) and (message.text in ["↩️ Back", "↩️ Назад"] or
                                           message.text in ["↩️ Отмена", "↩️Cancel"])
 
 
@@ -46,7 +46,8 @@ class FilterGuideSigns(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["↔️ Подойти к указателям", "↔️ View signs"] and \
+        return filter_is_pm(message) and message.text in ["↔️ Подойти к указателям", "↔️ View signs",
+                                                          "↔️ See the signs"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -58,7 +59,7 @@ class FilterBarracks(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["🎪 Казарма", "🎪 Barrack"] and \
+        return filter_is_pm(message) and message.text in ["🎪 Казарма", "🎪 Barracks"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -226,7 +227,7 @@ class FilterHallOfFame(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["🏤Мандапа Славы", "🏤Mandapa of Glory"] and \
+        return filter_is_pm(message) and message.text in ["🏤Мандапа Славы", "🏤Hall of Fame"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -251,8 +252,8 @@ class FilterTopStat(BaseFilter):
         if user_data is None:
             return False
         return filter_is_pm(message) and message.text in ["⚔️Атака", "🛡Защита", "🔥Опыт", "🌲Дерево", "⛰Камень",
-                                                          "🏚Стройка", "⚔️Attack", "🛡Defence", "🔥Exp", "🌲Wood",
-                                                          "⛰Stone", "🏚Building"] and user_data.get("status") == 'tops'
+                                                          "🏚Стройка", "⚔️Attack", "🛡Defence", "🔥Experience", "🌲Wood",
+                                                          "⛰Stone", "🏚Construction"] and user_data.get("status") == 'tops'
 
 
 filter_top_stat = FilterTopStat()
