@@ -224,13 +224,19 @@ def get_profile_text(player, self_request=True, user_data=None):
     if user_data is None:
         return response
     status = user_data.get("status")
-    if status is not None and status in ["sawmill", "quarry", "construction"]:
-        if player is not None:
-            j = construction_jobs.get(player.id)
-            if j is not None:
-                seconds_left = j.get_time_left()
-                response += "\nВы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>" \
-                            "".format(seconds_left // 60, (seconds_left % 60) // 1)
+    if status is not None and status in ["sawmill", "quarry", "construction"] or "quest_name" in user_data:
+        if "quest_name" in user_data:
+            quest_name = user_data.get("quest_name")
+            response += "\n<b>Вы {}. Это займёт несколько минут.</b>" \
+                        "".format("на разведке" if quest_name == 'exploration' else
+                                  "копаете котлован" if quest_name == 'pit' else "")
+        else:
+            if player is not None:
+                j = construction_jobs.get(player.id)
+                if j is not None:
+                    seconds_left = j.get_time_left()
+                    response += "\nВы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>" \
+                                "".format(seconds_left // 60, (seconds_left % 60) // 1)
     return response
 
 

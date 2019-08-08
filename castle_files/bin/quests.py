@@ -245,7 +245,7 @@ def safe_job_create(callback, when, player_id, context=None, cancel_old=True):
 
 
 quest_lock = threading.Lock()
-quest_players = {"exploration": [], "pit": []}  # TODO дамп на диск и поднятие
+quest_players = {"exploration": [], "pit": []}
 
 
 def tea_party_quest(bot, update, user_data):
@@ -264,14 +264,13 @@ def tea_party_quest(bot, update, user_data):
         logging.error("Quest is None")
         return
 
-    user_data.update({"status": quest})
+    user_data.update({"status": quest, "quest_name": quest})
     with quest_lock:
         lst: [int] = quest_players.get(quest)
         # lst.append(player.id)
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=mes.chat_id, text="Ты куда-то отправился. Вернуться невозможно. /f", reply_markup=buttons)
     safe_job_create(two_go_action, 5, player.id, {"quest": quest, "player_id": player.id})
-    # TODO при нажатии "отмена" удалять из списка ожидающих квест
     # job.run_once(two_go_action, random.random() * 180 + 120, {"quest": quest, "player_id": player.id})
 
 
@@ -322,11 +321,18 @@ def return_from_quest(player_id, user_data):
                 lst.remove(player_id)
             except ValueError:
                 pass
-    delete_list = ["quest", "quest_pressed", "quest_id", "pair_id"]
+    delete_list = ["quest", "quest_pressed", "quest_id", "pair_id", "quest_name"]
     for string in delete_list:
         if string in user_data:
             user_data.pop(string)
     user_data.update({"status": "tea_party"})
+    j = construction_jobs.get(player_id)
+    try:
+        j.job.schedule_removal()
+        construction_jobs.pop(player_id)
+    except Exception:
+        logging.error(traceback.format_exc())
+        pass
 
 
 def two_quest_pressed_go(bot, update, user_data: dict):
@@ -424,6 +430,7 @@ statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, 
 
 
 def load_construction_jobs():
+    global quest_players
     try:
         f = open('castle_files/backup/construction_jobs', 'rb')
         up = pickle.load(f)
@@ -454,8 +461,11 @@ def load_construction_jobs():
             except Exception:
                 logging.error(traceback.format_exc())
         f.close()
+        f = open('castle_files/backup/quest_players', 'rb')
+        with quest_lock:
+            quest_players = pickle.load(f)
     except FileNotFoundError:
-        return
+        pass
     except Exception:
         logging.error(traceback.format_exc())
 

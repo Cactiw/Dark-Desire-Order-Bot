@@ -5,6 +5,7 @@ from castle_files.bin.buttons import send_general_buttons, get_general_buttons, 
 from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
 from castle_files.bin.mid import do_mailing
+from castle_files.bin.quests import return_from_quest
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -96,7 +97,10 @@ def back(bot, update, user_data):
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
-    if status in ["sawmill", "quarry", "construction"]:
+    if status in ["sawmill", "quarry", "construction", "exploration", "pit", "waiting_second_player_for_quest",
+                  "two_quest"]:
+        if "quest_name" in user_data:
+            return_from_quest(update.message.from_user.id, user_data)
         bot.send_message(chat_id=update.message.from_user.id, text="Операция отменена.")
     rp_off = user_data.get("rp_off") or False
     new_status = None
