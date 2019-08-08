@@ -8,7 +8,8 @@ class FilterTechnicalTower(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🔭 Башня ТехМаг наук") and \
+        return filter_is_pm(message) and message.text in ["🔭 Башня ТехМаг наук",
+                                                          "🔭TechMag Science Tower"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -20,7 +21,8 @@ class FilterManuscript(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["📰Манускрипт", "📰Инструкция"] and \
+        return filter_is_pm(message) and message.text in ["📰Манускрипт", "📰Инструкция",
+                                                          "📰Manuscript", "📰Instruction"] and \
             user_data.get("status") in ['technical_tower', DEFAULT_CASTLE_STATUS, "rp_off"]
 
 
@@ -33,7 +35,8 @@ class FilterViewManuscriptCategory(BaseFilter):
         if user_data is None:
             return False
         return filter_is_pm(message) and \
-            message.text in ["↔️Указатели", "👤Игроки", "👥Гильдии", "🖋Триггеры", "📦Сток", "🏠Профсоюзы"] and \
+            message.text in ["↔️Указатели", "👤Игроки", "👥Гильдии", "🖋Триггеры", "📦Сток", "🏠Профсоюзы",
+                             "↔️Signs", "👤Players", "👥Guild", "🖋Triggers", "📦Stock"] and \
             user_data.get("status") == 'manuscript'
 
 
@@ -45,9 +48,9 @@ class FilterUpdateHistory(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and (message.text.startswith("🗂Архив объявлений") and
+        return filter_is_pm(message) and (message.text in ["🗂Архив объявлений", "🗂Announcements archive"] and
                                           user_data.get("status") == 'technical_tower') or \
-               message.text.startswith("🗂Обновления")
+            message.text in ["🗂Обновления", "🗂Updates"]
 
 
 filter_update_history = FilterUpdateHistory()
