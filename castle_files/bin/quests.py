@@ -347,7 +347,7 @@ def two_quest_pressed_go(bot, update, user_data: dict):
         j = construction_jobs.get(mes.from_user.id)
         if j is None:
             j = construction_jobs.get(pair_player_id)
-        j.job.shedule_removal()
+        j.job.schedule_removal()
     except Exception:
         logging.error(traceback.format_exc())
 
@@ -361,7 +361,7 @@ def two_quest_pressed_go(bot, update, user_data: dict):
     # Нажали оба игрока
     player, pair_player = Player.get_player(mes.from_user.id), Player.get_player(pair_player_id)
 
-    qst = quest_texts[quest][user_data["quest_id"]]
+    qst = quest_texts[quest]["two_players"][user_data["quest_id"]]
     first_text = qst.get("first_success")
     second_text = qst.get("second_success") or first_text
 
@@ -373,9 +373,9 @@ def two_quest_pressed_go(bot, update, user_data: dict):
     pair_player.update()
     buttons = get_general_buttons(user_data, player)
 
-    bot.send_message(chat_id=player.id, text=first_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+    bot.send_message(chat_id=player.id, text=first_text + "\nПолучено {}🔘".format(GO_SUCCESS_REPUTATION),
                      reply_markup=buttons)
-    bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+    bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_SUCCESS_REPUTATION),
                      reply_markup=buttons)
 
 
