@@ -241,10 +241,11 @@ def safe_job_create(callback, when, player_id, context=None, cancel_old=True):
         if old_j is not None:
             old_j.job.schedule_removal()
     construction_jobs.update({player_id: MyJob(j, when)})
+    return j
 
 
 quest_lock = threading.Lock()
-quest_players = {"exploration": [], "pit": []}
+quest_players = {"exploration": [], "pit": []}  # TODO дамп на диск и поднятие
 
 
 def tea_party_quest(bot, update, user_data):
@@ -269,7 +270,8 @@ def tea_party_quest(bot, update, user_data):
         # lst.append(player.id)
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=mes.chat_id, text="Ты куда-то отправился. Вернуться невозможно. /f", reply_markup=buttons)
-    safe_job_create(two_go_action, 30, player.id, {"quest": quest, "player_id": player.id})
+    safe_job_create(two_go_action, 5, player.id, {"quest": quest, "player_id": player.id})
+    # TODO при нажатии "отмена" удалять из списка ожидающих квест
     # job.run_once(two_go_action, random.random() * 180 + 120, {"quest": quest, "player_id": player.id})
 
 
@@ -297,19 +299,78 @@ def two_go_action(bot, cur_job):
             pair_player_id = player_list.pop()
     pair_player = Player.get_player(pair_player_id)
     pair_user_data = dispatcher.user_data.get(pair_player_id)
-    user_data.update({"status": "two_quest"})
-    pair_user_data.update({"status": "two_quest"})
+    quest_id, qst = random.choice(list(quest_texts[quest]["two_players"].items()))
+    user_data.update({"status": "two_quest", "pair_id": pair_player_id, "quest": quest, "quest_id": quest_id})
+    pair_user_data.update({"status": "two_quest", "pair_id": player_id, "quest": quest, "quest_id": quest_id})
+    first_text = qst["first_begin"]
+    second_text = qst["second_begin"] or first_text
     bot.send_message(chat_id=player_id,
-                     text="Ты встретил <b>{}</b> (@{}). У вас 3 минуты, чтобы нажать /go с промежутком менее 30 "
-                          "секунд".format(pair_player.nickname, pair_player.username), parse_mode='HTML')
+                     text=first_text.format(pair_player.nickname, pair_player.username), parse_mode='HTML')
     bot.send_message(chat_id=pair_player_id,
-                     text="Ты встретил <b>{}</b> (@{}). У вас 3 минуты, чтобы нажать /go с промежутком менее 30 "
-                          "секунд".format(player.nickname, player.username), parse_mode='HTML')
+                     text=second_text.format(player.nickname, player.username), parse_mode='HTML')
     safe_job_create(two_action_timeout, 30, player.id, {"ids": [player_id, pair_player_id]})
 
 
 GO_SUCCESS_REPUTATION = 10
 GO_NOT_SUCCESS_REPUTATION = 3
+
+
+def return_from_quest(player_id, user_data):
+    with quest_lock:
+        for lst in list(quest_players.values()):
+            try:
+                lst.remove(player_id)
+            except ValueError:
+                pass
+    delete_list = ["quest", "quest_pressed", "quest_id", "pair_id"]
+    for string in delete_list:
+        if string in user_data:
+            user_data.pop(string)
+    user_data.update({"status": "tea_party"})
+
+
+def two_quest_pressed_go(bot, update, user_data: dict):
+    mes = update.message
+    pair_player_id, quest = user_data.get("pair_id"), user_data.get("quest")
+    pair_user_data = dispatcher.user_data.get(pair_player_id)
+    if pair_user_data is None:
+        logging.error("Pair user_data is None for {}".format(mes.from_user.id))
+        return
+
+    try:
+        j = construction_jobs.get(mes.from_user.id)
+        if j is None:
+            j = construction_jobs.get(pair_player_id)
+        j.job.shedule_removal()
+    except Exception:
+        logging.error(traceback.format_exc())
+
+    pressed = pair_user_data.get("quest_pressed")
+    if not pressed:
+        # Нажал первый игрок (ждём второго)
+        user_data.update({"quest_pressed": True})
+        safe_job_create(two_action_timeout, 30, mes.from_user.id, {"ids": [mes.from_user.id, pair_player_id]})
+        bot.send_message(chat_id=mes.from_user.id, text="Принято! Ожидайте соратника.")
+        return
+    # Нажали оба игрока
+    player, pair_player = Player.get_player(mes.from_user.id), Player.get_player(pair_player_id)
+
+    qst = quest_texts[quest][user_data["quest_id"]]
+    first_text = qst.get("first_success")
+    second_text = qst.get("second_success") or first_text
+
+    return_from_quest(player.id, user_data)
+    return_from_quest(pair_player.id, pair_user_data)
+    player.reputation += GO_NOT_SUCCESS_REPUTATION
+    pair_player.reputation += GO_NOT_SUCCESS_REPUTATION
+    player.update()
+    pair_player.update()
+    buttons = get_general_buttons(user_data, player)
+
+    bot.send_message(chat_id=player.id, text=first_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
+    bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
 
 
 # Таймаут подбора второго игрока
@@ -322,7 +383,7 @@ def player_awaiting_timeout(bot, cur_job):
     if status != "waiting_second_player_for_quest":
         return
 
-    user_data.update({"status": "tea_party"})
+    return_from_quest(player_id, user_data)
     buttons = get_general_buttons(user_data, player)
     player.reputation += GO_NOT_SUCCESS_REPUTATION
     player.update()
@@ -335,21 +396,26 @@ def two_action_timeout(bot, cur_job):
     player, pair_player = Player.get_player(player_id), Player.get_player(pair_player_id)
     user_data, pair_user_data = dispatcher.user_data.get(player_id), dispatcher.user_data.get(pair_player_id)
 
-    status = user_data.get("status")
+    status, quest = user_data.get("status"), user_data.get("quest")
     if status != "two_quest":
         return
 
-    user_data.update({"status": "tea_party"})
-    pair_user_data.update({"status": "tea_party"})
+    qst = quest_texts[quest]["two_players"][user_data["quest_id"]]
+    first_text = qst.get("first_fail")
+    second_text = qst.get("second_fail") or first_text
+
+    return_from_quest(player_id, user_data)
+    return_from_quest(pair_player_id, pair_user_data)
     player.reputation += GO_NOT_SUCCESS_REPUTATION
     pair_player.reputation += GO_NOT_SUCCESS_REPUTATION
     player.update()
     pair_player.update()
     buttons = get_general_buttons(user_data, player)
-    bot.send_message(chat_id=player_id, text="Вы не смогли скоординироваться. Получено {}🔘"
-                                             "".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
-    bot.send_message(chat_id=pair_player_id, text="Вы не смогли скоординироваться. Получено {}🔘"
-                                                  "".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
+
+    bot.send_message(chat_id=player_id, text=first_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
+    bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
 
 
 statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return,
