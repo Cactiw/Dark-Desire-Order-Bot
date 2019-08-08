@@ -113,3 +113,18 @@ class FilterTeaPartyQuest(BaseFilter):
 
 
 filter_tea_party_quest = FilterTeaPartyQuest()
+
+
+class FilterTwoGoQuest(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and \
+               message.text in ["/protyanut", "/shvatit", "/sgrupirovatsya", "/podsadit", "/spinakspine", "/podelitsya",
+                                "/oglyanutsya", "/ostanovispodumoi", "/chempahnet", "/smellsliketeenspirit",
+                                "/ktotam", "/datpyat", ] and \
+            user_data.get("status") == 'two_quest'
+
+
+filter_two_go_quest = FilterTwoGoQuest()
