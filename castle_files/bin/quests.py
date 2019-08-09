@@ -302,7 +302,7 @@ def two_go_action(bot, cur_job):
     user_data.update({"status": "two_quest", "pair_id": pair_player_id, "quest": quest, "quest_id": quest_id})
     pair_user_data.update({"status": "two_quest", "pair_id": player_id, "quest": quest, "quest_id": quest_id})
     first_text = qst["first_begin"]
-    second_text = qst["second_begin"] or first_text
+    second_text = qst.get("second_begin") or first_text
     bot.send_message(chat_id=player_id,
                      text=first_text.format(pair_player.nickname, pair_player.username), parse_mode='HTML')
     bot.send_message(chat_id=pair_player_id,
@@ -378,6 +378,13 @@ def two_quest_pressed_go(bot, update, user_data: dict):
     bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_SUCCESS_REPUTATION),
                      reply_markup=buttons)
 
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, quest, 1, now, json.dumps({"result": "two_players_success",
+                                                                   "pair_player_id": pair_player_id})))
+    cursor.execute(request, (pair_player_id, quest, 1, now, json.dumps({"result": "two_players_success",
+                                                                        "pair_player_id": player.id})))
+
 
 # Таймаут подбора второго игрока
 def player_awaiting_timeout(bot, cur_job):
@@ -395,6 +402,10 @@ def player_awaiting_timeout(bot, cur_job):
     player.update()
     bot.send_message(chat_id=player_id, text=random.choice(quest_texts[quest]["one_player"]) +
                                              "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, quest, 1, now, json.dumps({"result": "one_player_success"})))
 
 
 def two_action_timeout(bot, cur_job):
@@ -422,6 +433,13 @@ def two_action_timeout(bot, cur_job):
                      reply_markup=buttons)
     bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
                      reply_markup=buttons)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, quest, 2, now, json.dumps({"result": "two_players_fail",
+                                                                   "pair_player_id": pair_player_id})))
+    cursor.execute(request, (pair_player_id, quest, 2, now, json.dumps({"result": "two_players_fail",
+                                                                        "pair_player_id": player.id})))
 
 
 statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return,
