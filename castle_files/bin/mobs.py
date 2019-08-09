@@ -16,13 +16,14 @@ import psycopg2
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date):
+def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs):
     response = "Обнаруженные мобы:\n"
     avg_lvl = 0
     for i, name in enumerate(mobs):
         lvl = lvls[i]
         avg_lvl += lvl
-        response += "<b>{}</b> 🏅: <code>{}</code>\n".format(name, lvl)
+        response += "<b>{}</b> 🏅: <code>{}</code>\n{}".format(name, lvl, "  ╰ {}\n".format(buffs[i]) if buffs[i] != ""
+                                                              else "")
     avg_lvl /= len(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
@@ -49,7 +50,7 @@ def mob(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Ошибка.")
         return
     link = link.group(1)
-    names, lvls = [], []
+    names, lvls, buffs = [], [], []
     for string in mes.text.splitlines():
         parse = re.search("(.+) lvl\\.(\\d+)", string)
         if parse is not None:
@@ -57,16 +58,23 @@ def mob(bot, update):
             lvl = int(parse.group(2))
             names.append(name)
             lvls.append(lvl)
+            buffs.append("")
+        else:
+            parse = re.search("  ╰ (.+)", string)
+            if parse is not None:
+                buff = parse.group(1)
+                buffs.pop()
+                buffs.append(buff)
     try:
         forward_message_date = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     except Exception:
         forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
-    request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel) values (" \
-              "%s, %s, %s, %s, %s, %s)"
+    request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel, buffs) values (" \
+              "%s, %s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
     helpers = []
     try:
-        cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm))
+        cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm, buffs))
     except psycopg2.IntegrityError:
         # logging.error(traceback.format_exc())
         request = "select on_channel, helpers from mobs where link = %s"
@@ -80,7 +88,7 @@ def mob(bot, update):
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date)
+    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
     player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
@@ -105,13 +113,13 @@ def mob_help(bot, update):
         bot.send_message(chat_id=update.callback_query.from_user.id, text="Произошла ошибка.")
         return
     link = link.group(1)
-    request = "select mob_names, mob_lvls, date_created, helpers from mobs where link = %s"
+    request = "select mob_names, mob_lvls, date_created, helpers, buffs from mobs where link = %s"
     cursor.execute(request, (link,))
     row = cursor.fetchone()
     if row is None:
         bot.send_message(chat_id=update.callback_query.from_user.id, text="Событие не найдено")
         return
-    names, lvls, forward_message_date, helpers = row
+    names, lvls, forward_message_date, helpers, buffs = row
     if update.callback_query.from_user.username in helpers:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помог!", show_alert=True)
         return
@@ -120,7 +128,7 @@ def mob_help(bot, update):
                                 show_alert=True)
     else:
         helpers.append(update.callback_query.from_user.username)
-    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date)
+    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
 
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
