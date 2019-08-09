@@ -36,7 +36,7 @@ def stats_handler(event):
     global guilds_str
     text = event.message.message
     if event.message.to_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID) and \
-            ('Результаты сражений:' in text or '⛺️Гильдия' in text):
+            ('Результаты сражений:' in text or '⛺️Гильдия' in text or '⛺Гильдия' in text):
         logging.error("Received data from telegram, sending: {}".format(text))
         if '⛺️Гильдия' in text:
             guilds_str += text + "\n"
