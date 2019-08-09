@@ -46,6 +46,11 @@ def add_report(bot, update, user_data):
     .*🛡: - всё лишнее до дефа. Далее абсолютно аналогично атаке 🛡:(\\d+)\\(?(.?\\d*)\\)?
     .*Lvl: (\\d+)\\s - лишнее до уровня и парсинг уровня, в комментариях не нуждается
     """
+    nickname = line.group(1)
+    if nickname != player.nickname:
+        bot.send_message(chat_id=mes.chat_id, text="Это не ваш репорт. В случае ошибок обновите профиль.",
+                         reply_to_message_id=mes.message_id)
+        return
     attack = int(line.group(2))
     additional_attack = int(line.group(3)) if line.group(3) != " " else 0
     defense = int(line.group(4))
