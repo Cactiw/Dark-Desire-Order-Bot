@@ -384,7 +384,7 @@ def get_tops_text(player, stat, stat_text, game_class=None):
 def top_stat(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    text_to_stats = {"⚔️Атака": "attack", "⚔️Attack": "Attack", "🛡Защита": "defense", "🛡Defence": "defense",
+    text_to_stats = {"⚔️Атака": "attack", "⚔️Attack": "attack", "🛡Защита": "defense", "🛡Defence": "defense",
                      "🔥Опыт": "exp", "🔥Experience": "exp", "🌲Дерево": "wood", "🌲Wood": "wood", "⛰Камень": "stone",
                      "⛰Stone": "stone", "🏚Стройка": "construction", "🏚Construction": "construction"}
     stat = text_to_stats.get(mes.text)
