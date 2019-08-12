@@ -36,7 +36,7 @@ class FilterViewManuscriptCategory(BaseFilter):
             return False
         return filter_is_pm(message) and \
             message.text in ["↔️Указатели", "👤Игроки", "👥Гильдии", "🖋Триггеры", "📦Сток", "🏠Профсоюзы",
-                             "↔️Signs", "👤Players", "👥Guild", "🖋Triggers", "📦Stock"] and \
+                             "↔️Signs", "👤Players", "👥Guilds", "🖋Triggers", "📦Stock"] and \
             user_data.get("status") == 'manuscript'
 
 

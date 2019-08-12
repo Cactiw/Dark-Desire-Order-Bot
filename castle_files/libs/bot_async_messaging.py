@@ -14,6 +14,7 @@ import threading
 import time
 import logging
 import traceback
+import re
 
 MESSAGE_PER_SECOND_LIMIT = 29
 MESSAGE_PER_CHAT_LIMIT = 3
@@ -148,18 +149,11 @@ class AsyncBot(Bot):
         self.message_queue.put(message)
         return 0
 
-    def sync_send_message(self, *args, **kwargs):
-        return super(AsyncBot, self).send_message(*args, **kwargs)
-
-    def actually_send_message(self, *args, **kwargs):
+    def check_and_translate(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
         if chat_id is None:
             chat_id = args[0]
-        message_type = kwargs.get('message_type')
-        if message_type is None:
-            message_type = 0
-        mes_text = kwargs.get('text')
-
+        mes_text: str = kwargs.get('text')
         try:
             # Автоматический перевод кнопок и текста
             if chat_id > 0:
@@ -181,11 +175,32 @@ class AsyncBot(Bot):
                                         button.text = text
                     if mes_text is not None:
                         for ru_str, en_str in list(texts_translate.items()):
-                            if ru_str in mes_text:
-                                mes_text = mes_text.replace(ru_str, en_str)
+                            parse = re.search(ru_str, mes_text)
+                            if parse is not None:
+                                groups = list(parse.groups())
+                                mes_text = re.sub(ru_str, en_str, mes_text)
+                                mes_text = mes_text.format(*groups)
                         kwargs.update({"text": mes_text})
         except Exception:
             logging.error(traceback.format_exc())
+        return args, kwargs
+
+    def editMessageText(self, *args, **kwargs):
+        args, kwargs = self.check_and_translate(*args, **kwargs)
+        return super(AsyncBot, self).editMessageText(*args, **kwargs)
+
+    def sync_send_message(self, *args, **kwargs):
+        return super(AsyncBot, self).send_message(*args, **kwargs)
+
+    def actually_send_message(self, *args, **kwargs):
+        chat_id = kwargs.get('chat_id')
+        if chat_id is None:
+            chat_id = args[0]
+        message_type = kwargs.get('message_type')
+        if message_type is None:
+            message_type = 0
+
+        args, kwargs = self.check_and_translate(*args, **kwargs)
 
         lock = self.counter_lock
         lock.acquire()
