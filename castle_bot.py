@@ -125,8 +125,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
 
     # Язык бота
-    dispatcher.add_handler(CommandHandler('en', change_lang, pass_user_data=True))
-    dispatcher.add_handler(CommandHandler('ru', change_lang, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('en', change_lang, filters=filter_is_pm, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('ru', change_lang, filters=filter_is_pm, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
