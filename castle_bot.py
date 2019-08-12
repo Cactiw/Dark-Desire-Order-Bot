@@ -29,7 +29,7 @@ from castle_files.work_materials.filters.technical_tower_filters import filter_t
     filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category
 from castle_files.work_materials.filters.quest_filters import filter_sawmill, filter_quarry, filter_treasury, \
     filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct, \
-    filter_tea_party_quest, filter_tea_party, filter_two_go_quest
+    filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
     filter_restrict_feedback, filter_unrestrict_feedback
@@ -72,7 +72,8 @@ from castle_files.bin.technical_tower import technical_tower, my_cabinet, reques
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category
 from castle_files.bin.quests import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction,\
-    begin_construction, construct, construction_plate, tea_party_quest, tea_party, two_quest_pressed_go
+    begin_construction, construct, construction_plate, tea_party_quest, tea_party, two_quest_pressed_go, \
+    add_cw_quest_result
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -318,6 +319,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_tea_party_quest, tea_party_quest, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_two_go_quest, two_quest_pressed_go, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_cw_quest_result, add_cw_quest_result))
 
 
     # Продолжаются хендлеры замка

@@ -3,12 +3,13 @@
 наверняка как-то ещё будет набираться), и сама стройка.
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
+from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
 from castle_files.libs.my_job import MyJob
 
-from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn
+from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn, local_tz
 from castle_files.work_materials.quest_texts import quest_texts
 
 import time
@@ -445,6 +446,35 @@ def two_action_timeout(bot, cur_job):
 statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return,
                          "exploration": two_go_action, "pit": two_go_action, "two_quest": two_action_timeout,
                          "waiting_second_player_for_quest": player_awaiting_timeout}
+
+
+def add_cw_quest_result(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    parse = re.findall("Получено: (.+) \\((\\d+)\\)", mes.text)
+    drop = player.tea_party_info.get("cw_quests_drop")
+    if drop is None:
+        drop = {}
+        player.tea_party_info.update({"cw_quests_drop": drop})
+
+    forward_message_date: datetime.datetime = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(
+        tzinfo=None)
+    if forward_message_date.timestamp() in drop:
+        bot.send_message(chat_id=mes.chat_id, text="Данный квест уже учтён.")
+        return
+    exp = re.search("Получено: (\\d+) опыта", mes.text)
+    exp = int(exp.group(1)) if exp is not None else 0
+    gold = re.search("and (\\d+) золотых монет", mes.text)
+    gold = int(gold.group(1)) if gold is not None else 0
+    new_quest = {"exp": exp, "gold": gold}
+    for name, count in parse:
+        code = get_item_code_by_name(name)
+        new_quest.update({code: count})
+    drop.update({forward_message_date.timestamp(): new_quest})
+    player.update()
+    bot.send_message(chat_id=mes.from_user.id, text="Квест учтён.")
 
 
 def load_construction_jobs():
