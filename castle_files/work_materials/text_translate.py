@@ -102,6 +102,10 @@ texts_translate = {
     "are immortalized. Eternal glory and honor!",
     "На указателях ещё много места, возможно, в будущем, там появятся новые строки":
         "The pointers still have a lot of space, maybe there will be new lines in the future",
+    "Вы успешно покинули гильдию": "You have successfully left the Guild",
+    "Показать профиль:": "Show profile:",
+    "Удалить из гильдии:": "Remove from Guild:",
+    "Вы заняты делом. Окончание через": "You're busy. End in",
     
     
     "Гильдия": "Guild",
