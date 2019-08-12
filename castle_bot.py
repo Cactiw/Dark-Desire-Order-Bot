@@ -87,7 +87,7 @@ from castle_files.bin.reports import add_report, battle_stats, battle_equip, bat
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
 from castle_files.bin.telethon_script import script_work
-from castle_files.bin.common_functions import unknown_input, sql, direct_send_message
+from castle_files.bin.common_functions import unknown_input, sql, direct_send_message, change_lang
 
 from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
@@ -106,7 +106,7 @@ import multiprocessing
 
 def start(bot, update, user_data):
     mes = update.message
-    player = Player.get_player(mes.from_user.id)
+    player = Player.get_player(mes.from_user.id, notify_on_error=False)
     if player is not None:
         unknown_input(bot, update, user_data)
         return
@@ -123,6 +123,10 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
+
+    # Язык бота
+    dispatcher.add_handler(CommandHandler('en', change_lang, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('ru', change_lang, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 

@@ -9,7 +9,8 @@ from castle_files.bin.service_functions import check_access
 
 class FilterBack(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and (message.text.startswith("↩️ Назад") or message.text.startswith("↩️ Отмена"))
+        return filter_is_pm(message) and (message.text in ["↩️ Back", "↩️ Назад"] or
+                                          message.text in ["↩️ Отмена", "↩️Cancel"])
 
 
 filter_back = FilterBack()
@@ -17,7 +18,7 @@ filter_back = FilterBack()
 
 class FilterNotConstructed(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and message.text.startswith("🏚 Не построено")
+        return filter_is_pm(message) and message.text in ["🏚 Не построено", "🏚 Not yet built"]
 
 
 filter_not_constructed = FilterNotConstructed()
@@ -26,7 +27,7 @@ filter_not_constructed = FilterNotConstructed()
 # Далее идут фильтры для локаций замка
 class FilterCentralSquare(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and message.text.startswith("⛲️ Центральная площадь")
+        return filter_is_pm(message) and message.text in ["⛲️ Центральная площадь", "⛲️Central Square"]
 
 
 filter_central_square = FilterCentralSquare()
@@ -34,7 +35,7 @@ filter_central_square = FilterCentralSquare()
 
 class FilterCastleGates(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and message.text.startswith("⛩ Врата замка")
+        return filter_is_pm(message) and message.text in ["⛩ Врата замка", "⛩ Castle gates"]
 
 
 filter_castle_gates = FilterCastleGates()
@@ -45,7 +46,8 @@ class FilterGuideSigns(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("↔️ Подойти к указателям") and \
+        return filter_is_pm(message) and message.text in ["↔️ Подойти к указателям", "↔️ View signs",
+                                                          "↔️ See the signs"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -57,7 +59,7 @@ class FilterBarracks(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🎪 Казарма") and \
+        return filter_is_pm(message) and message.text in ["🎪 Казарма", "🎪 Barracks"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -69,7 +71,7 @@ class FilterThroneRoom(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🏛 Тронный зал") and \
+        return filter_is_pm(message) and message.text in ["🏛 Тронный зал", "🏛Throne Room"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -81,7 +83,7 @@ class FilterWatchPortraits(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🎇Посмотреть на портреты") and \
+        return filter_is_pm(message) and message.text in ["🎇Посмотреть на портреты", "🎇View portraits"] and \
             user_data.get("status") == 'throne_room'
 
 
@@ -117,7 +119,7 @@ class FilterRequestChangeDebrief(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("📜Выкатить дебриф") and \
+        return filter_is_pm(message) and message.text in ["📜Выкатить дебриф"] and \
             user_data.get("status") == 'headquarters' and check_access(message.from_user.id)
 
 
@@ -141,7 +143,7 @@ class FilterRequestGuildMessageNotify(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("📣Рассылка по гильдиям") and \
+        return filter_is_pm(message) and message.text in ["📣Рассылка по гильдиям", "📣Guild Newsletter"] and \
             user_data.get("status") == 'headquarters' and check_access(message.from_user.id)
 
 
@@ -165,7 +167,7 @@ class FilterRequestChangeCastleMessage(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Изменить сообщение") and \
+        return filter_is_pm(message) and message.text in ["Изменить сообщение", "Edit message"] and \
             user_data.get("status") == 'king_cabinet' and message.from_user.id in [king_id, SUPER_ADMIN_ID]
 
 
@@ -189,7 +191,7 @@ class FilterAddGeneral(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Добавить генерала") and \
+        return filter_is_pm(message) and message.text in ["Добавить генерала", "Add general"] and \
             user_data.get("status") == 'king_cabinet' and message.from_user.id in [king_id, SUPER_ADMIN_ID]
 
 
@@ -225,7 +227,7 @@ class FilterHallOfFame(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🏤Мандапа Славы") and \
+        return filter_is_pm(message) and message.text in ["🏤Мандапа Славы", "🏤Hall of Fame"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -237,7 +239,7 @@ class FilterTops(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("📈Топы") and \
+        return filter_is_pm(message) and message.text in ["📈Топы", "📈Tops"] and \
             user_data.get("status") in ['hall_of_fame', DEFAULT_CASTLE_STATUS, "rp_off"]
 
 
@@ -250,7 +252,8 @@ class FilterTopStat(BaseFilter):
         if user_data is None:
             return False
         return filter_is_pm(message) and message.text in ["⚔️Атака", "🛡Защита", "🔥Опыт", "🌲Дерево", "⛰Камень",
-                                                          "🏚Стройка"] and user_data.get("status") == 'tops'
+                                                          "🏚Стройка", "⚔️Attack", "🛡Defence", "🔥Experience", "🌲Wood",
+                                                          "⛰Stone", "🏚Construction"] and user_data.get("status") == 'tops'
 
 
 filter_top_stat = FilterTopStat()

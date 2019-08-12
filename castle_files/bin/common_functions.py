@@ -23,6 +23,7 @@ def unknown_input(bot, update, user_data):
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
+# Отправка нужного сообщения массово по заданным айдишникам
 def direct_send_message(ids, text):
     i = 0
     for id in ids:
@@ -30,6 +31,31 @@ def direct_send_message(ids, text):
         dispatcher.bot.send_message(chat_id=id, text=text, parse_mode='HTML')
     dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="<b>{}</b> сообщений отправлено".format(i),
                                 parse_mode='HTML')
+
+
+# Смена языка в боте
+def change_lang(bot, update, user_data):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    if 'ru' in mes.text:
+        # Удаление записи о языке
+        try:
+            player.settings.pop("lang")
+            player.update()
+            user_data.pop("lang")
+        except KeyError:
+            pass
+        text = "Язык успешно изменён"
+    else:
+        player.settings.update({"lang": "en"})
+        player.update()
+        user_data.update({"lang": "en"})
+        text = "The language is changed successfully."
+    bot.send_message(chat_id=mes.from_user.id, text=text)
+    unknown_input(bot, update, user_data)
+
 
 
 def sql(bot, update):

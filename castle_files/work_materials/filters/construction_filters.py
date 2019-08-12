@@ -11,7 +11,7 @@ class FilterSawmill(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🌲Лесопилка") and \
+        return filter_is_pm(message) and message.text in ["🌲Лесопилка", "🌲Sawmill"] and \
             user_data.get("status") == 'castle_gates'
 
 
@@ -23,7 +23,7 @@ class FilterQuarry(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("⛰Каменоломня") and \
+        return filter_is_pm(message) and message.text in ["⛰Каменоломня", "⛰Quarry"] and \
             user_data.get("status") == 'castle_gates'
 
 
@@ -35,7 +35,7 @@ class FilterTreasury(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("💰Сокровищница") and \
+        return filter_is_pm(message) and message.text in ["💰Сокровищница", "💰Treasury"] and \
             user_data.get("status") == 'throne_room'
 
 
@@ -48,7 +48,7 @@ class FilterConstruct(BaseFilter):
         if user_data is None:
             return False
         # Внимательность при копировании, отрицание
-        return filter_is_pm(message) and not message.text.startswith("↩️ Назад") and \
+        return filter_is_pm(message) and not (message.text in ["↩️ Назад", "↩️ Back"]) and \
             user_data.get("status") == 'construction_plate'
 
 
@@ -60,7 +60,7 @@ class FilterConstructionPlate(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("🏚 Стройплощадка") and \
+        return filter_is_pm(message) and message.text in ["🏚 Стройплощадка", "🏚 Construction Plate"] and \
             user_data.get("status") == 'central_square'
 
 

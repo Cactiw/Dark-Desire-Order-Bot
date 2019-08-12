@@ -4,6 +4,8 @@ from telegram.error import (TelegramError, Unauthorized, BadRequest,
                             TimedOut, ChatMigrated, NetworkError)
 
 from castle_files.libs.message_group import MessageGroup, message_groups, groups_need_to_be_sent, message_groups_locks
+from castle_files.work_materials.buttons_translate import buttons_translate
+from castle_files.work_materials.text_translate import texts_translate
 
 
 import multiprocessing
@@ -12,6 +14,7 @@ import threading
 import time
 import logging
 import traceback
+import re
 
 MESSAGE_PER_SECOND_LIMIT = 29
 MESSAGE_PER_CHAT_LIMIT = 3
@@ -146,6 +149,46 @@ class AsyncBot(Bot):
         self.message_queue.put(message)
         return 0
 
+    def check_and_translate(self, *args, **kwargs):
+        chat_id = kwargs.get('chat_id')
+        if chat_id is None:
+            chat_id = args[0]
+        mes_text: str = kwargs.get('text')
+        try:
+            # Автоматический перевод кнопок и текста
+            if chat_id > 0:
+                user_data = self.dispatcher.user_data.get(chat_id)
+                if user_data is not None and user_data.get("lang") == "en":
+                    reply_markup = kwargs.get("reply_markup")
+                    if reply_markup is not None:
+                        if hasattr(reply_markup, "keyboard"):
+                            keyboard = reply_markup.keyboard
+                        elif hasattr(reply_markup, "inline_keyboard"):
+                            keyboard = reply_markup.inline_keyboard
+                        else:
+                            keyboard = None
+                        if keyboard is not None:
+                            for button_row in keyboard:
+                                for button in button_row:
+                                    text = buttons_translate.get(button.text)
+                                    if text is not None:
+                                        button.text = text
+                    if mes_text is not None:
+                        for ru_str, en_str in list(texts_translate.items()):
+                            parse = re.search(ru_str, mes_text)
+                            if parse is not None:
+                                groups = list(parse.groups())
+                                mes_text = re.sub(ru_str, en_str, mes_text)
+                                mes_text = mes_text.format(*groups)
+                        kwargs.update({"text": mes_text})
+        except Exception:
+            logging.error(traceback.format_exc())
+        return args, kwargs
+
+    def editMessageText(self, *args, **kwargs):
+        args, kwargs = self.check_and_translate(*args, **kwargs)
+        return super(AsyncBot, self).editMessageText(*args, **kwargs)
+
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
 
@@ -156,17 +199,9 @@ class AsyncBot(Bot):
         message_type = kwargs.get('message_type')
         if message_type is None:
             message_type = 0
-        # reply_markup = kwargs.get("reply_markup")
-        # if reply_markup is not None:
-        #     if hasattr(reply_markup, "keyboard"):
-        #         keyboard = reply_markup.keyboard
-        #     elif hasattr(reply_markup, "inline_keyboard"):
-        #         keyboard = reply_markup.inline_keyboard
-        #     else:
-        #         keyboard = None
-        #     if keyboard is not None:
-        #         print(keyboard)
-        #     print(reply_markup)
+
+        args, kwargs = self.check_and_translate(*args, **kwargs)
+
         lock = self.counter_lock
         lock.acquire()
         try:
