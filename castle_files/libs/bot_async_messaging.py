@@ -5,6 +5,7 @@ from telegram.error import (TelegramError, Unauthorized, BadRequest,
 
 from castle_files.libs.message_group import MessageGroup, message_groups, groups_need_to_be_sent, message_groups_locks
 from castle_files.work_materials.buttons_translate import buttons_translate
+from castle_files.work_materials.text_translate import texts_translate
 
 
 import multiprocessing
@@ -157,25 +158,34 @@ class AsyncBot(Bot):
         message_type = kwargs.get('message_type')
         if message_type is None:
             message_type = 0
+        mes_text = kwargs.get('text')
 
-        # Автоматический перевод кнопок
-        if chat_id > 0:
-            user_data = self.dispatcher.user_data.get(chat_id)
-            if user_data is not None and user_data.get("lang") == "en":
-                reply_markup = kwargs.get("reply_markup")
-                if reply_markup is not None:
-                    if hasattr(reply_markup, "keyboard"):
-                        keyboard = reply_markup.keyboard
-                    elif hasattr(reply_markup, "inline_keyboard"):
-                        keyboard = reply_markup.inline_keyboard
-                    else:
-                        keyboard = None
-                    if keyboard is not None:
-                        for button_row in keyboard:
-                            for button in button_row:
-                                text = buttons_translate.get(button.text)
-                                if text is not None:
-                                    button.text = text
+        try:
+            # Автоматический перевод кнопок и текста
+            if chat_id > 0:
+                user_data = self.dispatcher.user_data.get(chat_id)
+                if user_data is not None and user_data.get("lang") == "en":
+                    reply_markup = kwargs.get("reply_markup")
+                    if reply_markup is not None:
+                        if hasattr(reply_markup, "keyboard"):
+                            keyboard = reply_markup.keyboard
+                        elif hasattr(reply_markup, "inline_keyboard"):
+                            keyboard = reply_markup.inline_keyboard
+                        else:
+                            keyboard = None
+                        if keyboard is not None:
+                            for button_row in keyboard:
+                                for button in button_row:
+                                    text = buttons_translate.get(button.text)
+                                    if text is not None:
+                                        button.text = text
+                    if mes_text is not None:
+                        for ru_str, en_str in list(texts_translate.items()):
+                            if ru_str in mes_text:
+                                mes_text = mes_text.replace(ru_str, en_str)
+                        kwargs.update({"text": mes_text})
+        except Exception:
+            logging.error(traceback.format_exc())
 
         lock = self.counter_lock
         lock.acquire()
