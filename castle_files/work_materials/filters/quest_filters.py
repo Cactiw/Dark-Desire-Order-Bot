@@ -2,8 +2,10 @@
 В этом модуле находятся фильтры для сообщений, относящихся к стройке
 """
 from telegram.ext import BaseFilter
-from castle_files.work_materials.filters.general_filters import filter_is_pm
+from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_is_chat_wars_forward
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID
+
+import re
 
 
 class FilterSawmill(BaseFilter):
@@ -128,3 +130,11 @@ class FilterTwoGoQuest(BaseFilter):
 
 
 filter_two_go_quest = FilterTwoGoQuest()
+
+
+class FilterCWQuestResult(BaseFilter):
+    def filter(self, message):
+        return filter_is_chat_wars_forward(message) and re.search("Получено: \\d+ опыта", message.text) is not None
+
+
+filter_cw_quest_result = FilterCWQuestResult()
