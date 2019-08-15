@@ -185,6 +185,8 @@ def ws(bot, update):
                 response += "---------------------------------\n"
         response += "<a href=\"https://t.me/share/url?url=/ws_{}\">{}{} 💧{}</a>\n" \
                     "".format(shop.get("link"), castle, shop.get("ownerName"), shop.get("mana"))
+        if 'full' in mes.text:
+            response += "/ws_{}\n".format(shop.get("link"))
         for offer in shop.get("offers"):
             response += "<em>{}, 💧{} 💰{}</em>\n".format(offer.get("item"), offer.get("mana"), offer.get("price"))
         response += "\n"

@@ -147,6 +147,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('g_stock_other', stock, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('repair', repair))
     dispatcher.add_handler(CommandHandler('ws', ws, filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
     # Профсоюзы
