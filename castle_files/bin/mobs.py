@@ -10,6 +10,8 @@ import datetime
 import re
 import logging
 import traceback
+import requests
+import json
 
 import psycopg2
 
@@ -93,6 +95,17 @@ def mob(bot, update):
     if is_pm and (player is None or player.castle == '🖤'):
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
         bot.send_message(chat_id=mes.chat_id, text="Отправлено на канал. Спасибо!")
+        try:
+            # requests.post('http://127.0.0.1:5555/addMob',
+            #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+            #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
+            #               timeout=0.3)
+            requests.post('http://104.40.129.51:5555/addMob',
+                          json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+                                           "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
+                          timeout=0.3)
+        except Exception:
+            logging.error(traceback.format_exc())
     else:
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
     return
