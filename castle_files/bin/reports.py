@@ -163,9 +163,9 @@ def add_report(bot, update, user_data):
 
 def battle_drop(bot, update):
     mes = update.message
-    request = "select battle_id, equip from reports where equip is not null " \
+    request = "select battle_id, equip from reports where player_id = %s and equip is not null " \
               "order by battle_id desc limit 20"
-    cursor.execute(request)
+    cursor.execute(request, (mes.from_user.id,))
     rows = cursor.fetchall()
     response = "Последние изменения в экипировке по репортам:\n"
     for row in rows:
