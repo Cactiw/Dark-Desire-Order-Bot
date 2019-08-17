@@ -365,7 +365,7 @@ def set_vote_variant(bot, update):
 
 def vote_results(bot, update):
     mes = update.message
-    if mes.from_user.id != SUPER_ADMIN_ID:
+    if mes.from_user.id != SUPER_ADMIN_ID and mes.from_user.id != 116028074:
         return
     vote_id = re.search("_(\\d+)", mes.text)
     if vote_id is None:
