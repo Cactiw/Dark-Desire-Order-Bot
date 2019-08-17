@@ -108,8 +108,12 @@ texts_translate = {
     "Удалить из гильдии:": "Remove from Guild:",
     "Вы заняты делом. Окончание через": "You're busy. End in",
     "Вы успешно добыли (.+). Казна обновлена. Получено": "You have successfully extracted {}. The Treasury is updated. Received",
-    
-    
+
+    "Последнее обновление:": "Last update:",
+    "Запрошено обновление профиля.": "Profile update has been requested.",
+    "Запрошено обновление гильдии.": "Guild update has been requested.",
+    "В скором времени данные будут обновлены.": "Data will be updated soon.",
+
     "Гильдия": "Guild",
     "Покинуть гильдию:": "Leave guild:",
     "Классовый чат": "Class chat",

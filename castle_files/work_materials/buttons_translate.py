@@ -16,6 +16,7 @@ buttons_translate = {
     "⚙️Настройки": "⚙Settings",
     "🛒Уведомления о продаже": "🛒Sale notifications",
     "📦Изменения стока": "📦Stock changes",
+    "📌Пинг на мобов": "📌Mobs pings",
     "Заместители": "Deputies",
     "Настройки": "Settings",
     "Список игроков": "Player list",
