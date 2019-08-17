@@ -29,7 +29,7 @@ MAX_TOP_PLAYERS_SHOW_WEEK = 10
 def parse_stats():
     data = castles_stats_queue.get()
     while data is not None:
-        logging.error("Got data in parse: {}".format(data))
+        # logging.error("Got data in parse: {}".format(data))
         if 'Результаты сражений:' in data:
             # Результаты битвы замков
             response_all = "Игроки, попавшие в топ:\n"
@@ -82,7 +82,7 @@ def parse_stats():
                     response_by_tags.update({tag: lst})
                 # dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text=guild_str, parse_mode='HTML')
             import json
-            logging.error("Guild list for parse_stats: {}".format(json.dumps(guild_list, indent=4, ensure_ascii=False)))
+            # logging.error("Guild list for parse_stats: {}".format(json.dumps(guild_list, indent=4, ensure_ascii=False)))
             logging.error("Response by tags: {}".format(json.dumps(response_by_tags, indent=4, ensure_ascii=False)))
             print(guild_list)
             print(json.dumps(response_by_tags, indent=4, ensure_ascii=False))
