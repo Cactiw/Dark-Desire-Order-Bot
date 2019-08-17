@@ -33,10 +33,12 @@ def get_profile_settings_buttons(player):
             InlineKeyboardButton("🛒Уведомления о продаже", callback_data="prssoldnotify_{}".format(player.id)),
             InlineKeyboardButton("📦Изменения стока", callback_data="prsstocknotify_{}".format(player.id)),
         ],
+        [
+            InlineKeyboardButton("📌Пинг на мобов", callback_data="prsmobsping_{}".format(player.id)),
+        ],
     ]
     if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
-        buttons.append([InlineKeyboardButton("📌Пинг на аим", callback_data="prsaimping_{}".format(player.id)),
-])
+        buttons[1].append(InlineKeyboardButton("📌Пинг на аим", callback_data="prsaimping_{}".format(player.id)))
     return InlineKeyboardMarkup(buttons)
 
 

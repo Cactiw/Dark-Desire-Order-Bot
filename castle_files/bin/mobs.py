@@ -5,6 +5,7 @@
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, local_tz, cursor
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 
 import datetime
 import re
@@ -42,7 +43,7 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
     if len(helpers) >= 3:
         buttons[0].pop(1)
-    return [response, InlineKeyboardMarkup(buttons)]
+    return [response, InlineKeyboardMarkup(buttons), avg_lvl]
 
 
 def mob(bot, update):
@@ -90,7 +91,7 @@ def mob(bot, update):
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
+    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
     player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
@@ -107,6 +108,24 @@ def mob(bot, update):
         except Exception:
             logging.error(traceback.format_exc())
     else:
+        if not is_pm:
+            if player.guild is not None:
+                guild = Guild.get_guild(guild_id=player.guild)
+                if guild is not None and guild.chat_id == mes.chat_id:
+                    ping = []
+                    for pl_id in guild.members:
+                        pl = Player.get_player(pl_id)
+                        if avg_lvl - 5 <= pl.lvl <= avg_lvl + 5:
+                            on = pl.settings.get("mobs_notify")
+                            if on is None:
+                                on = True
+                            if on:
+                                ping.append(pl.username)
+                    if ping:
+                        text = "Мобы!\n"
+                        for username in ping:
+                            text += "@{} ".format(username)
+                        bot.send_message(chat_id=mes.chat_id, text=text)
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
     return
 

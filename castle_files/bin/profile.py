@@ -464,8 +464,8 @@ def get_profile_settings_text(player):
     if settings is None:
         settings = {}
         player.settings = settings
-    sold_notify, stock_change, rangers_notify = settings.get("sold_notify"), settings.get("stock_change"),\
-        settings.get("rangers_notify")
+    sold_notify, stock_change, rangers_notify, mobs_notify = settings.get("sold_notify"), settings.get("stock_change"),\
+        settings.get("rangers_notify"), settings.get("mobs_notify")
     if sold_notify is None:
         sold_notify = True
     response += "<code>{:<26}</code> <b>{}</b>\n".format("🛒Уведомления о продаже",
@@ -479,6 +479,11 @@ def get_profile_settings_text(player):
             rangers_notify = True
         response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на аим",
                                                              "✅включён" if rangers_notify else "❌отключён")
+
+    if mobs_notify is None:
+        sold_notify = True
+    response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на мобов",
+                                                         "✅включен" if mobs_notify else "❌отключен")
     return response
 
 
@@ -502,7 +507,8 @@ def change_profile_setting(bot, update):
     player = Player.get_player(update.callback_query.from_user.id)
     if player is None:
         return
-    set = {"prsstocknotify": "stock_change", "prssoldnotify": "sold_notify", "prsaimping": "rangers_notify"}
+    set = {"prsstocknotify": "stock_change", "prssoldnotify": "sold_notify", "prsaimping": "rangers_notify",
+           "prsmobsping": "mobs_notify"}
     setting = set.get(data.partition("_")[0])
     state = player.settings.get(setting)
     if state is None:
