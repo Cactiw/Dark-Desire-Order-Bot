@@ -481,7 +481,7 @@ def get_profile_settings_text(player):
                                                              "✅включён" if rangers_notify else "❌отключён")
 
     if mobs_notify is None:
-        sold_notify = True
+        mobs_notify = True
     response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на мобов",
                                                          "✅включен" if mobs_notify else "❌отключен")
     return response
