@@ -160,7 +160,7 @@ def mob_help(bot, update):
                                 show_alert=True)
     else:
         helpers.append(update.callback_query.from_user.username)
-    response, buttons = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
+    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
 
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
