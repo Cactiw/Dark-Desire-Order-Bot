@@ -47,8 +47,8 @@ def grant_auth_token(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    request_id = player.api_info.get("requestId")
-    if request_id is not None:
+    request_id, token = player.api_info.get("requestId"), player.api_info.get("token")
+    if request_id is not None and token is not None:
         cwapi.grant_additional_operation(mes.from_user.id, request_id, code, player=player)
     else:
         cwapi.grant_token(mes.from_user.id, code)
