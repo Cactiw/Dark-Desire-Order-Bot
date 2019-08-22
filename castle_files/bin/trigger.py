@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import cursor, moscow_tz
+from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID
 from castle_files.bin.service_functions import get_admin_ids, check_access
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
@@ -68,6 +68,9 @@ def add_trigger(bot, update):
             trigger_list = []
             triggers_in.update({mes.chat_id: trigger_list})
     else:
+        if mes.from_user.id != SUPER_ADMIN_ID:
+            return
+
         chat_id = 0
         trigger_list = global_triggers_in
     list_triggers = triggers_in.get(chat_id) if chat_id else global_triggers_in
