@@ -17,6 +17,9 @@ texts_translate = {
         "\"An audience can be requested no more than once every 8 hours\", — the butler said",
     "Ваше прошение аудиенции у Короля было отклонено. Возможно, король занят, или Ваш вид вызывает у него отвращение.":
         "Your request for an audience with the King was rejected. Perhaps the king is busy, or your appearance disgusts him.",
+    "Ваше обращение к Совету было озвучено. Если оно было по делу, то ожидайте ответа, но бойтесь его кары, если это не так!":
+        "Your appeal to the Council has been voiced. If it was on business, expect an answer, but be afraid of his punishment if it is not so!",
+    "Репорт учтён. Спасибо!": "Report noted. Thank you!",
     "Стены замка увешаны портретами текущих генералов Скалы:": "There are portraits of the current generals of the Rock on the castle walls:",
     "🎗Командир гильдии": "🎗Guild commander",
     "🎗Зам командира гильдии": "🎗Guild assistant",
@@ -63,7 +66,6 @@ texts_translate = {
     "📌Пинг на мобов": "📌Mobs pings   ",
     "включен[^<]?": "On",
     "отключен[^<]?": "Off",
-    "Всего:": "Total:",
     "Изменения в опыте": "Experience changes",
     "🖇 — полный доступ к АПИ, 📎 — без экипировки": "🖇 - full access to API, 📎 - without equipment",
     "Список заместителей гильдии": "Assistants list for guild",
@@ -114,6 +116,14 @@ texts_translate = {
     "Запрошено обновление гильдии.": "Guild update has been requested.",
     "В скором времени данные будут обновлены.": "Data will be updated soon.",
 
+    "Изменения в стоке:": "Stock changes",
+    "Приобретено:": "Earned:",
+    "Потеряно:": "Lost",
+    "В сумме:": "In the sum:",
+    "Всего:": "Total:",
+
+    "Отправлено на канал. Спасибо!": "Sent to the channel. Thank you!",
+
     "Гильдия": "Guild",
     "Покинуть гильдию:": "Leave guild:",
     "Классовый чат": "Class chat",
@@ -122,4 +132,6 @@ texts_translate = {
     "Статус:": "Status:",
     "дерево": "wood",
     "камень": "stone",
+
+    "Получено": "Received",
 }
