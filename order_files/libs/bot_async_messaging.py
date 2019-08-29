@@ -1,3 +1,7 @@
+"""
+Здесь находится класс Bot с его методами для приказника (и только! - избегать копирования),
+предназначен для наиболее быстрой и стабильной отправки пинов во множество чатов.
+"""
 from telegram import Bot
 from telegram.utils.request import Request
 from telegram.error import (Unauthorized, BadRequest,
@@ -7,8 +11,10 @@ import threading
 import time
 import logging
 import traceback
+import datetime
 
 from order_files.libs.order import Order, OrderBackup
+from castle_files.bin.service_functions import get_time_remaining_to_battle
 
 MESSAGE_PER_SECOND_LIMIT = 25
 MESSAGE_PER_CHAT_LIMIT = 3
@@ -30,14 +36,15 @@ class AsyncBot(Bot):
         self.order_queue = multiprocessing.Queue()
         self.processing = True
         self.num_workers = workers
+        print(workers)
         self.messages_per_second = 0
         self.second_reset_queue = multiprocessing.Queue()
         self.workers = []
         if request_kwargs is None:
             request_kwargs = {}
         con_pool_size = workers + 4
-        if 'con_pool_size' not in request_kwargs:
-            request_kwargs['con_pool_size'] = con_pool_size
+        if 'con_pool_size' not in request_kwargs or True:
+            request_kwargs.update({'con_pool_size': con_pool_size})
         self._request = Request(**request_kwargs)
         super(AsyncBot, self).__init__(token=token, request=self._request)
         # self.start()
@@ -59,15 +66,15 @@ class AsyncBot(Bot):
         lock = self.counter_lock
         wait_start = time.time()
         try:
-            lock.acquire()
-            while True:
-                if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT:
-                    self.messages_per_second += 1
-                    lock.release()
-                    break
-                # logging.info("sleeping")
-                lock.wait()
-                # logging.info("woke up")
+            with lock:
+                while True:
+                    if self.messages_per_second < MESSAGE_PER_SECOND_LIMIT:
+                        self.messages_per_second += 1
+                        # lock.release()
+                        break
+                    # logging.info("sleeping")
+                    lock.wait()
+                    # logging.info("woke up")
         finally:
             pass
         wait_end = time.time()
@@ -75,16 +82,20 @@ class AsyncBot(Bot):
         message = None
         body = {"chat_id": chat_id, "time": time.time()}
         self.second_reset_queue.put(body)
+        remaining_time = get_time_remaining_to_battle()
+        if remaining_time < datetime.timedelta(seconds=30) or True:  # Change
+            kwargs.update({"timeout": 0.7})
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)
+        except TimedOut:
+            logging.error("Order timeout")
+            # time.sleep(0.1)
+            message = self.actually_send_message(*args, **kwargs)
         except Unauthorized:
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
             logging.error(traceback.format_exc())
             return BADREQUEST_ERROR_CODE
-        except TimedOut:
-            time.sleep(0.1)
-            message = super(AsyncBot, self).send_message(*args, **kwargs)
         except NetworkError:
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
@@ -139,6 +150,8 @@ class AsyncBot(Bot):
         data = self.second_reset_queue.get()
         while self.processing and data is not None:
             chat_id = data.get("chat_id")
+            if chat_id is None:
+                chat_id = 0
             set_time = data.get("time")
             if chat_id is None or time is None:
                 data = self.second_reset_queue.get()
