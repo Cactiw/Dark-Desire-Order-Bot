@@ -62,7 +62,8 @@ class AsyncBot(Bot):
             0: super(AsyncBot, self).send_message, 1: super(AsyncBot, self).send_video,
             2: super(AsyncBot, self).send_audio, 3: super(AsyncBot, self).send_photo,
             4: super(AsyncBot, self).send_document, 5: super(AsyncBot, self).send_sticker,
-            6: super(AsyncBot, self).send_voice, 7: super(AsyncBot, self).sendVideoNote
+            6: super(AsyncBot, self).send_voice, 7: super(AsyncBot, self).sendVideoNote,
+            8: super(AsyncBot, self).answerCallbackQuery
         }
 
     def send_message(self, *args, **kwargs):
@@ -149,10 +150,19 @@ class AsyncBot(Bot):
         self.message_queue.put(message)
         return 0
 
+    def answerCallbackQuery(self, *args, **kwargs):
+        kwargs.update({"message_type": 8})
+        message = MessageInQueue(*args, **kwargs)
+        self.message_queue.put(message)
+        return 0
+
     def check_and_translate(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
         if chat_id is None:
-            chat_id = args[0]
+            try:
+                chat_id = args[0]
+            except IndexError:
+                chat_id = 0
         mes_text: str = kwargs.get('text')
         try:
             # Автоматический перевод кнопок и текста
@@ -195,7 +205,10 @@ class AsyncBot(Bot):
     def actually_send_message(self, *args, **kwargs):
         chat_id = kwargs.get('chat_id')
         if chat_id is None:
-            chat_id = args[0]
+            try:
+                chat_id = args[0]
+            except IndexError:
+                chat_id = 0
         message_type = kwargs.get('message_type')
         if message_type is None:
             message_type = 0
