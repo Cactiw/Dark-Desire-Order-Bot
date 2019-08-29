@@ -18,6 +18,13 @@ alch_recipes['remedy pack']['code'] = '507'
 alch_recipes['remedy pack']['recipe']['cliff rue'] = '1'
 alch_recipes['remedy pack']['recipe']["tecceagrass"] = '1'
 
+
+# 506 - Bottle of Remedy💧
+# 1 Cliff Rue + 1 Tecceagrass
+alch_recipes['bottle of remedy'] = defaultdict(dict)
+alch_recipes['bottle of remedy']['code'] = '506'
+
+
 # 63 - Assassin Vine: - 15💧
 # 1 White Blossom + 1 Sanguine Parsley
 alch_recipes['assassin vine'] = defaultdict(dict)
