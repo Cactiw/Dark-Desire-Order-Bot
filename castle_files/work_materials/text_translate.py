@@ -43,6 +43,8 @@ texts_translate = {
     "Вы отправились добывать камень. Это займёт примерно 3 минуты": "You went to get the stone. It will take about 3 minutes.",
     "Операция отменена.": "Operation canceled.",
     "Топ (.) по замку:": "Castle {0} top:",
+    "Обратите внимание, в топе отображаются только игроки, подключившие API \\(команда /auth\\)":
+        "Note that only players who have connected the API (/auth command) are displayed in the top",
     "Следующее сообщение будет отправлено стражникам на вахте!": "The next message will be sent to the guards on watch!",
     "Вы обратились к стражникам у городских ворот. Ожидайте ответа.": "You turned to the guards at the city gates. Wait for an answer.",
     "Список игроков в гильдии": "List of players in the guild",

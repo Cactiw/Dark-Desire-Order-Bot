@@ -8,6 +8,8 @@ from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
+from castle_files.work_materials.statuses_const import statuses
+
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
     classes_to_emoji
 from globals import update_request_queue
@@ -347,9 +349,12 @@ def get_tops_text(player, stat, stat_text, game_class=None):
                       "res_count desc;".format(stat, "and game_class = '{}'"
                                                      "".format(game_class) if game_class is not None else "")
     else:
-        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' and {} is not null {}" \
+        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' and {} is not null " \
+                  "and api_info -> 'token' is not null {}" \
                   "order by {} desc".format(stat, stat, "and game_class = '{}' ".format(game_class) if
                                             game_class is not None else "", stat)
+        response += "<em>Обратите внимание, в топе отображаются только игроки, подключившие API (команда /auth).</em>" \
+                    "\n\n"
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
@@ -422,6 +427,15 @@ def send_new_top(bot, update):
     except TelegramError:
         pass
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def status_shop(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    for status, price in list(statuses.items()):
+        pass
 
 
 def count_reputation_sum(bot, update):
