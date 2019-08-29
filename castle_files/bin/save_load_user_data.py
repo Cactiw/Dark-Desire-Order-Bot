@@ -1,5 +1,6 @@
 import castle_files.work_materials.globals as file_globals
 from castle_files.bin.quests import construction_jobs
+from castle_files.bin.guild_chats import worldtop
 
 from castle_files.libs.api import CW3API
 
@@ -20,6 +21,13 @@ def load_data():
         CW3API.api_info = pickle.load(f)
         f.close()
         print("Data picked up")
+        f = open('castle_files/backup/worldtop', 'rb')
+        t = pickle.load(f)
+        t = dict(sorted(list(t.items()), key=lambda x: x[1], reverse=True))
+        worldtop.clear()
+        for k, v in list(t.items()):
+            print(k, v)
+            worldtop.update({k: v})
     except FileNotFoundError:
         logging.error("Data file not found")
     except Exception:
@@ -55,6 +63,9 @@ def save_data():
                 f = open('castle_files/backup/construction_jobs', 'wb+')
                 pickle.dump(dump, f)
                 f.close()
+            f = open('castle_files/backup/worldtop', 'wb+')
+            pickle.dump(worldtop, f)
+            f.close()
             log.debug("Data write completed\b")
         except Exception:
             logging.error(sys.exc_info()[0])

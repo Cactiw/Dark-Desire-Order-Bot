@@ -26,6 +26,9 @@ MAX_TOP_PLAYERS_SHOW = 5
 MAX_TOP_PLAYERS_SHOW_WEEK = 10
 
 
+worldtop = {'🍆': 7944, '🍁': 7973, '☘': 7152, '🌹': 5551, '🐢': 14535, '🦇': 7811, '🖤': 7947}
+
+
 def parse_stats():
     data = castles_stats_queue.get()
     while data is not None:
@@ -33,12 +36,12 @@ def parse_stats():
         if 'Результаты сражений:' in data:
             # Результаты битвы замков
             response_all = "Игроки, попавшие в топ:\n"
-            for castle_results_string in data.split("\n\n"):
-                for guild_id in Guild.guild_ids:
-                    guild = Guild.get_guild(guild_id=guild_id)
-                    tag = guild.tag
+            for guild_id in Guild.guild_ids:
+                response = ""
+                guild = Guild.get_guild(guild_id=guild_id)
+                tag = guild.tag
+                for castle_results_string in data.split("\n\n"):
                     if tag in castle_results_string:
-                        response = ""
                         try:
                             attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
                         except TypeError:
@@ -54,12 +57,25 @@ def parse_stats():
                             response_all += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
                                                                       attacked_castle, nickname[:-1])
 
-                        if response != "":
-                            if guild.chat_id is None:
-                                continue
-                            dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+                if response != "":
+                    if guild.chat_id is None:
+                        continue
+                    dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
             if response_all != "Игроки, попавшие в топ:\n":
                 dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
+            worldtop_strings = data.split("\n\n")[-1].splitlines()
+            print(worldtop_strings)
+            for string in worldtop_strings:
+                parse = re.search("(.).* \\+(\\d+) 🏆 очков", string)
+                if parse is None:
+                    continue
+                castle = parse.group(1)
+                count = int(parse.group(2))
+                score = worldtop.get(castle)
+                score += count
+                worldtop.update({castle: score})
+                logging.info("Worldtop updated: {}: {}".format(castle, count))
+            logging.info("Worldtop at the end: {}".format(worldtop))
         else:
             #  Сообщение о пиратстве
             response_by_tags = {}
@@ -92,6 +108,15 @@ def parse_stats():
                     continue
                 dispatcher.bot.send_message(chat_id=guild.chat_id, text=string, parse_mode='HTML')
         data = castles_stats_queue.get()
+
+
+def show_worldtop(bot, update):
+    response = "Worldtop:\n"
+    i = 1
+    for k, v in list(worldtop.items()):
+        response += "# {} {}: <code>{:>5}</code> 🏆 очков\n".format(i, k, v)
+        i += 1
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
 # Запускается один раз при старте бота; осуществляет планирование всех рассылок, привязанных ко времени и

@@ -60,7 +60,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
-    plan_daily_tasks, guild_top_battles
+    plan_daily_tasks, guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
@@ -258,6 +258,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('notify_guild_not_ready', notify_guild_to_battle))
 
     dispatcher.add_handler(CommandHandler('ro', mute, pass_args=True))
+
+    dispatcher.add_handler(CommandHandler('worldtop', show_worldtop))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_give_resource, send_withdraw))
