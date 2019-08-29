@@ -84,7 +84,7 @@ def sql(bot, update):
         for i in range(0, len(row)):
             response += str(row[i]) + " "
         row = cursor.fetchone()
-        response += "\n\n"
+        response += "\n"
     if response == "":
         bot.send_message(chat_id=mes.chat_id, text="Empty. Row count: {}".format(cursor.cursor.rowcount))
         return
