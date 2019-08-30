@@ -35,8 +35,6 @@ filter_is_pm.update_filter = True
 
 class FilterHasAccess(BaseFilter):
     def filter(self, message):
-        if message is None:
-            return False
         if isinstance(message, Update):
             message = message.message
         return check_access(message.from_user.id)
