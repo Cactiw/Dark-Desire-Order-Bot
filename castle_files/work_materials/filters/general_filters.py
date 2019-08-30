@@ -13,6 +13,7 @@ class FilterIsChatWarsForward(BaseFilter):
 
 
 filter_is_chat_wars_forward = FilterIsChatWarsForward()
+filter_is_chat_wars_forward.update_filter = True
 
 
 class FilterIsPM(BaseFilter):
@@ -23,6 +24,7 @@ class FilterIsPM(BaseFilter):
 
 
 filter_is_pm = FilterIsPM()
+filter_is_pm.update_filter = True
 
 
 class FilterHasAccess(BaseFilter):
@@ -31,6 +33,7 @@ class FilterHasAccess(BaseFilter):
 
 
 filter_has_access = FilterHasAccess()
+filter_has_access.update_filter = True
 
 
 class FilterIsMerc(BaseFilter):
@@ -39,3 +42,4 @@ class FilterIsMerc(BaseFilter):
 
 
 filter_is_merc = FilterIsMerc()
+filter_is_merc.update_filter = True
