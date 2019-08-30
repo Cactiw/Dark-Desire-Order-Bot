@@ -83,7 +83,7 @@ class AsyncBot(Bot):
         body = {"chat_id": chat_id, "time": time.time()}
         self.second_reset_queue.put(body)
         remaining_time = get_time_remaining_to_battle()
-        if remaining_time < datetime.timedelta(seconds=30) or True:  # Change
+        if remaining_time <= datetime.timedelta(seconds=30):
             kwargs.update({"timeout": 0.7})
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)

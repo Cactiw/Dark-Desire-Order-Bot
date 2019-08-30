@@ -116,11 +116,10 @@ def wait_debug(bot, orders_count):
                                                      data.get("sent"), data.get("pin_end")
         if not all([begin, wait_start, wait_end, sent, pin_end]):
             continue
-        new_response = "Chat_id: <code>{}</code>\nНачало в <b>{}</b>\nНачало ожидания в <b>{}</b>, конец ожидания в " \
-                       "<b>{}</b>\nОтправлено в <b>{}</b>\nЗапинено в <b>{}</b>" \
+        new_response = "Chat_id: <code>{}</code>" \
                        "\nВремя ожидания: <b>{}</b>\nВремя отправки: <b>{}</b>\nВремя пина: <b>{}</b>" \
                        "\nОбщее время пина: <b>{}</b>" \
-                       "\n\n".format(chat_id, begin, wait_start, wait_end, sent, pin_end, wait_end - wait_start,
+                       "\n\n".format(chat_id, wait_end - wait_start,
                                      sent - wait_end, pin_end - sent, pin_end - wait_end)
         if len(response + new_response) > 4096:
             bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
