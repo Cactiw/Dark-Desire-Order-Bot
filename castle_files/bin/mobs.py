@@ -2,7 +2,7 @@
 Здесь находятся функции обработки событий, связаннх с мобами
 """
 
-from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, local_tz, cursor
+from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -69,7 +69,7 @@ def mob(bot, update):
                 buffs.pop()
                 buffs.append(buff)
     try:
-        forward_message_date = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+        forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     except Exception:
         forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel, buffs) values (" \
