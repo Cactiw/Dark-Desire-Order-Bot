@@ -1,0 +1,4 @@
+python-telegram-bot
+telethon
+pytz
+tzlocal
