@@ -73,6 +73,7 @@ def parse_stats():
                 score = worldtop.get(castle)
                 score += count
                 worldtop.update({castle: score})
+                sort_worldtop()
                 logging.info("Worldtop updated: {}: {}".format(castle, count))
             logging.info("Worldtop at the end: {}".format(worldtop))
         else:
@@ -107,6 +108,14 @@ def parse_stats():
                     continue
                 dispatcher.bot.send_message(chat_id=guild.chat_id, text=string, parse_mode='HTML')
         data = castles_stats_queue.get()
+
+
+def sort_worldtop():
+    t = dict(sorted(list(worldtop.items()), key=lambda x: x[1], reverse=True))
+    worldtop.clear()
+    for k, v in list(t.items()):
+        print(k, v)
+        worldtop.update({k: v})
 
 
 def show_worldtop(bot, update):

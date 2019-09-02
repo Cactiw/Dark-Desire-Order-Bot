@@ -3,6 +3,7 @@ from castle_files.bin.quests import construction_jobs
 from castle_files.bin.guild_chats import worldtop
 
 from castle_files.libs.api import CW3API
+from castle_files.bin.guild_chats import sort_worldtop
 
 import time
 import pickle
@@ -23,11 +24,7 @@ def load_data():
         print("Data picked up")
         f = open('castle_files/backup/worldtop', 'rb')
         t = pickle.load(f)
-        t = dict(sorted(list(t.items()), key=lambda x: x[1], reverse=True))
-        worldtop.clear()
-        for k, v in list(t.items()):
-            print(k, v)
-            worldtop.update({k: v})
+        sort_worldtop()
     except FileNotFoundError:
         logging.error("Data file not found")
     except Exception:

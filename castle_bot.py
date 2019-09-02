@@ -118,6 +118,41 @@ def skip(bot, update):
 
 
 def castle_bot_processing():
+
+    # Хендлеры для инлайн кнопок в топах
+    dispatcher.add_handler(CallbackQueryHandler(send_new_top, pattern="top_[^_]+_.*"))
+
+    # Хендлеры для инлайн кнопок мобов
+    dispatcher.add_handler(CallbackQueryHandler(mob_help, pattern="mob_partify_.*"))
+
+    # Хендлеры для инлайн кнопок профиля
+    dispatcher.add_handler(CallbackQueryHandler(guild_history, pattern="pr_guild_history_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(reports_history, pattern="pr_reports_history_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(profile_settings, pattern="pr_settings_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(profile_exp, pattern="pr_exp_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(change_profile_setting, pattern="prs.*_\\d+"))
+
+    # Хендлеры для инлайн кнопок гильдий
+    dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
+    dispatcher.add_handler(CallbackQueryHandler(edit_guild_chat, pattern="gccht_\\d+", pass_user_data=True))
+    dispatcher.add_handler(CallbackQueryHandler(edit_guild_division, pattern="gcdvs_\\d+", pass_user_data=True))
+
+    # Хендлер на любые изменения булеанов в гильдиях
+    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opn]_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(guild_reports, pattern="girep_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(edit_guild_setting, pattern="gs.*_\\d+"))
+
+    #
+
+    # Конец хендлеров инлайн кнопок
+
     # dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
     dispatcher.add_handler(MessageHandler(
         Filters.update.edited_message | Filters.update.channel_posts, skip))  # Скип всех сообщений с каналов,
@@ -425,36 +460,6 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
     # End of the restrictions---------------------------------------------------------------------------------------
-
-    # Хендлеры для инлайн кнопок в топах
-    dispatcher.add_handler(CallbackQueryHandler(send_new_top, pattern="top_[^_]+_.*"))
-
-    # Хендлеры для инлайн кнопок мобов
-    dispatcher.add_handler(CallbackQueryHandler(mob_help, pattern="mob_partify_.*"))
-
-    # Хендлеры для инлайн кнопок профиля
-    dispatcher.add_handler(CallbackQueryHandler(guild_history, pattern="pr_guild_history_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(reports_history, pattern="pr_reports_history_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(profile_settings, pattern="pr_settings_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(profile_exp, pattern="pr_exp_\\d+"))
-
-    dispatcher.add_handler(CallbackQueryHandler(change_profile_setting, pattern="prs.*_\\d+"))
-
-    # Хендлеры для инлайн кнопок гильдий
-    dispatcher.add_handler(CallbackQueryHandler(edit_guild_commander, pattern="gccmdr_\\d+", pass_user_data=True))
-    dispatcher.add_handler(CallbackQueryHandler(edit_guild_chat, pattern="gccht_\\d+", pass_user_data=True))
-    dispatcher.add_handler(CallbackQueryHandler(edit_guild_division, pattern="gcdvs_\\d+", pass_user_data=True))
-
-    # Хендлер на любые изменения булеанов в гильдиях
-    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opn]_\\d+"))
-
-    dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(guild_reports, pattern="girep_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
-
-    dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(edit_guild_setting, pattern="gs.*_\\d+"))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm, unknown_input, pass_user_data=True))
 
