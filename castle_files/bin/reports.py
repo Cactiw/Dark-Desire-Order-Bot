@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc
 from castle_files.bin.service_functions import count_battle_id
 from castle_files.bin.stock import get_item_code_by_name
 from castle_files.libs.player import Player
@@ -28,14 +28,12 @@ def add_report(bot, update, user_data):
         return
 
     try:
-        forward_message_date: datetime.datetime = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+        forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     except ValueError:
         try:
-            forward_message_date = mes.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
-        except ValueError:
             forward_message_date = mes.forward_date
-    except AttributeError:
-        forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+        except AttributeError:
+            forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
 
     line = re.search(".(.*)\\s⚔:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
     """ 

@@ -26,7 +26,7 @@ MAX_TOP_PLAYERS_SHOW = 5
 MAX_TOP_PLAYERS_SHOW_WEEK = 10
 
 
-worldtop = {'🍆': 7944, '🍁': 7973, '☘': 7152, '🌹': 5551, '🐢': 14535, '🦇': 7811, '🖤': 7947}
+worldtop = {'🍆': 0, '🍁': 0, '☘': 0, '🌹': 0, '🐢': 0, '🦇': 0, '🖤': 0}
 
 
 def parse_stats():
@@ -64,7 +64,6 @@ def parse_stats():
             if response_all != "Игроки, попавшие в топ:\n":
                 dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
             worldtop_strings = data.split("\n\n")[-1].splitlines()
-            print(worldtop_strings)
             for string in worldtop_strings:
                 parse = re.search("(.).* \\+(\\d+) 🏆 очков", string)
                 if parse is None:
@@ -240,7 +239,8 @@ def arena_notify(bot, job):
 def notify_guild_attack(bot, update):
     mes = update.message
     remaining_time = get_time_remaining_to_battle()
-    if mes.forward_date - datetime.datetime.now() > datetime.timedelta(minutes=2):
+    forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    if forward_message_date - datetime.datetime.now() > datetime.timedelta(minutes=2):
         return 0
     if remaining_time > datetime.timedelta(minutes=30):
         pass

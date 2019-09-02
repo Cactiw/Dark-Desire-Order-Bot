@@ -1,5 +1,5 @@
 from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor, moscow_tz, \
-    local_tz, job
+    local_tz, job, utc
 from mwt import MWT
 
 import datetime
@@ -81,14 +81,9 @@ def count_battle_id(message):
         forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     else:
         try:
-            forward_message_date = local_tz.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+            forward_message_date = utc.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
         except ValueError:
-            try:
-                forward_message_date = message.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
-            except ValueError:
-                forward_message_date = message.forward_date
-        except AttributeError:
-            forward_message_date = local_tz.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+            forward_message_date = message.forward_date
     time_from_first_battle = forward_message_date - first_battle
     battle_id = 0
     while time_from_first_battle > interval:

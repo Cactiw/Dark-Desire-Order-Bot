@@ -4,7 +4,7 @@
 """
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
-    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn
+    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -360,7 +360,9 @@ def hero(bot, update, user_data):
     if player is None and mes.chat_id != mes.from_user.id:
         # Добавление новых пользователей только в личке у бота
         return
-    if datetime.datetime.now() - mes.forward_date > datetime.timedelta(seconds=30) and \
+    forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    print(forward_message_date)
+    if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30) and \
             mes.from_user.id not in urned_players:
         bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
         return
@@ -529,7 +531,8 @@ def add_class_from_player(bot, update):
         bot.send_message(chat_id=mes.from_user.id, text="Сначала необходимо зарегистрироваться. Для этого необходимо "
                                                         "прислать ответ @ChatWarsBot на команду /hero")
         return
-    if datetime.datetime.now() - mes.forward_date > datetime.timedelta(seconds=30):
+    forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30):
         bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
         return
     game_class = re.search("🖤{} (\\w+) Скалы".format(re.escape(player.nickname)), mes.text)
