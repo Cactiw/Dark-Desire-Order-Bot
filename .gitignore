@@ -1,0 +1,9 @@
+config*
+*.log
+*.session
+*.key
+*.pem
+__pycache__/
+ .idea/
+castle_files/backup/*
+!castle_files/backup/empty
