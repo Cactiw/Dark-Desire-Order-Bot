@@ -399,7 +399,7 @@ def rangers_notify_start(bot, update):
 
         time_to_aim = datetime.timedelta(minutes=time_to_aim_mins)
         print("time_to_aim", time_to_aim)
-        time_to_notify = time_to_battle - time_to_aim
+        time_to_notify = time_to_battle - time_to_aim - datetime.timedelta(minutes=1)
         print(time_to_notify)
         # time_to_notify = datetime.timedelta(minutes=1)    # TEST
         if time_to_notify >= datetime.timedelta(minutes=0):
