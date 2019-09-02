@@ -1,5 +1,5 @@
 from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID, \
-    moscow_tz, local_tz, conn
+    moscow_tz, conn, utc
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids, \
     count_battle_id, count_battles_in_this_week, plan_work
 
@@ -26,7 +26,7 @@ MAX_TOP_PLAYERS_SHOW = 5
 MAX_TOP_PLAYERS_SHOW_WEEK = 10
 
 
-worldtop = {'🍆': 0, '🍁': 0, '☘': 0, '🌹': 0, '🐢': 0, '🦇': 0, '🖤': 0}
+worldtop = {'🍆': 70, '🍁': 51, '☘': 81, '🌹': 52, '🐢': 97, '🦇': 118, '🖤': 101}
 
 
 def parse_stats():
