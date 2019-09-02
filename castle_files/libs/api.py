@@ -282,10 +282,11 @@ class CW3API:
             player.lvl = profile.get("lvl")
             player.exp = profile.get("exp")
             player.guild_tag = profile.get("guild_tag")
-            if "🎗" in player.nickname or True:  # Отключено в связи с эмодзи в никах
+            if "🎗" in player.nickname:  # Отключено в связи с эмодзи в никах
                 pass
             else:
-                player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
+                guild_emoji = profile.get("guild_emoji")
+                player.nickname = ("{}[{}]".format(guild_emoji, player.guild_tag) if player.guild_tag is not None else
                                    "") + profile.get("userName")
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
