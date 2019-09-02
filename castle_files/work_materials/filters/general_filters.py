@@ -37,6 +37,8 @@ class FilterHasAccess(BaseFilter):
     def filter(self, message):
         if isinstance(message, Update):
             message = message.message
+            if message is None:
+                return False
         return check_access(message.from_user.id)
 
 
