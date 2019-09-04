@@ -24,7 +24,7 @@ def load_data():
         print("Data picked up")
         f = open('castle_files/backup/worldtop', 'rb')
         t = pickle.load(f)
-        sort_worldtop()
+        sort_worldtop(t)
     except FileNotFoundError:
         logging.error("Data file not found")
     except Exception:
