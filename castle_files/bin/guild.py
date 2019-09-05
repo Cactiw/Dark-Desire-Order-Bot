@@ -15,7 +15,7 @@ from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_bu
 
 from telegram.error import TelegramError
 
-from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
 from telegram.ext.dispatcher import run_async
 
 import logging
@@ -446,9 +446,10 @@ def list_players(bot, update, guild_id=None):
                 else:
                     api_text = "📎"
         rp1, rp2, rp3 = player.get_reports_count()
-        response_new = "<b>{}</b>{}\n🏅:<code>{},⚔:{},🛡:{}," \
+        response_new = "{}<b>{}</b>{}\n🏅:<code>{},⚔:{},🛡:{}," \
                        "🎖:{}/{}</code>" \
-                       "".format(player.nickname, api_text, player.lvl, player.attack, player.defense, rp1, rp2)
+                       "".format(classes_to_emoji.get(player.game_class) or "", player.nickname, api_text, player.lvl,
+                                 player.attack, player.defense, rp1, rp2)
         if high_access:
             response_new += "\nПоказать профиль: /view_profile_{}" \
                        "\nУдалить из гильдии: /remove_player_{}".format(player.id, player.id)
