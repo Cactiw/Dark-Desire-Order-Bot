@@ -190,7 +190,7 @@ class CW3API:
         if result == 'InvalidToken':
             cursor = self.conn.cursor()
             request = "select id from players where api_info -> 'token' = %s"
-            cursor.execute(request, body.get("payload").get("token"))
+            cursor.execute(request, (body.get("payload").get("token"),))
             player_id = cursor.fetchone()
             if player_id is not None:
                 player_id = player_id[0]
