@@ -116,7 +116,6 @@ def sort_worldtop(old=None):
     t = dict(sorted(list(old.items()), key=lambda x: x[1], reverse=True))
     worldtop.clear()
     for k, v in list(t.items()):
-        print(k, v)
         worldtop.update({k: v})
 
 
