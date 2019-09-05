@@ -4,6 +4,7 @@
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons
 from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
+from castle_files.bin.mid import do_mailing
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -219,10 +220,7 @@ def request_guild_message_notify(bot, update, user_data):
 
 def send_guild_message_notify(bot, update, user_data):
     user_data.update({"status": "headquarters"})
-    for guild_id in Guild.guild_ids:
-        guild = Guild.get_guild(guild_id=guild_id)
-        if guild.division != "Луки":
-            bot.send_message(chat_id=guild.chat_id, text=update.message.text, parse_mode='HTML')
+    do_mailing(bot, update.message.text)
     bot.send_message(update.message.from_user.id, text="Успешно отправлено!")
 
 

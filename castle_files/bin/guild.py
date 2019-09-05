@@ -728,6 +728,7 @@ def get_edit_guild_text(guild):
                               if guild.invite_link is not None else "")
     response += "\n\n⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
     response += "Дивизион: <b>{}</b>\n".format(guild.division or "не задан")
+    response += "Рассылка <b>{}</b>\n".format("включена" if guild.mailing_enabled else "оключена")
     response += "Приказы <b>{}</b>\n".format("включены" if guild.orders_enabled else "оключены")
     response += "Сообщения <b>{}</b>\n".format("пинятся" if guild.pin_enabled else "не пинятся")
     response += "Пины <b>{}</b>\n".format("громкие" if not guild.disable_notification else "тихие")
@@ -972,6 +973,8 @@ def change_guild_bool_state(bot, update):
         guild.pin_enabled = not guild.pin_enabled
     elif edit_type == 'n':
         guild.disable_notification = not guild.disable_notification
+    elif edit_type == 'm':
+        guild.mailing_enabled = not guild.mailing_enabled
     guild.update_to_database()
     mes = update.callback_query.message
     reply_markup = get_edit_guild_buttons(guild)

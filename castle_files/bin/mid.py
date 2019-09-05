@@ -25,12 +25,7 @@ def mailing(bot, update):
     if len(text) <= 2:
         bot.send_message(update.message.chat_id, text="Слишком коротко.", reply_to_message_id=mes.message_id)
         return
-    for guild_id in Guild.guild_ids:
-        guild = Guild.get_guild(guild_id=guild_id)
-        if guild is None:
-            continue
-        if guild.division is None or guild.division != "Луки":
-            bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
+    do_mailing(bot, text)
     if mes.text.startswith('/debrief'):
         throne = Location.get_location(2)
         format_values = throne.special_info.get("enter_text_format_values")
@@ -41,6 +36,15 @@ def mailing(bot, update):
                                                       "Дебриф изменён", reply_to_message_id=mes.message_id)
     else:
         bot.send_message(update.message.chat_id, text="Успешно отправлено!", reply_to_message_id=mes.message_id)
+
+
+def do_mailing(bot, text):
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild is None:
+            continue
+        if (guild.division is None or guild.division != "Луки") and guild.mailing_enabled:
+            bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
 
 
 def mailing_pin(bot, update):
@@ -54,7 +58,7 @@ def mail_and_pin(bot, update):
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
             continue
-        if guild.division == "Луки":
+        if guild.division == "Луки" or not guild.mailing_enabled:
             continue
         try:
             message = bot.sync_send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')

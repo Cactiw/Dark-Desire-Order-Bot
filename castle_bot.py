@@ -139,7 +139,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_division, pattern="gcdvs_\\d+", pass_user_data=True))
 
     # Хендлер на любые изменения булеанов в гильдиях
-    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opn]_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opnm]_\\d+"))
 
     dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
