@@ -10,6 +10,7 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
+from castle_files.bin.service_functions import get_time_remaining_to_battle
 
 from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID
 
@@ -20,6 +21,7 @@ import logging
 import traceback
 import threading
 import copy
+import datetime
 
 import re
 
@@ -102,6 +104,38 @@ def update_guild(bot, update):
                                                    "Возможно, стоит сделать /auth ещё раз.")
         return
     bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
+
+
+def players_update_monitor():
+    cursor = conn.cursor()
+    time.sleep(2)
+    while True:
+        try:
+            if not cwapi.active:
+                return 0
+            time_to_battle = get_time_remaining_to_battle()
+            if time_to_battle < datetime.timedelta(minutes=30) or \
+                    time_to_battle > datetime.timedelta(minutes=30, hours=7):
+                time.sleep(1)
+                continue
+            request = "select id from players where api_info -> 'token' is not null order by last_updated limit 1"
+            cursor.execute(request)
+            row = cursor.fetchone()
+            if row is None:
+                logging.error("Request is None in players_update_monitor")
+                return 0
+            player = Player.get_player(row[0])
+            cwapi.update_player(player.id, player=player)
+            logging.info("Updating {} through CW3 API".format(player.nickname))
+            time.sleep(1)
+            if not cwapi.active:
+                return 0
+            access = player.api_info.get("access")
+            if access is not None and "gear" in access:
+                cwapi.update_gear(player.id, player=player)
+                time.sleep(1)
+        except Exception:
+            logging.error(traceback.format_exc())
 
 
 def repair_comparator(shop, castle):
@@ -299,11 +333,11 @@ def grassroots_update_players(bot, job):
     row = cursor.fetchone()
     count = 0
     while row is not None:
-        cwapi.update_player(row[0])
+        # cwapi.update_player(row[0])
         cwapi.update_stock(row[0])
         access = row[1].get("access") or []
         gear_access = "gear" in access
-        if gear_access:
+        if gear_access or False:
             cwapi.update_gear(row[0])
         count += 1
         row = cursor.fetchone()

@@ -179,13 +179,29 @@ class CW3API:
     def __on_message(self, channel, method, header, body):
         # print(json.dumps(json.loads(body), sort_keys=1, indent=4, ensure_ascii=False))
         self.got_responses += 1
-        print(method, header, body)
-        print(json.loads(body))
-        print(method.consumer_tag, method.delivery_tag)
-        print(header.timestamp)
+        # print(method, header, body)
+        # print(json.loads(body))
+        # print(method.consumer_tag, method.delivery_tag)
+        # print(header.timestamp)
         channel.basic_ack(method.delivery_tag)
         # method, header, body = json.loads(method), json.loads(header), json.loads(body)
         body = json.loads(body)
+        result = body.get("result")
+        if result == 'InvalidToken':
+            cursor = self.conn.cursor()
+            request = "select id from players where api_info -> 'token' = %s"
+            cursor.execute(request)
+            player_id = cursor.fetchone()
+            if player_id is not None:
+                player_id = player_id[0]
+                player = Player.get_player(player_id)
+                try:
+                    player.api_info.pop("token")
+                    player.api_info.pop("access")
+                except KeyError:
+                    pass
+                player.update()
+
         callback = self.callbacks.get(body.get("action"))
         if callback is None:
             logging.warning("Callback is None for {}, {}, {}".format(method, header, body))
@@ -264,7 +280,7 @@ class CW3API:
         if body.get("result") != "Ok":
             logging.error("error while requesting profile, {}".format(body))
             return
-        print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+        # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         try:
             payload = body.get("payload")
             user_id = payload.get("userId")
@@ -291,7 +307,6 @@ class CW3API:
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
             player.update_to_database()
-            print("Profile updated throug the API for {}".format(player.nickname))
         except Exception:
             logging.error(traceback.format_exc())
 
@@ -300,7 +315,7 @@ class CW3API:
             logging.error("error while requesting guild info, {}".format(body))
             return
         try:
-            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             player_id = payload.get("userId")
             player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
@@ -322,7 +337,7 @@ class CW3API:
                     continue
                 eq = get_equipment_by_name(name)
                 if eq is None:
-                    logging.warning("Equipment with name {} is None".format(name))
+                    # logging.warning("Equipment with name {} is None".format(name))
                     continue
                 attack = item.get("atk") or 0
                 defense = item.get("def") or 0
@@ -338,7 +353,7 @@ class CW3API:
             if body.get("result") != "Ok":
                 logging.error("error while requesting guild info, {}".format(body))
                 return
-            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             player_id = payload.get("userId")
             player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
@@ -565,11 +580,8 @@ class CW3API:
 
     # Голая отправка запроса, без ограничений
     def __publish_message(self, message):
-        print("sending request", message)
-        print(json.dumps(message))
         # properties = pika.BasicProperties(app_id='cactiw_castle_skalen', content_type='application/json')
         try:
-            print("SENDING PID = ", threading.current_thread().ident)
             self.sent += 1
             return self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY,
                                               body=json.dumps(message), properties=None)
@@ -582,7 +594,7 @@ class CW3API:
     def actually_publish_message(self, message):
         try:
             self.lock.acquire()
-            print(self.connected, self.channel)
+            # print(self.connected, self.channel)
             if self.active is False:
                 return
             if not self.connected or self.channel is None:
