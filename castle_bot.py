@@ -149,6 +149,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_setting, pattern="gs.*_\\d+"))
 
+    dispatcher.add_handler(CallbackQueryHandler(delete_guild, pattern="g_delete_confirm_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(cancel_delete_guild, pattern="g_delete_cancel_\\d+"))
+
     #
 
     # Конец хендлеров инлайн кнопок
@@ -447,8 +450,6 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_edit_guild, edit_guild))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_delete_guild, request_delete_guild))
-    dispatcher.add_handler(CallbackQueryHandler(delete_guild, pattern="g_delete_confirm_\\d+"))
-    dispatcher.add_handler(CallbackQueryHandler(cancel_delete_guild, pattern="g_delete_cancel_\\d+"))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_change_guild_commander, change_guild_commander,
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_change_guild_chat, change_guild_chat,
