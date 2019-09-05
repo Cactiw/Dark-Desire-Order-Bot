@@ -358,6 +358,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("👤Игроки"),
                 KeyboardButton("👥Гильдии"),
+                KeyboardButton("📓Гайды"),
             ],
             [
                 KeyboardButton("🖋Триггеры"),
@@ -369,7 +370,23 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             ]
         ]
         if not rp_off:
-            buttons[0].insert(0, KeyboardButton("↔️Указатели"))
+            buttons[1].insert(0, KeyboardButton("↔️Указатели"))
+    elif status == 'guides':
+        buttons = [
+            [
+                KeyboardButton("⚗️Алхимик"),
+                KeyboardButton("⚒Кузнец"),
+                KeyboardButton("📦Добытчик"),
+            ],
+            [
+                KeyboardButton("🏹Лучник"),
+                KeyboardButton("⚔Рыцарь"),
+                KeyboardButton("🛡Защитник"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
     elif status == 'tea_party':
         buttons = [
             KeyboardButton("Отправиться на разведку"),

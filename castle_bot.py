@@ -26,7 +26,8 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
-    filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category
+    filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category, \
+    filter_guides
 from castle_files.work_materials.filters.construction_filters import filter_sawmill, filter_quarry, filter_treasury, \
     filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
@@ -69,7 +70,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
-    change_update_history, manuscript, view_manuscript_category
+    change_update_history, manuscript, view_manuscript_category, guides
 from castle_files.bin.quests import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction,\
     begin_construction, construct, construction_plate
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
@@ -340,6 +341,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_technical_tower, technical_tower, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_manuscript, manuscript, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_guides, guides, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_manuscript_category, view_manuscript_category))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_my_cabinet, my_cabinet, pass_user_data=True))
 
