@@ -108,7 +108,8 @@ def update_guild(bot, update):
 
 def players_update_monitor():
     cursor = conn.cursor()
-    time.sleep(2)
+    time.sleep(5)
+    logging.info("Started updating profiles")
     while True:
         try:
             if not cwapi.active:
@@ -126,7 +127,7 @@ def players_update_monitor():
                 return 0
             player = Player.get_player(row[0])
             cwapi.update_player(player.id, player=player)
-            logging.info("Updating {} through CW3 API".format(player.nickname))
+            logging.debug("Updating {} through CW3 API".format(player.nickname))
             time.sleep(1)
             if not cwapi.active:
                 return 0

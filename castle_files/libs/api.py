@@ -417,7 +417,7 @@ class CW3API:
                 player.api_info.pop("change_stock_send")
                 player.update()
 
-            print(player.stock)
+            # print(player.stock)
         except Exception:
             logging.error(traceback.format_exc())
 
