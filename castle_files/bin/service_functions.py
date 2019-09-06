@@ -80,10 +80,13 @@ def count_battle_id(message):
     if message is None:
         forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     else:
-        try:
-            forward_message_date = utc.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-        except ValueError:
-            forward_message_date = message.forward_date
+        if message.forward_date is not None:
+            try:
+                forward_message_date = utc.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+            except ValueError:
+                forward_message_date = message.forward_date
+        else:
+            forward_message_date = utc.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     time_from_first_battle = forward_message_date - first_battle
     battle_id = 0
     while time_from_first_battle > interval:
