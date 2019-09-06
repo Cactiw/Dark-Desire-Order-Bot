@@ -94,9 +94,9 @@ def add_report(bot, update, user_data):
                     buff = parse.group(1)
                     buffs.pop()
                     buffs.append(buff)
-        hit = re.search("Hit: (\\d+)", s)
+        hit = re.search("Your attacks: (\\d+)", s)
         hit = int(hit.group(1)) if hit is not None else 0
-        miss = re.search("Miss: (\\d+)", s)
+        miss = re.search("Hostile strikes: (\\d+)", s)
         miss = int(miss.group(1)) if miss is not None else 0
         last_hit = re.search("Last hit: (\\d+)", s)
         last_hit = int(last_hit.group(1)) if last_hit is not None else 0
