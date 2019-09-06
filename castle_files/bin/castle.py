@@ -9,7 +9,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
-from castle_files.work_materials.statuses_const import statuses
+from castle_files.work_materials.statuses_const import statuses as statuses_const
 
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
     classes_to_emoji
@@ -432,8 +432,55 @@ def status_shop(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    for status, price in list(statuses.items()):
-        pass
+    response = "Статусы, доступные для покупки:\n"
+    player_statuses = player.tea_party_info.get("statuses") or []
+    for status_id, status in list(statuses_const.items()):
+        name, price = status.get("name"), status.get("price")
+        if status not in player_statuses:
+            response += "<b>{}</b>: {}🔘\n/buy_status_{}\n\n".format(name, price, status_id)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def buy_status(bot, update):
+    mes = update.message
+    status_id = re.search("_(\\d+)", mes.text)
+    if status_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Статус не найден")
+        return
+    status_id = int(status_id.group(1))
+    player = Player.get_player(mes.from_user.id)
+    player_statuses = player.api_info.get("statuses")
+    if player_statuses is None:
+        player_statuses = []
+        player.api_info.update({"statuses": player_statuses})
+    if status_id in player_statuses:
+        bot.send_message(chat_id=mes.chat_id, text="Статус уже куплен")
+        return
+    status = statuses_const.get(status_id)
+    price, name = status.get("price"), status.get("name")
+    if player.reputation < price:
+        bot.send_message(chat_id=mes.chat_id, text="Недостаточно 🔘")
+        return
+    player.reputation -= price
+    player_statuses.append(status_id)
+    player.update()
+    bot.send_message(chat_id=mes.chat_id, text="Статус <b>{}</b> успешно куплен!".format(name))
+
+
+def statuses(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    player_statuses = player.api_info.get("statuses")
+    if player_statuses is None:
+        bot.send_message(chat_id=mes.chat_id, text="Нет статусов. Статусы можно купить по /status_shop")
+        return
+    response = "Текущий статус: <b>{}</b>\n\n".format(player.status) if player.status is not None else ""
+    response += "Доступные статусы:\n"
+    for status_id in player_statuses:
+        status = statuses_const.get(status_id)
+        name = status.get("name")
+        response += "<b>{}</b>\n/status_on_{}\n\n".format(name, status_id)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 def count_reputation_sum(bot, update):
