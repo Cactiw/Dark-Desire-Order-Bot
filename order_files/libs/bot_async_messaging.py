@@ -86,6 +86,7 @@ class AsyncBot(Bot):
         if kwargs.get("timeout_retry"):
             try:
                 kwargs.pop("timeout_retry")
+                kwargs.pop("timeout")
             except Exception:
                 pass
         elif remaining_time <= datetime.timedelta(seconds=15):
