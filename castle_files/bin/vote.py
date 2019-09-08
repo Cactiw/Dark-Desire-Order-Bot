@@ -266,8 +266,8 @@ def vote(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
         return
     if player.guild is None:
-        # bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
-        # return
+        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
+        return
         pass
     vote_id = re.search("_(\\d+)", mes.text)
     if vote_id is None:
@@ -277,6 +277,10 @@ def vote(bot, update):
     vote = Vote.get_vote(vote_id)
     if vote is None:
         bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
+        return
+    if player.last_updated < vote.started:
+        bot.send_message(chat_id=mes.chat_id, text="Для принятия участия в этом голосовании необходимо обновить "
+                                                   "профиль после его начала.")
         return
     try:
         if vote.classes is not None and vote.classes and (player.game_class is None or
@@ -312,8 +316,8 @@ def set_vote_variant(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
         return
     if player.guild is None:
-        # bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
-        # return
+        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
+        return
         pass
     parse = re.search("_(\\d+)_(\\d+)", data)
     if parse is None:
@@ -324,6 +328,10 @@ def set_vote_variant(bot, update):
     vote = Vote.get_vote(vote_id)
     if vote is None:
         bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
+        return
+    if player.last_updated < vote.started:
+        bot.send_message(chat_id=mes.chat_id, text="Для принятия участия в этом голосовании необходимо обновить "
+                                                   "профиль после его начала.")
         return
     try:
         if vote.classes is not None and vote.classes and (player.game_class is None or
