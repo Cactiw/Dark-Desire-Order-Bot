@@ -9,6 +9,7 @@ from castle_files.libs.player import Player
 from castle_files.work_materials.globals import dispatcher
 from castle_files.bin.telethon_script import castles_stats_queue
 from castle_files.bin.profile import plan_remember_exp
+from castle_files.bin.api import check_guilds_api_access
 
 from telegram.error import TelegramError
 
@@ -134,6 +135,7 @@ def plan_daily_tasks(bot=None, job=None):
     plan_arena_notify()
     plan_top_notify()
     plan_remember_exp()
+    plan_guilds_api_players_update()
     # plan_work(plan_daily_tasks, 0, 0, 10)
 
 
@@ -143,6 +145,10 @@ def plan_arena_notify():
 
 def plan_top_notify():
     plan_work(top_notify, 19, 0, 0)
+
+
+def plan_guilds_api_players_update():
+    plan_work(check_guilds_api_access, 3, 0, 0, context={"reset": True})
 
 
 def guild_top_battles(bot, update):

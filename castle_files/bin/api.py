@@ -117,7 +117,14 @@ def get_player_with_api_access_from_guild(guild: Guild):
     return player_id
 
 
-def check_guilds_api_access(reset=False):
+def check_guilds_api_access(bot=None, job=None):
+    if job is None:
+        reset = False
+    else:
+        try:
+            reset = job.context.get("reset") or False
+        except Exception:
+            reset = False
     cursor = conn.cursor()
     if reset:
         logging.info("Clearing data about players with guilds API access")
