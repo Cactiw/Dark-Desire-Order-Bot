@@ -157,7 +157,8 @@ def search_for_players_with_api_access(guild: Guild):
 def players_update_monitor():
     cursor = conn.cursor()
     time.sleep(7)
-    check_guilds_api_access(reset=False)
+
+    check_guilds_api_access()
     logging.info("Started updating profiles")
     i = 0
     while True:
