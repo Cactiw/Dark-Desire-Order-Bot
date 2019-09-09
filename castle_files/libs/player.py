@@ -128,7 +128,7 @@ class Player:
                                             text="Вы не зарегистрированы. Для регистрации необходимо "
                                                  "прислать ответ @ChatWarsBot на команду /hero")
             return None
-        print(row)
+        # print(row)
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class, \
             class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, exp, api_info, \
             stock, player_id, settings, exp_info, class_info, mobs_info = row
