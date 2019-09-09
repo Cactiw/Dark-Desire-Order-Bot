@@ -7,6 +7,7 @@ from castle_files.bin.buttons import get_vote_buttons
 from castle_files.bin.service_functions import check_access
 
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 from castle_files.libs.vote import Vote
 
 from telegram.error import TelegramError, BadRequest
@@ -259,6 +260,9 @@ def get_vote_text(vote, choice=None):
     return response
 
 
+ALLOWED_LIST = [520005310]
+
+
 def vote(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
@@ -267,7 +271,7 @@ def vote(bot, update):
     if player.castle != '🖤':
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
         return
-    if player.guild is None:
+    if player.guild is None and player.id not in ALLOWED_LIST:
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
         return
         pass
@@ -317,7 +321,7 @@ def set_vote_variant(bot, update):
     if player.castle != '🖤':
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
         return
-    if player.guild is None:
+    if player.guild is None and player.id not in ALLOWED_LIST:
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
         return
         pass
@@ -422,3 +426,42 @@ def wide_vote_results(bot, update):
     for i, ch in enumerate(vote.choices):
         for player_id in ch:
             player = Player.get_player(player_id)
+
+
+def guild_unvoted_list(bot, update):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID:
+        return
+    parse = re.search(" (\\d+) (.*)", mes.text)
+    if parse is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.\n\nСинтаксис: /guild_unvoted_list {vote_id} "
+                                                   "{guild_tag}")
+        return
+    vote_id = int(parse.group(1))
+    guild_tag = parse.group(2)
+    vote = Vote.get_vote(vote_id)
+    if vote is None:
+        bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
+        return
+    guild = Guild.get_guild(guild_tag=guild_tag)
+    if guild is None:
+        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        return
+    response = "Не проголосовали в гильдии <b>{}</b>:\n".format(guild.tag)
+    for player_id in guild.members:
+        voted = False
+        for ch in vote.choices:
+            if player_id in ch:
+                voted = True
+                break
+        if not voted:
+            player = Player.get_player(player_id)
+            response += "@{} ".format(player.username)
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+
+
+
+
+

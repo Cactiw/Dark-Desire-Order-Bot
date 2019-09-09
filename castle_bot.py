@@ -78,7 +78,7 @@ from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feed
     send_reply_to_duty_request, check_ban_in_duty_chat, ask_to_revoke_duty_link, revoke_duty_link
 from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, view_vote, \
     request_change_vote_duration, change_vote_duration, start_vote, finish_vote, votes, vote, set_vote_variant, \
-    vote_results, set_vote_classes
+    vote_results, set_vote_classes, guild_unvoted_list
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -317,6 +317,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_add_vote_variant, add_vote_variant,
                                           pass_user_data=True))
     dispatcher.add_handler(CommandHandler('finish_vote', finish_vote, pass_user_data=True))
+
+    dispatcher.add_handler(CommandHandler('guild_unvoted', guild_unvoted_list))
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_view_vote, view_vote))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_request_edit_vote_duration,
