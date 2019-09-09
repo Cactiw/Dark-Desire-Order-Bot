@@ -245,6 +245,8 @@ def votes(bot, update):
 
 def get_vote_text(vote, choice=None):
     response = "<b>{}</b>:\n{}\n\n".format(vote.name, vote.text)
+    response += "Завершение через: <code>{}</code>\n".format(str(vote.started + vote.duration - datetime.datetime.now(
+        tz=moscow_tz).replace(tzinfo=None)).split('.')[0])
     if vote.classes is not None and vote.classes and not all(vote.classes):
         cl_text = ""
         for i, b in enumerate(vote.classes):
@@ -399,3 +401,24 @@ def vote_results(bot, update):
         response += "{} —— <code>{}</code> (<code>{:.0f}%</code>)\n".format(res[0], res[1], res[1]/total_voices*100)
     response += "\n<em>Всего голосов:</em> <b>{}</b>".format(total_voices)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def wide_vote_results(bot, update):
+    # Пока ничего, заготовка под результаты, отсортированные по гильдиям
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID and mes.from_user.id != 116028074:
+        return
+    vote_id = re.search("_(\\d+)", mes.text)
+    if vote_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+        return
+    vote_id = int(vote_id.group(1))
+    vote = Vote.get_vote(vote_id)
+    if vote is None:
+        bot.send_message(chat_id=mes.chat_id, text="Голосование не найдено.")
+        return
+    results = {}
+    total_voices = 0
+    for i, ch in enumerate(vote.choices):
+        for player_id in ch:
+            player = Player.get_player(player_id)
