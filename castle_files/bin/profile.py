@@ -81,8 +81,6 @@ def class_chat_check(bot, update):
         player = Player.get_player(user.id)
         if mes.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(mes.from_user.id):
             return
-        if player is None:
-            continue
         if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id or \
                 player.castle != '🖤':
             try:
