@@ -221,6 +221,9 @@ def battle_stats(bot, update):
                                                        count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     while row is not None:
         player = Player.get_player(row[0])
+        if player.castle != '🖤':
+            row = cursor1.fetchone()
+            continue
         if player.guild is None:
             guild = guilds[-1]
         else:
