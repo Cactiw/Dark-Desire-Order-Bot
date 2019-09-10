@@ -52,6 +52,7 @@ MERC_ID = 105907720
 MY_CHANNEL_ID = -1001341013464
 
 construction_jobs = {}
+castle_chats = []
 
 
 allowed_list = []

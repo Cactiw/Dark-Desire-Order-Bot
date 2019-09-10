@@ -4,7 +4,7 @@
 """
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
-    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc
+    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc, castle_chats
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -96,6 +96,67 @@ def class_chat_check(bot, update):
                                  text=text, parse_mode='HTML')
             except TelegramError:
                 return
+
+
+def castle_chat_check(message):
+    if message.new_chat_members:
+        users = message.new_chat_members
+    else:
+        users = [message.from_user]
+    for user in users:
+        player = Player.get_player(user.id)
+        if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
+            return False
+        if player is None:
+            return True
+        if player is None or player.castle != '🖤':
+            return True
+    return False
+
+
+def remove_players_from_chat(bot, update):
+    message = update.message
+    if message.new_chat_members:
+        users = message.new_chat_members
+    else:
+        users = [message.from_user]
+    for user in users:
+        user_id = user.id
+        player = Player.get_player(user.id)
+        if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
+            return
+        if player is None or player.castle != '🖤':
+            try:
+                text = "Этот чат только для игроков 🖤Скалы"
+                bot.kickChatMember(chat_id=message.chat_id, user_id=user_id)
+                bot.send_message(chat_id=message.chat_id,
+                                 text=text, parse_mode='HTML')
+            except TelegramError:
+                pass
+
+
+def set_castle_chat(bot, update):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID and not check_access(mes.from_user.id):
+        return
+    if mes.chat_id == mes.from_user.id:
+        bot.send_message(chat_id=mes.chat_id, text="Команда запрещена в ЛС")
+        return
+    on = 'on' in update.message.text
+    if on:
+        if mes.chat_id in castle_chats:
+            bot.send_message(chat_id=mes.chat_id, text="Чат уже установлен как замковый")
+            return
+        castle_chats.append(mes.chat_id)
+        text = "Чат отмечен как замковый. Бот будет удалять любых участников не из Скалы, " \
+               "или с отсутствующими профилями"
+    else:
+        if mes.chat_id not in castle_chats:
+            bot.send_message(chat_id=mes.chat_id, text="Чат и так не замковый")
+            return
+        castle_chats.remove(mes.chat_id)
+        text = "Теперь чат разрешён для всех участников."
+    bot.send_message(chat_id=mes.chat_id, text=text)
 
 
 def get_profile_text(player, self_request=True, user_data=None):

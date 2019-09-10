@@ -5,7 +5,8 @@ from castle_files.work_materials.globals import dispatcher, updater, conn, Produ
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
-    filter_is_profile, filter_not_registered, filter_forbidden, filter_set_class, filter_in_class_chat
+    filter_is_profile, filter_not_registered, filter_forbidden, filter_set_class, filter_in_class_chat, \
+    filter_kick_from_castle_chat
 from castle_files.work_materials.filters.class_filters import filter_archer_trap
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
 from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
@@ -47,7 +48,7 @@ from castle_files.bin.service_functions import cancel, fill_allowed_list
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
     set_status, guild_history, revoke_all_class_links, class_chat_check, reports_history, profile_settings, \
-    change_profile_setting, get_rangers, profile_exp
+    change_profile_setting, get_rangers, profile_exp, set_castle_chat, remove_players_from_chat
 from castle_files.bin.class_functions import add_trap, trap_stats
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
@@ -305,11 +306,14 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_give_resource, send_withdraw))
 
-    # Кик из классовых чатов
+    # Кик из классовых и замковых чатов
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_class_chat, class_chat_check))
     dispatcher.add_handler(CommandHandler('revoke_all_class_links', revoke_all_class_links))
 
     dispatcher.add_handler(CommandHandler('get_rangers', get_rangers))
+
+    dispatcher.add_handler(CommandHandler('set_castle_chat', set_castle_chat))
+    dispatcher.add_handler(MessageHandler(filter_kick_from_castle_chat, remove_players_from_chat))
 
     # Хендлеры голосований
     dispatcher.add_handler(CommandHandler('create_vote', create_vote, pass_user_data=True))

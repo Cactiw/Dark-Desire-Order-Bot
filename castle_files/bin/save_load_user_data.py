@@ -18,17 +18,31 @@ def load_data():
         f = open('castle_files/backup/user_data', 'rb')
         file_globals.dispatcher.user_data = pickle.load(f)
         f.close()
+    except FileNotFoundError:
+        logging.error("Data file not found")
+    try:
         f = open('castle_files/backup/api_info', 'rb')
         CW3API.api_info = pickle.load(f)
         f.close()
-        print("Data picked up")
+    except FileNotFoundError:
+        logging.error("Data file not found")
+    try:
         f = open('castle_files/backup/worldtop', 'rb')
         t = pickle.load(f)
         sort_worldtop(t)
     except FileNotFoundError:
         logging.error("Data file not found")
+    try:
+        f = open('castle_files/backup/castle_chats', 'rb')
+        t = pickle.load(f)
+        for chat_id in t:
+            file_globals.castle_chats.append(chat_id)
+        f.close()
+    except FileNotFoundError:
+        logging.error("Data file not found")
     except Exception:
         logging.error(sys.exc_info()[0])
+    print("Data picked up")
 
 
 def save_data():
@@ -62,6 +76,9 @@ def save_data():
                 f.close()
             f = open('castle_files/backup/worldtop', 'wb+')
             pickle.dump(worldtop, f)
+            f.close()
+            f = open('castle_files/backup/castle_chats', 'wb+')
+            pickle.dump(file_globals.castle_chats, f)
             f.close()
             log.debug("Data write completed\b")
         except Exception:
