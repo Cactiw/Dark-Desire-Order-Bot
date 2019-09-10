@@ -38,7 +38,7 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     else:
         response += "\nОсталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
                                                                           int(remaining_time.total_seconds() % 60)))
-    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - 5), int(avg_lvl + 5)),
+    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - 5), int(avg_lvl + 10)),
                                      url=u"https://t.me/share/url?url=/fight_{}".format(link)),
                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
     if len(helpers) >= 3:
@@ -115,11 +115,11 @@ def mob(bot, update):
                     ping = []
                     for pl_id in guild.members:
                         pl = Player.get_player(pl_id)
-                        if avg_lvl - 5 <= pl.lvl <= avg_lvl + 5:
+                        if avg_lvl - 5 <= pl.lvl <= avg_lvl + 10:
                             on = pl.settings.get("mobs_notify")
                             if on is None:
                                 on = True
-                            if on:
+                            if on and pl.id != mes.from_user.id:
                                 ping.append(pl.username)
                     if ping:
                         text = "Мобы!\n"
