@@ -303,7 +303,7 @@ def view_profile(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
     player = Player.get_player(player_id)
-    if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
+    if player is None or (mes.text.startswith("/view_profile") and (guild is None or player.guild != guild.id)):
         if player is not None and player.guild is not None:
             guild = Guild.get_guild(player.guild)
             if guild is not None:
