@@ -2,7 +2,8 @@ import multiprocessing
 import threading
 import logging
 
-from order_bot import order_bot_processing
+import order_bot
+from new_order_bot import order_bot_processing
 from castle_bot import castle_bot_processing
 
 from castle_files.bin.telethon_script import script_work
@@ -29,7 +30,7 @@ order_bot_process.start()
 processes.append(order_bot_process)
 
 castle_bot_process = multiprocessing.Process(target=castle_bot_processing)
-castle_bot_process.start()
+# castle_bot_process.start()
 processes.append(castle_bot_process)
 try:
     processes[0].join()
