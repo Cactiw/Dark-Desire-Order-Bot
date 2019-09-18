@@ -2,7 +2,7 @@
 Здесь находится класс Bot с его методами для приказника (и только! - избегать копирования),
 предназначен для наиболее быстрой и стабильной отправки пинов во множество чатов.
 """
-from telegram import Bot
+from telegram import Bot, ReplyMarkup, Message
 from telegram.utils.request import Request
 from telegram.error import (Unauthorized, BadRequest,
                             TimedOut, NetworkError)
@@ -12,6 +12,8 @@ import time
 import logging
 import traceback
 import datetime
+import requests
+import json
 
 from order_files.libs.order import Order, OrderBackup
 from castle_files.bin.service_functions import get_time_remaining_to_battle
@@ -50,7 +52,6 @@ class AsyncBot(Bot):
         super(AsyncBot, self).__init__(token=token, request=self._request)
         # self.start()
 
-
     """def send_message(self, *args, **kwargs):
         message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
@@ -84,6 +85,7 @@ class AsyncBot(Bot):
         body = {"chat_id": chat_id, "time": time.time()}
         self.second_reset_queue.put(body)
         remaining_time = get_time_remaining_to_battle()
+        timeout = 5
         if kwargs.get("timeout_retry"):
             try:
                 kwargs.pop("timeout_retry")
@@ -92,8 +94,32 @@ class AsyncBot(Bot):
                 pass
         elif remaining_time <= datetime.timedelta(seconds=15):
             kwargs.update({"timeout": 0.8, "timeout_retry": True})
+            timeout = 0.8
         try:
-            message = super(AsyncBot, self).send_message(*args, **kwargs)
+            reply_markup = kwargs.get("reply_markup")
+            if isinstance(reply_markup, ReplyMarkup):
+                reply_markup = reply_markup.to_json()
+            data = {'chat_id': chat_id, 'text': kwargs["text"], 'parse_mode': kwargs["parse_mode"]}
+            if reply_markup is not None:
+                data.update({'reply_markup': reply_markup})
+            try:
+                resp = requests.post(self.base_url + '/sendMessage', data=json.dumps(data).encode('utf-8'),
+                                     headers={'Content-Type': 'application/json'}, timeout=timeout)
+            except Exception:
+                raise TimedOut
+            resp = resp.json()
+            print(resp)
+            ok = resp["ok"]
+            if not ok:
+                code, descr = resp["error_code"], resp["description"]
+                errors = {400: BadRequest(descr), 403: Unauthorized(descr)}
+                error = errors.get(code)
+                if error is None:
+                    logging.error("Unknown error for code {}".format(code))
+                    raise BadRequest
+                raise error
+            message = Message.de_json(resp["result"], super(AsyncBot, self))
+            # message = super(AsyncBot, self).send_message(*args, **kwargs)
         except TimedOut:
             logging.error("Order timeout")
             # time.sleep(0.1)
