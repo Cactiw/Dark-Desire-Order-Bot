@@ -21,6 +21,7 @@ MESSAGE_PER_CHAT_LIMIT = 3
 
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
+TIMEOUT_ERROR_CODE = 5
 
 advanced_callback = multiprocessing.Queue()
 
@@ -90,13 +91,14 @@ class AsyncBot(Bot):
             except Exception:
                 pass
         elif remaining_time <= datetime.timedelta(seconds=15):
-            kwargs.update({"timeout": 1, "timeout_retry": True})
+            kwargs.update({"timeout": 0.8, "timeout_retry": True})
         try:
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except TimedOut:
             logging.error("Order timeout")
             # time.sleep(0.1)
-            message = self.actually_send_message(*args, **kwargs)
+            # message = self.actually_send_message(*args, **kwargs)
+            return TIMEOUT_ERROR_CODE
         except Unauthorized:
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
@@ -107,9 +109,9 @@ class AsyncBot(Bot):
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         return message
 
-    def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None):
+    def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None, kwargs={}):
         order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin_enabled, notification=notification,
-                      reply_markup=reply_markup)
+                      reply_markup=reply_markup, kwargs=kwargs)
         self.order_queue.put(order)
 
     def start(self):
@@ -180,18 +182,26 @@ class AsyncBot(Bot):
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
             reply_markup = order_in_queue.reply_markup
+            kwargs = order_in_queue.kwargs
             # logging.info("worker {}, starting to send".format(num))
             begin = time.time()
             message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
-                                                 reply_markup=reply_markup)
+                                                 reply_markup=reply_markup, **kwargs)
             sent = time.time()
             # logging.info("worker {}, message sent".format(num))
+            send_backup = True
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass
             elif message == BADREQUEST_ERROR_CODE:
                 response += "Невозможно отправить сообщение в чат {0}, проверьте корректность chat id\n".format(chat_id)
                 pass
+            elif message == TIMEOUT_ERROR_CODE:
+                self.send_order(order_id=order_in_queue.order_id, chat_id=chat_id, response=text, pin_enabled=pin,
+                                notification=notification, reply_markup=reply_markup, kwargs={"timeout": 1,
+                                                                                              "timeout_retry": True})
+                time.sleep(0.1)
+                send_backup = False
             else:
                 if pin:
                     try:
@@ -203,11 +213,12 @@ class AsyncBot(Bot):
                     except BadRequest:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
-            pin_end = time.time()
-            advanced_callback.put({"chat_id": chat_id, "begin": begin, "sent": sent, "pin_end": pin_end})
-            OK = response == ""
-            order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
-            order_backup_queue.put(order_backup)
+            if send_backup:
+                pin_end = time.time()
+                advanced_callback.put({"chat_id": chat_id, "begin": begin, "sent": sent, "pin_end": pin_end})
+                OK = response == ""
+                order_backup = OrderBackup(order_id=order_in_queue.order_id, OK=OK, text=response)
+                order_backup_queue.put(order_backup)
             order_in_queue = self.order_queue.get()
             if order_in_queue is None:
                 return 0
