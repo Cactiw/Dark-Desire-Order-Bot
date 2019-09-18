@@ -431,6 +431,10 @@ def send_new_top(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
+def roulette(bot, update):
+    pass
+
+
 def count_reputation_sum(bot, update):
     request = "select action, player_id from castle_logs"
     cursor.execute(request)
