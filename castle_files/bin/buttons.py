@@ -399,6 +399,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             KeyboardButton("Рыть котлован"),
             ],
             [
+                KeyboardButton("Рулетка"),
+            ],
+            [
                 KeyboardButton("↩️ Назад"),
             ],
         ]

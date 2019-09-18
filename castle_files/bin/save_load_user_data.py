@@ -74,17 +74,14 @@ def save_data():
                 f = open('castle_files/backup/construction_jobs', 'wb+')
                 pickle.dump(dump, f)
                 f.close()
-<<<<<<< HEAD
             f = open('castle_files/backup/worldtop', 'wb+')
             pickle.dump(worldtop, f)
             f.close()
             f = open('castle_files/backup/castle_chats', 'wb+')
             pickle.dump(file_globals.castle_chats, f)
-=======
             f = open('castle_files/backup/quest_players', 'wb+')
             with quest_lock:
                 pickle.dump(quest_players, f)
->>>>>>> Доработал в квестах дампы, отмены, выводы профиля
             f.close()
             log.debug("Data write completed\b")
         except Exception:

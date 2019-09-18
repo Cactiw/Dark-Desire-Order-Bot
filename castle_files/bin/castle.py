@@ -445,6 +445,10 @@ def status_shop(bot, update):
         pass
 
 
+def roulette(bot, update):
+    pass
+
+
 def count_reputation_sum(bot, update):
     request = "select action, player_id from castle_logs"
     cursor.execute(request)
