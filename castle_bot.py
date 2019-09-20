@@ -341,7 +341,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_technical_tower, technical_tower, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_manuscript, manuscript, pass_user_data=True))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_guides, guides, pass_user_data=True))
+    # dispatcher.add_handler(MessageHandler(Filters.text & filter_guides, guides, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_manuscript_category, view_manuscript_category))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_my_cabinet, my_cabinet, pass_user_data=True))
 

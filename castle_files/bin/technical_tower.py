@@ -23,14 +23,16 @@ def manuscript(bot, update, user_data):
 
 
 def guides(bot, update, user_data):
-    user_data.update({"status": "guides"})
-    buttons = get_general_buttons(user_data)
-    bot.send_message(chat_id=update.message.from_user.id,
-                     text="Выберите раздел:", reply_markup=buttons)
+    pass
+    # user_data.update({"status": "guides"})
+    # buttons = get_general_buttons(user_data)
+    # bot.send_message(chat_id=update.message.from_user.id,
+    #                  text="Выберите раздел:", reply_markup=buttons)
 
 
 def view_manuscript_category(bot, update):
-    bot.send_message(chat_id=update.message.from_user.id, text=faq_texts.get(update.message.text), parse_mode='HTML')
+    bot.send_message(chat_id=update.message.from_user.id, text=faq_texts.get(update.message.text), parse_mode='HTML',
+                     disable_web_page_preview=True)
 
 
 def my_cabinet(bot, update, user_data):
