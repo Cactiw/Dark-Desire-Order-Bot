@@ -99,9 +99,12 @@ class AsyncBot(Bot):
             reply_markup = kwargs.get("reply_markup")
             if isinstance(reply_markup, ReplyMarkup):
                 reply_markup = reply_markup.to_json()
-            data = {'chat_id': chat_id, 'text': kwargs["text"], 'parse_mode': kwargs["parse_mode"]}
+            parse_mode = kwargs.get("parse_mode")
+            data = {'chat_id': chat_id, 'text': kwargs["text"]}
             if reply_markup is not None:
                 data.update({'reply_markup': reply_markup})
+            if parse_mode is not None:
+                data.update({'parse_mode': parse_mode})
             try:
                 resp = requests.post(self.base_url + '/sendMessage', data=json.dumps(data).encode('utf-8'),
                                      headers={'Content-Type': 'application/json'}, timeout=timeout)
