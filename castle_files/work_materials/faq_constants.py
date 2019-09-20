@@ -143,6 +143,32 @@ View: ссылка
 /split_union_attack_full,  /split_union_defense_full  - работают как и краткие версии, однако суффикс full отображает также ник в игре, требуемую стату и сумму статов по группам. 
 /split_union_attack_full_alt, /split_union_defense_full_alt - использует альтернативный алгоритм разделения атаки/защиты, обеспечивая баланс количества игроков в разных группах.
 """,
+                "📓Гайды": """<b>📓Гайды</b>:
+                
+ 🛡 <b>Хранитель</b> - https://telegra.ph/Gajd-klassa-Sentinel-Skaly-08-09
+
+ ⚔️ <b>Рыцарь</b> - https://telegra.ph/Gajd-klassa-Knight-Skaly-09-03
+
+ 🏹 <b>Лучник</b> - https://telegra.ph/Gajd-klassa-RangerSkaly-09-03
+
+ ⚗️ <b>Алхимик</b> - https://telegra.ph/Gajd-klassa-Alchemist-Skaly-09-03
+ 
+ 📦 <b>Добытчик</b> - https://telegra.ph/Gajd-klassa-CollectorSkaly-09-03
+
+ ⚒ <b>Кузнец</b> - https://telegra.ph/Gajd-klassa-BlacksmithSkaly-09-03""",
+            "📓Guides": """<b>📓Guides</b> (only in Russian for now):
+                
+ 🛡 <b>Sentinel</b> - https://telegra.ph/Gajd-klassa-Sentinel-Skaly-08-09
+
+ ⚔️ <b>Knight</b> - https://telegra.ph/Gajd-klassa-Knight-Skaly-09-03
+
+ 🏹 <b>Ranger</b> - https://telegra.ph/Gajd-klassa-RangerSkaly-09-03
+
+ ⚗️ <b>Alchemist</b> - https://telegra.ph/Gajd-klassa-Alchemist-Skaly-09-03
+ 
+ 📦 <b>Collector</b> - https://telegra.ph/Gajd-klassa-CollectorSkaly-09-03
+
+ ⚒ <b>Blacksmith</b> - https://telegra.ph/Gajd-klassa-BlacksmithSkaly-09-03""",
                 "↔️Signs": """<b>Barracks</b>
 
 <code>Look in the mirror</code> - shows yours current profile in the bot.

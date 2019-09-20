@@ -76,6 +76,7 @@ def back(bot, update, user_data):
         "tops": "central_square",
 
         "manuscript": "technical_tower",
+        "guides": "manuscript",
 
     }
 
