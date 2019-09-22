@@ -384,6 +384,16 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("↩️ Назад"),
             ],
         ]
+    elif status == 'roulette':
+        buttons = [
+            [
+                KeyboardButton("Поставить"),
+                KeyboardButton("Топы в рулетке"),
+            ],
+            [
+                KeyboardButton("↩️ Назад")
+            ],
+        ]
     if only_buttons or buttons is None:
         return buttons
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)

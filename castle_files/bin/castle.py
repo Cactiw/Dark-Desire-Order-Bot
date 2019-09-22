@@ -79,6 +79,8 @@ def back(bot, update, user_data):
         "exploration": "tea_party",
         "pit": "tea_party",
 
+        "roulette": "tea_party",
+
     }
 
     statuses_rp_off = {
@@ -431,8 +433,9 @@ def send_new_top(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
-def roulette(bot, update):
-    pass
+def roulette(bot, update, user_data):
+    user_data.update({"status": "roulette", "location_id": 10})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def count_reputation_sum(bot, update):
