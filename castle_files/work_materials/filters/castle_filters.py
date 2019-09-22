@@ -257,3 +257,38 @@ class FilterTopStat(BaseFilter):
 
 
 filter_top_stat = FilterTopStat()
+
+
+class FilterRoulette(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text in ["Рулетка", "Roulette"] and \
+            user_data.get("status") == 'tea_party'
+
+
+filter_roulette = FilterRoulette()
+
+
+class FilterRequestRouletteBet(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text in ["Сделать ставку", "Place a bet"] and \
+            user_data.get("status") == 'roulette'
+
+
+filter_request_roulette_bet = FilterRequestRouletteBet()
+
+
+class FilterPlaceRouletteBet(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and user_data.get("status") == 'awaiting_roulette_bet'
+
+
+filter_place_roulette_bet = FilterPlaceRouletteBet()

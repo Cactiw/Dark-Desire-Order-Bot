@@ -98,7 +98,7 @@ class FilterTeaParty(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Чайная лига"] and \
+        return filter_is_pm(message) and message.text in ["Чайная лига", "Tea party"] and \
             user_data.get("status") == 'central_square'
 
 
@@ -110,7 +110,7 @@ class FilterTeaPartyQuest(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Разведка", "Рыть котлован"] and \
+        return filter_is_pm(message) and message.text in ["Разведка", "Рыть котлован", "Exploration", "Dig a pit"] and \
             user_data.get("status") == 'tea_party'
 
 

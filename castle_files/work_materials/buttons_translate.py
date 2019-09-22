@@ -57,6 +57,11 @@ buttons_translate = {
     "🏛 Тронный зал": "🏛Throne Room",
     "🎇Посмотреть на портреты": "🎇View portraits",
     "🏤Мандапа Славы": "🏤Hall of Fame",
+    "Чайная лига": "Tea party",
+    "Разведка": "Exploration",
+    "Рыть котлован": "Dig a pit",
+    "Рулетка": "Roulette",
+    "Сделать ставку": "Place a bet",
 
     "🌲Лесопилка": "🌲Sawmill",
     "⛰Каменоломня": "⛰Quarry",
@@ -73,4 +78,5 @@ buttons_translate = {
     "📰Манускрипт": "📰Manuscript",
     "🗂Архив объявлений": "🗂Announcements archive",
     "↔️ Подойти к указателям": "↔️ See the signs",
+
 }

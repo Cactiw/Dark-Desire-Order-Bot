@@ -24,7 +24,8 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
-    filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat
+    filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat, filter_roulette, \
+    filter_request_roulette_bet, filter_place_roulette_bet
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category, \
@@ -63,13 +64,14 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
-    plan_daily_tasks, guild_top_battles, show_worldtop
+    guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
-    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum
+    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, roulette_main, request_roulette_bet, \
+    place_roulette_bet
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category, guides
@@ -87,6 +89,7 @@ from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
 from castle_files.bin.reports import add_report, battle_stats, battle_equip, battle_drop
+from castle_files.bin.tasks import plan_daily_tasks
 
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
@@ -378,6 +381,11 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_cw_quest_result, add_cw_quest_result))
 
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_roulette, roulette_main, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_roulette_bet, request_roulette_bet,
+                                          pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_place_roulette_bet, place_roulette_bet,
+                                          pass_user_data=True))
 
     # Продолжаются хендлеры замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_request_bot_guild_message_notify,

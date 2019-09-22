@@ -241,7 +241,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message', 'editing_debrief',
-                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "treasury"]:
+                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "treasury",
+                    "awaiting_roulette_bet"]:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
@@ -408,7 +409,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     elif status == 'roulette':
         buttons = [
             [
-                KeyboardButton("Поставить"),
+                KeyboardButton("Сделать ставку"),
                 KeyboardButton("Топы в рулетке"),
             ],
             [
