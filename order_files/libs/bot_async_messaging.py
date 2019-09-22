@@ -105,24 +105,24 @@ class AsyncBot(Bot):
                 data.update({'reply_markup': reply_markup})
             if parse_mode is not None:
                 data.update({'parse_mode': parse_mode})
-            try:
-                resp = requests.post(self.base_url + '/sendMessage', data=json.dumps(data).encode('utf-8'),
-                                     headers={'Content-Type': 'application/json'}, timeout=timeout)
-            except Exception:
-                raise TimedOut
-            resp = resp.json()
-            print(resp)
-            ok = resp["ok"]
-            if not ok:
-                code, descr = resp["error_code"], resp["description"]
-                errors = {400: BadRequest(descr), 403: Unauthorized(descr)}
-                error = errors.get(code)
-                if error is None:
-                    logging.error("Unknown error for code {}".format(code))
-                    raise BadRequest
-                raise error
-            message = Message.de_json(resp["result"], super(AsyncBot, self))
-            # message = super(AsyncBot, self).send_message(*args, **kwargs)
+            # try:
+            #     resp = requests.post(self.base_url + '/sendMessage', data=json.dumps(data).encode('utf-8'),
+            #                          headers={'Content-Type': 'application/json'}, timeout=timeout)
+            # except Exception:
+            #     raise TimedOut
+            # resp = resp.json()
+            # print(resp)
+            # ok = resp["ok"]
+            # if not ok:
+            #     code, descr = resp["error_code"], resp["description"]
+            #     errors = {400: BadRequest(descr), 403: Unauthorized(descr)}
+            #     error = errors.get(code)
+            #     if error is None:
+            #         logging.error("Unknown error for code {}".format(code))
+            #         raise BadRequest
+            #     raise error
+            # message = Message.de_json(resp["result"], super(AsyncBot, self))
+            message = super(AsyncBot, self).send_message(*args, **kwargs)
         except TimedOut:
             logging.error("Order timeout")
             # time.sleep(0.1)
