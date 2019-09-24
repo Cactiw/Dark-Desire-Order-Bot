@@ -663,17 +663,21 @@ def remember_exp(bot, job):
     battle_id = count_battle_id(None)
     for row in rows:
         player_id, exp, exp_info = row
+        player = Player.get_player(player_id)
         if exp_info is None:
             exp_info = {}
-        exp_info.update({battle_id: exp})
+        exp_info.update({str(battle_id): exp})
         exp_info = {k: v for k, v in sorted(list(exp_info.items()), key=lambda x: int(x[0]))}
-        request = "update players set exp_info = %s where id = %s"
-        cursor.execute(request, (json.dumps(exp_info, ensure_ascii=False), player_id))
+        player.exp_info = exp_info
+        player.update()
+        # request = "update players set exp_info = %s where id = %s"
+        # cursor.execute(request, (json.dumps(exp_info, ensure_ascii=False), player_id))
     plan_remember_exp()
 
 
 def plan_remember_exp():
     plan_work(remember_exp, 0, 0, 0)
+    # remember_exp(None, None)
 
 
 def get_rangers(bot, update):
