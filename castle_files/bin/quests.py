@@ -3,12 +3,14 @@
 наверняка как-то ещё будет набираться), и сама стройка.
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
+from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
 from castle_files.libs.my_job import MyJob
 
-from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn
+from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn, local_tz
+from castle_files.work_materials.quest_texts import quest_texts
 
 import time
 import pickle
@@ -16,6 +18,7 @@ import logging
 import traceback
 import json
 import datetime
+import random
 import re
 
 import threading
@@ -230,6 +233,18 @@ def tea_party(bot, update, user_data):
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
+# Создаёт работу через when секунд (на запуск callback функции), добавляет в construction_jobs для сохранения на диске и
+# автоматического поднятия при перезапуске бота.
+def safe_job_create(callback, when, player_id, context=None, cancel_old=True):
+    j = job.run_once(callback=callback, when=when, context=context)
+    if cancel_old:
+        old_j = construction_jobs.get(player_id)
+        if old_j is not None:
+            old_j.job.schedule_removal()
+    construction_jobs.update({player_id: MyJob(j, when)})
+    return j
+
+
 quest_lock = threading.Lock()
 quest_players = {"exploration": [], "pit": []}
 
@@ -239,7 +254,7 @@ def tea_party_quest(bot, update, user_data):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    quests = {"исследование": "exploration",
+    quests = {"разведка": "exploration",
               "котлован": "pit"}
     quest = None
     for key, v in list(quests.items()):
@@ -250,19 +265,220 @@ def tea_party_quest(bot, update, user_data):
         logging.error("Quest is None")
         return
 
-    user_data.update({"status": quest})
+    user_data.update({"status": quest, "quest_name": quest})
     with quest_lock:
-        lst: [Player] = quest_players.get(quest)
-        lst.append(player)
+        lst: [int] = quest_players.get(quest)
+        # lst.append(player.id)
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=mes.chat_id, text="Ты куда-то отправился. Вернуться невозможно. /f", reply_markup=buttons)
+    safe_job_create(two_go_action, 5, player.id, {"quest": quest, "player_id": player.id})
+    # job.run_once(two_go_action, random.random() * 180 + 120, {"quest": quest, "player_id": player.id})
 
 
+def two_go_action(bot, cur_job):
+    quest, player_id = cur_job.context.get("quest"), cur_job.context.get("player_id")
+    player = Player.get_player(player_id)
+    user_data = dispatcher.user_data.get(player_id)
 
-statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return}
+    status = user_data.get("status")
+    if status != quest:
+        return
+
+    with quest_lock:
+        player_list = quest_players.get(quest)
+        if player_list is None:
+            logging.error("No quest configured for {}".format(quest))
+            return
+        if not player_list:
+            player_list.append(player_id)
+            safe_job_create(player_awaiting_timeout, 60 * 3, player.id,
+                            context={"quest": quest, "player_id": player.id})
+            user_data.update({"status": "waiting_second_player_for_quest"})
+            return
+        else:
+            pair_player_id = player_list.pop()
+    pair_player = Player.get_player(pair_player_id)
+    pair_user_data = dispatcher.user_data.get(pair_player_id)
+    quest_id, qst = random.choice(list(quest_texts[quest]["two_players"].items()))
+    user_data.update({"status": "two_quest", "pair_id": pair_player_id, "quest": quest, "quest_id": quest_id})
+    pair_user_data.update({"status": "two_quest", "pair_id": player_id, "quest": quest, "quest_id": quest_id})
+    first_text = qst["first_begin"]
+    second_text = qst.get("second_begin") or first_text
+    bot.send_message(chat_id=player_id,
+                     text=first_text.format(pair_player.nickname, pair_player.username), parse_mode='HTML')
+    bot.send_message(chat_id=pair_player_id,
+                     text=second_text.format(player.nickname, player.username), parse_mode='HTML')
+    safe_job_create(two_action_timeout, 30, player.id, {"ids": [player_id, pair_player_id]})
+
+
+GO_SUCCESS_REPUTATION = 10
+GO_NOT_SUCCESS_REPUTATION = 3
+
+
+def return_from_quest(player_id, user_data):
+    with quest_lock:
+        for lst in list(quest_players.values()):
+            try:
+                lst.remove(player_id)
+            except ValueError:
+                pass
+    delete_list = ["quest", "quest_pressed", "quest_id", "pair_id", "quest_name"]
+    for string in delete_list:
+        if string in user_data:
+            user_data.pop(string)
+    user_data.update({"status": "tea_party"})
+    j = construction_jobs.get(player_id)
+    try:
+        j.job.schedule_removal()
+        construction_jobs.pop(player_id)
+    except Exception:
+        logging.error(traceback.format_exc())
+        pass
+
+
+def two_quest_pressed_go(bot, update, user_data: dict):
+    mes = update.message
+    pair_player_id, quest = user_data.get("pair_id"), user_data.get("quest")
+    pair_user_data = dispatcher.user_data.get(pair_player_id)
+    if pair_user_data is None:
+        logging.error("Pair user_data is None for {}".format(mes.from_user.id))
+        return
+
+    try:
+        j = construction_jobs.get(mes.from_user.id)
+        if j is None:
+            j = construction_jobs.get(pair_player_id)
+        j.job.schedule_removal()
+    except Exception:
+        logging.error(traceback.format_exc())
+
+    pressed = pair_user_data.get("quest_pressed")
+    if not pressed:
+        # Нажал первый игрок (ждём второго)
+        user_data.update({"quest_pressed": True})
+        safe_job_create(two_action_timeout, 30, mes.from_user.id, {"ids": [mes.from_user.id, pair_player_id]})
+        bot.send_message(chat_id=mes.from_user.id, text="Принято! Ожидайте соратника.")
+        return
+    # Нажали оба игрока
+    player, pair_player = Player.get_player(mes.from_user.id), Player.get_player(pair_player_id)
+
+    qst = quest_texts[quest]["two_players"][user_data["quest_id"]]
+    first_text = qst.get("first_success")
+    second_text = qst.get("second_success") or first_text
+
+    return_from_quest(player.id, user_data)
+    return_from_quest(pair_player.id, pair_user_data)
+    player.reputation += GO_NOT_SUCCESS_REPUTATION
+    pair_player.reputation += GO_NOT_SUCCESS_REPUTATION
+    player.update()
+    pair_player.update()
+    buttons = get_general_buttons(user_data, player)
+
+    bot.send_message(chat_id=player.id, text=first_text + "\nПолучено {}🔘".format(GO_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
+    bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, quest, 1, now, json.dumps({"result": "two_players_success",
+                                                                   "pair_player_id": pair_player_id})))
+    cursor.execute(request, (pair_player_id, quest, 1, now, json.dumps({"result": "two_players_success",
+                                                                        "pair_player_id": player.id})))
+
+
+# Таймаут подбора второго игрока
+def player_awaiting_timeout(bot, cur_job):
+    quest, player_id = cur_job.context.get("quest"), cur_job.context.get("player_id")
+    player = Player.get_player(player_id)
+    user_data = dispatcher.user_data.get(player_id)
+
+    status = user_data.get("status")
+    if status != "waiting_second_player_for_quest":
+        return
+
+    return_from_quest(player_id, user_data)
+    buttons = get_general_buttons(user_data, player)
+    player.reputation += GO_NOT_SUCCESS_REPUTATION
+    player.update()
+    bot.send_message(chat_id=player_id, text=random.choice(quest_texts[quest]["one_player"]) +
+                                             "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION), reply_markup=buttons)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, quest, 1, now, json.dumps({"result": "one_player_success"})))
+
+
+def two_action_timeout(bot, cur_job):
+    player_id, pair_player_id = cur_job.context.get("ids")
+    player, pair_player = Player.get_player(player_id), Player.get_player(pair_player_id)
+    user_data, pair_user_data = dispatcher.user_data.get(player_id), dispatcher.user_data.get(pair_player_id)
+
+    status, quest = user_data.get("status"), user_data.get("quest")
+    if status != "two_quest":
+        return
+
+    qst = quest_texts[quest]["two_players"][user_data["quest_id"]]
+    first_text = qst.get("first_fail")
+    second_text = qst.get("second_fail") or first_text
+
+    return_from_quest(player_id, user_data)
+    return_from_quest(pair_player_id, pair_user_data)
+    player.reputation += GO_NOT_SUCCESS_REPUTATION
+    pair_player.reputation += GO_NOT_SUCCESS_REPUTATION
+    player.update()
+    pair_player.update()
+    buttons = get_general_buttons(user_data, player)
+
+    bot.send_message(chat_id=player_id, text=first_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
+    bot.send_message(chat_id=pair_player_id, text=second_text + "\nПолучено {}🔘".format(GO_NOT_SUCCESS_REPUTATION),
+                     reply_markup=buttons)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, quest, 2, now, json.dumps({"result": "two_players_fail",
+                                                                   "pair_player_id": pair_player_id})))
+    cursor.execute(request, (pair_player_id, quest, 2, now, json.dumps({"result": "two_players_fail",
+                                                                        "pair_player_id": player.id})))
+
+
+statuses_to_callbacks = {"sawmill": resource_return, "quarry": resource_return, "construction": construction_return,
+                         "exploration": two_go_action, "pit": two_go_action, "two_quest": two_action_timeout,
+                         "waiting_second_player_for_quest": player_awaiting_timeout}
+
+
+def add_cw_quest_result(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    parse = re.findall("Получено: (.+) \\((\\d+)\\)", mes.text)
+    drop = player.tea_party_info.get("cw_quests_drop")
+    if drop is None:
+        drop = {}
+        player.tea_party_info.update({"cw_quests_drop": drop})
+
+    forward_message_date: datetime.datetime = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(
+        tzinfo=None)
+    if forward_message_date.timestamp() in drop:
+        bot.send_message(chat_id=mes.chat_id, text="Данный квест уже учтён.")
+        return
+    exp = re.search("Получено: (\\d+) опыта", mes.text)
+    exp = int(exp.group(1)) if exp is not None else 0
+    gold = re.search("and (\\d+) золотых монет", mes.text)
+    gold = int(gold.group(1)) if gold is not None else 0
+    new_quest = {"exp": exp, "gold": gold}
+    for name, count in parse:
+        code = get_item_code_by_name(name)
+        new_quest.update({code: count})
+    drop.update({forward_message_date.timestamp(): new_quest})
+    player.update()
+    bot.send_message(chat_id=mes.from_user.id, text="Квест учтён.")
 
 
 def load_construction_jobs():
+    global quest_players
     try:
         f = open('castle_files/backup/construction_jobs', 'rb')
         up = pickle.load(f)
@@ -271,22 +487,33 @@ def load_construction_jobs():
             now = time.time()
             remaining_time = v[1] - now
             print("remaining", remaining_time)
+            callback = statuses_to_callbacks.get(v[0])
+            if callback is None:
+                logging.warning("Callback is None for status {}".format(v[0]))
+                continue
+            if v[2] is None:
+                context = [k, dispatcher.user_data.get(k)]
+            else:
+                context = v[2]
             if remaining_time < 0:
                 try:
-                    job.run_once(statuses_to_callbacks.get(v[0]), 0.1, context=[k, dispatcher.user_data.get(k)])
+                    job.run_once(callback, 0.1, context=context)
                 except Exception:
-                    # logging.error(traceback.format_exc())
+                    logging.error(traceback.format_exc())
                     pass
                 continue
             try:
-                construction_jobs.update({k: MyJob(job.run_once(statuses_to_callbacks.get(v[0]), remaining_time,
-                                                                context=[k, dispatcher.user_data.get(k)]),
+                construction_jobs.update({k: MyJob(job.run_once(callback, remaining_time,
+                                                                context=context),
                                                    remaining_time)})
             except Exception:
                 logging.error(traceback.format_exc())
         f.close()
+        f = open('castle_files/backup/quest_players', 'rb')
+        with quest_lock:
+            quest_players = pickle.load(f)
     except FileNotFoundError:
-        return
+        pass
     except Exception:
         logging.error(traceback.format_exc())
 

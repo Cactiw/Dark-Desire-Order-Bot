@@ -24,13 +24,15 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
-    filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat
+    filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat, filter_roulette, \
+    filter_request_roulette_bet, filter_place_roulette_bet
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category, \
     filter_guides
-from castle_files.work_materials.filters.construction_filters import filter_sawmill, filter_quarry, filter_treasury, \
-    filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct
+from castle_files.work_materials.filters.quest_filters import filter_sawmill, filter_quarry, filter_treasury, \
+    filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct, \
+    filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
     filter_restrict_feedback, filter_unrestrict_feedback
@@ -62,18 +64,20 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
-    plan_daily_tasks, guild_top_battles, show_worldtop
+    guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
-    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum
+    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, roulette_main, request_roulette_bet, \
+    place_roulette_bet
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category, guides
 from castle_files.bin.quests import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction,\
-    begin_construction, construct, construction_plate
+    begin_construction, construct, construction_plate, tea_party_quest, tea_party, two_quest_pressed_go, \
+    add_cw_quest_result
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -85,6 +89,7 @@ from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
 from castle_files.bin.reports import add_report, battle_stats, battle_equip, battle_drop
+from castle_files.bin.tasks import plan_daily_tasks
 
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
@@ -367,6 +372,20 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_king_cabinet_construction, king_cabinet_construction))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_begin_construction, begin_construction))
+
+    # Хендлеры на квесты
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_tea_party, tea_party, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_tea_party_quest, tea_party_quest, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_two_go_quest, two_quest_pressed_go, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_cw_quest_result, add_cw_quest_result))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_roulette, roulette_main, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_request_roulette_bet, request_roulette_bet,
+                                          pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_place_roulette_bet, place_roulette_bet,
+                                          pass_user_data=True))
 
     # Продолжаются хендлеры замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_request_bot_guild_message_notify,

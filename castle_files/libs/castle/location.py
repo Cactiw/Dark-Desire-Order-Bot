@@ -247,9 +247,15 @@ hall_of_fame.create_location_in_database()
 tea_party = Location(9, "🍥Чайная Лига", "Чайная лига. Здесь ты сможешь узнать новости замка, получить работенку, "
                         "заработать деньжат и , вероятно, заслужить славу и уважение.",
                      need_clicks_to_construct=15000, state=False, building_process=-1,
-                     need_res_to_construct={"wood": 30000, "stone": 30000}
+                     need_res_to_construct={"wood": 60000, "stone": 60000}
                      )
 tea_party.create_location_in_database()
+
+roulette = Location(10, "🎰Рулетка", "Рулетка. Здесь ты можешь посоревноваться в удаче с другими игроками.\n"
+                    "Игры проходят каждые полчаса с 9 до 21 часа по МСК.\n\nНа ближайшую игру поставлено "
+                    "<b>{}</b> 🔘жетонов.",
+                    special_info={"enter_text_format_values": [0], "placed": {}, "total_placed": 0, "won": {}})
+roulette.create_location_in_database()
 
 
 # ТОВАРИЩ! СОЗДАЛ ЛОКАЦИЮ -- ВНЕСИ В СЛОВАРИ НИЖЕ!
@@ -266,6 +272,7 @@ status_to_location = {
     "construction_plate": 7,
     "hall_of_fame": 8,
     "tea_party": 9,
+    "roulette": 10,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -280,5 +287,6 @@ locations = {
     6: throne_room.treasury,
     7: construction_plate,
     8: hall_of_fame,
-    9: tea_party
+    9: tea_party,
+    10: roulette,
 }

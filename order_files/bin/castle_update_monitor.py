@@ -5,7 +5,7 @@
 from globals import update_request_queue
 from order_files.bin.order import recashe_order_chats
 from order_files.work_materials.globals import conn
-from castle_files.bin.castle import fill_mid_players
+from castle_files.bin.mid import fill_mid_players
 
 
 # Сам монитор, работает до получения None из очереди update_request_queue

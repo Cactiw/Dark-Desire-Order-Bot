@@ -4,7 +4,8 @@
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons
 from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
-from castle_files.bin.mid import do_mailing
+from castle_files.bin.mid import do_mailing, fill_mid_players
+from castle_files.bin.quests import return_from_quest
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -12,7 +13,7 @@ from castle_files.libs.guild import Guild
 from castle_files.work_materials.statuses_const import statuses
 
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
-    classes_to_emoji
+    classes_to_emoji, CENTRAL_SQUARE_CHAT_ID, job, moscow_tz
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
@@ -21,6 +22,9 @@ from telegram.error import BadRequest, TelegramError
 import re
 import logging
 import traceback
+import random
+import time
+import datetime
 
 TOP_NUM_PLAYERS = 20
 
@@ -78,6 +82,13 @@ def back(bot, update, user_data):
         "manuscript": "technical_tower",
         "guides": "manuscript",
 
+        "tea_party": "central_square",
+        "exploration": "tea_party",
+        "pit": "tea_party",
+
+        "roulette": "tea_party",
+        "awaiting_roulette_bet": "roulette",
+
     }
 
     statuses_rp_off = {
@@ -92,7 +103,10 @@ def back(bot, update, user_data):
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
-    if status in ["sawmill", "quarry", "construction"]:
+    if status in ["sawmill", "quarry", "construction", "exploration", "pit", "waiting_second_player_for_quest",
+                  "two_quest"]:
+        if "quest_name" in user_data:
+            return_from_quest(update.message.from_user.id, user_data)
         bot.send_message(chat_id=update.message.from_user.id, text="Операция отменена.")
     rp_off = user_data.get("rp_off") or False
     new_status = None
@@ -160,17 +174,6 @@ def castle_gates(bot, update, user_data):
         response += "\nКак страж, ты имеешь возможность заступить на вахту\n"
     reply_markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=reply_markup)
-
-
-# Заполнение списка мида, запускать при старте бота и при обновлении состава
-def fill_mid_players(other_process=False):
-    high_access_list.clear()
-    throne = Location.get_location(2)
-    if other_process:
-        throne.load_location(other_process=True)
-    mid_players = throne.special_info.get("mid_players")
-    for player_id in mid_players:
-        high_access_list.append(player_id)
 
 
 # Посмотреть состав мида
@@ -435,6 +438,131 @@ def status_shop(bot, update):
         return
     for status, price in list(statuses.items()):
         pass
+
+
+def roulette_main(bot, update, user_data):
+    user_data.update({"status": "roulette", "location_id": 10})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def request_roulette_bet(bot, update, user_data):
+    mes = update.message
+    user_data.update({"status": "awaiting_roulette_bet"})
+    roulette = Location.get_location(10)
+    placed = roulette.special_info["placed"].get(str(mes.from_user.id))
+    if placed is None:
+        placed = 0
+    buttons = get_general_buttons(user_data)
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Введите количество 🔘жетонов для ставки:\nМинимальная ставка: 10🔘\n\n"
+                          "Ваша ставка: <b>{}</b>🔘.\n"
+                          "Доступно: <b>{}</b>🔘.\n\n<em>Обратите внимание, отменить ставку невозможно.</em>"
+                          "".format(placed, player.reputation),
+                     reply_markup=buttons, parse_mode='HTML')
+
+
+def place_roulette_bet(bot, update, user_data):
+    mes = update.message
+    bet = re.search("(\\d+)", mes.text)
+    if bet is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис. Пожалуйста, пришлите в ответ целое число "
+                                                   "не меньше 10")
+        return
+    bet = int(bet.group(1))
+    if bet < 10:
+        bot.send_message(chat_id=mes.chat_id, text="Минимальная ставка: 10🔘.")
+        return
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    if bet > player.reputation:
+        bot.send_message(chat_id=mes.chat_id, text="У вас не хватает 🔘жетонов!")
+        return
+    player.reputation -= bet
+    player.update()
+    roulette = Location.get_location(10)
+    if roulette.special_info.get("game_running"):
+        bot.send_message(chat_id=mes.chat_id, text="Игра началась. Ставки закрыты!")
+        return
+    placed = roulette.special_info["placed"].get(str(mes.from_user.id))
+    if placed is None:
+        placed = 0
+    placed += bet
+    roulette.special_info["placed"].update({str(mes.from_user.id): placed})
+    total_placed = roulette.special_info["total_placed"]
+    if total_placed is None:
+        total_placed = 0
+    total_placed += bet
+    roulette.special_info["total_placed"] = total_placed
+    roulette.special_info["enter_text_format_values"] = [total_placed]  # Если изменится вид сообщения, поменять
+    roulette.update_location_to_database()
+    user_data.update({"status": "roulette"})
+    buttons = get_general_buttons(user_data, player=player)
+    bot.send_message(chat_id=mes.from_user.id, text="Ставка успешно сделана. Удачи на игре!", reply_markup=buttons)
+
+
+def roulette_game(bot, job):
+    # CENTRAL_SQUARE_CHAT_ID = -1001346136061  # тест
+    response = "🎰РУЛЕТКА🎰\n\n"
+    roulette = Location.get_location(10)
+    total_placed = roulette.special_info["total_placed"] or 0
+    print(total_placed, roulette.special_info["placed"])
+    if total_placed == 0:
+        bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response + "Никто не сделал ставок. Игра не состоялась.")
+        return
+    players, position = {}, 1
+    for player_id, placed in list(roulette.special_info["placed"].items()):
+        players.update({int(player_id): range(position, position + placed)})
+        position += placed
+    response += "Игра начинается!"
+    mes = bot.sync_send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response)
+    intervals = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01]
+    progress = ["\\_", "|", "/_", "-"]
+    i = 0
+    r, player = None, None
+    for interval in intervals:
+        r = random.randint(1, position)
+        for player_id, rng in list(players.items()):
+            if r in rng:
+                player = Player.get_player(player_id)
+                response = "🎰РУЛЕТКА🎰\nРозыгрыш {}🔘\n\nБилет №{} (<b>{}</b>)\n\nИдёт игра {}" \
+                           "".format(total_placed, r, player.nickname, progress[i])
+                i += 1
+                if i % 4 == 0:
+                    i = 0
+                break
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+        time.sleep(interval)
+    player.reputation += total_placed
+    player.update()
+    response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
+               "<b>{}</b>🔘!\nПоздравляем!".format(r, player.nickname, player.username, total_placed)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+
+    roulette.special_info.update({"enter_text_format_values": [0], "placed": {}, "total_placed": 0})
+    won = roulette.special_info.get("won")
+    player_won = won.get(str(player.id)) or 0
+    roulette.special_info["won"].update({str(player.id): player_won + total_placed})
+    roulette.update_location_to_database()
+    time.sleep(1)
+    plan_roulette_games()
+
+
+def plan_roulette_games():
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    roulette_time = now.replace(hour=9, minute=0, second=0)
+    limit_time = now.replace(hour=21, minute=0, second=0)
+    while roulette_time < now and roulette_time <= limit_time:
+        roulette_time += datetime.timedelta(hours=3)
+    if roulette_time > limit_time:
+        roulette_time = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(hour=9))
+    job.run_once(roulette_game, when=roulette_time)
+    # print(roulette_time)
+
+    # job.run_once(roulette_game, 60)  # тест
 
 
 def count_reputation_sum(bot, update):
