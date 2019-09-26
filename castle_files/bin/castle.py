@@ -559,7 +559,9 @@ def plan_roulette_games():
         roulette_time += datetime.timedelta(hours=3)
     if roulette_time > limit_time:
         roulette_time = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(hour=9))
-    job.run_once(roulette_game, when=roulette_time)
+    tea_party = Location.get_location(9)
+    if tea_party.is_constructed():
+        job.run_once(roulette_game, when=roulette_time)
     # print(roulette_time)
 
     # job.run_once(roulette_game, 60)  # тест
