@@ -395,10 +395,11 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             ]
         ]
     elif status == 'tea_party':
-        buttons = [[
-            KeyboardButton("Разведка"),
-            KeyboardButton("Рыть котлован"),
-            ],
+        buttons = [
+            # [
+            # KeyboardButton("Разведка"),
+            # KeyboardButton("Рыть котлован"),
+            # ],
             [
                 KeyboardButton("Рулетка"),
             ],
