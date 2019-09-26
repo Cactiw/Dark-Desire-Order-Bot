@@ -379,7 +379,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_two_go_quest, two_quest_pressed_go, pass_user_data=True))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_cw_quest_result, add_cw_quest_result))
+    # dispatcher.add_handler(MessageHandler(Filters.text & filter_cw_quest_result, add_cw_quest_result))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_roulette, roulette_main, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_request_roulette_bet, request_roulette_bet,

@@ -59,6 +59,31 @@ texts_translate = {
     "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n\n"
         "На лобном месте, левее фонтана, прибит пергамент с важной новостью:": "You stand in the middle of the ⛲️Central square of the Rock of the Dark Desire.\n\n"    
         "On the frontal place, to the left of the fountain, the parchment with important news is nailed:",
+    "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
+                          "Холодный ветер пробирает до костей и на площади немноголюдно.\nЗИМА БЛИЗКО!\n\n"
+                          "На лобном месте, левее фонтана, прибит пергамент с важной новостью:":
+        "You stand in the middle of the ⛲️Central square of the Rock of the Dark Desire.\n"
+        "The cold wind chills to the bone and the square is not crowded.\nWINTER IS COMING!\n\n"
+        "On the frontal place, to the left of the fountain, the parchment with important news is nailed:",
+    "Заверенно подписью и печатью Короля.\n\n"
+    "По правую руку во всю работает команда землемеров, строительная площадка работает в 3 смены.":
+        "Signed and sealed by the King."
+        "On the right hand in all the team of surveyors works, the construction site works in 3 shifts.",
+
+    "Именем Короля!\nПостановляю:\n1\\) Начать организованную подготовку и сбор запасов на холодный сезон.\n"
+    "2\\) Возвести единый штаб для найма и вознаграждение самых усердных работников.":
+        "IN THE NAME OF THE KING!\nDecide:\n"
+        "1) Start organized preparation and collection of stocks for the cold season.\n"
+        "2) Erect a single headquarters for hiring and rewarding the most diligent workers.",
+
+    "Именем Короля!\nПостановляю:\n1\\) Начать организованную подготовку и сбор запасов на холодный сезон.\n"
+    "2\\) Собрать по 60 000 камня и древесины, необходимых для возведения единого штаба, "
+    "в коем будет проходить найм и вознаграждение самых усердных работников.":
+        "IN THE NAME OF THE KING!\nDecide:\n"
+        "1) Start organized preparation and collection of stocks for the cold season.\n"
+        "2) Collect 60,000 stone and timber each, necessary for the erection of a single headquarters, "
+        "in which the most diligent workers will be hired and rewarded.",
+
     "Текущее состояние казны:": "The current state of the Treasury:",
     "Чат центральной площади": "⛲️Central square chat",
     "🏷Выдача ресурсов": "🏷Resource withdraw",
