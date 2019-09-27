@@ -141,6 +141,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                            "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
+    if '⚔️🖤\n🛡🖤' in response:
+        response = response.replace("⚔️🖤\n🛡🖤", "🛡ФУЛЛ ДЕФ!🛡\n🛡ВСЕ В ЗАЩИТУ!🛡")
     buttons = get_order_buttons(castle_target, defense)
     orders_sent = 0
     if divisions == 'ALL':
