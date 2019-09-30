@@ -489,7 +489,7 @@ def load_construction_jobs():
             print("remaining", remaining_time)
             callback = statuses_to_callbacks.get(v[0])
             if callback is None:
-                logging.warning("Callback is None for status {}".format(v[0]))
+                logging.error("Callback is None for status {}".format(v[0]))
                 continue
             if v[2] is None:
                 context = [k, dispatcher.user_data.get(k)]
