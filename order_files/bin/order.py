@@ -135,8 +135,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     for i, p in enumerate(potions):
         if p:
             pot_str += potions_to_order[i]
-    response = "{3}⚔️{0}\n{1}{2}\n\n{4}" \
-               "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
+    response = "{3}⚔:{0}\n{1}{2}\n\n{4}" \
+               "\n".format(castle_target, "🛡:{}\n".format(castle_target if defense == "Attack!"
                                                          else defense) if defense is not None else "",
                            "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
