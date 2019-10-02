@@ -1,8 +1,12 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+#
+# castles_unicode = {'🍁': '\uD83C\uDF41', '☘': '\u2618\uFE0F', '🖤': '\uD83D\uDDA4', '🐢': '\uD83D\uDC22',
+#                    '🦇': '\uD83E\uDD87', '🌹': '\uD83C\uDF39', '🍆': '\uD83C\uDF46',
+#                    '\uD83D\uDDA4Деф!🛡': '\uD83D\uDDA4'}
 
-castles_unicode = {'🍁': '\uD83C\uDF41', '☘': '\u2618\uFE0F', '🖤': '\uD83D\uDDA4', '🐢': '\uD83D\uDC22',
-                   '🦇': '\uD83E\uDD87', '🌹': '\uD83C\uDF39', '🍆': '\uD83C\uDF46',
-                   '\uD83D\uDDA4Деф!🛡': '\uD83D\uDDA4'}
+castles_unicode = {'🍁': '🍁', '☘': '☘', '🖤': '🖤', '🐢': '🐢',
+                   '🦇': '🦇', '🌹': '🌹', '🍆': '🍆',
+                   '\uD83D\uDDA4Деф!🛡': '🖤'}
 
 
 def get_order_buttons(attack, defense):
@@ -25,4 +29,4 @@ def get_order_buttons(attack, defense):
     buttons.append([
         InlineKeyboardButton(url="t.me/ChatWarsBot", text="ChatWars")
     ])
-    return InlineKeyboardMarkup(buttons)
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

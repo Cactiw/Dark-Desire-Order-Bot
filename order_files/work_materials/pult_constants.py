@@ -2,7 +2,7 @@ import datetime
 
 divisions = ['Запад', 'Центр', 'Восток', 'Все атакеры', 'Луки', 'ВСЕ']
 
-castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '\uD83D\uDDA4Деф!🛡']
+castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤Деф!🛡']
 
 times = ["⚠️", "58", "59", "30", "40", "45"]
 times_to_time = [None, datetime.timedelta(minutes=2), datetime.timedelta(minutes=1),
@@ -14,7 +14,7 @@ tactics_order_to_emoji = {"/tactics_tortuga": "🐢", "/tactics_rassvet": "🌹"
                           "/tactics_amber": "🍁", "/tactics_random": "❓", "": ""}
 
 defense = ["Деф дома 🖤", "В атаку!", ""]
-defense_to_order = ["\uD83D\uDDA4Деф!🛡", "Attack!", None]
+defense_to_order = ["🖤Деф!🛡", "Attack!", None]
 
 potions = ["⚗️ Атака", "⚗️ Деф"]
 potions_to_order = ["Пьем ⚔️АТК ⚗️зелья\nVial of Rage: <a href=\"https://t.me/share/url?url=/use_p01\">/use_p01</a>\n"

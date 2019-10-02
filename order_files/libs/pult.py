@@ -3,7 +3,7 @@ from order_files.work_materials.pult_constants import castles as castles_const, 
     potions as potions_const
 from order_files.work_materials.globals import deferred_orders, moscow_tz, local_tz
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 class Pult:
@@ -115,7 +115,7 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
     ]
     if deferred_time is not None or variant is not None:
         __pult_buttons.pop(5)
-    PultMarkup = InlineKeyboardMarkup(__pult_buttons)
+    PultMarkup = InlineKeyboardMarkup(inline_keyboard=__pult_buttons)
     return PultMarkup
 
 

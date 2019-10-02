@@ -1,21 +1,27 @@
 import logging, time
-from telegram import KeyboardButton, ReplyKeyboardMarkup
 
-from order_files.work_materials.globals import cursor, order_chats, deferred_orders, job, moscow_tz, CALLBACK_CHAT_ID, \
+from order_files.work_materials.globals import cursor, order_chats, deferred_orders, moscow_tz, CALLBACK_CHAT_ID, \
     local_tz, conn, admin_ids, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.work_materials.pult_constants import divisions as division_const, castles, defense_to_order, \
     potions_to_order
-from order_files.libs.bot_async_messaging import order_backup_queue
 from order_files.libs.pult import Pult
 from order_files.libs.bot_async_messaging import advanced_callback
 from order_files.bin.buttons import get_order_buttons
+from order_files.libs.order import OrderBackup
 
 import order_bot
+
+from aiogram import exceptions, types
 
 import order_files.work_materials.globals as globals
 import datetime
 import threading
+import traceback
+import asyncio
+
+
+order_backup_queue = asyncio.Queue()
 
 
 def build_menu(buttons,
@@ -42,20 +48,6 @@ def after_battle(bot, job):
             0, len(order_bot.logs), MAX_MESSAGE_LENGTH)]:
         bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
     order_bot.logs = ""
-
-
-def menu(bot, update):
-    button_list = [
-    KeyboardButton("/⚔ 🍁"),
-    KeyboardButton("/⚔ ☘"),
-    KeyboardButton("/⚔ 🖤"),
-    KeyboardButton("/⚔ 🐢"),
-    KeyboardButton("/⚔ 🦇"),
-    KeyboardButton("/⚔ 🌹"),
-    KeyboardButton("/⚔ 🍆"),
-    ]
-    reply_markup = ReplyKeyboardMarkup(build_menu(button_list, n_cols=3))
-    bot.send_message(chat_id=update.message.chat_id, text = 'Select castle', reply_markup=reply_markup)
 
 
 def attackCommand(bot, update):
@@ -128,7 +120,7 @@ def wait_debug(bot, orders_count):
     bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
 
 
-def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
+async def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
     pot_str = ""
@@ -147,8 +139,10 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
-            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
-                           notification=not chat[2], reply_markup=buttons)
+            # bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+            #                notification=not chat[2], reply_markup=buttons)
+            asyncio.ensure_future(bot_send_order(bot, order_id=globals.order_id, chat_id=chat[0], response=response,
+                                                 pin_enabled=chat[1], notification=not chat[2], reply_markup=buttons))
             orders_sent += 1
     else:
         current_divisions = []
@@ -164,12 +158,12 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                 bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
                                notification=not chat[2], reply_markup=buttons)
                 orders_sent += 1
-    threading.Thread(target=wait_debug, args=(bot, orders_sent)).start()
+    # threading.Thread(target=wait_debug, args=(bot, orders_sent)).start()
     response = ""
     orders_OK = 0
     orders_failed = 0
     while orders_OK + orders_failed < orders_sent:
-        current = order_backup_queue.get()
+        current = await order_backup_queue.get()
         if current.order_id == globals.order_id:
             if current.OK:
                 orders_OK += 1
@@ -177,7 +171,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                 orders_failed += 1
                 response += current.text
         else:
-            order_backup_queue.put(current)
+            await order_backup_queue.put(current)
             logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, globals.order_id))
 
     globals.order_id += 1
@@ -186,22 +180,51 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
             "ошибка при отправке в <b>{2}</b> чатов, " \
             "рассылка заняла <b>{3}</b>\n\n".format(datetime.datetime.now(tz=moscow_tz), orders_OK, orders_failed, time_delta) + response
-    bot.send_message(chat_id = chat_callback_id, text=stats, parse_mode='HTML')
+    await bot.send_message(chat_id=chat_callback_id, text=stats, parse_mode='HTML')
+
+
+async def bot_send_order(bot, order_id, chat_id, response, pin_enabled, notification, reply_markup):
+    callback = ""
+    try:
+        message = await bot.send_message(chat_id=chat_id, text=response, reply_markup=reply_markup, parse_mode='HTML')
+    except Exception:
+        logging.error(traceback.format_exc())
+    except exceptions.TimeoutWarning:
+        logging.error("Order timeout")
+    except exceptions.Unauthorized:
+        callback += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
+    except exceptions.BadRequest:
+        callback += "Невозможно отправить сообщение в чат {0}, проверьте корректность chat id\n".format(chat_id)
+    except Exception:
+        callback += "Неизвестная ошибка в чате {}".format(chat_id)
+        logging.error(traceback.format_exc())
+    else:
+        if pin_enabled:
+            try:
+                await bot.pin_chat_message(chat_id=chat_id, message_id=message.message_id,
+                                           disable_notification=not notification)
+            except (exceptions.Unauthorized, exceptions.BadRequest):
+                callback += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
+    OK = callback == ""
+    order_backup = OrderBackup(order_id=order_id, OK=OK, text=callback)
+    await order_backup_queue.put(order_backup)
 
 
 # Начало отправки отложки
-def send_order_job(bot, job):
-    chat_callback_id = job.context[0]
-    castle_target = job.context[1]
-    defense = job.context[2]
-    tactics = job.context[3]
+async def send_order_job(bot, context):
+    print("Sending deferred")
+    chat_callback_id = context[0]
+    castle_target = context[1]
+    defense = context[2]
+    tactics = context[3]
     print(tactics)
-    divisions = job.context[4]
+    divisions = context[4]
     if divisions[len(divisions) - 1]:
         divisions = "ALL"
-    potions = job.context[5]
-    deferred_id = job.context[6]
-    send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions)
+    potions = context[5]
+    deferred_id = context[6]
+    print(divisions)
+    await send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions)
     for i, order in enumerate(deferred_orders):
         if order.deferred_id == deferred_id:
             order.delete()
