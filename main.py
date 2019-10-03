@@ -28,7 +28,7 @@ if len(sys.argv) > 1:
             logging.info("Starting telethon auth")
             script_work()  # Для авторизации на новой машине
 
-
+# order_bot_processing()
 processes = []
 order_bot_process = multiprocessing.Process(target=order_bot_processing)
 order_bot_process.start()

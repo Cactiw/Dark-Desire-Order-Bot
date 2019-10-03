@@ -242,7 +242,8 @@ class Guild:
             logging.error(traceback.format_exc())
             return -1
         if need_order_recashe:
-            update_request_queue.put(["update_guild", self.id])
+            pass
+            # update_request_queue.put(["update_guild", self.id])
         cursor.close()
         return 0
 

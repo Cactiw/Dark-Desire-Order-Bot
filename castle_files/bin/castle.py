@@ -288,7 +288,7 @@ def adding_general(bot, update, user_data):
     fill_mid_players()
     bot.send_message(chat_id=update.message.from_user.id, text="@{} теперь генерал!".format(player.username))
     user_data.update({"status": "king_cabinet"})
-    update_request_queue.put(["update_mid"])
+    # update_request_queue.put(["update_mid"])
 
 
 def remove_general(bot, update):
@@ -310,7 +310,7 @@ def remove_general(bot, update):
     fill_mid_players()
     bot.send_message(chat_id=update.message.from_user.id,
                      text="@{} сослан в тортугу и больше не генерал".format(player.username))
-    update_request_queue.put(["update_mid"])
+    # update_request_queue.put(["update_mid"])
 
 
 def hall_of_fame(bot, update, user_data):
