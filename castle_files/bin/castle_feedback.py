@@ -7,7 +7,7 @@ from castle_files.bin.buttons import get_general_buttons
 from castle_files.bin.castle import back
 from castle_files.libs.castle.location import Location
 
-from order_files.bin.pult_callback import count_next_battle_time
+from bin.service_functions import count_next_battle_time
 
 import datetime
 import re

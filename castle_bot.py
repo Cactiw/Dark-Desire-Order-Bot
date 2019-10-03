@@ -109,6 +109,16 @@ import castle_files.work_materials.globals as file_globals
 
 import threading
 import multiprocessing
+import logging
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+
+log_file = logging.FileHandler(filename='castle_error.log', mode='a')
+log_file.setLevel(logging.ERROR)
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO, handlers=[log_file, console])
 
 
 def start(bot, update, user_data):
@@ -555,3 +565,7 @@ def castle_bot_processing():
     save_user_data.join()
     conn.close()
     exit(0)
+
+
+if __name__ == "__main__":
+    castle_bot_processing()

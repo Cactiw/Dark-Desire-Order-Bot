@@ -3,7 +3,6 @@
 """
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
-from order_files.bin.pult_callback import count_next_battle_time
 
 from castle_files.bin.guild_chats import rangers_notify_start
 from castle_files.bin.api import grassroots_update_players, grassroots_update_stock, send_potion_stats, \
@@ -11,6 +10,8 @@ from castle_files.bin.api import grassroots_update_players, grassroots_update_st
 
 from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID, \
     high_access_list
+
+from bin.service_functions import count_next_battle_time
 
 from telegram.error import TelegramError
 
