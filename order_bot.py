@@ -1,3 +1,5 @@
+#! /usr/bin/env python3.7
+# coding=utf-8
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 
