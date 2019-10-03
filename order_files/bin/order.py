@@ -24,6 +24,11 @@ import asyncio
 order_backup_queue = asyncio.Queue()
 
 
+MAX_ORDERS_PER_SECOND = 25
+orders_count = 0
+orders_cond = asyncio.Condition()
+
+
 def build_menu(buttons,
                n_cols,
                header_buttons=None,
@@ -133,16 +138,18 @@ async def send_order(bot, chat_callback_id, divisions, castle_target, defense, t
                            "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
-    if '⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡' in response:
-        response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🛡ФУЛЛ ДЕФ!🛡\n🛡ВСЕ В ЗАЩИТУ!🛡")
+    if '⚔:🖤Деф!🛡\n🛡:🖤Деф!🛡' in response:
+        pass
+        # response = response.replace("⚔:🖤Деф!🛡\n🛡:🖤Деф!🛡", "🛡ФУЛЛ ДЕФ!🛡\n🛡ВСЕ В ЗАЩИТУ!🛡")
     buttons = get_order_buttons(castle_target, defense)
     orders_sent = 0
     if divisions == 'ALL':
-        for chat in order_chats:
+        for i, chat in enumerate(order_chats):
             # bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
             #                notification=not chat[2], reply_markup=buttons)
             asyncio.ensure_future(bot_send_order(bot, order_id=globals.order_id, chat_id=chat[0], response=response,
-                                                 pin_enabled=chat[1], notification=not chat[2], reply_markup=buttons))
+                                                 pin_enabled=chat[1], notification=not chat[2], reply_markup=buttons,
+                                                 num=i))
             orders_sent += 1
     else:
         current_divisions = []
@@ -183,9 +190,16 @@ async def send_order(bot, chat_callback_id, divisions, castle_target, defense, t
     await bot.send_message(chat_id=chat_callback_id, text=stats, parse_mode='HTML')
 
 
-async def bot_send_order(bot, order_id, chat_id, response, pin_enabled, notification, reply_markup):
+async def bot_send_order(bot, order_id, chat_id, response, pin_enabled, notification, reply_markup, num):
+    global orders_count
     callback = ""
+    async with orders_cond:
+        while orders_count >= MAX_ORDERS_PER_SECOND:
+            await orders_cond.wait()
+        orders_count += 1
+    t = time.time()
     try:
+        print("starting {}, {}".format(num, orders_count))
         message = await bot.send_message(chat_id=chat_id, text=response, reply_markup=reply_markup, parse_mode='HTML')
     except Exception:
         logging.error(traceback.format_exc())
@@ -199,15 +213,22 @@ async def bot_send_order(bot, order_id, chat_id, response, pin_enabled, notifica
         callback += "Неизвестная ошибка в чате {}".format(chat_id)
         logging.error(traceback.format_exc())
     else:
+        print("sent message {}, time required:".format(num), time.time() - t)
         if pin_enabled:
             try:
-                await bot.pin_chat_message(chat_id=chat_id, message_id=message.message_id,
-                                           disable_notification=not notification)
+                pass
+                # await bot.pin_chat_message(chat_id=chat_id, message_id=message.message_id,
+                #                            disable_notification=not notification)
             except (exceptions.Unauthorized, exceptions.BadRequest):
                 callback += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
     OK = callback == ""
     order_backup = OrderBackup(order_id=order_id, OK=OK, text=callback)
     await order_backup_queue.put(order_backup)
+    await asyncio.sleep(1)
+    async with orders_cond:
+        orders_count -= 1
+        print("reset..., count =", orders_count)
+        orders_cond.notify(1)
 
 
 # Начало отправки отложки

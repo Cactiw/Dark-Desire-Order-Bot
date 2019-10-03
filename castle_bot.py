@@ -516,7 +516,7 @@ def castle_bot_processing():
     processes.append(unloading_resources)
 
     telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
-    telethon_script.start()
+    # telethon_script.start()  TODO return
     processes.append(telethon_script)
 
     parse_stats_pr = threading.Thread(target=parse_stats, name="Stats Parse")
@@ -524,11 +524,11 @@ def castle_bot_processing():
     processes.append(parse_stats_pr)
 
     api = threading.Thread(target=start_api, args=[])
-    api.start()
+    # api.start()
     processes.append(api)
 
     players_update = threading.Thread(target=players_update_monitor, args=[])
-    players_update.start()
+    # players_update.start()
     processes.append(players_update)
 
     # text = """"""
