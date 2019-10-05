@@ -1,4 +1,4 @@
-from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
     CONNECT_TYPE
@@ -70,8 +70,8 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
-    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, roulette_main, request_roulette_bet, \
-    place_roulette_bet
+    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, status_shop, buy_status, statuses, \
+    roulette_main, request_roulette_bet, place_roulette_bet
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category, guides
@@ -370,6 +370,10 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_my_cabinet, my_cabinet, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_treasury, treasury, pass_user_data=True))
+
+    dispatcher.add_handler(CommandHandler('statuses', statuses))
+    dispatcher.add_handler(CommandHandler('status_shop', status_shop))
+    dispatcher.add_handler(MessageHandler(Filters.regex('buy_status_\\d+'), buy_status))
 
     # Хендлеры для строительства в замке
     dispatcher.add_handler(MessageHandler(Filters.text & filter_sawmill, sawmill, pass_user_data=True))
