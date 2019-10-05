@@ -11,7 +11,7 @@ from order_files.libs.pult import Pult
 from order_files.libs.bot_async_messaging import advanced_callback
 from order_files.bin.buttons import get_order_buttons
 
-import order_bot
+from bin.service_functions import count_next_battle_time
 
 import order_files.work_materials.globals as globals
 import datetime
@@ -28,20 +28,6 @@ def build_menu(buttons,
     if footer_buttons:
         menu.append(footer_buttons)
     return menu
-
-
-def plan_battle_jobs():
-    job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
-
-
-def after_battle(bot, job):
-    time.sleep(1)
-    plan_battle_jobs()
-    Pult.variants.clear()
-    for logs_to_send in [order_bot.logs[i:i + MAX_MESSAGE_LENGTH] for i in range(
-            0, len(order_bot.logs), MAX_MESSAGE_LENGTH)]:
-        bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
-    order_bot.logs = ""
 
 
 def menu(bot, update):
@@ -129,18 +115,23 @@ def wait_debug(bot, orders_count):
 
 
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
+    time_to_battle = count_next_battle_time() - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    if time_to_battle >= datetime.timedelta(seconds=55):
+        recashe_order_chats()
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
     pot_str = ""
     for i, p in enumerate(potions):
         if p:
             pot_str += potions_to_order[i]
-    response = "{3}⚔️{0}\n{1}{2}\n\n{4}" \
-               "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
+    response = "{3}⚔:{0}\n{1}{2}\n\n{4}" \
+               "\n".format(castle_target, "🛡:{}\n".format(castle_target if defense == "Attack!"
                                                          else defense) if defense is not None else "",
                            "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
+    if '⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡' in response:
+        response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🛡ФУЛЛ ДЕФ!🛡\n🛡ВСЕ В ЗАЩИТУ!🛡")
     buttons = get_order_buttons(castle_target, defense)
     orders_sent = 0
     if divisions == 'ALL':
@@ -285,14 +276,4 @@ def refill_deferred_orders():
         row = cursor.fetchone()
     logging.info("Orders refilled")
 
-
-
-def count_next_battle_time():
-    next_battle = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None, hour=1, minute=0, second=0,
-                                                              microsecond=0)
-
-    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
-    while next_battle < now:
-        next_battle += datetime.timedelta(hours=8)
-    return next_battle
 

@@ -2,7 +2,7 @@
 Здесь находится класс Bot с его методами для приказника (и только! - избегать копирования),
 предназначен для наиболее быстрой и стабильной отправки пинов во множество чатов.
 """
-from telegram import Bot
+from telegram import Bot, ReplyMarkup, Message
 from telegram.utils.request import Request
 from telegram.error import (Unauthorized, BadRequest,
                             TimedOut, NetworkError)
@@ -12,6 +12,8 @@ import time
 import logging
 import traceback
 import datetime
+import requests
+import json
 
 from order_files.libs.order import Order, OrderBackup
 from castle_files.bin.service_functions import get_time_remaining_to_battle
@@ -21,6 +23,7 @@ MESSAGE_PER_CHAT_LIMIT = 3
 
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
+TIMEOUT_ERROR_CODE = 5
 
 advanced_callback = multiprocessing.Queue()
 
@@ -48,7 +51,6 @@ class AsyncBot(Bot):
         self._request = Request(**request_kwargs)
         super(AsyncBot, self).__init__(token=token, request=self._request)
         # self.start()
-
 
     """def send_message(self, *args, **kwargs):
         message = MessageInQueue(*args, **kwargs)
@@ -83,19 +85,49 @@ class AsyncBot(Bot):
         body = {"chat_id": chat_id, "time": time.time()}
         self.second_reset_queue.put(body)
         remaining_time = get_time_remaining_to_battle()
+        timeout = 5
         if kwargs.get("timeout_retry"):
             try:
                 kwargs.pop("timeout_retry")
+                kwargs.pop("timeout")
             except Exception:
                 pass
-        elif remaining_time <= datetime.timedelta(seconds=25):
-            kwargs.update({"timeout": 1, "timeout_retry": True})
+        elif remaining_time <= datetime.timedelta(seconds=15):
+            kwargs.update({"timeout": 0.8, "timeout_retry": True})
+            timeout = 0.8
         try:
+            reply_markup = kwargs.get("reply_markup")
+            if isinstance(reply_markup, ReplyMarkup):
+                reply_markup = reply_markup.to_json()
+            parse_mode = kwargs.get("parse_mode")
+            data = {'chat_id': chat_id, 'text': kwargs["text"]}
+            if reply_markup is not None:
+                data.update({'reply_markup': reply_markup})
+            if parse_mode is not None:
+                data.update({'parse_mode': parse_mode})
+            # try:
+            #     resp = requests.post(self.base_url + '/sendMessage', data=json.dumps(data).encode('utf-8'),
+            #                          headers={'Content-Type': 'application/json'}, timeout=timeout)
+            # except Exception:
+            #     raise TimedOut
+            # resp = resp.json()
+            # print(resp)
+            # ok = resp["ok"]
+            # if not ok:
+            #     code, descr = resp["error_code"], resp["description"]
+            #     errors = {400: BadRequest(descr), 403: Unauthorized(descr)}
+            #     error = errors.get(code)
+            #     if error is None:
+            #         logging.error("Unknown error for code {}".format(code))
+            #         raise BadRequest
+            #     raise error
+            # message = Message.de_json(resp["result"], super(AsyncBot, self))
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         except TimedOut:
             logging.error("Order timeout")
             # time.sleep(0.1)
-            message = self.actually_send_message(*args, **kwargs)
+            # message = self.actually_send_message(*args, **kwargs)
+            return TIMEOUT_ERROR_CODE
         except Unauthorized:
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
@@ -106,9 +138,9 @@ class AsyncBot(Bot):
             message = super(AsyncBot, self).send_message(*args, **kwargs)
         return message
 
-    def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None):
+    def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None, kwargs={}):
         order = Order(order_id=order_id, text=response, chat_id=chat_id, pin=pin_enabled, notification=notification,
-                      reply_markup=reply_markup)
+                      reply_markup=reply_markup, kwargs=kwargs)
         self.order_queue.put(order)
 
     def start(self):
@@ -179,18 +211,26 @@ class AsyncBot(Bot):
             chat_id = order_in_queue.chat_id
             text = order_in_queue.text
             reply_markup = order_in_queue.reply_markup
+            kwargs = order_in_queue.kwargs
             # logging.info("worker {}, starting to send".format(num))
             begin = time.time()
             message = self.actually_send_message(chat_id=chat_id, text=text, parse_mode='HTML',
-                                                 reply_markup=reply_markup)
+                                                 reply_markup=reply_markup, **kwargs)
             sent = time.time()
             # logging.info("worker {}, message sent".format(num))
+            send_backup = True
             if message == UNAUTHORIZED_ERROR_CODE:
                 response += "Недостаточно прав для отправки сообщения в чат {0}\n".format(chat_id)
                 pass
             elif message == BADREQUEST_ERROR_CODE:
                 response += "Невозможно отправить сообщение в чат {0}, проверьте корректность chat id\n".format(chat_id)
                 pass
+            elif message == TIMEOUT_ERROR_CODE:
+                self.send_order(order_id=order_in_queue.order_id, chat_id=chat_id, response=text, pin_enabled=pin,
+                                notification=notification, reply_markup=reply_markup, kwargs={"timeout": 1,
+                                                                                              "timeout_retry": True})
+                time.sleep(0.1)
+                send_backup = False
             else:
                 if pin:
                     try:
@@ -202,11 +242,12 @@ class AsyncBot(Bot):
                     except BadRequest:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
-            pin_end = time.time()
-            advanced_callback.put({"chat_id": chat_id, "begin": begin, "sent": sent, "pin_end": pin_end})
-            OK = response == ""
-            order_backup = OrderBackup(order_id=order_in_queue.order_id, OK = OK, text = response)
-            order_backup_queue.put(order_backup)
+            if send_backup:
+                pin_end = time.time()
+                advanced_callback.put({"chat_id": chat_id, "begin": begin, "sent": sent, "pin_end": pin_end})
+                OK = response == ""
+                order_backup = OrderBackup(order_id=order_in_queue.order_id, OK=OK, text=response)
+                order_backup_queue.put(order_backup)
             order_in_queue = self.order_queue.get()
             if order_in_queue is None:
                 return 0

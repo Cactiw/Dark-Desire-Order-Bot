@@ -2,10 +2,12 @@ from telegram.ext import BaseFilter
 from order_files.work_materials.globals import allowed_chats, admin_ids
 from castle_files.bin.service_functions import check_access
 from castle_files.work_materials.globals import MID_CHAT_ID
+from castle_files.bin.mid import fill_mid_players
 
 
 class FilterIsAdmin(BaseFilter):
     def filter(self, message):
+        fill_mid_players(other_process=True)
         return check_access(message.from_user.id)
 
 

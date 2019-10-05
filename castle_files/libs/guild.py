@@ -1,7 +1,7 @@
 """
 Этот модуль содержит класс Гильдия и методы работы с ней, в том числе и с БД.
 """
-from castle_files.work_materials.globals import conn
+from castle_files.work_materials.globals import conn, moscow_tz
 
 from castle_files.libs.player import Player
 from globals import update_request_queue
@@ -10,6 +10,7 @@ import logging
 import traceback
 import time
 import json
+import datetime
 
 MAX_GUILD_HISTORY_LENGTH = 10
 
@@ -25,7 +26,8 @@ class Guild:
     guild_ids = []
 
     def __init__(self, guild_id, tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
-                 orders_enabled, pin_enabled, disable_notification, settings=None, api_info=None, mailing_enabled=True):
+                 orders_enabled, pin_enabled, disable_notification, settings=None, api_info=None, mailing_enabled=True,
+                 last_updated=None):
         self.id = guild_id
         self.tag = tag
         self.name = name
@@ -45,6 +47,7 @@ class Guild:
         self.settings = settings
         self.api_info = api_info if api_info is not None else {}
         self.mailing_enabled = mailing_enabled
+        self.last_updated = last_updated  # Последнее обновление ЧЕРЕЗ АПИ
 
         # Приватные поля, равные общей атаке и дефу гильдии,
         # подсчёт проиводится только при необходимости в соответствующих методах
@@ -178,7 +181,7 @@ class Guild:
         # Гильдии нет в кэше, получение гильдии из базы данных
         request = "select guild_tag, guild_id, guild_name, chat_id, members, commander_id, division, chat_name, " \
                   "invite_link, orders_enabled, pin_enabled, disable_notification, assistants, settings, api_info, " \
-                  "mailing_enabled" \
+                  "mailing_enabled, last_updated" \
                   " from guilds "
         if guild_tag is not None:
             request += "where lower(guild_tag) = %s"
@@ -192,12 +195,13 @@ class Guild:
         if row is None:
             return None
         guild_tag, guild_id, name, chat_id, members, commander_id, division, chat_name, invite_link, orders_enabled, \
-            pin_enabled, disable_notification, assistants, settings, api_info, mailing_enabled = row
+            pin_enabled, disable_notification, assistants, settings, api_info, mailing_enabled, last_updated = row
         if assistants is None:
             assistants = []
         # Инициализация новой гильдии
-        guild = Guild(guild_id, guild_tag, name, members, commander_id, assistants, division, chat_id, chat_name, invite_link,
-                      orders_enabled, pin_enabled, disable_notification, settings, api_info, mailing_enabled)
+        guild = Guild(guild_id, guild_tag, name, members, commander_id, assistants, division, chat_id, chat_name,
+                      invite_link, orders_enabled, pin_enabled, disable_notification, settings, api_info,
+                      mailing_enabled, last_updated)
 
         # Сохранение гильдии в словарь для дальнейшего быстрого доступа
         guilds.update({guild.id: guild})
@@ -227,17 +231,19 @@ class Guild:
         cursor = conn.cursor()
         request = "update guilds set guild_name = %s, members = %s, commander_id = %s, division = %s, chat_id = %s, " \
                   "chat_name = %s, invite_link = %s, orders_enabled = %s, pin_enabled = %s,disable_notification = %s, " \
-                  "assistants = %s, settings = %s, api_info = %s, mailing_enabled = %s where guild_tag = %s"
+                  "assistants = %s, settings = %s, api_info = %s, mailing_enabled = %s, last_updated = %s " \
+                  "where guild_tag = %s"
         try:
             cursor.execute(request, (self.name, self.members, self.commander_id, self.division, self.chat_id,
                                      self.chat_name, self.invite_link, self.orders_enabled, self.pin_enabled,
                                      self.disable_notification, self.assistants, json.dumps(self.settings),
-                                     json.dumps(self.api_info), self.mailing_enabled, self.tag))
+                                     json.dumps(self.api_info), self.mailing_enabled, self.last_updated, self.tag))
         except Exception:
             logging.error(traceback.format_exc())
             return -1
         if need_order_recashe:
-            update_request_queue.put(["update_guild", self.id])
+            pass
+            # update_request_queue.put(["update_guild", self.id])
         cursor.close()
         return 0
 

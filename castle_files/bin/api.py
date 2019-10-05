@@ -106,12 +106,64 @@ def update_guild(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
 
 
+def get_player_with_api_access_from_guild(guild: Guild):
+    # for player_id in guild.members:
+    #     player = Player.get_player(player_id)
+    #     token = player.api_info.get("token")
+    #     if token is not None:
+    #         return player
+    players_with_api_ids = guild.api_info.get('api_players') or []
+    player_id = players_with_api_ids[0] if players_with_api_ids else None
+    return player_id
+
+
+def check_guilds_api_access(bot=None, job=None):
+    if job is None:
+        reset = False
+    else:
+        try:
+            reset = job.context.get("reset") or False
+        except Exception:
+            reset = False
+    cursor = conn.cursor()
+    if reset:
+        logging.info("Clearing data about players with guilds API access")
+        request = "update guilds set api_info = (api_info::jsonb - 'api_players')"
+        cursor.execute(request)
+    logging.info("Checking API access for guilds")
+    request = "select guild_id from guilds where (api_info -> 'api_players') is null"
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    if not rows:
+        logging.info("All guilds have data about players with API access")
+        return
+    for row in rows:
+        guild = Guild.get_guild(guild_id=row[0])
+        search_for_players_with_api_access(guild)
+    logging.info("Information about players with API access requested")
+
+
+def search_for_players_with_api_access(guild: Guild):
+    logging.info("Requesting information about {} players with API access".format(guild.tag))
+    guild.api_info.update({"api_players": []})
+    for player_id in guild.members:
+        player = Player.get_player(player_id)
+        token = player.api_info.get("token")
+        if token is not None:
+            cwapi.update_guild_info(player.id, player)
+    guild.update_to_database(need_order_recashe=False)
+
+
 def players_update_monitor():
     cursor = conn.cursor()
-    time.sleep(5)
+    time.sleep(7)
+
+    check_guilds_api_access()
     logging.info("Started updating profiles")
+    i = 0
     while True:
         try:
+            i += 1
             if not cwapi.active:
                 return 0
             time_to_battle = get_time_remaining_to_battle()
@@ -119,6 +171,26 @@ def players_update_monitor():
                     time_to_battle > datetime.timedelta(minutes=30, hours=7):
                 time.sleep(1)
                 continue
+            if i % 20 == 0:
+                # Обновление гильдии
+                request = "select guild_id from guilds order by last_updated nulls first"
+                cursor.execute(request)
+                rows = cursor.fetchall()
+                guild, player_id = None, None
+                for row in rows:
+                    guild_id = row[0]
+                    guild = Guild.get_guild(guild_id=guild_id)
+                    player_id = get_player_with_api_access_from_guild(guild)
+                    if player_id is not None:
+                        break
+                if guild is None or player_id is None:
+                    logging.error("No guild to update")
+                    continue
+                cwapi.update_guild_info(player_id)
+                guild.api_info.update()
+                logging.debug("Updating {} through CW3 API".format(guild.tag))
+
+
             request = "select id from players where api_info -> 'token' is not null order by last_updated limit 1"
             cursor.execute(request)
             row = cursor.fetchone()
@@ -320,7 +392,9 @@ def stock(bot, update):
     if is_guild and guild is not None:
         stock_size, stock_limit = guild.api_info.get("stock_size"), guild.api_info.get("stock_limit")
         if stock_size is not None and stock_limit is not None:
-            response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>".format(stock_size, stock_limit)
+            response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>\n".format(stock_size, stock_limit)
+        response += "Последнее обновление: <em>{}</em>".format(guild.last_updated.strftime(
+                "%d/%m/%y %H:%M") if guild.last_updated is not None else "Неизвестно")
     elif not is_guild:
         response += "Последнее обновление: <em>{}</em>\n".format(player.api_info.get("stock_update") or "Неизвестно")
     bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
@@ -366,6 +440,26 @@ def grassroots_update_stock(bot, job):
         row = cursor.fetchone()
     bot.send_message(chat_id=SUPER_ADMIN_ID,
                      text="Запрошено обновление {} стоков, установлено {} флагов для отправки"
+                          "".format(count_all, count))
+
+    # Обновление стока гильдий
+    request = "select guild_id from guilds where (api_info -> 'api_players') is not null and " \
+              "json_array_length(api_info -> 'api_players') > 0"
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    count, count_all = 0, 0
+    for row in rows:
+        guild = Guild.get_guild(guild_id=row[0])
+        player_id = guild.api_info.get("api_players")[0]
+        cwapi.update_guild_info(player_id)
+        logging.info("Requested {} update".format(guild.tag))
+        count_all += 1
+        if change_send:
+            guild.api_info.update({"change_stock_send": True})
+            guild.update_to_database(need_order_recashe=False)
+            count += 1
+    bot.send_message(chat_id=SUPER_ADMIN_ID,
+                     text="Запрошено обновление {} гильдий, установлено {} флагов для отправки"
                           "".format(count_all, count))
 
 

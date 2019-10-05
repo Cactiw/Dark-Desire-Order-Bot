@@ -1,3 +1,5 @@
+#! /usr/bin/env python3.7
+# coding=utf-8
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 
@@ -6,8 +8,9 @@ from order_files.work_materials.filters.service_filters import *
 from order_files.work_materials.filters.pult_filters import filter_remove_order, filter_remove_variant
 
 
-from order_files.bin.pult_callback import pult, pult_callback, pult_variants, send_variant, remove_variant
-from order_files.bin.order import attackCommand, menu, remove_order, refill_deferred_orders, plan_battle_jobs
+from order_files.bin.pult_callback import pult, pult_callback, pult_variants, send_variant, remove_variant, \
+    plan_battle_jobs
+from order_files.bin.order import attackCommand, menu, remove_order, refill_deferred_orders
 
 from order_files.bin.guild_chats import add_pin, pin_setup, recashe_order_chats, pindivision, pinmute, pinpin, pinset
 
@@ -20,16 +23,26 @@ from castle_files.bin.castle import fill_mid_players
 
 from globals import update_request_queue
 
+import order_files.work_materials.globals as globals
+
 import threading
 import time
+import logging
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+
+log_file = logging.FileHandler(filename='order_error.log', mode='a')
+log_file.setLevel(logging.ERROR)
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO, handlers=[log_file, console])
 
 
 # ------------------------------------------------------------------------------------------------------
-logs = ""
-
 
 def send_logs(bot, update):
-    for logs_to_send in [logs[i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(logs), MAX_MESSAGE_LENGTH)]:
+    for logs_to_send in [globals.logs[i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(globals.logs), MAX_MESSAGE_LENGTH)]:
         bot.sync_send_message(chat_id=update.message.chat_id, text=logs_to_send)
 
 
@@ -99,7 +112,7 @@ def order_bot_processing():
     """
 
     update_monitor = threading.Thread(target=castle_update_monitor, name="Order Database Update Monitor")
-    update_monitor.start()
+    # update_monitor.start()
     processes.append(update_monitor)
 
     if CONNECT_TYPE == 'webhook':
@@ -114,9 +127,13 @@ def order_bot_processing():
 
     # Останавливаем бота, если были нажаты Ctrl + C
     updater.idle()
-    if logs != "":
-        for logs_to_send in [logs[i:i+MAX_MESSAGE_LENGTH] for i in range(0, len(logs), MAX_MESSAGE_LENGTH)]:
+    if globals.logs != "":
+        for logs_to_send in [globals.logs[i:i+MAX_MESSAGE_LENGTH] for i in range(0, len(globals.logs), MAX_MESSAGE_LENGTH)]:
             dispatcher.bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
     # Разрываем подключение.
     conn.close()
     update_request_queue.put(None)
+
+
+if __name__ == "__main__":
+    order_bot_processing()

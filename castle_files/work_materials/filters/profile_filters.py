@@ -1,9 +1,11 @@
 from telegram.ext import BaseFilter
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
-from castle_files.work_materials.globals import allowed_list, class_chats
+from castle_files.work_materials.globals import allowed_list, class_chats, castle_chats
 
 from castle_files.libs.player import Player
+
+from castle_files.bin.profile import castle_chat_check
 
 import re
 
@@ -78,3 +80,11 @@ class FilterInClassChat(BaseFilter):
 
 
 filter_in_class_chat = FilterInClassChat()
+
+
+class FilterKickFromCastleChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in castle_chats and castle_chat_check(message)
+
+
+filter_kick_from_castle_chat = FilterKickFromCastleChat()

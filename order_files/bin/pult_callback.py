@@ -8,11 +8,12 @@ from order_files.bin.order import send_order, send_order_job, count_next_battle_
 from order_files.work_materials.pult_constants import divisions as divisions_const, potions as potions_consts, \
     tactics_order_to_emoji
 
-from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job
+from order_files.work_materials.globals import cursor, deferred_orders, moscow_tz, local_tz, job, bot, \
+    MAX_MESSAGE_LENGTH, LOGS_CHAT_ID
 
 from castle_files.bin.service_functions import check_access
+from castle_files.bin.castle import fill_mid_players
 
-import order_bot
 import order_files.work_materials.globals as globals
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -137,6 +138,12 @@ def pult_variants(bot, update):
 
 def send_variant(bot, update):
     data = update.callback_query.data
+    try:
+        fill_mid_players(other_process=True)  # TODO сделать нормально
+    except Exception:
+        logging.error(traceback.format_exc())
+    if not check_access(update.callback_query.from_user.id):
+        return
     variant_id = re.search("_(\\d+)", data)
     if variant_id is None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка поиска варианта",
@@ -156,6 +163,10 @@ def send_variant(bot, update):
 
 def pult_callback(bot, update):
     data = update.callback_query.data
+    try:
+        fill_mid_players(other_process=True)  # TODO сделать нормально
+    except Exception:
+        logging.error(traceback.format_exc())
     if not check_access(update.callback_query.from_user.id):
         return
     if data == "ps":
@@ -182,7 +193,7 @@ def pult_callback(bot, update):
 
 
 def pult_send(bot, update):
-    order_bot.logs += "{} - @{} Нажал \"Отправить\"" \
+    globals.logs += "{} - @{} Нажал \"Отправить\"" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username)
     mes = update.callback_query.message
@@ -278,7 +289,7 @@ def pult_divisions_callback(bot, update):
     pult_status.update({"divisions": new_division })
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
-    order_bot.logs += "{} - @{} - Изменил дивизион на {}" \
+    globals.logs += "{} - @{} - Изменил дивизион на {}" \
             "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                         update.callback_query.from_user.username, divisions_const[new_target])
 
@@ -292,7 +303,7 @@ def pult_castles_callback(bot, update):
     pult_status.update({"target": new_target})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
-    order_bot.logs += "{} - @{} - Изменил цель на {}" \
+    globals.logs += "{} - @{} - Изменил цель на {}" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username, castles[new_target])
 
@@ -307,7 +318,7 @@ def pult_time_callback(bot, update):
     pult_status.update({ "time" : new_time })
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
-    order_bot.logs += "{} - @{} - Изменил время пина на {}" \
+    globals.logs += "{} - @{} - Изменил время пина на {}" \
             "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                         update.callback_query.from_user.username, times_to_time[new_time])
 
@@ -325,7 +336,7 @@ def pult_defense_callback(bot, update):
     pult_status.update({"defense": new_defense})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
-    order_bot.logs += "{} - @{} - Изменил деф на {}" \
+    globals.logs += "{} - @{} - Изменил деф на {}" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username, defense_to_order[new_defense])
 
@@ -342,7 +353,7 @@ def pult_tactics_callback(bot, update):
     pult_status.update({"tactics": new_tactics})
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
-    order_bot.logs += "{} - @{} - Изменил тактику на {}" \
+    globals.logs += "{} - @{} - Изменил тактику на {}" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username, tactics_to_order[new_tactics])
 
@@ -356,7 +367,7 @@ def pult_potions_callback(bot, update):
     new_markup = rebuild_pult("change_potions", pult, new_potions)
     edit_pult(bot=bot, chat_id=mes.chat_id, message_id=mes.message_id, reply_markup=new_markup,
               callback_query_id=update.callback_query.id)
-    order_bot.logs += "{} - @{} - Изменил зелья на {}" \
+    globals.logs += "{} - @{} - Изменил зелья на {}" \
                       "\n".format(datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H-%M-%S"),
                                   update.callback_query.from_user.username, potions_consts[new_potions])
 
@@ -371,3 +382,20 @@ def edit_pult(bot, chat_id, message_id, reply_markup, callback_query_id):
     finally:
         bot.answerCallbackQuery(callback_query_id=callback_query_id)
 
+
+def plan_battle_jobs():
+    job.run_once(after_battle, moscow_tz.localize(count_next_battle_time()).astimezone(tz=local_tz).replace(tzinfo=None))
+
+
+def after_battle(bot, job):
+    time.sleep(1)
+    plan_battle_jobs()
+    Pult.variants.clear()
+    send_and_clear_logs()
+
+
+def send_and_clear_logs():
+    for logs_to_send in [globals.logs[i:i + MAX_MESSAGE_LENGTH] for i in range(
+            0, len(globals.logs), MAX_MESSAGE_LENGTH)]:
+        bot.sync_send_message(chat_id=LOGS_CHAT_ID, text=logs_to_send)
+    globals.logs = ""

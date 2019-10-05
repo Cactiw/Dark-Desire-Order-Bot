@@ -4,7 +4,7 @@
 """
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
-    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc
+    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc, castle_chats
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -81,8 +81,6 @@ def class_chat_check(bot, update):
         player = Player.get_player(user.id)
         if mes.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(mes.from_user.id):
             return
-        if player is None:
-            continue
         if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id or \
                 player.castle != '🖤':
             try:
@@ -96,6 +94,67 @@ def class_chat_check(bot, update):
                                  text=text, parse_mode='HTML')
             except TelegramError:
                 return
+
+
+def castle_chat_check(message):
+    if message.new_chat_members:
+        users = message.new_chat_members
+    else:
+        users = [message.from_user]
+    for user in users:
+        player = Player.get_player(user.id)
+        if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
+            return False
+        if player is None:
+            return True
+        if player is None or player.castle != '🖤':
+            return True
+    return False
+
+
+def remove_players_from_chat(bot, update):
+    message = update.message
+    if message.new_chat_members:
+        users = message.new_chat_members
+    else:
+        users = [message.from_user]
+    for user in users:
+        user_id = user.id
+        player = Player.get_player(user.id)
+        if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
+            return
+        if player is None or player.castle != '🖤':
+            try:
+                text = "Этот чат только для игроков 🖤Скалы"
+                bot.kickChatMember(chat_id=message.chat_id, user_id=user_id)
+                bot.send_message(chat_id=message.chat_id,
+                                 text=text, parse_mode='HTML')
+            except TelegramError:
+                pass
+
+
+def set_castle_chat(bot, update):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID and not check_access(mes.from_user.id):
+        return
+    if mes.chat_id == mes.from_user.id:
+        bot.send_message(chat_id=mes.chat_id, text="Команда запрещена в ЛС")
+        return
+    on = 'on' in update.message.text
+    if on:
+        if mes.chat_id in castle_chats:
+            bot.send_message(chat_id=mes.chat_id, text="Чат уже установлен как замковый")
+            return
+        castle_chats.append(mes.chat_id)
+        text = "Чат отмечен как замковый. Бот будет удалять любых участников не из Скалы, " \
+               "или с отсутствующими профилями"
+    else:
+        if mes.chat_id not in castle_chats:
+            bot.send_message(chat_id=mes.chat_id, text="Чат и так не замковый")
+            return
+        castle_chats.remove(mes.chat_id)
+        text = "Теперь чат разрешён для всех участников."
+    bot.send_message(chat_id=mes.chat_id, text=text)
 
 
 def get_profile_text(player, self_request=True, user_data=None):
@@ -165,13 +224,19 @@ def get_profile_text(player, self_request=True, user_data=None):
     if user_data is None:
         return response
     status = user_data.get("status")
-    if status is not None and status in ["sawmill", "quarry", "construction"]:
-        if player is not None:
-            j = construction_jobs.get(player.id)
-            if j is not None:
-                seconds_left = j.get_time_left()
-                response += "\nВы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>" \
-                            "".format(seconds_left // 60, (seconds_left % 60) // 1)
+    if status is not None and status in ["sawmill", "quarry", "construction"] or "quest_name" in user_data:
+        if "quest_name" in user_data:
+            quest_name = user_data.get("quest_name")
+            response += "\n<b>Вы {}. Это займёт несколько минут.</b>" \
+                        "".format("на разведке" if quest_name == 'exploration' else
+                                  "копаете котлован" if quest_name == 'pit' else "")
+        else:
+            if player is not None:
+                j = construction_jobs.get(player.id)
+                if j is not None:
+                    seconds_left = j.get_time_left()
+                    response += "\nВы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>" \
+                                "".format(seconds_left // 60, (seconds_left % 60) // 1)
     return response
 
 
@@ -185,8 +250,8 @@ def profile(bot, update, user_data=None):
                      disable_web_page_preview=True)
 
 
-trade_divisions_access_list = [439637823, 320365073, 334443202, 407981701, 421007491, 440203516, 165503452, 98625707,
-                               210685625, 205356091]
+trade_divisions_access_list = [320365073, 407981701, 98625707, 205356091, 491614325, 374281599, 116028074, 284826167,
+                               133078153, 401404607]
 # Игроки, которым дал доступ к хуизу в связи с альянсами
 
 
@@ -243,7 +308,7 @@ def view_profile(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
     player = Player.get_player(player_id)
-    if player is None or (mes.text.startswith("/view_profile") and player.guild != guild.id):
+    if player is None or (mes.text.startswith("/view_profile") and (guild is None or player.guild != guild.id)):
         if player is not None and player.guild is not None:
             guild = Guild.get_guild(player.guild)
             if guild is not None:
@@ -604,17 +669,21 @@ def remember_exp(bot, job):
     battle_id = count_battle_id(None)
     for row in rows:
         player_id, exp, exp_info = row
+        player = Player.get_player(player_id)
         if exp_info is None:
             exp_info = {}
-        exp_info.update({battle_id: exp})
+        exp_info.update({str(battle_id): exp})
         exp_info = {k: v for k, v in sorted(list(exp_info.items()), key=lambda x: int(x[0]))}
-        request = "update players set exp_info = %s where id = %s"
-        cursor.execute(request, (json.dumps(exp_info, ensure_ascii=False), player_id))
+        player.exp_info = exp_info
+        player.update()
+        # request = "update players set exp_info = %s where id = %s"
+        # cursor.execute(request, (json.dumps(exp_info, ensure_ascii=False), player_id))
     plan_remember_exp()
 
 
 def plan_remember_exp():
     plan_work(remember_exp, 0, 0, 0)
+    # remember_exp(None, None)
 
 
 def get_rangers(bot, update):

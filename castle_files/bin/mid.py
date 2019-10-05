@@ -3,13 +3,15 @@
 """
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
-from order_files.bin.pult_callback import count_next_battle_time
 
 from castle_files.bin.guild_chats import rangers_notify_start
 from castle_files.bin.api import grassroots_update_players, grassroots_update_stock, send_potion_stats, \
     update_stock_for_fails
 
-from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID, \
+    high_access_list
+
+from bin.service_functions import count_next_battle_time
 
 from telegram.error import TelegramError
 
@@ -147,3 +149,13 @@ def message_before_battle(bot, job):
     bot.send_message(chat_id=MID_CHAT_ID,
                      text=datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%M:%S"))
 
+
+# Заполнение списка мида, запускать при старте бота и при обновлении состава
+def fill_mid_players(other_process=False):
+    high_access_list.clear()
+    throne = Location.get_location(2)
+    if other_process:
+        throne.load_location(other_process=True)
+    mid_players = throne.special_info.get("mid_players")
+    for player_id in mid_players:
+        high_access_list.append(player_id)

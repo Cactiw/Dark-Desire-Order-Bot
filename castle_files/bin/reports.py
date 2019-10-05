@@ -63,6 +63,12 @@ def add_report(bot, update, user_data):
     battle_id = count_battle_id(mes)
     hp = re.search("❤️Hp: (-?\\d+)", s)
     hp = int(hp.group(1)) if hp is not None else 0
+    outplay = re.search("You outplayed (.+) by ⚔️(\\d+)", s)
+    outplay_dict = {}
+    if outplay is not None:
+        outplay_nickname = outplay.group(1)
+        outplay_attack = int(outplay.group(2))
+        outplay_dict.update({"nickname": outplay_nickname, "attack": outplay_attack})
 
     if 'Encounter:' in s or ('hit' in s.lower() and 'miss' in s.lower() and 'last hit' in s.lower()):
         # Репорт с мобов
@@ -131,10 +137,10 @@ def add_report(bot, update, user_data):
         bot.send_message(chat_id=mes.from_user.id, text="Репорт за эту битву уже учтён!")
         return
     request = "insert into reports(player_id, battle_id, attack, additional_attack, defense, additional_defense, lvl, "\
-              "exp, gold, stock, equip) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+              "exp, gold, stock, equip, outplay) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
                              gold, stock, json.dumps(equip_change, ensure_ascii=False) if equip_change is not None else
-                             None))
+                             None, json.dumps(outplay_dict, ensure_ascii=False) if outplay_dict is not None else None))
 
     player.count_reports()
     reputation = REPORT_REPUTATION_COUNT
@@ -221,6 +227,9 @@ def battle_stats(bot, update):
                                                        count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     while row is not None:
         player = Player.get_player(row[0])
+        if player.castle != '🖤':
+            row = cursor1.fetchone()
+            continue
         if player.guild is None:
             guild = guilds[-1]
         else:

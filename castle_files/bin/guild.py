@@ -478,14 +478,19 @@ def remove_player(bot, update):
     if current_player is None:
         return
     guild = Guild.get_guild(guild_id=current_player.guild)
-    if guild is None:
-        bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
-        return
+    player_to_remove = Player.get_player(player_id)
+    player_to_remove_guild = guild
+    if player_to_remove_guild is not None and player_to_remove_guild.is_academy():
+        # Костыль на учителей в академке без гильдии (такие бывают, да)
+        pass
+    else:
+        if guild is None:
+            bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
+            return
     if not guild.check_high_access(current_player.id):
         bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.")
         return
-    player_to_remove = Player.get_player(player_id)
-    player_to_remove_guild = guild
+
     if player_to_remove is None or player_to_remove.id not in guild.members:
         player_to_remove_guild = Guild.get_guild(player_to_remove.guild)
         if player_to_remove_guild is not None and player_to_remove_guild.is_academy() and \

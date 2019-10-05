@@ -302,8 +302,16 @@ class CW3API:
                 pass
             else:
                 guild_emoji = profile.get("guild_emoji")
-                player.nickname = ("{}[{}]".format(guild_emoji, player.guild_tag) if player.guild_tag is not None else
-                                   "") + profile.get("userName")
+                if guild_emoji is None:
+                    guild_emoji = ""
+                if player.nickname in ("{}[{}]".format(guild_emoji, player.guild_tag) if player.guild_tag is not None
+                                       else "") + profile.get("userName"):
+                    pass
+                else:
+                    player.nickname = ("{}[{}]".format(guild_emoji, player.guild_tag) if player.guild_tag is not None
+                                       else "") + profile.get("userName")
+                    # player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
+                    #                    "") + profile.get("userName")
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
             player.update_to_database()
@@ -348,6 +356,43 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
+
+    def get_stock_change_text(self, old_stock, new_stock):
+        response = "Изменения в стоке:\n"
+        prices = self.api_info.get("prices") or {}
+        changes = {}
+        for code, count in list(old_stock.items()):
+            new_count = new_stock.get(code) or 0
+            change = new_count - count
+            if change != 0:
+                changes.update({code: change})
+        for code, count in list(new_stock.items()):
+            if code in changes:
+                continue
+            old_count = old_stock.get(code) or 0
+            change = count - old_count
+            if change != 0:
+                changes.update({code: change})
+        response_added, response_lost = "\n<b>➕Приобретено:</b>\n", "\n<b>➖Потеряно:</b>\n"
+        gold_added, gold_lost = 0, 0
+        changes_sorted = {k: v for k, v in sorted(list(changes.items()),
+                                                  key=lambda x: (prices.get(x[0]) or 10000) * x[1])}
+        for code, change in list(changes_sorted.items()):
+            price = prices.get(code) or 0
+            if change > 0:
+                response_added += "+{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
+                                                         "{}💰".format(price * change) if price != 0 else "❔")
+                gold_added += change * price
+            else:
+                response_lost += "{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
+                                                       "{}💰".format(price * change) if price != 0 else "❔")
+                gold_lost += change * price
+        response_added += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_added) if gold_added > 0 else ""
+        response_lost += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_lost) if gold_lost < 0 else ""
+        response += response_added + response_lost
+        response += "\n<b>Всего:</b> <code>{}</code>💰".format(gold_added + gold_lost)
+        return response
+
     def on_stock_info(self, channel, method, header, body):
         try:
             if body.get("result") != "Ok":
@@ -380,39 +425,7 @@ class CW3API:
             #               "".format(player.nickname, player.api_info.get("change_stock_send"), send_change))
             if player.api_info.get("change_stock_send") and send_change is True:
                 # Уведомление игрока о изменении в стоке
-                response = "Изменения в стоке:\n"
-                prices = self.api_info.get("prices") or {}
-                changes = {}
-                for code, count in list(old_stock.items()):
-                    new_count = player.stock.get(code) or 0
-                    change = new_count - count
-                    if change != 0:
-                        changes.update({code: change})
-                for code, count in list(player.stock.items()):
-                    if code in changes:
-                        continue
-                    old_count = old_stock.get(code) or 0
-                    change = count - old_count
-                    if change != 0:
-                        changes.update({code: change})
-                response_added, response_lost = "\n<b>➕Приобретено:</b>\n", "\n<b>➖Потеряно:</b>\n"
-                gold_added, gold_lost = 0, 0
-                changes_sorted = {k: v for k, v in sorted(list(changes.items()),
-                                                          key=lambda x: (prices.get(x[0]) or 10000) * x[1])}
-                for code, change in list(changes_sorted.items()):
-                    price = prices.get(code) or 0
-                    if change > 0:
-                        response_added += "+{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
-                                                                 "{}💰".format(price * change) if price != 0 else "❔")
-                        gold_added += change * price
-                    else:
-                        response_lost += "{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
-                                                               "{}💰".format(price * change) if price != 0 else "❔")
-                        gold_lost += change * price
-                response_added += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_added) if gold_added > 0 else ""
-                response_lost += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_lost) if gold_lost < 0 else ""
-                response += response_added + response_lost
-                response += "\n<b>Всего:</b> <code>{}</code>💰".format(gold_added + gold_lost)
+                response = self.get_stock_change_text(old_stock, player.stock)
                 self.bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')
                 player.api_info.pop("change_stock_send")
                 player.update()
@@ -426,8 +439,8 @@ class CW3API:
             if body.get("result") != "Ok":
                 logging.error("error while requesting guild info, {}".format(body))
                 return
-            print(body)
-            print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(body)
+            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             name, glory, lvl, members, stock_size, stock_limit, \
                 player_id, tag = payload.get("name"), payload.get("glory"), payload.get("level"), \
@@ -448,9 +461,26 @@ class CW3API:
                 logging.warning("Received guild info, but guild is None or not euqal for"
                                 " {} (@{})".format(player.nickname, player.username))
                 return
+            old_stock, old_glory, change_send = guild.api_info.get("stock") or {}, guild.api_info.get("glory") or 0, \
+                                                guild.api_info.get("change_stock_send") or False
+            if change_send:
+                response = "Итоги битвы <b>{}</b>\n".format(guild.tag)
+                response += "<b>🎖Glory:</b> <code>{}</code>\n\n".format(glory - old_glory)
+                response += self.get_stock_change_text(old_stock, stock)
+                self.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+                guild.api_info.pop("change_stock_send")
+                guild.update_to_database(need_order_recashe=False)
+
             guild.name = name
+            api_players = guild.api_info.get("api_players")
+            if api_players is None:
+                api_players = []
+                guild.api_info.update({"api_players": api_players})
+            if player_id not in api_players:
+                api_players.append(player_id)
             guild.api_info.update({"stock": stock, "glory": glory, "lvl": lvl, "members": members,
                                    "stock_size": stock_size, "stock_limit": stock_limit})
+            guild.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
             guild.update_to_database(need_order_recashe=False)
         except Exception:
             logging.error(traceback.format_exc())

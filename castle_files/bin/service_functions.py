@@ -15,7 +15,7 @@ def cancel(bot, update, user_data):
 
 
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
-def plan_work(callback, hour, minute, second):
+def plan_work(callback, hour, minute, second, context={}):
     time_to_send = datetime.time(hour=hour, minute=minute, second=second)
     time_now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
     day_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).date()
@@ -25,7 +25,7 @@ def plan_work(callback, hour, minute, second):
     date_to_send = date_to_send.date()
     send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
     send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
-    job.run_once(callback, when=send_time, context=[])
+    job.run_once(callback, when=send_time, context=context)
 
 
 def check_access(user_id):
