@@ -25,7 +25,7 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
     filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat, filter_roulette, \
-    filter_request_roulette_bet, filter_place_roulette_bet
+    filter_request_roulette_bet, filter_place_roulette_bet, filter_status_shop
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category, \
@@ -70,8 +70,8 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
-    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, status_shop, buy_status, statuses, \
-    roulette_main, request_roulette_bet, place_roulette_bet
+    hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, roulette_main, request_roulette_bet, \
+    place_roulette_bet
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category, guides
@@ -85,6 +85,7 @@ from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feed
 from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, view_vote, \
     request_change_vote_duration, change_vote_duration, start_vote, finish_vote, votes, vote, set_vote_variant, \
     vote_results, set_vote_classes, guild_unvoted_list
+from castle_files.bin.statuses import status_shop, buy_status, statuses, status_on
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -373,7 +374,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('statuses', statuses))
     dispatcher.add_handler(CommandHandler('status_shop', status_shop))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_status_shop, status_shop))
     dispatcher.add_handler(MessageHandler(Filters.regex('buy_status_\\d+'), buy_status))
+    dispatcher.add_handler(MessageHandler(Filters.regex('status_on_\\d+'), status_on))
 
     # Хендлеры для строительства в замке
     dispatcher.add_handler(MessageHandler(Filters.text & filter_sawmill, sawmill, pass_user_data=True))

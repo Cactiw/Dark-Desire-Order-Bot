@@ -259,6 +259,17 @@ class FilterTopStat(BaseFilter):
 filter_top_stat = FilterTopStat()
 
 
+class FilterStatusShop(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text in ["Магазин статусов", "Status shop"]
+
+
+filter_status_shop = FilterStatusShop()
+
+
 class FilterRoulette(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)

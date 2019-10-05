@@ -13,6 +13,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
 from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id
 from castle_files.bin.reports import count_battle_time
+from castle_files.bin.statuses import get_status_text_by_id
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -179,7 +180,7 @@ def get_profile_text(player, self_request=True, user_data=None):
         user_data = dispatcher.user_data.get(player.id)
     response += "🔘: <code>{}</code>\n".format(player.reputation) if not user_data.get("rp_off") else "\n"
     if player.status is not None:
-        response += "Статус: <b>{}</b>\n".format(player.status)
+        response += "Статус: <b>{}</b>\n".format(get_status_text_by_id(player.status, player.id))
     response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
                 "\n".format(player.lvl, player.exp or "???", player.attack, player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None

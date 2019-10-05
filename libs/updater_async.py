@@ -17,7 +17,7 @@ class AsyncUpdater(Updater):
         super(AsyncUpdater, self).__init__(token=token, base_url=base_url, workers=workers, bot=bot,
                                            private_key = private_key, private_key_password=private_key_password,
                                            user_sig_handler=user_sig_handler, request_kwargs = request_kwargs)
-                                           #persistence = persistence)    #   Требуется на гите, но не требуется тут (?)
+        #persistence = persistence)    #   Требуется на гите, но не требуется тут (?)
 
     def start_polling(self, *args, **kwargs):
         try:
