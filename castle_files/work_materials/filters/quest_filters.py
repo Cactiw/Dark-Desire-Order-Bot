@@ -98,7 +98,7 @@ class FilterTeaParty(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Чайная лига", "Tea party"] and \
+        return filter_is_pm(message) and message.text in ["🍵Чайная лига", "🍵Tea party"] and \
             user_data.get("status") == 'central_square'
 
 

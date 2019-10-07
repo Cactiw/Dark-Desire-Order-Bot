@@ -203,7 +203,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
 
         tea_party = Location.get_location(9)
         if tea_party is not None and tea_party.is_constructed():
-            buttons[1].insert(2, KeyboardButton("Чайная лига"))
+            buttons[1].insert(2, KeyboardButton("🍵Чайная лига"))
 
     elif status == 'barracks':
         buttons = [
