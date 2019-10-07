@@ -160,6 +160,8 @@ def construct(bot, update, user_data):
         if loc.name == mes.text:
             location_id = loc.id
             break
+    if mes.text == '/build_teaparty':
+        location_id = 9
     if location_id is None:
         send_general_buttons(mes.from_user.id, user_data=user_data, bot=bot)
         return

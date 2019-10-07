@@ -384,7 +384,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_construction_plate, construction_plate,
                                           pass_user_data=True))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_construct, construct,
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_construct, construct,
                                           pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_king_cabinet_construction, king_cabinet_construction))
