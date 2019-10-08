@@ -229,6 +229,14 @@ def arena_notify(bot, job):
     plan_arena_notify()
 
 
+def plan_arena_notify():
+    plan_work(arena_notify, 12, 0, 0)
+
+
+def plan_top_notify():
+    plan_work(top_notify, 19, 0, 0)
+
+
 def notify_guild_attack(bot, update):
     mes = update.message
     remaining_time = get_time_remaining_to_battle()
@@ -242,8 +250,8 @@ def notify_guild_attack(bot, update):
     sleeping = mes.text.count("[🛌]") + mes.text.count("[⚒]")
     response = "<b>{0}</b>\nГотово к битве: <b>{1}</b>\nНе готово к битве, но занято <b>{2}</b>\n" \
                "Спит: <b>{3}</b>\n\nВремя до битвы: {4}\n".format(mes.text.splitlines()[0], ready_to_battle,
-                                                                mes.text.count("\n") - ready_to_battle - sleeping,
-                                                                sleeping, ":".join(str(remaining_time).partition(".")[0].split(":")[0:3]))
+                                                                  mes.text.count("\n") - ready_to_battle - sleeping,
+                                                                  sleeping, ":".join(str(remaining_time).partition(".")[0].split(":")[0:3]))
     request = "select guild_id from guilds where chat_id = %s"
     cursor.execute(request, (mes.chat_id,))
     row = cursor.fetchone()
