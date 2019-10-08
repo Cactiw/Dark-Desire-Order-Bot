@@ -209,7 +209,7 @@ class Player:
                                  self.guild_history, self.exp, json.dumps(self.api_info), json.dumps(self.stock),
                                  json.dumps(self.settings), json.dumps(self.exp_info, ensure_ascii=False),
                                  json.dumps(self.class_info), json.dumps(self.mobs_info),
-                                 json.dumps(self.tea_party_info), self.id))
+                                 json.dumps(self.tea_party_info, ensure_ascii=False), self.id))
         cursor.close()
         return 0
 

@@ -204,7 +204,7 @@ def construction_return(bot, job):
         bot.send_message(chat_id=player_id, text="Локация уже построена или стройка не начиналась. Возможно, локацию "
                                                  "построили в то время, пока вы добирались до стройки.")
         return
-    location.building_process += 1
+    location.building_process += 3
     player = Player.get_player(job.context[0])
     if location.building_process >= location.need_clicks_to_construct:
         location.state = True

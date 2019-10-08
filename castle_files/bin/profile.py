@@ -320,8 +320,8 @@ def view_profile(bot, update):
                     return
     if reply and player.status is not None:
         # Сообщение со статусом
-        bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(player.status),
-                         parse_mode='HTML', reply_to_message_id=mes.message_id)
+        bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(get_status_text_by_id(
+            player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
     buttons = get_profile_buttons(player)
     if (player.guild is None or player.guild != requested_player.guild) and not check_whois_access(requested_player_id):
         guild = Guild.get_guild(guild_id=player.guild)

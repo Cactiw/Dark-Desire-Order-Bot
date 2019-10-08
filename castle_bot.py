@@ -85,7 +85,8 @@ from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feed
 from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, view_vote, \
     request_change_vote_duration, change_vote_duration, start_vote, finish_vote, votes, vote, set_vote_variant, \
     vote_results, set_vote_classes, guild_unvoted_list
-from castle_files.bin.statuses import status_shop, buy_status, statuses, status_on
+from castle_files.bin.statuses import status_shop, buy_status, statuses, status_on, \
+    request_set_own_status, set_own_status, moderate_status
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -169,6 +170,10 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(delete_guild, pattern="g_delete_confirm_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(cancel_delete_guild, pattern="g_delete_cancel_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(set_own_status, pattern="p_own_status.*"))
+    dispatcher.add_handler(CallbackQueryHandler(moderate_status, pattern="p_moderate_status_\\d+.*"))
+
 
     #
 
@@ -300,6 +305,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('doc', view_profile))
 
     dispatcher.add_handler(CommandHandler('set_status', set_status))
+    dispatcher.add_handler(CommandHandler('set_own_status', request_set_own_status))
 
     # Хендлеры для триггеров
     dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))

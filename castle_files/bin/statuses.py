@@ -3,6 +3,7 @@
 """
 
 from castle_files.work_materials.statuses_const import statuses as statuses_const
+from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, moscow_tz
 
 from castle_files.libs.player import Player
 
@@ -10,8 +11,10 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import BadRequest
 
 import re
+import datetime
 
 OWN_STATUS_PRICE = 10000
+OWN_STATUS_ID = 0
 
 
 def status_shop(bot, update):
@@ -43,13 +46,17 @@ def request_set_own_status(bot, update):
     if player.reputation < OWN_STATUS_PRICE:
         bot.send_message(chat_id=mes.chat_id, text="Недостаточно 🔘 жетонов")
         return
+    if player.tea_party_info.get("own_status_awaiting_moderation") is not None:
+        bot.send_message(chat_id=mes.chat_id, text="У вас уже есть статус, проходящий модерацию. Дождитесь окончания.")
+        return
     player.tea_party_info.update({"requested_own_status": new_status})
     player.update()
-    bot.send_message(chat_id=mes.chat_id, text="Установить собственный статус на {}? ({} 🔘)".format(new_status,
-                                                                                                    OWN_STATUS_PRICE),
-                     reply_markup=InlineKeyboardMarkup([
+    bot.send_message(chat_id=mes.chat_id, text="Установить собственный статус на {}? ({} 🔘)\n\n"
+                                               "Обратите внимание, все статусы проходят модерацию."
+                                               "".format(new_status, OWN_STATUS_PRICE),
+                     reply_markup=InlineKeyboardMarkup([[
                          InlineKeyboardButton(text="✅Да", callback_data="p_own_status yes"),
-                         InlineKeyboardButton(text="❌Нет", callback_data="p_own_status no")]))
+                         InlineKeyboardButton(text="❌Нет", callback_data="p_own_status no")]]))
 
 
 def set_own_status(bot, update):
@@ -70,9 +77,17 @@ def set_own_status(bot, update):
                                       show_alert=True)
             return
         player.reputation -= OWN_STATUS_PRICE
-        player.tea_party_info.update({"own_status": new_status})
+        player.tea_party_info.update({"own_status_awaiting_moderation": new_status})
+        bot.send_message(chat_id=STATUSES_MODERATION_CHAT_ID, parse_mode='HTML',
+                         text="<b>{}</b>(@{}) Хочет установить статус на <b>{}</b>.\n"
+                              "Разрешить?".format(player.nickname, player.username, new_status),
+                         reply_markup=InlineKeyboardMarkup([[
+                             InlineKeyboardButton(text="✅Да",
+                                                  callback_data="p_moderate_status_{} yes".format(player.id)),
+                             InlineKeyboardButton(text="❌Нет",
+                                                  callback_data="p_moderate_status_{} no".format(player.id))]]))
         player.update()
-        text = "Статус успешно изменён."
+        text = "Статус отправлен на модерацию."
 
     else:
         text = "Изменение статуса отменено."
@@ -82,6 +97,47 @@ def set_own_status(bot, update):
     except BadRequest:
         bot.send_message(chat_id=mes.chat_id, text=text)
 
+
+def moderate_status(bot, update):
+    mes = update.callback_query.message
+    player_id = re.search("_(\\d+)", update.callback_query.data)
+    if player_id is None:
+        bot.answer_callback_query(callback_query_id=update.callback_query.id,
+                                  text="Ошибка. Неверные данные в ответе",
+                                  show_alert=True)
+        return
+    player_id = int(player_id.group(1))
+    player = Player.get_player(player_id)
+    if player is None:
+        return
+    yes = 'yes' in update.callback_query.data
+    new_status = player.tea_party_info.get("own_status_awaiting_moderation")
+    if new_status is None:
+        bot.answer_callback_query(callback_query_id=update.callback_query.id,
+                                  text="Не найден новый статус. Скорее всего, на запрос уже ответили",
+                                  show_alert=True)
+        return
+    answer_text = "{} @<b>{}</b> в <code>{}</code>" \
+                  "".format("Одобрено" if yes else "Отклонено", update.callback_query.from_user.username,
+                            datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H:%M:%S"))
+    if yes:
+        player.tea_party_info.update({"own_status": new_status})
+        text = "Новый статус (<b>{}</b>) успешно прошёл модерацию.".format(new_status)
+        # Записываю в статусы новый
+        pl_statuses = player.tea_party_info.get("statuses")
+        if pl_statuses is None:
+            pl_statuses = []
+            player.tea_party_info.update({"statuses": pl_statuses})
+        if OWN_STATUS_ID not in pl_statuses:
+            pl_statuses.append(OWN_STATUS_ID)
+    else:
+        text = "Статус (<b>{}</b>) отклонён.\nВозвращено {} 🔘 жетонов".format(new_status, OWN_STATUS_PRICE)
+        player.reputation += OWN_STATUS_PRICE
+    player.tea_party_info.pop("own_status_awaiting_moderation")
+    player.update()
+    bot.send_message(chat_id=player.id, text=text, parse_mode='HTML')
+    bot.edit_message_text(chat_id=mes.chat_id, message_id=mes.message_id, text=mes.text + "\n" + answer_text,
+                          parse_mode='HTML')
 
 
 def buy_status(bot, update):
@@ -118,12 +174,15 @@ def statuses(bot, update):
         bot.send_message(chat_id=mes.chat_id,
                          text="Нет купленных статусов. Статусы можно купить в магазине (Чайная лига)")
         return
-    response = "Текущий статус: <b>{}</b>\n\n".format(get_status_text_by_id(player.status)) if \
+    response = "Текущий статус: <b>{}</b>\n\n".format(get_status_text_by_id(player.status, player.id)) if \
         player.status is not None else ""
     response += "Доступные статусы:\n"
     for status_id in player_statuses:
-        status = statuses_const.get(status_id)
-        name = status.get("name")
+        if status_id == OWN_STATUS_ID:
+            name = player.tea_party_info.get("own_status")
+        else:
+            status = statuses_const.get(status_id)
+            name = status.get("name")
         response += "<b>{}</b>\n/status_on_{}\n\n".format(name, status_id)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
@@ -149,6 +208,11 @@ def status_on(bot, update):
 
 
 def get_status_text_by_id(status_id: int, player_id=None) -> str:
+    if status_id == OWN_STATUS_ID:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if player is None:
+            raise RuntimeError
+        return player.tea_party_info.get("own_status")
     status = statuses_const.get(status_id)
     if status is not None:
         return status["name"]
