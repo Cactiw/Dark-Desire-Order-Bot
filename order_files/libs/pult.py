@@ -17,9 +17,10 @@ class Pult:
         self.status = pult_status_default.copy()
         self.divisions = divisions_const.copy()
         self.divisions[-1] = '✅' + self.divisions[-1]
+        self.rangers_division_num = self.divisions.index("Луки")
         self.all_attackers_division_num = self.divisions.index('Все атакеры')
         self.all_division_num = self.divisions.index('✅ВСЕ')
-        self.divisions_active = [False, False, False, False, False, True]
+        self.divisions_active = [False, False, False, False, False, False, True]
         self.castles = castles_const.copy()
         self.times = times_const.copy()
         self.potions = potions_const.copy()
@@ -71,6 +72,7 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
         [
             InlineKeyboardButton(divisions[3], callback_data="pdv3"),
             InlineKeyboardButton(divisions[5], callback_data="pdv5"),
+            InlineKeyboardButton(divisions[6], callback_data="pdv6"),
 
         ],
         [
@@ -120,7 +122,6 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
 
 
 def rebuild_pult(action, pult, context):
-    print(pult.deferred_time)
     if action == "None":
         return build_pult(pult.divisions, pult.castles, pult.times, pult.defense, pult.tactics, pult.potions,
                           deferred_time=pult.deferred_time)
@@ -146,14 +147,14 @@ def rebuild_pult(action, pult, context):
                                 deferred_time=deferred_time, variant=variant)
         return new_markup
     if action == "change_division":
-        if context == pult.all_division_num:
-            for i in range (0, len(pult.divisions) - 1):
+        if context in [pult.all_division_num, pult.all_attackers_division_num, pult.rangers_division_num]:
+            for i in range(len(pult.divisions)):
                 pult.divisions[i] = divisions_const[i]
                 pult.divisions_active[i] = False
         else:
-            if pult.divisions_active[pult.all_division_num]:
-                pult.divisions[pult.all_division_num] = divisions_const[pult.all_division_num]
-                pult.divisions_active[pult.all_division_num] = False
+            for i in [pult.all_division_num, pult.all_attackers_division_num, pult.rangers_division_num]:
+                pult.divisions[i] = divisions_const[i]
+                pult.divisions_active[i] = False
         if pult.divisions_active[context]:
             pult.divisions[context] = divisions_const[context]
             pult.divisions_active[context] = False
