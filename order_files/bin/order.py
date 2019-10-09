@@ -136,9 +136,10 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
-            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
-                           notification=not chat[2], reply_markup=buttons)
-            orders_sent += 1
+            if chat[3] != 'Траст':
+                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+                               notification=not chat[2], reply_markup=buttons)
+                orders_sent += 1
     else:
         current_divisions = []
         for i in range(0, len(divisions)):
