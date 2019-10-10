@@ -13,7 +13,7 @@ from telegram.error import BadRequest
 import re
 import datetime
 
-OWN_STATUS_PRICE = 10000
+OWN_STATUS_PRICE = 5000
 OWN_STATUS_ID = 0
 
 
@@ -28,8 +28,9 @@ def status_shop(bot, update):
         name, price = status.get("name"), status.get("price")
         if status not in player_statuses:
             response += "<b>{}</b>: {}🔘\n/buy_status_{}\n\n".format(name, price, status_id)
-    response += "\n\nУстановить собственный статус (10000 🔘): /set_own_status {Новый статус}\n" \
-                "<em>Обратите внимание, повторная смена статуса будет вновь стоить жетоны.</em>"
+    response += "\n\nУстановить собственный статус ({} 🔘): /set_own_status {}\n" \
+                "<em>Обратите внимание, повторная смена статуса будет вновь стоить жетоны.</em>" \
+                "".format(OWN_STATUS_PRICE, "Новый статус")
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
