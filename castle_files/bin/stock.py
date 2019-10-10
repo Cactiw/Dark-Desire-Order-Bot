@@ -65,20 +65,37 @@ def stock_sort_comparator(item_code):
     return [3, item_code]
 
 
+def format_withdraw_link(response: str) -> str:
+    return "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
+
+
+def format_all_withdraws(response: str, response_full: str, not_enough: str) -> str:
+    response = format_withdraw_link(response)
+    if not_enough != "":
+        response += "\n\nВозможно, не хватает ресурсов:\n" + not_enough
+        response += "\nПопытаться достать всё:\n"
+        response += format_withdraw_link(response_full)
+    else:
+        response = format_withdraw_link(response_full)
+    return response
+
+
 def send_withdraw(bot, update):
     mes = update.message
-    response = "/g_withdraw "
+    response, response_full = "/g_withdraw ", "/g_withdraw "
     give = {}
     res_count = 0
     player = Player.get_player(update.message.from_user.id)
     if player is None:
         return
+    guild_stock = None
     if player.guild is not None:
         guild = Guild.get_guild(guild_id=player.guild)
         if guild.settings is not None:
             if guild.settings.get("withdraw") is False:
                 if guild.chat_id == mes.chat_id:
                     return
+        guild_stock = guild.api_info.get("stock")
     if "дай" in mes.text.lower():
         # Выдача ресурсов по Дай x y
         potions_dict = {
@@ -135,16 +152,24 @@ def send_withdraw(bot, update):
             if code is None:
                 continue
             give.update({code: count})
+    not_enough = ""
     for code, count in list(give.items()):
-        response += "{} {} ".format(code, count)
+        if guild_stock is not None:
+            # Есть данные о стоке, проверка наличия ресурсов
+            in_stock = guild_stock.get(code) or 0
+            if in_stock > 0:
+                response += "{} {} ".format(code, min(count, in_stock))
+            if in_stock < count:
+                not_enough += "{} x {}\n".format(get_item_name_by_code(code), count - in_stock)
+        response_full += "{} {} ".format(code, count)
         res_count += 1
         if res_count >= 8:
-            response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
+            response = format_all_withdraws(response, response_full, not_enough)
             bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
-            response = "/g_withdraw "
+            response, response_full, not_enough = "/g_withdraw ", "/g_withdraw ", ""
             res_count = 0
     if res_count > 0:
-        response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
+        response = format_all_withdraws(response, response_full, not_enough)
         bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
