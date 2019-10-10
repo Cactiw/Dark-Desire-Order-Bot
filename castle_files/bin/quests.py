@@ -221,7 +221,7 @@ def construction_return(bot, job):
             construction_jobs.pop(job.context[0])
         except Exception:
             logging.error(traceback.format_exc())
-    buttons = get_general_buttons(job.context[1], player)
+    buttons = get_general_buttons(user_data, player)
     request = "insert into castle_logs(player_id, action, result, additional_info, date) values (%s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, "construction", 1, json.dumps({"location_id": location_id}),
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
