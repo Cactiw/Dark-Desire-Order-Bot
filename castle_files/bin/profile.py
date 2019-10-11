@@ -270,12 +270,13 @@ def view_profile(bot, update):
     requested_player = Player.get_player(requested_player_id)
     if requested_player is None:
         return
+    has_access = True
     guild = Guild.get_guild(guild_id=requested_player.guild)
     if not check_whois_access(requested_player_id):
         if guild is None or not guild.check_high_access(requested_player_id):
             bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
                              reply_to_message_id=mes.message_id)
-            return
+            has_access = False
     # Доступ к хуизу есть
     reply = False
     if mes.text.startswith("/dok") or mes.text.startswith("/doc"):
@@ -283,6 +284,8 @@ def view_profile(bot, update):
             #  Реплай в чате
             reply = True
             player_id = mes.reply_to_message.from_user.id
+        elif has_access is False:
+            return
         elif "@" in update.message.text:
             # Поиск по юзерке
             request = "select id from players where username = %s"
@@ -322,6 +325,8 @@ def view_profile(bot, update):
         # Сообщение со статусом
         bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(get_status_text_by_id(
             player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
+    if not has_access:
+        return
     buttons = get_profile_buttons(player)
     if (player.guild is None or player.guild != requested_player.guild) and not check_whois_access(requested_player_id):
         guild = Guild.get_guild(guild_id=player.guild)
