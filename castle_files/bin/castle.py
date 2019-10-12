@@ -545,7 +545,7 @@ def plan_roulette_games():
     roulette_time = now.replace(hour=9, minute=0, second=0)
     limit_time = now.replace(hour=21, minute=0, second=0)
     while roulette_time < now and roulette_time <= limit_time:
-        roulette_time += datetime.timedelta(hours=3)
+        roulette_time += datetime.timedelta(hours=0, minutes=30)
     if roulette_time > limit_time:
         roulette_time = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(hour=9))
     tea_party = Location.get_location(9)
