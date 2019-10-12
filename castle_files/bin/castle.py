@@ -508,7 +508,7 @@ def roulette_game(bot, job):
         position += placed
     response += "Игра начинается!"
     mes = bot.sync_send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response)
-    intervals = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01]
+    intervals = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01]
     progress = ["\\_", "|", "/_", "-"]
     i = 0
     r, player = None, None
