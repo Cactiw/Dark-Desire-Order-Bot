@@ -50,6 +50,11 @@ def request_set_own_status(bot, update):
     if player.tea_party_info.get("own_status_awaiting_moderation") is not None:
         bot.send_message(chat_id=mes.chat_id, text="У вас уже есть статус, проходящий модерацию. Дождитесь окончания.")
         return
+    for status_id, status in list(statuses_const.items()):
+        if new_status == status["name"]:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Новый статус совпадает с одним из зарезервированных. Выберите другой.")
+            return
     player.tea_party_info.update({"requested_own_status": new_status})
     player.update()
     bot.send_message(chat_id=mes.chat_id, text="Установить собственный статус на {}? ({} 🔘)\n\n"
