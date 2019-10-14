@@ -529,7 +529,10 @@ def roulette_game(bot, job):
     player.update()
     response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
                "<b>{}</b>🔘!\nПоздравляем!".format(r, player.nickname, player.username, total_placed)
-    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+    try:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+    except BadRequest:
+        pass
 
     roulette.special_info.update({"enter_text_format_values": [0], "placed": {}, "total_placed": 0})
     won = roulette.special_info.get("won")
