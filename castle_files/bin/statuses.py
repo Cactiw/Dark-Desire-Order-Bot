@@ -169,7 +169,9 @@ def buy_status(bot, update):
     player.reputation -= price
     player_statuses.append(status_id)
     player.update()
-    bot.send_message(chat_id=mes.chat_id, text="Статус <b>{}</b> успешно куплен!".format(name), parse_mode='HTML')
+    bot.send_message(chat_id=mes.chat_id,
+                     text="Статус <b>{}</b> успешно куплен!\nАктивируйте его! "
+                          "Просмотреть доступные статусы: /statuses".format(name), parse_mode='HTML')
 
 
 def statuses(bot, update):
