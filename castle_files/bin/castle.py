@@ -498,55 +498,60 @@ def place_roulette_bet(bot, update, user_data):
 
 def roulette_game(bot, job):
     # CENTRAL_SQUARE_CHAT_ID = -1001346136061  # тест
-    response = "🎰РУЛЕТКА🎰\n\n"
-    roulette = Location.get_location(10)
-    total_placed = roulette.special_info["total_placed"] or 0
-    print(total_placed, roulette.special_info["placed"])
-    if total_placed == 0:
-        bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response + "Никто не сделал ставок. Игра не состоялась.")
-        return
-    players, position = {}, 1
-    for player_id, placed in list(roulette.special_info["placed"].items()):
-        players.update({int(player_id): range(position, position + placed)})
-        position += placed
-    response += "Игра начинается!"
-    mes = bot.sync_send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response)
-    intervals = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01]
-    progress = ["\\_", "|", "/_", "-"]
-    i = 0
-    r, player = None, None
-    for interval in intervals:
-        r = random.randint(1, position)
-        for player_id, rng in list(players.items()):
-            if r in rng:
-                player = Player.get_player(player_id)
-                response = "🎰РУЛЕТКА🎰\nРозыгрыш {}🔘\n\nБилет №{} (<b>{}</b>)\n\nИдёт игра {}" \
-                           "".format(total_placed, r, player.nickname, progress[i])
-                i += 1
-                if i % 4 == 0:
-                    i = 0
-                break
-        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
-        time.sleep(interval)
-    player.reputation += total_placed
-    player.update()
-    response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
-               "<b>{}</b>🔘!\nПоздравляем!".format(r, player.nickname, player.username, total_placed)
+    logging.error("Roulette game started")
     try:
-        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
-    except BadRequest:
-        pass
+        response = "🎰РУЛЕТКА🎰\n\n"
+        roulette = Location.get_location(10)
+        total_placed = roulette.special_info["total_placed"] or 0
+        print(total_placed, roulette.special_info["placed"])
+        if total_placed == 0:
+            bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response + "Никто не сделал ставок. Игра не состоялась.")
+            return
+        players, position = {}, 1
+        for player_id, placed in list(roulette.special_info["placed"].items()):
+            players.update({int(player_id): range(position, position + placed)})
+            position += placed
+        response += "Игра начинается!"
+        mes = bot.sync_send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response)
+        intervals = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01]
+        progress = ["\\_", "|", "/_", "-"]
+        i = 0
+        r, player = None, None
+        for interval in intervals:
+            r = random.randint(1, position)
+            for player_id, rng in list(players.items()):
+                if r in rng:
+                    player = Player.get_player(player_id)
+                    response = "🎰РУЛЕТКА🎰\nРозыгрыш {}🔘\n\nБилет №{} (<b>{}</b>)\n\nИдёт игра {}" \
+                               "".format(total_placed, r, player.nickname, progress[i])
+                    i += 1
+                    if i % 4 == 0:
+                        i = 0
+                    break
+            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+            time.sleep(interval)
+        player.reputation += total_placed
+        player.update()
+        response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
+                   "<b>{}</b>🔘!\nПоздравляем!".format(r, player.nickname, player.username, total_placed)
+        try:
+            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+        except BadRequest:
+            pass
 
-    roulette.special_info.update({"enter_text_format_values": [0], "placed": {}, "total_placed": 0})
-    won = roulette.special_info.get("won")
-    player_won = won.get(str(player.id)) or 0
-    roulette.special_info["won"].update({str(player.id): player_won + total_placed})
-    roulette.update_location_to_database()
+        roulette.special_info.update({"enter_text_format_values": [0], "placed": {}, "total_placed": 0})
+        won = roulette.special_info.get("won")
+        player_won = won.get(str(player.id)) or 0
+        roulette.special_info["won"].update({str(player.id): player_won + total_placed})
+        roulette.update_location_to_database()
+    except Exception:
+        logging.error(traceback.format_exc())
     time.sleep(1)
     plan_roulette_games()
 
 
 def plan_roulette_games():
+    logging.error("Planning roulette game")
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     roulette_time = now.replace(hour=9, minute=0, second=0)
     limit_time = now.replace(hour=21, minute=0, second=0)
@@ -557,8 +562,8 @@ def plan_roulette_games():
     tea_party = Location.get_location(9)
     if tea_party.is_constructed():
         job.run_once(roulette_game, when=roulette_time)
+        logging.error("Roulette planned on {}".format(roulette_time))
     # print(roulette_time)
-
     # job.run_once(roulette_game, 60)  # тест
 
 
