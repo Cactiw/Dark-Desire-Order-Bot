@@ -155,7 +155,7 @@ def mob_help(bot, update):
     if update.callback_query.from_user.username in helpers:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помог!", show_alert=True)
         return
-    if len(helpers) >= 3:
+    if len(helpers) >= 5:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Уже собралось достаточно помощников!",
                                 show_alert=True)
     else:
