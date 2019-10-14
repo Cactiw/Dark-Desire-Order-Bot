@@ -490,7 +490,10 @@ def place_roulette_bet(bot, update, user_data):
     roulette.update_location_to_database()
     user_data.update({"status": "roulette"})
     buttons = get_general_buttons(user_data, player=player)
-    bot.send_message(chat_id=mes.from_user.id, text="Ставка успешно сделана. Удачи на игре!", reply_markup=buttons)
+    bot.send_message(chat_id=mes.from_user.id,
+                     text="Ставка успешно сделана. Удачи на игре!\n\nРезультаты будут на <a href="
+                          "\"https://t.me/joinchat/DdKE7kUfsmDVIC2DJymw_A\">⛲️Центральной площади</a>",
+                     reply_markup=buttons, parse_mode='HTML')
 
 
 def roulette_game(bot, job):
