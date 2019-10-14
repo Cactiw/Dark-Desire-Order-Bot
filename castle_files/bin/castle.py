@@ -518,17 +518,24 @@ def roulette_game(bot, job):
         i = 0
         r, player = None, None
         for interval in intervals:
+            found = False
             r = random.randint(1, position)
             for player_id, rng in list(players.items()):
                 if r in rng:
                     player = Player.get_player(player_id)
                     response = "🎰РУЛЕТКА🎰\nРозыгрыш {}🔘\n\nБилет №{} (<b>{}</b>)\n\nИдёт игра {}" \
                                "".format(total_placed, r, player.nickname, progress[i])
-                    i += 1
-                    if i % 4 == 0:
-                        i = 0
+                    found = True
                     break
-            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+            if not found:
+                logging.error("Roulette interval not found, r = {}, rngs = {}".format(r, list(players.values())))
+            i += 1
+            if i % 4 == 0:
+                i = 0
+            try:
+                bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+            except BadRequest:
+                pass
             time.sleep(interval)
         player.reputation += total_placed
         player.update()
