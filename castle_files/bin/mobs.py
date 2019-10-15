@@ -18,6 +18,8 @@ import psycopg2
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+PING_LIMIT = 4
+
 
 def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs):
     response = "Обнаруженные мобы:\n"
@@ -101,13 +103,17 @@ def mob(bot, update):
             #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
             #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
             #               timeout=0.3)
-            requests.post('http://104.40.129.51:5555/addMob',
-                          json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
-                                           "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
-                          timeout=0.3)
+
+            pass
+            # Верно!
+            # requests.post('http://104.40.129.51:5555/addMob',
+            #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+            #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
+            #               timeout=0.3)
         except Exception:
             logging.error(traceback.format_exc())
     else:
+        ping_count = 0
         if not is_pm:
             if player.guild is not None:
                 guild = Guild.get_guild(guild_id=player.guild)
@@ -125,7 +131,13 @@ def mob(bot, update):
                         text = "Мобы!\n"
                         for username in ping:
                             text += "@{} ".format(username)
-                        bot.send_message(chat_id=mes.chat_id, text=text)
+                            ping_count += 1
+                            if ping_count >= PING_LIMIT:
+                                bot.send_message(chat_id=mes.chat_id, text=text)
+                                text = "Мобы!\n"
+                                ping_count = 0
+                        if text != "Мобы!\n":
+                            bot.send_message(chat_id=mes.chat_id, text=text)
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
     return
 
