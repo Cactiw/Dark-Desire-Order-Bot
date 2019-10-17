@@ -158,7 +158,7 @@ def set_castle_chat(bot, update):
     bot.send_message(chat_id=mes.chat_id, text=text)
 
 
-def get_profile_text(player, self_request=True, user_data=None):
+def get_profile_text(player, self_request=True, user_data=None, requested_player=None):
     barracks = Location.get_location(1)
     class_links = barracks.special_info.get("class_links")
     if class_links is None:
@@ -187,6 +187,8 @@ def get_profile_text(player, self_request=True, user_data=None):
     response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
+    elif guild is not None and requested_player.guild == guild.id and guild.check_high_access(requested_player.id):
+        response += "Удалить из гильдии: /remove_player_{}\n".format(player.id)
     if self_request:
         if player.game_class is not None and player.castle == '🖤' and player.game_class not in ['Master', 'Esquire']:
             try:
@@ -337,7 +339,7 @@ def view_profile(bot, update):
                          parse_mode='HTML', reply_markup=buttons)
         return
     buttons = get_profile_buttons(player, whois_access=True)
-    response = get_profile_text(player, self_request=False)
+    response = get_profile_text(player, self_request=False, requested_player=requested_player)
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
 
 

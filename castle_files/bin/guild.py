@@ -446,13 +446,13 @@ def list_players(bot, update, guild_id=None):
                 else:
                     api_text = "📎"
         rp1, rp2, rp3 = player.get_reports_count()
-        response_new = "{}<b>{}</b>{}\n🏅:<code>{},⚔:{},🛡:{}," \
-                       "🎖:{}/{}</code>" \
-                       "".format(classes_to_emoji.get(player.game_class) or "", player.nickname, api_text, player.lvl,
-                                 player.attack, player.defense, rp1, rp2)
+        response_new = "{}<b>{}</b> @{} {}\n🔥<code>{}</code>,🏅<code>{}\n⚔{}, 🛡{}, " \
+                       "🎖{}/{}</code>" \
+                       "".format(classes_to_emoji.get(player.game_class) or "", player.nickname, player.username,
+                                 api_text, player.exp, player.lvl, player.attack, player.defense, rp1, rp2)
         if high_access:
             response_new += "\nПоказать профиль: /view_profile_{}" \
-                       "\nУдалить из гильдии: /remove_player_{}".format(player.id, player.id)
+                       "".format(player.id)
         response_new += "\n\n"
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
