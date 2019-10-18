@@ -30,3 +30,13 @@ class FilterSuperAdmin(BaseFilter):
 
 
 filter_super_admin = FilterSuperAdmin()
+
+
+class FilterDjedy(BaseFilter):
+    def filter(self, message):
+        if message.from_user is None:
+            return False
+        return message.from_user.id == admin_ids[1]
+
+
+filter_djedy = FilterDjedy()
