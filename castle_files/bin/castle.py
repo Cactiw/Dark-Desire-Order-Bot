@@ -11,7 +11,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
-    classes_to_emoji, CENTRAL_SQUARE_CHAT_ID, job, moscow_tz
+    classes_to_emoji, CENTRAL_SQUARE_CHAT_ID, job, moscow_tz, dispatcher
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
@@ -25,6 +25,7 @@ import time
 import datetime
 
 TOP_NUM_PLAYERS = 20
+KABALA_GAIN = 2000
 
 emoji_to_class = dict_invert(classes_to_emoji)
 
@@ -579,6 +580,45 @@ def plan_roulette_games():
         logging.error("Roulette planned on {}".format(roulette_time))
     # print(roulette_time)
     # job.run_once(roulette_game, 60)  # тест
+
+
+def request_kabala(bot, update):
+    if update.message.from_user.id != SUPER_ADMIN_ID:
+        return
+    text = """Уважаемый/ая воин/мастер (нужное подчеркнуть)!
+Чайная Лига предварительно одобрила вам кредит на 2000 Жетонов!
+Для одобрения нажмите /kabala"""
+    count = 0
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id)
+        if guild is not None:
+            for player_id in guild.members:
+                user_data = dispatcher.user_data.get(player_id)
+                if 'kabala_time' in user_data:
+                    user_data.pop('kabala_time')
+                bot.send_message(chat_id=player_id, text=text)
+                count += 1
+    bot.send_message(chat_id=SUPER_ADMIN_ID, text="Предлложение о кредите разослано {} игрокам".format(count))
+
+
+def kabala(bot, update, user_data):
+    text = """Вчитываясь в текст подписанного только что договора, маленькими буквами внизу ты обнаружил условия:
+
+<em>Кредитная программа "Жетон в каждый дом" предоставляется на условиях  ежедневной сдачи репортов. В случае неуплаты репортами Чайная Лига вправе в одностороннем порядке применить любые санкции по устранению нарушения Договора, вплоть до ректального зондирования.</em>
+
+Заверенно печатью и подписью Короля.
+
+ПОЗДРАВЛЯЕМ!"""
+    mes = update.message
+    if 'kabala_time' in user_data:
+        bot.send_message(chat_id=mes.chat_id, text="Предложение одноразовое.")
+        return
+    player = Player.get_player(mes.from_user.id)
+    player.reputation += KABALA_GAIN
+    player.update()
+    user_data.update({"kabala_time": time.time()})
+    bot.send_message(chat_id=player.id, text=text, parse_mode='HTML')
+
 
 
 def count_reputation_sum(bot, update):
