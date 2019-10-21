@@ -6,7 +6,7 @@ from castle_files.work_materials.globals import dispatcher, updater, conn, Produ
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
     filter_is_profile, filter_not_registered, filter_forbidden, filter_set_class, filter_in_class_chat, \
-    filter_kick_from_castle_chat
+    filter_kick_from_castle_chat, filter_joined_castle_chat, filter_in_castle_chat
 from castle_files.work_materials.filters.class_filters import filter_archer_trap
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
 from castle_files.work_materials.filters.trigger_filters import filter_is_trigger
@@ -105,6 +105,7 @@ from castle_files.bin.telethon_script import castles_stats_queue
 
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
+from castle_files.libs.castle.location import Location
 
 import castle_files.work_materials.globals as file_globals
 
@@ -130,6 +131,22 @@ def start(bot, update, user_data):
         unknown_input(bot, update, user_data)
         return
     bot.send_message(chat_id=update.message.chat_id, text="Привет! Пришли мне форвард /hero из @chatwarsbot!")
+
+
+def castle_hello(bot, update):
+    cp = Location.get_location(0)
+    mes = update.message
+    notified = cp.special_info.get("notified_on_join")
+    if notified is None:
+        notified = []
+        cp.special_info.update({"notified_on_join": notified})
+    if mes.from_user.id not in notified:
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Привет, новичок!\n\n<a href=\"https://t.me/joinchat/F4YvQUUfsDhK1bYfU_S1Fw\">Вступай в "
+                              "академию</a>, где ты получишь необходимые знания и навыки!",
+                         reply_to_message_id=mes.message_id, parse_mode='HTML')
+        notified.append(mes.from_user.id)
+        cp.update_location_to_database()
 
 
 def skip(bot, update):
@@ -231,7 +248,11 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_split_union, split_union))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered, unknown_input, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered & filter_joined_castle_chat,
+                                          castle_hello))
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered & filter_is_pm, unknown_input,
+                                          pass_user_data=True))
 
     # Мобы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_mob_message, mob))

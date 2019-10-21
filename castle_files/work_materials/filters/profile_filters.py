@@ -1,7 +1,7 @@
 from telegram.ext import BaseFilter
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
-from castle_files.work_materials.globals import allowed_list, class_chats, castle_chats
+from castle_files.work_materials.globals import allowed_list, class_chats, castle_chats, CASTLE_CHAT_ID
 
 from castle_files.libs.player import Player
 
@@ -12,10 +12,28 @@ import re
 
 class FilterNotRegistered(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and Player.get_player(message.from_user.id) is None
+        return Player.get_player(message.from_user.id) is None
 
 
 filter_not_registered = FilterNotRegistered()
+
+
+class FilterJoinedCastleChat(BaseFilter):
+    def filter(self, message):
+        return message.new_chat_members and message.chat_id == CASTLE_CHAT_ID
+
+
+filter_joined_castle_chat = FilterJoinedCastleChat()
+
+
+class FilterInCastleChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id == CASTLE_CHAT_ID
+
+
+filter_in_castle_chat = FilterInCastleChat()
+
+
 
 
 class FilterForbidden(BaseFilter):
