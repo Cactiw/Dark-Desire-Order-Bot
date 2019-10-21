@@ -84,16 +84,16 @@ def plan_battle_jobs():
                  context={"change_send": False})
     job.run_once(grassroots_update_stock, next_battle_time - datetime.timedelta(hours=0, minutes=3, seconds=12),
                  context={"change_send": False})
-    job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=7, seconds=0),
+    job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=4, seconds=0),
                  context={"change_send": True})
 
     # job.run_once(grassroots_update_stock, next_battle_time + datetime.timedelta(hours=0, minutes=0, seconds=1),
     #              context={"change_send": False})
 
-    job.run_once(update_stock_for_fails, next_battle_time + datetime.timedelta(hours=0, minutes=10, seconds=0),
+    job.run_once(update_stock_for_fails, next_battle_time + datetime.timedelta(hours=0, minutes=12, seconds=0),
                  context={"change_send": True})
 
-    job.run_once(update_stock_for_fails, next_battle_time + datetime.timedelta(hours=0, minutes=15, seconds=0),
+    job.run_once(update_stock_for_fails, next_battle_time + datetime.timedelta(hours=0, minutes=20, seconds=0),
                  context={"change_send": True})
 
     # job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
