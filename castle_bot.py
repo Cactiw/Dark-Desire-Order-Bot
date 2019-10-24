@@ -402,8 +402,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('statuses', statuses))
     dispatcher.add_handler(CommandHandler('status_shop', status_shop))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_status_shop, status_shop))
-    dispatcher.add_handler(MessageHandler(Filters.regex('buy_status_\\d+'), buy_status))
-    dispatcher.add_handler(MessageHandler(Filters.regex('status_on_\\d+'), status_on))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('buy_status_\\d+'), buy_status))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('status_on_\\d+'), status_on))
 
     # Хендлеры для строительства в замке
     dispatcher.add_handler(MessageHandler(Filters.text & filter_sawmill, sawmill, pass_user_data=True))
