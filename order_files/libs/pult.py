@@ -159,7 +159,7 @@ def rebuild_pult(action, pult, context):
                     continue
                 pult.divisions[i] = divisions_const[i]
                 pult.divisions_active[i] = False
-        else:
+        elif context != pult.academy_division_num:
             for i in [pult.all_division_num, pult.all_attackers_division_num, pult.rangers_division_num]:
                 pult.divisions[i] = divisions_const[i]
                 pult.divisions_active[i] = False
