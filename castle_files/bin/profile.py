@@ -204,8 +204,10 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
     for equipment in eq_list:
         if equipment is None:
             continue
-        response += "<b>{}</b><code>{}</code><code>{}</code>" \
-                    "\n".format(equipment.name, " +{}⚔️ ".format(equipment.attack) if equipment.attack != 0 else "",
+        response += "{}<b>{}</b>{}<code>{}</code><code>{}</code>" \
+                    "\n".format("✨" if equipment.condition == 'Reinforced' else "🔩" if equipment.condition == "broken"
+                                else "", equipment.name, " {} ".format(equipment.quality) if equipment.quality else "",
+                                " +{}⚔️ ".format(equipment.attack) if equipment.attack != 0 else "",
                                 "+{}🛡 ".format(equipment.defense) if equipment.defense != 0 else "")
 
     r1, r2, r3 = player.get_reports_count()

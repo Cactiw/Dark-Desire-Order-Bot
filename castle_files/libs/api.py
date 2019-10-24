@@ -5,6 +5,7 @@
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
+from castle_files.libs.equipment import Equipment
 from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator, \
     get_item_name_by_code
 
@@ -349,7 +350,9 @@ class CW3API:
                     continue
                 attack = item.get("atk") or 0
                 defense = item.get("def") or 0
-                eq.name, eq.attack, eq.defense = name, attack, defense
+                quality = Equipment.quality.get(item.get("quality"))
+                condition = item.get("condition")
+                eq.name, eq.attack, eq.defense, eq.quality, eq.condition = name, attack, defense, quality, condition
                 player_equipment.update({eq.place: eq})
             player.equipment = player_equipment
             player.update()

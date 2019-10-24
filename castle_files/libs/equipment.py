@@ -7,7 +7,9 @@ import json
 
 
 class Equipment:
-    def __init__(self, place, item_type, code, name, attack, defense, tier):
+    quality = {"Fine": "E", "High": "D", "Great": "C", "Excellent": "B", "Masterpiece": "A"}
+
+    def __init__(self, place, item_type, code, name, attack, defense, tier, condition=None, quality=None):
         self.place = place
         self.type = item_type
         self.code = code
@@ -15,13 +17,17 @@ class Equipment:
         self.attack = attack
         self.defense = defense
         self.tier = tier
+        self.condition = condition
+        self.quality = quality
 
     def to_json(self):
         dictionary = {
             "code": self.type + self.code,
             "name": self.name,
             "attack": self.attack,
-            "defense": self.defense
+            "defense": self.defense,
+            "quality": self.quality,
+            "condition": self.condition
         }
         return json.dumps(dictionary)
 
