@@ -248,6 +248,11 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_split_union, split_union))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
+    dispatcher.add_handler(CommandHandler('dokument', view_profile))
+    dispatcher.add_handler(CommandHandler('document', view_profile))
+    dispatcher.add_handler(CommandHandler('dok', view_profile))
+    dispatcher.add_handler(CommandHandler('doc', view_profile))
+
     dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered & filter_joined_castle_chat,
                                           castle_hello))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
@@ -319,11 +324,6 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('d4', drop_table))
     dispatcher.add_handler(CommandHandler('dc', drop_table))
     dispatcher.add_handler(CommandHandler('drop', send_search_bot, pass_args=True))
-
-    dispatcher.add_handler(CommandHandler('dokument', view_profile))
-    dispatcher.add_handler(CommandHandler('document', view_profile))
-    dispatcher.add_handler(CommandHandler('dok', view_profile))
-    dispatcher.add_handler(CommandHandler('doc', view_profile))
 
     dispatcher.add_handler(CommandHandler('set_status', set_status))
     dispatcher.add_handler(CommandHandler('set_own_status', request_set_own_status))
