@@ -124,7 +124,7 @@ def mob(bot, update):
                         if avg_lvl - 5 <= pl.lvl <= avg_lvl + 10:
                             on = pl.settings.get("mobs_notify")
                             if on is None:
-                                on = True
+                                on = False
                             if on and pl.id != mes.from_user.id:
                                 ping.append(pl.username)
                     if ping:
