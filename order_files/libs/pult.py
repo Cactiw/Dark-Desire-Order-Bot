@@ -19,6 +19,7 @@ class Pult:
         self.divisions[-1] = '✅' + self.divisions[-1]
         self.rangers_division_num = self.divisions.index("Луки")
         self.all_attackers_division_num = self.divisions.index('Все атакеры')
+        self.academy_division_num = self.divisions.index('Академ')
         self.all_division_num = self.divisions.index('✅ВСЕ')
         self.divisions_active = [False, False, False, False, False, False, False, True]
         self.castles = castles_const.copy()
@@ -148,8 +149,14 @@ def rebuild_pult(action, pult, context):
                                 deferred_time=deferred_time, variant=variant)
         return new_markup
     if action == "change_division":
-        if context in [pult.all_division_num, pult.all_attackers_division_num, pult.rangers_division_num]:
+        if context in [pult.all_division_num, pult.rangers_division_num]:
             for i in range(len(pult.divisions)):
+                pult.divisions[i] = divisions_const[i]
+                pult.divisions_active[i] = False
+        elif context == pult.all_attackers_division_num:
+            for i in range(len(pult.divisions)):
+                if i == pult.academy_division_num:
+                    continue
                 pult.divisions[i] = divisions_const[i]
                 pult.divisions_active[i] = False
         else:
