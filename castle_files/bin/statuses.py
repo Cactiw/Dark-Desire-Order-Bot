@@ -14,6 +14,7 @@ import re
 import datetime
 
 OWN_STATUS_PRICE = 5000
+# PLAYER_STATUS_PRICE = 10000
 OWN_STATUS_ID = 0
 
 
@@ -26,11 +27,12 @@ def status_shop(bot, update):
     player_statuses = player.tea_party_info.get("statuses") or []
     for status_id, status in list(statuses_const.items()):
         name, price = status.get("name"), status.get("price")
-        if status not in player_statuses:
+        if status not in player_statuses and not status.get("unique"):
             response += "<b>{}</b>: {}🔘\n/buy_status_{}\n\n".format(name, price, status_id)
     response += "\n\nУстановить собственный статус ({} 🔘): /set_own_status {}\n" \
-                "<em>Обратите внимание, повторная смена статуса будет вновь стоить жетоны.</em>" \
-                "".format(OWN_STATUS_PRICE, "Новый статус")
+                "<em>Обратите внимание, повторная смена статуса будет вновь стоить жетоны.</em>\n" \
+                # "Установить статус другому ({} 🔘): /set_player_status {} {}".format(
+                # OWN_STATUS_PRICE, "{Новый статус}", PLAYER_STATUS_PRICE, "id игрока", "{Новый статус}")
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
@@ -163,6 +165,9 @@ def buy_status(bot, update):
         return
     status = statuses_const.get(status_id)
     price, name = status.get("price"), status.get("name")
+    if price is None:
+        bot.send_message(chat_id=mes.chat_id, text="Этот статус невозможно купить.")
+        return
     if player.reputation < price:
         bot.send_message(chat_id=mes.chat_id, text="Недостаточно 🔘")
         return
@@ -223,5 +228,8 @@ def get_status_text_by_id(status_id: int, player_id=None) -> str:
         return player.tea_party_info.get("own_status")
     status = statuses_const.get(status_id)
     if status is not None:
-        return status["name"]
+        name = status["name"]
+        if status.get("unique"):
+            name += " 🎗"
+        return name
     return None
