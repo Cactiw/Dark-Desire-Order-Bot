@@ -106,10 +106,10 @@ def mob(bot, update):
 
             pass
             # Верно!
-            # requests.post('http://104.40.129.51:5555/addMob',
-            #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
-            #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
-            #               timeout=0.3)
+            requests.post('http://ec2-18-184-54-121.eu-central-1.compute.amazonaws.com:5555/addMob',
+                          json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+                                           "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
+                          timeout=0.3)
         except Exception:
             logging.error(traceback.format_exc())
     else:
