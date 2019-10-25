@@ -474,6 +474,7 @@ class CW3API:
             if change_send:
                 self.guild_changes.update({guild.tag: glory - old_glory})
                 if self.guild_changes_work is None:
+                    logging.error("Planning guild info send to MID")
                     self.guild_changes_work = threading.Timer(60, self.send_guild_changes_to_mid)
                     self.guild_changes_work.start()
                 response = "Итоги битвы <b>{}</b>\n".format(guild.tag)
@@ -500,13 +501,16 @@ class CW3API:
     #
 
     def send_guild_changes_to_mid(self):
+        logging.error("Started sending guild info to MID")
         guild_changes = {k: v for k, v in sorted(list(self.guild_changes.items()), key=lambda x: x[1], reverse=True)}
+        logging.error(guild_changes)
         self.guild_changes_work = None
         self.guild_changes.clear()
         response = "Изменения глори по гильдиям:\n"
         for tag, glory_change in list(guild_changes.items()):
             guild = Guild.get_guild(guild_tag=tag, new_cursor=True)
             response += "{}<b>{}</b> 🎖:<code>{:>3}</code>\n".format("🖤", guild.tag, glory_change)
+        logging.error("Sending guild info to MID, {}".format(response))
         self.bot.send_message(chat_id=MID_CHAT_ID, response=response, parse_mode='HTML')
 
     # Запрос доступа к апи
