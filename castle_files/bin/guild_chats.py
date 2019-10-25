@@ -5,6 +5,7 @@ from castle_files.bin.service_functions import get_time_remaining_to_battle, che
 
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
+from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.work_materials.globals import dispatcher
 from castle_files.bin.telethon_script import castles_stats_queue
@@ -145,10 +146,11 @@ def guild_top_battles(bot, update):
                          text='Гильдейские топы доступны только командирам и замам гильдий.')
         return
     response = get_top_text(guild, 3)
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    for text in response:
+        bot.send_message(chat_id=mes.chat_id, text=text, parse_mode='HTML')
 
 
-def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
+def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None) -> [str]:
     if max_players is None:
         max_players = 10000
     if curr_cursor is None:
@@ -171,6 +173,7 @@ def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
         reports = player.get_reports_count()[0]
         players.append([player, exp, gold, stock, "{}/{} ({}%)".format(reports, total_battles, reports * 100 //
                                                                        total_battles)])
+    ret = []
     response = "📈Топ <b>{}</b> за {} по битвам:\n".format(guild.tag, "день" if battles_for_count == 3 else "неделю")
 
     tops = ["🔥По опыту:", "💰По золоту:", "📦По стоку:", "⚔️Участие в битвах на этой неделе:"]
@@ -187,7 +190,12 @@ def get_top_text(guild, battles_for_count, max_players=None, curr_cursor=None):
                                                                         ""), top[0], elem[i + 1])
             elif j == max_players:
                 response += "...\n"
-    return response
+            if len(response) > MAX_MESSAGE_LENGTH:
+                ret.append(response)
+                response = ""
+    if response != "":
+        ret.append(response)
+    return ret
 
 
 # Рассылка ежедневных топов по ги
@@ -210,7 +218,8 @@ def top_notify(bot, job):
                 continue
             response = get_top_text(guild, 21, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW_WEEK)
             if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
-                bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+                for text in response:
+                    bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
 
     time.sleep(1)
     plan_top_notify()
