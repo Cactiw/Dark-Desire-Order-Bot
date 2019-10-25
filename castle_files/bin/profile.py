@@ -14,6 +14,7 @@ from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, 
 from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id
 from castle_files.bin.reports import count_battle_time
 from castle_files.bin.statuses import get_status_text_by_id
+from castle_files.bin.api import auth
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -512,6 +513,7 @@ def hero(bot, update, user_data):
                          parse_mode='HTML')
         if filter_is_pm(mes):
             send_general_buttons(mes.from_user.id, user_data)
+        auth(bot, update)
 
     else:
         # Обновляем существующую информацию
