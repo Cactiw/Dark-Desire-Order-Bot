@@ -2,7 +2,8 @@
 Библиотека для работы с АПИ ЧВ3
 """
 
-from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals
+from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals,\
+    MID_CHAT_ID
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.equipment import Equipment
@@ -42,6 +43,10 @@ class CW3API:
         self.connecting = False  # True, если соединение не установлено, но пытается установиться в данный момент
         self.active = True  # True при запуске, и False в самом конце, если self.active == True и
         #                   # self.connected == False, то это значит, что соединение оборвалось само.
+
+        self.guild_changes = {}
+        self.guild_changes_work = None
+
         self.conn = None
         self.cursor = None
         self.connection = None
@@ -467,6 +472,10 @@ class CW3API:
             old_stock, old_glory, change_send = guild.api_info.get("stock") or {}, guild.api_info.get("glory") or 0, \
                                                 guild.api_info.get("change_stock_send") or False
             if change_send:
+                self.guild_changes.update({guild.tag: glory - old_glory})
+                if self.guild_changes_work is None:
+                    self.guild_changes_work = threading.Timer(60, self.send_guild_changes_to_mid)
+                    self.guild_changes_work.start()
                 response = "Итоги битвы <b>{}</b>\n".format(guild.tag)
                 response += "<b>🎖Glory:</b> <code>{}</code>\n\n".format(glory - old_glory)
                 response += self.get_stock_change_text(old_stock, stock)
@@ -489,6 +498,16 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     #
+
+    def send_guild_changes_to_mid(self):
+        guild_changes = {k: v for k, v in sorted(list(self.guild_changes.items()), key=lambda x: x[1], reverse=True)}
+        self.guild_changes_work = None
+        self.guild_changes.clear()
+        response = "Изменения глори по гильдиям:\n"
+        for tag, glory_change in list(guild_changes.items()):
+            guild = Guild.get_guild(guild_tag=tag, new_cursor=True)
+            response += "{}<b>{}</b> 🎖:<code>{:>3}</code>\n".format("🖤", guild.tag, glory_change)
+        self.bot.send_message(chat_id=MID_CHAT_ID, response=response, parse_mode='HTML')
 
     # Запрос доступа к апи
     def request_auth_token(self, user_id):
