@@ -13,7 +13,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
 from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id
 from castle_files.bin.reports import count_battle_time
-from castle_files.bin.statuses import get_status_text_by_id
+from castle_files.bin.statuses import get_status_text_by_id, get_status_message_by_text
 from castle_files.bin.api import auth
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
@@ -27,17 +27,6 @@ import datetime
 import random
 import json
 
-
-status_messages = [
-    "В таверне вы слышали, как этот человек отзывался на имя <b>{}</b>",
-    "Кажется, это <b>{}</b>, вы видели его не стенде объявлений. Он занимался крафтом в неположенном месте.",
-    "Да это же <b>{}</b>! Вот кто привёл ручного дракона на прошлой неделе и чуть не сжёг все казармы.",
-    "Есть люди, которые пропускают битвы. Но <b>{}</b> не из таких. Он вообще на них не ходит.",
-    "*Крики о помощи*\nО! Кажется, это <b>{}</b> вновь полез в колодец за “счастливыми” монетками. Может, "
-    "стоит подать ему веревку, в обмен на мелочь?",
-    "Снова этот <b>{}</b> хвастается своим Грифоновским кинжалом. Может кто-то ему расскажет, что выгоднее точить "
-    "Хантер?"
-]
 
 class_chats_inverted = dict_invert(class_chats)
 
@@ -329,8 +318,8 @@ def view_profile(bot, update):
                     return
     if reply and player.status is not None:
         # Сообщение со статусом
-        bot.send_message(chat_id=mes.chat_id, text=random.choice(status_messages).format(get_status_text_by_id(
-            player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
+        bot.send_message(chat_id=mes.chat_id, text=get_status_message_by_text(
+            get_status_text_by_id(player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
     if not has_access:
         return
     buttons = get_profile_buttons(player)

@@ -2,7 +2,8 @@
 В этом модуле находятся функции, связанные со статусами
 """
 
-from castle_files.work_materials.statuses_const import statuses as statuses_const
+from castle_files.work_materials.statuses_const import statuses as statuses_const, statuses_to_messages, \
+    default_status_messages
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, moscow_tz
 
 from castle_files.libs.player import Player
@@ -12,6 +13,7 @@ from telegram.error import BadRequest
 
 import re
 import datetime
+import random
 
 OWN_STATUS_PRICE = 5000
 # PLAYER_STATUS_PRICE = 10000
@@ -236,3 +238,8 @@ def get_status_text_by_id(status_id: int, player_id=None) -> str:
             name += " 🎗"
         return name
     return None
+
+
+def get_status_message_by_text(text: str) -> str:
+    s = statuses_to_messages.get(text)
+    return s if s is not None else random.choice(default_status_messages).format(text)
