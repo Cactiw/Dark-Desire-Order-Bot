@@ -207,7 +207,8 @@ def top_notify(bot, job):
             continue
         response = get_top_text(guild, 3, curr_cursor=cursor, max_players=MAX_TOP_PLAYERS_SHOW)
         if guild.settings is None or guild.settings.get("tops_notify") in [None, True]:
-            bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+            for text in response:
+                bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
 
     total_battles = count_battles_in_this_week()
     if total_battles >= 21:
