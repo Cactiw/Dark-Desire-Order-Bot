@@ -69,6 +69,7 @@ class Location:
         self.special_info = row[2]
 
     def update_location_to_database(self):
+        cursor = conn.cursor()
         request = "update locations set state = %s, building_process = %s, special_info = %s where location_id = %s"
         cursor.execute(request, (self.state, self.building_process,
                                  json.dumps(self.special_info) if self.special_info is not None else None, self.id))

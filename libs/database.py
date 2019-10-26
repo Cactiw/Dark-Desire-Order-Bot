@@ -47,12 +47,12 @@ class Cursor:
         if threading.current_thread().ident != self.pid:
             self.requests += request + "\n"
             self.error_threading_count += 1
-            if self.error_threading_count >= 3 or True:
+            if self.error_threading_count >= 3:
                 logging.error("USING CURSOR {} IN ANOTHER THREAD (err_count = {}), curr pid = {}, "
                               "init pid = {}, request = {}, args = {}\n"
                               "{}\nStack:{}"
                               "".format(self.id, self.error_threading_count, threading.current_thread().ident,
-                                          self.pid, request, args, self.requests, traceback.format_stack()))
+                                        self.pid, request, args, self.requests, traceback.format_stack()))
                 self.pid = threading.current_thread().ident
         if self.cursor is None:
             self.cursor = self.conn.connection.cursor()
