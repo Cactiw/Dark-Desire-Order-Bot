@@ -8,5 +8,6 @@ statuses = {
     5: {"name": "🍁9КА", "price": 9000},
 
 
-    1000: {"name": "🐿Матерь Кусек", "price": None, "unique": True}
+    1000: {"name": "🐿Матерь Кусек", "price": None, "unique": True},
+    1001: {"name": "🐱Смущённая Киса", "price": None, "unique": True},
 }

@@ -57,6 +57,9 @@ def request_set_own_status(bot, update):
             bot.send_message(chat_id=mes.chat_id,
                              text="Новый статус совпадает с одним из зарезервированных. Выберите другой.")
             return
+    if '🎗' in new_status:
+        bot.send_message(chat_id=mes.chat_id, text="🎗 запрещена в статусе.")
+        return
     player.tea_party_info.update({"requested_own_status": new_status})
     player.update()
     bot.send_message(chat_id=mes.chat_id, text="Установить собственный статус на {}? ({} 🔘)\n\n"
