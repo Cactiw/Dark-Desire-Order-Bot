@@ -401,6 +401,21 @@ def stock(bot, update):
     bot.send_message_group(mes.chat_id)
 
 
+def autospend_gold(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    access = player.api_info.get("access") or []
+    if "wtb" not in access:
+        cwapi.auth_additional_operation(mes.from_user.id, "TradeTerminal", player=player)
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Для возможности покупать ресурсы на бирже, пожалуйста, "
+                              "пришлите форвард сообщения, полученного от @ChatWarsBot.")
+        return
+    return
+
+    parse = re.search(" (.*) (\\d+)")
+
+
 def grassroots_update_players(bot, job):
     cursor = conn.cursor()
     request = "select id, api_info from players where api_info ->> 'token' is not null"

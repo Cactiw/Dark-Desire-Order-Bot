@@ -257,6 +257,7 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_grant_additional_operational(self, channel, method, header, body):
+        accesses = {"GetGearInfo": "gear", "TradeTerminal": "wtb"}
         try:
             payload = body.get("payload")
             player_id = payload.get("userId")
@@ -272,8 +273,10 @@ class CW3API:
             if access is None:
                 access = []
                 player.api_info.update({"access": access})
-            if "gear" not in access:
-                access.append("gear")  # TODO Если будет больше 1 операции, то сделать отслеживание доступа.
+            operation = accesses.get(player.api_info.get("operation"))
+            if operation not in access:
+                access.append(operation)
+            player.api_info.pop("operation")
             player.update()
             self.bot.send_message(chat_id=player_id, text="Действие API успешно разрешено.")
         except Exception:
@@ -538,6 +541,7 @@ class CW3API:
         token = player.api_info.get("token")
         if token is None:
             raise RuntimeError
+        player.api_info.update({"operation": operation})
         self.publish_message({
             "token": token,
             "action": "authAdditionalOperation",
