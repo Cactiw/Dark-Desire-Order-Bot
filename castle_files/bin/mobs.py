@@ -21,7 +21,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 PING_LIMIT = 4
 
 
-def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs):
+def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes):
     response = "Обнаруженные мобы:\n"
     avg_lvl = 0
     for i, name in enumerate(mobs):
@@ -34,7 +34,7 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
         response += "\n" + get_helpers_text(helpers)
 
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
-    remaining_time = datetime.timedelta(minutes=3) - (now - forward_message_date)
+    remaining_time = datetime.timedelta(minutes=minutes) - (now - forward_message_date)
     if remaining_time < datetime.timedelta(0):
         response += "\nВремени не осталось!"
     else:
@@ -93,7 +93,9 @@ def mob(bot, update):
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
+    minutes = 5 if 'ambush' in mes.text else 3
+    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs,
+                                                           minutes)
     player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
         bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
@@ -172,7 +174,8 @@ def mob_help(bot, update):
                                 show_alert=True)
     else:
         helpers.append(update.callback_query.from_user.username)
-    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs)
+    minutes = 5 if 'ambush' in mes.text else 3
+    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs, minutes)
 
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
