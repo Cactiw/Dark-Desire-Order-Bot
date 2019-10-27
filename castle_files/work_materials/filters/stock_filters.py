@@ -34,7 +34,7 @@ class FilterStockWithdraw(BaseFilter):
     def filter(self, message):
         return (filter_is_chat_wars_forward(message) or True) and (
                 message.text.startswith("Not enough materials") or message.text.startswith("Не хватает материалов") or
-                message.text.startswith("Materials needed"))
+                message.text.startswith("Materials needed") or message.text.startswith("Нет нужных материалов"))
 
 
 filter_stock_withdraw = FilterStockWithdraw()

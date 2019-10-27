@@ -135,12 +135,20 @@ def send_withdraw(bot, update):
                         names.append(p)
     else:
         for string in update.message.text.splitlines():
-            parse = re.search("(\\d+) x ([^\n$]+)", string)
-            if parse is None:
-                continue
-            count = int(parse.group(1))
-            name = parse.group(2)
-            code = resources.get(name)
+            if "Нет нужных материалов" in mes.text:
+                parse = re.search("([^\n$]+) x (\\d+)", string)
+                if parse is None:
+                    continue
+                count = int(parse.group(2))
+                name = parse.group(1)
+                code = resources.get(name)
+            else:
+                parse = re.search("(\\d+) x ([^\n$]+)", string)
+                if parse is None:
+                    continue
+                count = int(parse.group(1))
+                name = parse.group(2)
+                code = resources.get(name)
             if code is None:
                 for num, elem in list(items.items()):
                     if name.lower() == elem[1].lower():
