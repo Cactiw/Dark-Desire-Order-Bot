@@ -507,6 +507,7 @@ def roulette_game(bot, job):
         print(total_placed, roulette.special_info["placed"])
         if total_placed == 0:
             bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response + "Никто не сделал ставок. Игра не состоялась.")
+            plan_roulette_games()
             return
         players, position = {}, 1
         for player_id, placed in list(roulette.special_info["placed"].items()):
