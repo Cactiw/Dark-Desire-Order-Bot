@@ -511,7 +511,7 @@ class CW3API:
         for tag, glory_change in list(guild_changes.items()):
             guild = Guild.get_guild(guild_tag=tag, new_cursor=True)
             response += "{}<b>{}</b> 🎖:<code>{:>3}</code>\n".format("🖤", guild.tag, glory_change)
-        self.bot.sync_send_message(chat_id=MID_CHAT_ID, response=response, parse_mode='HTML')
+        self.bot.send_message(chat_id=MID_CHAT_ID, text=response, parse_mode='HTML')
 
     # Запрос доступа к апи
     def request_auth_token(self, user_id):
