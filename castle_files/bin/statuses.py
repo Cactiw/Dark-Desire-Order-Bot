@@ -31,8 +31,9 @@ def status_shop(bot, update):
         name, price = status.get("name"), status.get("price")
         if status not in player_statuses and not status.get("unique"):
             response += "<b>{}</b>: {}🔘\n/buy_status_{}\n\n".format(name, price, status_id)
-    response += "\n\nУстановить собственный статус ({} 🔘): /set_own_status {}\n" \
+    response += "\nУстановить собственный статус ({} 🔘): /set_own_status [Новый статус]\n" \
                 "<em>Обратите внимание, повторная смена статуса будет вновь стоить жетоны.</em>\n" \
+                "".format(OWN_STATUS_PRICE)
                 # "Установить статус другому ({} 🔘): /set_player_status {} {}".format(
                 # OWN_STATUS_PRICE, "{Новый статус}", PLAYER_STATUS_PRICE, "id игрока", "{Новый статус}")
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
