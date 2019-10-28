@@ -203,6 +203,15 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('start', start, filters=filter_is_pm, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
+    dispatcher.add_handler(CommandHandler('dokument', view_profile))
+    dispatcher.add_handler(CommandHandler('document', view_profile))
+    dispatcher.add_handler(CommandHandler('dok', view_profile))
+    dispatcher.add_handler(CommandHandler('doc', view_profile))
+
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered & filter_joined_castle_chat,
+                                          castle_hello))
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
+
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
 
     # Язык бота
@@ -249,14 +258,6 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_split_union, split_union))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
-    dispatcher.add_handler(CommandHandler('dokument', view_profile))
-    dispatcher.add_handler(CommandHandler('document', view_profile))
-    dispatcher.add_handler(CommandHandler('dok', view_profile))
-    dispatcher.add_handler(CommandHandler('doc', view_profile))
-
-    dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered & filter_joined_castle_chat,
-                                          castle_hello))
-    dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered & filter_is_pm, unknown_input,
                                           pass_user_data=True))
 
