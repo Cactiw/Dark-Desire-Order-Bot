@@ -142,7 +142,9 @@ def castle_hello(bot, update):
         cp.special_info.update({"notified_on_join": notified})
     if mes.from_user.id not in notified:
         bot.send_message(chat_id=mes.chat_id,
-                         text="Привет, новичок!\n\n<a href=\"https://t.me/joinchat/F4YvQUUfsDhK1bYfU_S1Fw\">Вступай в "
+                         text="Привет, новичок!\n\nДоложи капитану стражи о прибытии, прислав в чат пароль "
+                              "латинскими буквами в формате XXX XXX.\n\n"
+                              "<a href=\"https://t.me/joinchat/F4YvQUUfsDhK1bYfU_S1Fw\">Вступай в "
                               "академию</a>, где ты получишь необходимые знания и навыки!",
                          reply_to_message_id=mes.message_id, parse_mode='HTML', disable_web_page_preview=True)
         notified.append(mes.from_user.id)
