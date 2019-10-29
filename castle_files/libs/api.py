@@ -317,8 +317,12 @@ class CW3API:
                                        else "") + profile.get("userName"):
                     pass
                 else:
-                    player.nickname = ("{}[{}]".format(guild_emoji, player.guild_tag) if player.guild_tag is not None
+                    new_nickname = ("{}[{}]".format(guild_emoji, player.guild_tag) if player.guild_tag is not None
                                        else "") + profile.get("userName")
+                    if new_nickname in player.nickname:
+                        pass
+                    else:
+                        player.nickname = new_nickname
                     # player.nickname = ("[{}]".format(player.guild_tag) if player.guild_tag is not None else
                     #                    "") + profile.get("userName")
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
