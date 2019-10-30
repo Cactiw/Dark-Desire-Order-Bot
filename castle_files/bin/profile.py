@@ -278,18 +278,20 @@ def view_profile(bot, update):
         if mes.reply_to_message is not None:
             #  Реплай в чате
             reply = True
-            player_id = mes.reply_to_message.from_user.id
+            player_ids = [mes.reply_to_message.from_user.id]
         elif has_access is False:
             return
         elif "@" in update.message.text:
             # Поиск по юзерке
-            request = "select id from players where username = %s"
-            cursor.execute(request, (mes.text.partition("@")[2],))
-            row = cursor.fetchone()
-            if row is None:
-                bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
-                return
-            player_id = row[0]
+            player_ids = []
+            for username in mes.text.split()[1:]:
+                request = "select id from players where username = %s"
+                cursor.execute(request, (username.partition("@")[2],))
+                row = cursor.fetchone()
+                if row is None:
+                    bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+                    return
+                player_ids.append(row[0])
         else:
             # Поиск по нику в игре
             request = "select id from players where lower(nickname) = %s or lower(nickname) like %s"
@@ -299,41 +301,42 @@ def view_profile(bot, update):
             if row is None:
                 bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
                 return
-            player_id = row[0]
+            player_ids = [row[0]]
     else:
         player_id = re.search("_(\\d+)", mes.text)
-        player_id = int(player_id.group(1))
-    if player_id is None:
+        player_ids = [int(player_id.group(1))]
+    if not player_ids:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
-    player = Player.get_player(player_id)
-    if player is None or (mes.text.startswith("/view_profile") and (guild is None or player.guild != guild.id)):
-        if player is not None and player.guild is not None:
-            guild = Guild.get_guild(player.guild)
-            if guild is not None:
-                if requested_player_id in guild.assistants or requested_player_id == guild.commander_id:
-                    pass
-                else:
-                    bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
-                    return
-    if reply and player.status is not None:
-        # Сообщение со статусом
-        bot.send_message(chat_id=mes.chat_id, text=get_status_message_by_text(
-            get_status_text_by_id(player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
-    if not has_access:
-        return
-    buttons = get_profile_buttons(player)
-    if (player.guild is None or player.guild != requested_player.guild) and not check_whois_access(requested_player_id):
-        guild = Guild.get_guild(guild_id=player.guild)
-        bot.send_message(chat_id=mes.from_user.id,
-                         text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "
-                              "служит {}".format("в гильдии <b>{}</b>".format(guild.tag) if guild is not None else
-                                                 "как вольный наёмник (без гильдии)"),
-                         parse_mode='HTML', reply_markup=buttons)
-        return
-    buttons = get_profile_buttons(player, whois_access=True)
-    response = get_profile_text(player, self_request=False, requested_player=requested_player)
-    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
+    for player_id in player_ids:
+        player = Player.get_player(player_id)
+        if player is None or (mes.text.startswith("/view_profile") and (guild is None or player.guild != guild.id)):
+            if player is not None and player.guild is not None:
+                guild = Guild.get_guild(player.guild)
+                if guild is not None:
+                    if requested_player_id in guild.assistants or requested_player_id == guild.commander_id:
+                        pass
+                    else:
+                        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
+                        return
+        if reply and player.status is not None:
+            # Сообщение со статусом
+            bot.send_message(chat_id=mes.chat_id, text=get_status_message_by_text(
+                get_status_text_by_id(player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
+        if not has_access:
+            return
+        buttons = get_profile_buttons(player)
+        if (player.guild is None or player.guild != requested_player.guild) and not check_whois_access(requested_player_id):
+            guild = Guild.get_guild(guild_id=player.guild)
+            bot.send_message(chat_id=mes.from_user.id,
+                             text="Вы не знаете этого человека, однако его форма позволяет вам сделать вывод, что он "
+                                  "служит {}".format("в гильдии <b>{}</b>".format(guild.tag) if guild is not None else
+                                                     "как вольный наёмник (без гильдии)"),
+                             parse_mode='HTML', reply_markup=buttons)
+            return
+        buttons = get_profile_buttons(player, whois_access=True)
+        response = get_profile_text(player, self_request=False, requested_player=requested_player)
+        bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
 
 
 def guild_history(bot, update):
