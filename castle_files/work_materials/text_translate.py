@@ -154,11 +154,17 @@ texts_translate = {
     "Roulette. Here you can compete in luck with other players.\nGames are held every 3 hours from 9 to 21 hours GMT.",
     "На ближайшую игру поставлено <b>(\\d+)</b> 🔘жетонов.": "The nearest game has {} 🔘tokens.",
 
-    "Введите количество 🔘жетонов для ставки:\nМинимальная ставка: 10🔘\n\nВаша ставка: <b>(\\d+)</b>🔘.\nДоступно: <b>(\\d+)</b>🔘.\n\n<em>Обратите внимание, отменить ставку невозможно.</em>":
-    "Enter the number of 🔘tokens to bet:\nMinimum bet: 10🔘\n\nYour bet: {}🔘.\nAvailable: {}🔘.\n\n<em>Please note that it is not possible to cancel the bet.</em>",
+    "Введите количество 🔘жетонов для ставки:\nМинимальная ставка: 10🔘\n\nВаша ставка: <b>(\\d+)</b>🔘.\nДоступно: <b>(\\d+)</b>🔘.":
+    "Enter the number of 🔘tokens to bet:\nMinimum bet: 10🔘\n\nYour bet: {}🔘.\nAvailable: {}🔘.",
+    "Максимальная ставка: <b>(\\d+)</b>🔘": "Maximum bet: <b>{}</b>🔘",
+    "<em>Обратите внимание, отменить ставку невозможно.</em>": "<em>Please note that it is not possible to cancel the bet.</em>",
     "Ставка успешно сделана. Удачи на игре!": "The rate of successfully done. Good luck on the game!",
     "Минимальная ставка: (\\d+)🔘.": "Minimum bet: {}🔘.",
     "У вас не хватает 🔘жетонов!": "You don't have enough 🔘tokens!",
+    "На последнюю игру каждые сутки ставки не ограничены.":
+        "On the last game every day bets are not limited.",
+    "Результаты будут на": "The results will be on the",
+    "Центральной площади": "Central Square",
 
     "Статус уже куплен": "Status already purchased",
     "Статус <b>(.+)</b> успешно куплен!": "Status <b>{}</b> successfully purchased!",
