@@ -476,8 +476,6 @@ def place_roulette_bet(bot, update, user_data):
     if bet > player.reputation:
         bot.send_message(chat_id=mes.chat_id, text="У вас не хватает 🔘жетонов!")
         return
-    player.reputation -= bet
-    player.update()
     roulette = Location.get_location(10)
     if roulette.special_info.get("game_running"):
         bot.send_message(chat_id=mes.chat_id, text="Игра началась. Ставки закрыты!")
@@ -493,6 +491,8 @@ def place_roulette_bet(bot, update, user_data):
                                   "На последнюю игру каждые сутки ставки не ограничены.".format(ROULETTE_MAX_BET_LIMIT),
                              parse_mode='HTML')
             return
+    player.reputation -= bet
+    player.update()
     roulette.special_info["placed"].update({str(mes.from_user.id): placed})
     total_placed = roulette.special_info["total_placed"]
     if total_placed is None:
