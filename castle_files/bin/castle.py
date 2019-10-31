@@ -24,6 +24,8 @@ import random
 import time
 import datetime
 
+ROULETTE_MAX_BET_LIMIT = 50
+ROULETTE_HOUR_LIMIT = 18
 TOP_NUM_PLAYERS = 20
 KABALA_GAIN = 2000
 
@@ -449,8 +451,11 @@ def request_roulette_bet(bot, update, user_data):
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Введите количество 🔘жетонов для ставки:\nМинимальная ставка: 10🔘\n\n"
                           "Ваша ставка: <b>{}</b>🔘.\n"
-                          "Доступно: <b>{}</b>🔘.\n\n<em>Обратите внимание, отменить ставку невозможно.</em>"
-                          "".format(placed, player.reputation),
+                          "Доступно: <b>{}</b>🔘.{}\n\n<em>Обратите внимание, отменить ставку невозможно.</em>"
+                          "".format(placed, player.reputation,
+                                    "\nМаксимальная ставка: <b>{}</b>🔘".format(ROULETTE_MAX_BET_LIMIT) if
+                                    datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time() <
+                                    datetime.time(hour=ROULETTE_HOUR_LIMIT) else ""),
                      reply_markup=buttons, parse_mode='HTML')
 
 
@@ -481,6 +486,13 @@ def place_roulette_bet(bot, update, user_data):
     if placed is None:
         placed = 0
     placed += bet
+    if datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time() < datetime.time(hour=ROULETTE_HOUR_LIMIT):
+        if placed > ROULETTE_MAX_BET_LIMIT:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Максимальная ставка: <b>{}</b>🔘.\n"
+                                  "На последнюю игру каждые сутки ставки не ограничены.".format(ROULETTE_MAX_BET_LIMIT),
+                             parse_mode='HTML')
+            return
     roulette.special_info["placed"].update({str(mes.from_user.id): placed})
     total_placed = roulette.special_info["total_placed"]
     if total_placed is None:
