@@ -351,6 +351,13 @@ def get_tops_text(player, stat, stat_text, game_class=None):
                       "additional_info ->> 'resource' = '{}' {}group by nickname, game_class, lvl, player_id order by "\
                       "res_count desc;".format(stat, "and game_class = '{}'"
                                                      "".format(game_class) if game_class is not None else "")
+    elif stat.startswith("roulette"):
+        select = stat.partition("roulette_")[2]
+        request = "select nickname, count, game_class, lvl, players.id from locations, json_each(special_info -> '{}')"\
+                  " as a(id, count) inner join players on a.id::text::integer = players.id where " \
+                  "location_id = 10 order by " \
+                  "count::text::integer desc".format(select)  # Этот запрос составлялся час. Помянем.
+
     else:
         request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' and {} is not null " \
                   "and api_info -> 'token' is not null {}" \
@@ -563,15 +570,27 @@ def roulette_game(bot, job):
             pass
 
         roulette.special_info.update({"enter_text_format_values": [0], "placed": {}, "total_placed": 0})
-        won = roulette.special_info.get("won")
+        won, games_won, games_played = roulette.special_info.get("won"), roulette.special_info.get("games_won"), \
+                                       roulette.special_info.get("games_played")
+        if games_won is None:
+            games_won = {}
+            roulette.special_info.update({"games_won": games_won})
+        if games_played is None:
+            games_played = {}
+            roulette.special_info.update({"games_played": games_played})
         player_won = won.get(str(player.id)) or 0
+        player_games_won = games_won.get(str(player.id)) or 0
         roulette.special_info["won"].update({str(player.id): player_won + total_placed})
+        games_won.update({str(player.id): player_games_won + 1})
         roulette.update_location_to_database()
         for player_id, rng in list(players.items()):
+            player_played = games_played.get(str(player_id)) or 0
+            games_played.update({str(player_id): player_played + 1})
             bot.send_message(chat_id=player_id,
                              text="🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%"
                                   "".format("выиграли" if player_id == player.id else "проиграли",
                                             len(rng) / total_placed * 100))
+        roulette.update_location_to_database()
     except Exception:
         logging.error(traceback.format_exc())
     time.sleep(1)
@@ -593,6 +612,13 @@ def plan_roulette_games():
         logging.error("Roulette planned on {}".format(roulette_time))
     # print(roulette_time)
     # job.run_once(roulette_game, 60)  # тест
+
+
+def roulette_tops(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    text = get_tops_text(player=player, stat="roulette_won", stat_text="🔘")  # roulette_games_won, roulette_games_played
+    bot.send_message(chat_id=mes.chat_id, text=text, parse_mode='HTML')
 
 
 def request_kabala(bot, update):

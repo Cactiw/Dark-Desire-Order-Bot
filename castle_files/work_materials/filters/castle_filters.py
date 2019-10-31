@@ -303,3 +303,15 @@ class FilterPlaceRouletteBet(BaseFilter):
 
 
 filter_place_roulette_bet = FilterPlaceRouletteBet()
+
+
+class FilterRouletteTops(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text in ["Топы в рулетке", "Roulette tops"] and \
+            user_data.get("status") == 'roulette'
+
+
+filter_roulette_tops = FilterRouletteTops()

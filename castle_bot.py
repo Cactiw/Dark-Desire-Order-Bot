@@ -25,7 +25,7 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
     filter_request_change_castle_message, filter_change_castle_message, filter_headquarters, \
     filter_request_guild_message_notify, filter_send_guild_message_notify, filter_change_debrief, \
     filter_request_change_debrief, filter_hall_of_fame, filter_tops, filter_top_stat, filter_roulette, \
-    filter_request_roulette_bet, filter_place_roulette_bet, filter_status_shop
+    filter_request_roulette_bet, filter_place_roulette_bet, filter_status_shop, filter_roulette_tops
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category, \
@@ -71,7 +71,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
     hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, roulette_main, request_roulette_bet, \
-    place_roulette_bet, request_kabala, kabala
+    place_roulette_bet, request_kabala, kabala, roulette_tops
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category, guides
@@ -434,6 +434,7 @@ def castle_bot_processing():
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_place_roulette_bet, place_roulette_bet,
                                           pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_roulette_tops, roulette_tops))
 
     dispatcher.add_handler(CommandHandler('request_kabala', request_kabala))
     dispatcher.add_handler(CommandHandler('kabala', kabala, pass_user_data=True))
