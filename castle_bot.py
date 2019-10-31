@@ -71,7 +71,7 @@ from castle_files.bin.castle import central_square, barracks, back, throne_room,
     request_change_castle_message, change_castle_message, headquarters, \
     request_guild_message_notify, send_guild_message_notify, change_rp, request_change_debrief, change_debrief, \
     hall_of_fame, tops, top_stat, send_new_top, count_reputation_sum, roulette_main, request_roulette_bet, \
-    place_roulette_bet, request_kabala, kabala, roulette_tops
+    place_roulette_bet, request_kabala, kabala, roulette_tops, new_roulette_top
 from castle_files.bin.technical_tower import technical_tower, my_cabinet, request_change_update_message, \
     change_update_message, request_bot_guild_message_notify, send_bot_guild_message_notify, update_history, \
     change_update_history, manuscript, view_manuscript_category, guides
@@ -192,6 +192,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(set_own_status, pattern="p_own_status.*"))
     dispatcher.add_handler(CallbackQueryHandler(moderate_status, pattern="p_moderate_status_\\d+.*"))
+
+    dispatcher.add_handler(CallbackQueryHandler(new_roulette_top, pattern="roulette_top_.*"))
 
 
     #

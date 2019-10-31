@@ -139,6 +139,20 @@ def get_tops_buttons(stat, curr='all'):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_roulette_tops_buttons(curr=""):
+    buttons = [
+        [
+            InlineKeyboardButton("{}🔘Выиграно".format('✅' if curr == 'roulette_won' else ""),
+                                 callback_data="roulette_top_won"),
+            InlineKeyboardButton("{}Игр выиграно".format('✅' if curr == 'roulette_games_won' else ""),
+                                 callback_data="roulette_top_games_won"),
+            InlineKeyboardButton("{}Игр сыграно".format('✅' if curr == 'roulette_games_played' else ""),
+                                 callback_data="roulette_top_games_played"),
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 def get_vote_buttons(vote, choice=None):
     buttons = []
     for i, var in enumerate(vote.variants):

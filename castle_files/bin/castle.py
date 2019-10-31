@@ -1,7 +1,8 @@
 """
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
-from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons
+from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons, \
+    get_roulette_tops_buttons
 from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
 from castle_files.bin.mid import do_mailing, fill_mid_players
@@ -618,7 +619,28 @@ def roulette_tops(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     text = get_tops_text(player=player, stat="roulette_won", stat_text="🔘")  # roulette_games_won, roulette_games_played
-    bot.send_message(chat_id=mes.chat_id, text=text, parse_mode='HTML')
+    buttons = get_roulette_tops_buttons(curr="won")
+    bot.send_message(chat_id=mes.chat_id, text=text, reply_markup=buttons, parse_mode='HTML')
+
+
+def new_roulette_top(bot, update):
+    stats = {"roulette_won": "🔘", "roulette_games_won": "🏆", "roulette_games_played": "🎰"}
+    data, mes = update.callback_query.data, update.callback_query.message
+    new_stat = "roulette_" + data.partition("roulette_top_")[2]
+    player = Player.get_player(update.callback_query.from_user.id)
+    new_text, new_buttons = get_tops_text(player=player, stat=new_stat, stat_text=stats.get(new_stat)), \
+                            get_roulette_tops_buttons(curr=new_stat)
+    if new_text != mes.text or new_buttons != mes.reply_markup:
+        try:
+            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text,
+                                reply_markup=new_buttons, parse_mode='HTML')
+        # except Exception:
+        # logging.error(traceback.format_exc())
+        except BadRequest:
+            pass
+        except TelegramError:
+            pass
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 def request_kabala(bot, update):
