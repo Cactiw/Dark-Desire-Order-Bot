@@ -8,6 +8,11 @@ from castle_files.libs.bot_async_messaging import AsyncBot
 
 from libs.database import Conn
 
+try:
+    from config import enable_api
+except ImportError:
+    enable_api = True
+
 castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 
 classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel', 'Master', 'Esquire']

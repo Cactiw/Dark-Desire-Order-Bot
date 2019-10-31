@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE
+    CONNECT_TYPE, enable_api
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -574,13 +574,14 @@ def castle_bot_processing():
     parse_stats_pr.start()
     processes.append(parse_stats_pr)
 
-    api = threading.Thread(target=start_api, args=[])
-    api.start()
-    processes.append(api)
+    if enable_api:
+        api = threading.Thread(target=start_api, args=[])
+        api.start()
+        processes.append(api)
 
-    players_update = threading.Thread(target=players_update_monitor, args=[])
-    players_update.start()
-    processes.append(players_update)
+        players_update = threading.Thread(target=players_update_monitor, args=[])
+        players_update.start()
+        processes.append(players_update)
 
     # text = """"""
     # direct_send_message([485596730, 455422372, 575592214, 683640549, 669515343, 260550882, 187299899], text)
