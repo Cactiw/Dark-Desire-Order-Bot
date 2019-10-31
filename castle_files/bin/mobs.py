@@ -43,7 +43,7 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - 5), int(avg_lvl + 10)),
                                      url=u"https://t.me/share/url?url=/fight_{}".format(link)),
                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
-    if len(helpers) >= 3:
+    if len(helpers) >= 5:
         buttons[0].pop(1)
     return [response, InlineKeyboardMarkup(buttons), avg_lvl]
 
