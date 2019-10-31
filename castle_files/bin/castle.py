@@ -619,7 +619,7 @@ def roulette_tops(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     text = get_tops_text(player=player, stat="roulette_won", stat_text="🔘")  # roulette_games_won, roulette_games_played
-    buttons = get_roulette_tops_buttons(curr="won")
+    buttons = get_roulette_tops_buttons(curr="roulette_won")
     bot.send_message(chat_id=mes.chat_id, text=text, reply_markup=buttons, parse_mode='HTML')
 
 

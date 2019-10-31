@@ -264,7 +264,7 @@ class FilterStatusShop(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Магазин статусов", "Status shop"]
+        return filter_is_pm(message) and message.text in ["💲Магазин статусов", "💲Status shop"]
 
 
 filter_status_shop = FilterStatusShop()
@@ -275,7 +275,7 @@ class FilterRoulette(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Рулетка", "Roulette"] and \
+        return filter_is_pm(message) and message.text in ["🎰Рулетка", "🎰Roulette"] and \
             user_data.get("status") == 'tea_party'
 
 
@@ -287,7 +287,7 @@ class FilterRequestRouletteBet(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Сделать ставку", "Place a bet"] and \
+        return filter_is_pm(message) and message.text in ["🔸Сделать ставку", "🔸Place a bet"] and \
             user_data.get("status") == 'roulette'
 
 
@@ -310,7 +310,7 @@ class FilterRouletteTops(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text in ["Топы в рулетке", "Roulette tops"] and \
+        return filter_is_pm(message) and message.text in ["📈Топы в рулетке", "📈Roulette tops"] and \
             user_data.get("status") == 'roulette'
 
 

@@ -144,9 +144,9 @@ def get_roulette_tops_buttons(curr=""):
         [
             InlineKeyboardButton("{}🔘Выиграно".format('✅' if curr == 'roulette_won' else ""),
                                  callback_data="roulette_top_won"),
-            InlineKeyboardButton("{}Игр выиграно".format('✅' if curr == 'roulette_games_won' else ""),
+            InlineKeyboardButton("{}🏆Игр выиграно".format('✅' if curr == 'roulette_games_won' else ""),
                                  callback_data="roulette_top_games_won"),
-            InlineKeyboardButton("{}Игр сыграно".format('✅' if curr == 'roulette_games_played' else ""),
+            InlineKeyboardButton("{}🎰Игр сыграно".format('✅' if curr == 'roulette_games_played' else ""),
                                  callback_data="roulette_top_games_played"),
         ]
     ]
@@ -415,8 +415,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             # KeyboardButton("Рыть котлован"),
             # ],
             [
-                KeyboardButton("Рулетка"),
-                KeyboardButton("Магазин статусов"),
+                KeyboardButton("🎰Рулетка"),
+                KeyboardButton("💲Магазин статусов"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
@@ -425,8 +425,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
     elif status == 'roulette':
         buttons = [
             [
-                KeyboardButton("Сделать ставку"),
-                KeyboardButton("Топы в рулетке"),
+                KeyboardButton("🔸Сделать ставку"),
+                KeyboardButton("📈Топы в рулетке"),
             ],
             [
                 KeyboardButton("↩️ Назад")

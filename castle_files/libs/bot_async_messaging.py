@@ -180,9 +180,12 @@ class AsyncBot(Bot):
                         if keyboard is not None:
                             for button_row in keyboard:
                                 for button in button_row:
-                                    text = buttons_translate.get(button.text)
-                                    if text is not None:
-                                        button.text = text
+                                    for ru_txt, en_txt in list(buttons_translate.items()):
+                                        if ru_txt in button.text and len(ru_txt) + 2 >= len(button.text):
+                                            text = button.text.replace(ru_txt, en_txt)
+                                            button.text = text
+                                    # if text is not None:
+                                    #     button.text = text
                     if mes_text is not None:
                         for ru_str, en_str in list(texts_translate.items()):
                             parse = re.search(ru_str, mes_text)
