@@ -580,7 +580,7 @@ def roulette_game(bot, job):
             roulette.special_info.update({"games_played": games_played})
         player_won = won.get(str(player.id)) or 0
         player_games_won = games_won.get(str(player.id)) or 0
-        roulette.special_info["won"].update({str(player.id): player_won + total_placed})
+        roulette.special_info["won"].update({str(player.id): player_won + total_placed - placed})
         games_won.update({str(player.id): player_games_won + 1})
         roulette.update_location_to_database()
         for player_id, rng in list(players.items()):
