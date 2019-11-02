@@ -4,9 +4,11 @@
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
 from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
+from castle_files.bin.quest_triggers import on_add_cw_quest
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
+from castle_files.libs.quest import Quest, CollectResourceQuest, quests
 from castle_files.libs.my_job import MyJob
 
 from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn, local_tz
@@ -20,6 +22,7 @@ import json
 import datetime
 import random
 import re
+import copy
 
 import threading
 
@@ -473,10 +476,37 @@ def add_cw_quest_result(bot, update):
     new_quest = {"exp": exp, "gold": gold}
     for name, count in parse:
         code = get_item_code_by_name(name)
-        new_quest.update({code: count})
+        new_quest.update({code: int(count)})
     drop.update({forward_message_date.timestamp(): new_quest})
     player.update()
     bot.send_message(chat_id=mes.from_user.id, text="Квест учтён.")
+    on_add_cw_quest(player, new_quest, forward_message_date.timestamp())
+
+
+def update_daily_quests():
+    cursor = conn.cursor()
+    request = "select id from players"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        player = Player.get_player(row[0])
+        if player is None:
+            continue
+        daily_quests: [Quest] = player.quests_info.get("daily_quests")
+        if daily_quests is None:
+            daily_quests = []
+            player.quests_info.update({"daily_quests": daily_quests})
+        else:
+            daily_quests.clear()
+        for i in range(3):
+            quest = copy.deepcopy(random.choice(list(quests.values())))
+            quest.start()
+            daily_quests.append(quest)
+        player.update_to_database()
+        row = cursor.fetchone()
+
+
+
 
 
 def load_construction_jobs():

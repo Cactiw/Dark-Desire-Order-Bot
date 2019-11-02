@@ -170,6 +170,8 @@ texts_translate = {
     "Статус <b>(.+)</b> успешно куплен!": "Status <b>{}</b> successfully purchased!",
     "Текущий статус:": "Current status:",
 
+    "Квест выполнен.": "Quest completed.",
+
 
 
     "Голосование доступно только жителям 🖤Скалы!": "This vote is available only for 🖤Rock players",
