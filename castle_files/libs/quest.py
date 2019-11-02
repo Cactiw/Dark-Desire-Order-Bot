@@ -10,6 +10,7 @@ import copy
 
 
 class Quest:
+    ALL_DAILY_QUESTS_REWARD = 100
     def __init__(self, id: int, quest_type: str, duration_type: str, description: str, objective, reward: int,
                  status: str, progress, started_time: time.time()):
         self.id = id
@@ -24,7 +25,8 @@ class Quest:
         self.player = None
         pass
 
-    def start(self):
+    def start(self, player):
+        self.player = player
         self.status = "Running"
         self.started_time = time.time()
 
@@ -54,12 +56,27 @@ class Quest:
         dispatcher.bot.send_message(
             chat_id=self.player.id, text="Квест выполнен.\nПолучено: <b>{}</b>🔘".format(self.reward), parse_mode='HTML')
 
+        if self.duration_type == "Daily":
+            daily_quests: [Quest] = self.player.quests_info.get("daily_quests")
+            if not daily_quests:
+                return
+            for quest in daily_quests:
+                if quest.status != "Completed":
+                    return
+            dispatcher.bot.send_message(chat_id=self.player.id, text="Все ежедневные квесты выполнены.\n"
+                                        "Получено: <b>{}</b>🔘".format(self.ALL_DAILY_QUESTS_REWARD), parse_mode='HTML')
+
     def try_complete(self):
         if self.check_complete():
             self.complete()
 
-    def check_complete(self):
-        raise NotImplemented
+    def check_complete(self) -> bool:
+        """It is assumed that self.progress and self.objective are int objects.
+        If not, then implement this method on your own."""
+        try:
+            return self.progress >= self.objective
+        except Exception:
+            raise NotImplemented
 
 
 class CollectResourceQuest(Quest):
@@ -70,11 +87,11 @@ class CollectResourceQuest(Quest):
             id=id, quest_type="collect_resource", duration_type="Daily", description="Собрать из квестов",
             objective=resources, reward=reward, status=status, progress=progress, started_time=started_time)
 
-    def start(self):
+    def start(self, player):
         self.objective = {random.choice(self.objective_draft.get("available_resources")):
                           self.objective_draft.get("count")[0]}
         self.progress = {}
-        super(CollectResourceQuest, self).start()
+        super(CollectResourceQuest, self).start(player)
 
     def update_progress(self, update_value: {str: int}):
         if self.status != "Running":
@@ -87,7 +104,6 @@ class CollectResourceQuest(Quest):
         self.try_complete()
 
 
-
     def check_complete(self) -> bool:
         for key, need_value in list(self.objective.items()):
             have_value = self.progress.get(key) or 0
@@ -95,14 +111,29 @@ class CollectResourceQuest(Quest):
                 return False
         return True
 
+#
+# class FeedbackRequestQuest(Quest):
+#     def __init__(self, id: int, quest_type: str, objective, reward: int, status: str,
+#                  progress: int, started_time: time.time):
+#         super(FeedbackRequestQuest, self).__init__(
+#             id, quest_type, "daily", "Обратиться к {}", objective, reward, status, progress, started_time)
+#
 
-class FeedbackRequestQuest(Quest):
-    pass
 
 
 
 quests = {
     1: CollectResourceQuest(id=1, resources={}, reward=25, status="Closed", progress={}, started_time=None,
                             objective_draft={"available_resources": ["01", "02", "03", "04", "06", "08", "20"],
-                                             "count": [10, 50]})
+                                             "count": [10, 50]}),
+    2: Quest(id=2, quest_type="feedback_request_mid", duration_type="Daily", objective=1,
+             description="Обратиться к миду <b>{}</b> раз", reward=25, status="Closed", progress=0, started_time=None),
+    3: Quest(id=3, quest_type="feedback_request_duty", duration_type="Daily", objective=1,
+             description="Обратиться к стражникам <b>{}</b> раз", reward=25, status="Closed", progress=0,
+             started_time=None),
+    4: Quest(id=4, quest_type="feedback_request_king", duration_type="Daily", objective=1,
+             description="Попросить аудиенции у Короля", reward=25, status="Closed", progress=0,
+             started_time=None),
+
+
 }

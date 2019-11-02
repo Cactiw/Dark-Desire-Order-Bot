@@ -500,7 +500,7 @@ def update_daily_quests():
             daily_quests.clear()
         for i in range(3):
             quest = copy.deepcopy(random.choice(list(quests.values())))
-            quest.start()
+            quest.start(player)
             daily_quests.append(quest)
         player.update_to_database()
         row = cursor.fetchone()
