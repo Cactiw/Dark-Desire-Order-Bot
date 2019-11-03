@@ -12,8 +12,9 @@ import copy
 
 class Quest:
     ALL_DAILY_QUESTS_REWARD = 100
+
     def __init__(self, id: int, quest_type: str, duration_type: str, description: str, objective, reward: int,
-                 status: str, progress, started_time: time.time()):
+                 status: str, progress, started_time: time.time(), daily_unique=False):
         self.id = id
         self.type = quest_type
         self.duration_type = duration_type
@@ -23,6 +24,7 @@ class Quest:
         self.status = status
         self.progress = progress
         self.started_time = started_time
+        self.daily_unique = daily_unique
         self.player = None
         pass
 
@@ -88,11 +90,14 @@ class Quest:
 
 class CollectResourceQuest(Quest):
     def __init__(self, id: int, resources: {str: int}, reward: int, status: str,
-                 progress: {str: int}, started_time: time.time, objective_draft=None):
+                 progress: {str: int}, started_time: time.time, objective_draft=None, daily_unique=False):
         self.objective_draft = objective_draft
+        quest_type = "castle_collect_resource" if list(objective_draft["available_resources"])[0] in [
+            "🌲Wood", "⛰Stone"] else "collect_resource"
         super(CollectResourceQuest, self).__init__(
-            id=id, quest_type="collect_resource", duration_type="Daily", description="Собрать в квестах ",
-            objective=resources, reward=reward, status=status, progress=progress, started_time=started_time)
+            id=id, quest_type=quest_type, duration_type="Daily", description="Собрать в квестах ",
+            objective=resources, reward=reward, status=status, progress=progress, started_time=started_time,
+            daily_unique=daily_unique)
 
     def start(self, player):
         self.objective = {random.choice(self.objective_draft.get("available_resources")):
@@ -104,6 +109,7 @@ class CollectResourceQuest(Quest):
         if self.status != "Running":
             return
         for key, value in list(update_value.items()):
+            print(key, value, self.objective)
             if key not in self.objective:
                 continue
             old_value = self.progress.get(key) or 0
@@ -144,13 +150,17 @@ quests = {
                             objective_draft={"available_resources": ["01", "02", "03", "04", "06", "08", "20"],
                                              "count": [10, 50]}),
     2: Quest(id=2, quest_type="feedback_request_mid", duration_type="Daily", objective=1,
-             description="Обратиться к миду <b>{}</b> раз", reward=25, status="Closed", progress=0, started_time=None),
+             description="Обратиться к миду <b>{}</b> раз", reward=25, status="Closed", progress=0, started_time=None,
+             daily_unique=True),
     3: Quest(id=3, quest_type="feedback_request_duty", duration_type="Daily", objective=1,
              description="Обратиться к стражникам <b>{}</b> раз", reward=25, status="Closed", progress=0,
-             started_time=None),
+             started_time=None, daily_unique=True),
     4: Quest(id=4, quest_type="feedback_request_king", duration_type="Daily", objective=1,
              description="Попросить аудиенции у Короля", reward=25, status="Closed", progress=0,
-             started_time=None),
+             started_time=None, daily_unique=True),
+    5: CollectResourceQuest(id=5, resources={}, reward=25, status="Closed", progress={}, started_time=None,
+                            objective_draft={"available_resources": ["🌲Wood", "⛰Stone"],
+                                             "count": [1, 5]}, daily_unique=True)
 
 
 }

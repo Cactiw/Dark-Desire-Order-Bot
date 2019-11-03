@@ -36,4 +36,8 @@ def on_mid_request(player):
     update_quest_type(player, "feedback_request_mid", 1)
 
 
+def on_resource_return(player, resource):
+    res = {"wood": "🌲Wood", "stone": "⛰Stone"}
+    resource = res.get(resource)
+    update_quest_type(player, "castle_collect_resource", {resource: 1})
 

@@ -4,7 +4,7 @@
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
 from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
-from castle_files.bin.quest_triggers import on_add_cw_quest
+from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
@@ -84,6 +84,7 @@ def resource_return(bot, job):
     bot.send_message(chat_id=job.context[0], text="Вы успешно добыли {}. Казна обновлена. Получено 3 🔘"
                                                   "".format("дерево" if res == "wood" else "камень"),
                      reply_markup=buttons)
+    on_resource_return(player, res)
 
 
 def king_cabinet_construction(bot, update):
@@ -498,9 +499,16 @@ def update_daily_quests():
             player.quests_info.update({"daily_quests": daily_quests})
         else:
             daily_quests.clear()
+        forbidden_list = []
         for i in range(3):
             quest = copy.deepcopy(random.choice(list(quests.values())))
+            limit = 0
+            while quest.id in forbidden_list and limit < 5:
+                quest = copy.deepcopy(random.choice(list(quests.values())))
+                limit += 1
             quest.start(player)
+            if quest.daily_unique:
+                forbidden_list.append(quest.id)
             daily_quests.append(quest)
         player.update_to_database()
         row = cursor.fetchone()
