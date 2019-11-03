@@ -2,11 +2,12 @@
 
 from castle_files.work_materials.globals import moscow_tz, dispatcher
 
+from castle_files.bin.stock_service import get_item_name_by_code
+
 import time
 import json
 import random
 import copy
-
 
 
 class Quest:
@@ -78,13 +79,19 @@ class Quest:
         except Exception:
             raise NotImplemented
 
+    def get_description(self):
+        return ("✅" if self.status == "Completed" else "") + self.description.format(self.objective) + \
+               " (<b>{} / {}</b>)".format(
+            self.progress if self.progress <= self.objective else self.objective, self.objective)
+
+
 
 class CollectResourceQuest(Quest):
     def __init__(self, id: int, resources: {str: int}, reward: int, status: str,
                  progress: {str: int}, started_time: time.time, objective_draft=None):
         self.objective_draft = objective_draft
         super(CollectResourceQuest, self).__init__(
-            id=id, quest_type="collect_resource", duration_type="Daily", description="Собрать из квестов",
+            id=id, quest_type="collect_resource", duration_type="Daily", description="Собрать в квестах ",
             objective=resources, reward=reward, status=status, progress=progress, started_time=started_time)
 
     def start(self, player):
@@ -110,6 +117,16 @@ class CollectResourceQuest(Quest):
             if have_value < need_value:
                 return False
         return True
+
+    def get_description(self):
+        text = ("✅" if self.status == "Completed" else "") + self.description
+        for k, v in list(self.objective.items()):
+            got_value = self.progress.get(k) or 0
+            if got_value > v:
+                got_value = v
+            text += "<b>{}</b> x{} (<b>{} / {}</b>)\n".format(get_item_name_by_code(k), v, got_value, v)
+        return text[:-1]
+
 
 #
 # class FeedbackRequestQuest(Quest):

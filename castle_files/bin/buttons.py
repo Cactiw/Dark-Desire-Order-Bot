@@ -456,7 +456,7 @@ def get_text_to_general_buttons(user_data, player=None):
                 return "Вы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>".format(seconds_left // 60,
                                                                                           (seconds_left % 60) // 1)
     if location_id is not None:
-        return Location.get_location_enter_text_by_id(location_id)
+        return Location.get_location_enter_text_by_id(location_id, player=player)
 
 
 def send_general_buttons(user_id, user_data, bot=None):

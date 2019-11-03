@@ -11,47 +11,10 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
+from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_by_name, get_equipment_by_code, \
+    get_equipment_by_name
+
 import re
-
-
-def get_item_code_by_name(name):
-    for num, elem in list(items.items()):
-        if name == elem[1]:
-            code = "k" + num
-            return code
-        elif elem[0] in name and "recipe" in name.lower():
-            code = "r" + num
-            return code
-        else:
-            continue
-    item = get_equipment_by_name(name)
-    if item is not None:
-        return item.type + item.code
-    item = alch_recipes.get(name.lower())
-    if item is not None:
-        return item.get("code")
-    item = resources.get(name)
-    return item
-
-
-def get_item_name_by_code(code):
-    item = get_equipment_by_code(code)
-    if item is not None:
-        return item.name
-    item = resources_reverted.get(code)
-    if item is not None:
-        return item
-    if code[0] in ["k", "r"]:
-        item = items.get(code[1:])
-        if code[0] == 'k':
-            return item[1]
-        if code[0] == 'r':
-            return item[0] + " recipe"
-    if code[0] == "p":
-        for name, potion in list(alch_recipes.items()):
-            if potion.get("code") == code:
-                return name
-    return code
 
 
 def stock_sort_comparator(item_code):
