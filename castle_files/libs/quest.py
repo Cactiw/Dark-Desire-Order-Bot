@@ -160,7 +160,15 @@ quests = {
              started_time=None, daily_unique=True),
     5: CollectResourceQuest(id=5, resources={}, reward=25, status="Closed", progress={}, started_time=None,
                             objective_draft={"available_resources": ["🌲Wood", "⛰Stone"],
-                                             "count": [1, 5]}, daily_unique=True)
-
+                                             "count": [1, 5]}, daily_unique=True),
+    6: Quest(id=6, quest_type="reports", duration_type="Daily", objective=3,
+             description="Посетить <b>{}</b> битвы", reward=25, status="Closed", progress=0,
+             started_time=None, daily_unique=True),
+    7: Quest(id=7, quest_type="doc_statuses", duration_type="Daily", objective=3,
+             description="/doc <b>{}</b> человека со статусом", reward=25, status="Closed", progress=0,
+             started_time=None, daily_unique=True),
+    8: Quest(id=8, quest_type="arena_win", duration_type="Daily", objective=3,
+             description="Выиграть <b>{}</b> арены", reward=25, status="Closed", progress=0,
+             started_time=None, daily_unique=True),
 
 }

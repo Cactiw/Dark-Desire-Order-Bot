@@ -1,6 +1,9 @@
 from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc
+
 from castle_files.bin.service_functions import count_battle_id
 from castle_files.bin.stock import get_item_code_by_name
+from castle_files.bin.quest_triggers import on_add_report
+
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
@@ -153,6 +156,7 @@ def add_report(bot, update, user_data):
     response = "Репорт учтён. Спасибо!\n" \
                "{}".format("Получено {}🔘!".format(reputation) if not user_data.get("rp_off") else "")
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+    on_add_report(player, forward_message_date)
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"

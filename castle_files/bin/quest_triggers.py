@@ -4,6 +4,8 @@
 
 from castle_files.libs.quest import Quest
 
+import datetime
+
 
 def on_add_cw_quest(player, resources, quest_time):
     daily_quests: [Quest] = player.quests_info.get("daily_quests")
@@ -15,13 +17,17 @@ def on_add_cw_quest(player, resources, quest_time):
     player.update()
 
 
-def update_quest_type(player, quest_type, update_value):
+def update_quest_type(player, quest_type, update_value, time_check=None):
+    if isinstance(time_check, datetime.datetime):
+        time_check = time_check.timestamp()
     daily_quests: [Quest] = player.quests_info.get("daily_quests")
     if not daily_quests:
         return
     for quest in daily_quests:
         if quest.type == quest_type:
-            quest.update_progress(update_value)
+            if time_check is None or quest.started_time < time_check:
+                quest.update_progress(update_value)
+    player.update()
 
 
 def on_king_audience(player):
@@ -41,3 +47,14 @@ def on_resource_return(player, resource):
     resource = res.get(resource)
     update_quest_type(player, "castle_collect_resource", {resource: 1})
 
+
+def on_add_report(player, report_time):
+    update_quest_type(player, "reports", 1, time_check=report_time)
+
+
+def on_doc_status(player):
+    update_quest_type(player, "doc_statuses", 1)
+
+
+def on_won_arena(player, won_time):
+    update_quest_type(player, "arena_win", 1, time_check=won_time)

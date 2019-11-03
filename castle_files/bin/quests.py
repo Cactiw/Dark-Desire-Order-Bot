@@ -4,7 +4,8 @@
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
 from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
-from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return
+from castle_files.bin.service_functions import get_message_forward_time
+from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return, on_won_arena
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
@@ -482,6 +483,23 @@ def add_cw_quest_result(bot, update):
     player.update()
     bot.send_message(chat_id=mes.from_user.id, text="Квест учтён.")
     on_add_cw_quest(player, new_quest, forward_message_date.timestamp())
+
+
+def add_arena_result(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player.nickname in mes.text and "Поздравляем!" in mes.text:
+        res = player.tea_party_info.get("cw_arena_result")
+        if res is None:
+            res = {}
+            player.tea_party_info.update({"cw_arena_result": res})
+        date = get_message_forward_time(mes)
+        if str(date.timestamp()) in res:
+            return
+        res.update({str(date.timestamp()): {"won": True}})
+        player.update()
+        on_won_arena(player, get_message_forward_time(mes))
+    pass
 
 
 def update_daily_quests():

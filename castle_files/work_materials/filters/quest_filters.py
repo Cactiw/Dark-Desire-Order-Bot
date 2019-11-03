@@ -138,3 +138,15 @@ class FilterCWQuestResult(BaseFilter):
 
 
 filter_cw_quest_result = FilterCWQuestResult()
+
+
+class FilterCWArenaResult(BaseFilter):
+    def filter(self, message):
+        return filter_is_chat_wars_forward(message) and \
+               re.search("Рейтинги обновлены: /top5 & /top6", message.text) is not None
+
+
+filter_cw_arena_result = FilterCWArenaResult()
+
+
+

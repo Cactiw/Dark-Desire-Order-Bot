@@ -28,6 +28,17 @@ def plan_work(callback, hour, minute, second, context={}):
     job.run_once(callback, when=send_time, context=context)
 
 
+def get_message_forward_time(message):
+    try:
+        forward_message_date = utc.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except ValueError:
+        try:
+            forward_message_date = message.forward_date
+        except AttributeError:
+            forward_message_date = local_tz.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    return forward_message_date
+
+
 def check_access(user_id):
     return user_id == SUPER_ADMIN_ID or user_id in high_access_list
 
