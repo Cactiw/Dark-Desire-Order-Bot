@@ -4,7 +4,7 @@
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
 from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
-from castle_files.bin.service_functions import get_message_forward_time
+from castle_files.bin.service_functions import get_message_forward_time, plan_work
 from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return, on_won_arena
 
 from castle_files.libs.player import Player
@@ -532,6 +532,8 @@ def update_daily_quests():
         row = cursor.fetchone()
 
 
+def plan_update_daily_quests():
+    plan_work(update_daily_quests, 0, 0, 0)
 
 
 
