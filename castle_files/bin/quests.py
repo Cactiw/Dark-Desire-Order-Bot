@@ -502,7 +502,7 @@ def add_arena_result(bot, update):
     pass
 
 
-def update_daily_quests():
+def update_daily_quests(bot, job):
     cursor = conn.cursor()
     request = "select id from players"
     cursor.execute(request)

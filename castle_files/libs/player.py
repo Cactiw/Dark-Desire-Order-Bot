@@ -160,6 +160,8 @@ class Player:
                         api_info=api_info, stock=stock, settings=settings, exp_info=exp_info, class_info=class_info,
                         mobs_info=mobs_info, tea_party_info=tea_party_info, quests_info=quests_from_db)
         players.update({player_id: player})  # Кладу игрока в память для дальнейшего ускоренного использования
+        if quests_info is None:
+            quests_info = {}
         for k, v in list(quests_info.items()):
             l = []
             quests_from_db.update({k: l})
