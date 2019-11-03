@@ -6,6 +6,8 @@ from castle_files.work_materials.globals import SENTINELS_DUTY_CHAT_ID, CASTLE_B
 
 from castle_files.bin.service_functions import check_access
 from castle_files.bin.buttons import get_general_buttons
+from castle_files.bin.quest_triggers import on_duty_request
+
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 
@@ -108,6 +110,9 @@ def send_duty_feedback(bot, update, user_data):
     reply_markup = get_general_buttons(user_data, player=Player.get_player(update.message.from_user.id))
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Вы обратились к стражникам у городских ворот. Ожидайте ответа.", reply_markup=reply_markup)
+
+    player = Player.get_player(update.message.from_user.id)
+    on_duty_request(player)
 
 
 def forward_then_reply_to_duty(bot, message):

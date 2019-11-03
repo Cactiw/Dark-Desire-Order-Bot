@@ -15,6 +15,7 @@ from castle_files.bin.service_functions import check_access, dict_invert, plan_w
 from castle_files.bin.reports import count_battle_time
 from castle_files.bin.statuses import get_status_text_by_id, get_status_message_by_text
 from castle_files.bin.api import auth
+from castle_files.bin.quest_triggers import on_doc_status
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -323,6 +324,7 @@ def view_profile(bot, update):
             # Сообщение со статусом
             bot.send_message(chat_id=mes.chat_id, text=get_status_message_by_text(
                 get_status_text_by_id(player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
+            on_doc_status(requested_player)
         if not has_access:
             return
         buttons = get_profile_buttons(player)

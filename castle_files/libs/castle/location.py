@@ -38,12 +38,14 @@ class Location:
         return locations.get(location_id)
 
     @staticmethod
-    def get_location_enter_text_by_id(location_id, without_format=False):
+    def get_location_enter_text_by_id(location_id, player=None, without_format=False):
         location = Location.get_location(location_id)
         if location is None:
             return None
         if hasattr(location, "update_enter_text"):
             location.update_enter_text()
+        if hasattr(location, "get_text_for_player"):
+            return location.get_text_for_player(player)
         if location.special_info is None:
             return location.enter_text
         insert_values = location.special_info.get("enter_text_format_values")
@@ -178,6 +180,18 @@ class ConstructionPlate(Location):
         self.refill_current_buildings_info()
 
 
+class TeaParty(Location):
+    def get_text_for_player(self, player):
+        daily_quests = player.quests_info.get("daily_quests")
+        if not daily_quests:
+            return
+        text = "\n\nЕжедневные квесты:\n"
+        for quest in daily_quests:
+            text += "{}\n".format(quest.get_description())
+        return self.enter_text + text
+
+
+
 #
 
 """
@@ -246,8 +260,8 @@ hall_of_fame = Location(8, "🏤Мандапа Славы", "Мандапа Сл
                         need_res_to_construct={"wood": 500, "stone": 500})
 hall_of_fame.create_location_in_database()
 
-tea_party = Location(9, "🍵Чайная Лига", "Чайная лига. Здесь ты сможешь узнать новости замка, получить работенку, "
-                        "заработать деньжат и , вероятно, заслужить славу и уважение.",
+tea_party = TeaParty(9, "🍵Чайная Лига", "Чайная лига. Здесь ты сможешь узнать новости замка, получить работенку, "
+                        "заработать деньжат и , вероятно, заслужить славу и уважение.\n",
                      need_clicks_to_construct=15000, state=False, building_process=-1,
                      need_res_to_construct={"wood": 60000, "stone": 60000}
                      )

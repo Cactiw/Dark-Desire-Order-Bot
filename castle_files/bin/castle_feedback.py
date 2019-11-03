@@ -5,7 +5,10 @@ from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_
     DEFAULT_CASTLE_STATUS
 from castle_files.bin.buttons import get_general_buttons
 from castle_files.bin.castle import back
+from castle_files.bin.quest_triggers import on_king_audience, on_mid_request
+
 from castle_files.libs.castle.location import Location
+from castle_files.libs.player import Player
 
 from bin.service_functions import count_next_battle_time
 
@@ -39,6 +42,9 @@ def request_king_audience(bot, update, user_data):
                      text="@{} просит аудиенции! \nПринять: /accept_king_audience_{}\nОтказать: "
                           "/decline_king_audience_{}".format(update.message.from_user.username, row[0], row[0]))
     bot.send_message(chat_id=update.message.from_user.id, text="Запрос об аудиенции отправлен. Ожидайте ответа")
+
+    player = Player.get_player(update.message.from_user.id)
+    on_king_audience(player)
 
 
 # Функция, которая возвращает [ id запросившего аудиенцию : id аудиенции ], или [-1], если произошла ошибка
@@ -123,6 +129,9 @@ def send_mid_feedback(bot, update, user_data):
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Ваше обращение к Совету было озвучено. Если оно было по делу, то ожидайте ответа, "
                           "но бойтесь его кары, если это не так!", reply_markup=reply_markup)
+
+    player = Player.get_player(player_id=update.message.from_user.id)
+    on_mid_request(player)
 
 
 def forward_then_reply_to_mid(bot, message):

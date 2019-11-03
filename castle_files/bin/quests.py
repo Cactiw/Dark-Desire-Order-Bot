@@ -4,9 +4,12 @@
 """
 from castle_files.bin.buttons import get_general_buttons, send_general_buttons
 from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
+from castle_files.bin.service_functions import get_message_forward_time, plan_work
+from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return, on_won_arena
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
+from castle_files.libs.quest import Quest, CollectResourceQuest, quests
 from castle_files.libs.my_job import MyJob
 
 from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn, local_tz
@@ -20,6 +23,7 @@ import json
 import datetime
 import random
 import re
+import copy
 
 import threading
 
@@ -81,6 +85,7 @@ def resource_return(bot, job):
     bot.send_message(chat_id=job.context[0], text="Вы успешно добыли {}. Казна обновлена. Получено 3 🔘"
                                                   "".format("дерево" if res == "wood" else "камень"),
                      reply_markup=buttons)
+    on_resource_return(player, res)
 
 
 def king_cabinet_construction(bot, update):
@@ -473,10 +478,63 @@ def add_cw_quest_result(bot, update):
     new_quest = {"exp": exp, "gold": gold}
     for name, count in parse:
         code = get_item_code_by_name(name)
-        new_quest.update({code: count})
+        new_quest.update({code: int(count)})
     drop.update({forward_message_date.timestamp(): new_quest})
     player.update()
     bot.send_message(chat_id=mes.from_user.id, text="Квест учтён.")
+    on_add_cw_quest(player, new_quest, forward_message_date.timestamp())
+
+
+def add_arena_result(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player.nickname in mes.text and "Поздравляем!" in mes.text:
+        res = player.tea_party_info.get("cw_arena_result")
+        if res is None:
+            res = {}
+            player.tea_party_info.update({"cw_arena_result": res})
+        date = get_message_forward_time(mes)
+        if str(date.timestamp()) in res:
+            return
+        res.update({str(date.timestamp()): {"won": True}})
+        player.update()
+        on_won_arena(player, get_message_forward_time(mes))
+    pass
+
+
+def update_daily_quests():
+    cursor = conn.cursor()
+    request = "select id from players"
+    cursor.execute(request)
+    row = cursor.fetchone()
+    while row is not None:
+        player = Player.get_player(row[0])
+        if player is None:
+            continue
+        daily_quests: [Quest] = player.quests_info.get("daily_quests")
+        if daily_quests is None:
+            daily_quests = []
+            player.quests_info.update({"daily_quests": daily_quests})
+        else:
+            daily_quests.clear()
+        forbidden_list = []
+        for i in range(3):
+            quest = copy.deepcopy(random.choice(list(quests.values())))
+            limit = 0
+            while quest.id in forbidden_list and limit < 5:
+                quest = copy.deepcopy(random.choice(list(quests.values())))
+                limit += 1
+            quest.start(player)
+            if quest.daily_unique:
+                forbidden_list.append(quest.id)
+            daily_quests.append(quest)
+        player.update_to_database()
+        row = cursor.fetchone()
+
+
+def plan_update_daily_quests():
+    plan_work(update_daily_quests, 0, 0, 0)
+
 
 
 def load_construction_jobs():
