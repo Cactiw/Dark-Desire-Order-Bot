@@ -158,7 +158,7 @@ class Guild:
 
     # Метод получения гильдии из БД
     @staticmethod
-    def get_guild(guild_id=None, guild_tag=None, new_cursor=False):
+    def get_guild(guild_id=None, guild_tag=None, chat_id=None, new_cursor=False):
         """
         if new_cursor:
             cur_cursor = conn.cursor()
@@ -170,6 +170,11 @@ class Guild:
         if guild_tag is not None:
             for guild_id, current_guild in list(guilds.items()):
                 if current_guild.tag == guild_tag:
+                    guild = current_guild
+                    break
+        elif chat_id is not None:
+            for guild_id, current_guild in list(guilds.items()):
+                if current_guild.chat_id == chat_id:
                     guild = current_guild
                     break
         elif guild_id is not None:
@@ -186,6 +191,9 @@ class Guild:
         if guild_tag is not None:
             request += "where lower(guild_tag) = %s"
             cur_cursor.execute(request, (guild_tag.lower(),))
+        elif chat_id is not None:
+            request += "where chat_id = %s"
+            cur_cursor.execute(request, (chat_id,))
         elif guild_id is not None:
             request += "where guild_id = %s"
             cur_cursor.execute(request, (guild_id,))

@@ -185,3 +185,133 @@ def mob_help(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Успешно добавлено")
     request = "update mobs set helpers = %s where link = %s"
     cursor.execute(request, (helpers, link))
+
+
+def get_fight_club_txt(link, lvl, helpers, forward_message_date):
+    response = "Подпольный бой!\n🏅Уровень: <b>{}</b>\n".format(lvl)
+    if helpers:
+        response += "\n"
+        for username in helpers:
+            response += "{}\n".format(username)
+
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    remaining_time = datetime.timedelta(minutes=3) - (now - forward_message_date)
+    if remaining_time < datetime.timedelta(0):
+        response += "\nВремени не осталось!"
+    else:
+        response += "\nОсталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
+                                                                          int(remaining_time.total_seconds() % 60)))
+    return response
+
+
+def fight_club(bot, update):
+    mes = update.message
+    link = re.search("/fight_(.*)$", mes.text)
+    if link is None:
+        bot.send_message(chat_id=mes.chat_id, text="Ошибка.")
+        return
+    link = link.group(1)
+    player = Player.get_player(mes.from_user.id)
+    try:
+        forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except Exception:
+        forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    request = "select mob_lvls, helpers from mobs where link = %s"
+    cursor.execute(request, (link,))
+    row = cursor.fetchone()
+    helpers = []
+    lvl = player.lvl
+    if row is not None:
+        lvls, helpers = row
+        lvl = lvls[0]
+    response = get_fight_club_txt(link, lvl, helpers, forward_message_date)
+    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(lvl - 5), int(lvl + 10)),
+                                     url=u"https://t.me/share/url?url=/fight_{}".format(link)),
+                InlineKeyboardButton(text="🤝Помогаю!", callback_data="fight_club_partify_{}".format(link))]]
+    guild = Guild.get_guild(chat_id=mes.chat_id)
+    if guild is not None:
+        ping = []
+        for player_id in guild.members:
+            cur_player = Player.get_player(player_id)
+            if cur_player is None:
+                continue
+            if cur_player.settings.get("pretend") and cur_player.lvl in range(lvl - 5, lvl + 11):
+                ping.append(player.username)
+            if len(ping) >= 4:
+                text = "Подпольный бой!\n"
+                for username in ping:
+                    text += "@{} ".format(username)
+                bot.send_message(chat_id=mes.chat_id, text=text)
+                ping.clear()
+        if ping:
+            text = "Подпольный бой!\n"
+            for username in ping:
+                text += "@{} ".format(username)
+            bot.send_message(chat_id=mes.chat_id, text=text)
+    if guild is not None:
+        response += "\n\n<em>Подписаться на уведомления о клубах в чате ги:</em> /pretend"
+    bot.send_message(chat_id=mes.chat_id, text=response, reply_markup=InlineKeyboardMarkup(buttons), parse_mode='HTML')
+    request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player) values (" \
+              "%s, %s, %s, %s, %s)"
+    try:
+        cursor.execute(request, (link, ["Fight Club"], [lvl], forward_message_date, mes.from_user.id))
+    except psycopg2.IntegrityError:
+        pass
+
+
+def fight_club_help(bot, update):
+    data = update.callback_query.data
+    mes = update.callback_query.message
+    link = re.search("fight_club_partify_(.+)", data)
+    if link is None:
+        bot.send_message(chat_id=update.callback_query.from_user.id, text="Произошла ошибка.")
+        return
+    link = link.group(1)
+    request = "select mob_lvls, date_created, helpers from mobs where link = %s"
+    cursor.execute(request, (link,))
+    row = cursor.fetchone()
+    if row is None:
+        bot.send_message(chat_id=update.callback_query.from_user.id, text="Событие не найдено")
+        return
+    lvls, forward_message_date, helpers = row
+    lvl = lvls[0]
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Для помощи необходима регистрация!",
+                                show_alert=True)
+        return
+    helper_row = "@{} 🏅:{}".format(player.username, player.lvl)
+    if helper_row in helpers:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помогаешь!", show_alert=True)
+        return
+    helpers.append(helper_row)
+    response = get_fight_club_txt(link, lvl, helpers, forward_message_date)
+    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(player.lvl - 5), int(player.lvl + 10)),
+                                     url=u"https://t.me/share/url?url=/fight_{}".format(link)),
+                InlineKeyboardButton(text="🤝Помогаю!", callback_data="fight_club_partify_{}".format(link))]]
+    try:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
+                            reply_markup=InlineKeyboardMarkup(buttons), parse_mode='HTML')
+    except Exception:
+        logging.error(traceback.format_exc())
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Успешно добавлено")
+    request = "update mobs set helpers = %s where link = %s"
+    cursor.execute(request, (helpers, link))
+
+
+def pretend(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    current = player.settings.get("pretend")
+    if current is None:
+        current = False
+    current = not current
+    player.settings.update({"pretend": current})
+    player.update()
+    bot.send_message(chat_id=mes.chat_id,
+                     text="Пинги на подпольные бои <b>{}</b>".format("✅включены" if current else "❌отключены"),
+                     parse_mode='HTML')
+    return
+
+
+

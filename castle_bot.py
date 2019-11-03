@@ -18,7 +18,7 @@ from castle_files.work_materials.filters.guild_filters import filter_edit_guild,
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, \
     filter_delete_guild, filter_view_guilds_commanders
 from castle_files.work_materials.filters.guild_chat_filters import filter_guild_list
-from castle_files.work_materials.filters.mob_filters import filter_mob_message
+from castle_files.work_materials.filters.mob_filters import filter_mob_message, filter_fight_club_message
 from castle_files.work_materials.filters.castle_filters import filter_central_square, filter_barracks, filter_back, \
     filter_throne_room, filter_castle_gates, filter_guide_signs, filter_not_constructed, filter_watch_portraits, \
     filter_king_cabinet, filter_add_general, filter_adding_general, filter_remove_general, \
@@ -65,7 +65,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     guild_top_battles, show_worldtop
-from castle_files.bin.mobs import mob, mob_help
+from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -162,6 +162,7 @@ def castle_bot_processing():
 
     # Хендлеры для инлайн кнопок мобов
     dispatcher.add_handler(CallbackQueryHandler(mob_help, pattern="mob_partify_.*"))
+    dispatcher.add_handler(CallbackQueryHandler(fight_club_help, pattern="fight_club_partify_.*"))
 
     # Хендлеры для инлайн кнопок профиля
     dispatcher.add_handler(CallbackQueryHandler(guild_history, pattern="pr_guild_history_\\d+"))
@@ -266,7 +267,9 @@ def castle_bot_processing():
                                           pass_user_data=True))
 
     # Мобы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_fight_club_message, fight_club))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_mob_message, mob))
+    dispatcher.add_handler(CommandHandler('pretend', pretend))
 
     # Приём репортов
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report, pass_user_data=True))
