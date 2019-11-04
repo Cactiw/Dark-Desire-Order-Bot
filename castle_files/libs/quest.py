@@ -35,6 +35,8 @@ class Quest:
 
     def update_progress(self, update_value):
         # This method should be reimplemented if quest structure is harder that just an int object
+        if self.status != "Running":
+            return
         self.progress += update_value
         self.try_complete()
 
@@ -160,7 +162,7 @@ quests = {
              started_time=None, daily_unique=True),
     5: CollectResourceQuest(id=5, resources={}, reward=25, status="Closed", progress={}, started_time=None,
                             objective_draft={"available_resources": ["🌲Wood", "⛰Stone"],
-                                             "count": [1, 5]}, daily_unique=True),
+                                             "count": [3, 15]}, daily_unique=True),
     6: Quest(id=6, quest_type="reports", duration_type="Daily", objective=3,
              description="Посетить <b>{}</b> битвы", reward=25, status="Closed", progress=0,
              started_time=None, daily_unique=True),

@@ -466,8 +466,7 @@ def add_cw_quest_result(bot, update):
         drop = {}
         player.tea_party_info.update({"cw_quests_drop": drop})
 
-    forward_message_date: datetime.datetime = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(
-        tzinfo=None)
+    forward_message_date: datetime.datetime = get_message_forward_time(mes)
     if forward_message_date.timestamp() in drop:
         bot.send_message(chat_id=mes.chat_id, text="Данный квест уже учтён.")
         return
