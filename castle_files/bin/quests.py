@@ -529,6 +529,8 @@ def update_daily_quests(bot, job):
             daily_quests.append(quest)
         player.update_to_database()
         row = cursor.fetchone()
+    time.sleep(1)
+    plan_update_daily_quests()
 
 
 def plan_update_daily_quests():
