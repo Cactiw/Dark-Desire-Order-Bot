@@ -45,7 +45,7 @@ def request_set_own_status(bot, update):
     if player is None:
         return
     try:
-        new_status = mes.text.split()[1]
+        new_status = mes.text.partition(" ")[2]
     except IndexError:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
