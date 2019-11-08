@@ -68,6 +68,8 @@ class Quest:
             for quest in daily_quests:
                 if quest.status != "Completed":
                     return
+            self.player.reputation += self.ALL_DAILY_QUESTS_REWARD
+            self.player.update()
             dispatcher.bot.send_message(chat_id=self.player.id, text="Все ежедневные квесты выполнены.\n"
                                         "Получено: <b>{}</b>🔘".format(self.ALL_DAILY_QUESTS_REWARD), parse_mode='HTML')
 
