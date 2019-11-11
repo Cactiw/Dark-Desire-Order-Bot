@@ -33,6 +33,7 @@ from castle_files.work_materials.filters.technical_tower_filters import filter_t
 from castle_files.work_materials.filters.quest_filters import filter_sawmill, filter_quarry, filter_treasury, \
     filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct, \
     filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result, filter_cw_arena_result
+from castle_files.work_materials.filters.reward_filters import filter_smuggler, filter_get_reward
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
     filter_restrict_feedback, filter_unrestrict_feedback
@@ -87,6 +88,7 @@ from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, 
     vote_results, set_vote_classes, guild_unvoted_list
 from castle_files.bin.statuses import status_shop, buy_status, statuses, status_on, \
     request_set_own_status, set_own_status, moderate_status
+from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -193,6 +195,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(set_own_status, pattern="p_own_status.*"))
     dispatcher.add_handler(CallbackQueryHandler(moderate_status, pattern="p_moderate_status_\\d+.*"))
+
+    dispatcher.add_handler(CallbackQueryHandler(answer_reward, pattern="p_reward.*", pass_user_data=True))
+    dispatcher.add_handler(CallbackQueryHandler(moderate_reward, pattern="p_moderate_reward_\\d+.*"))
 
     dispatcher.add_handler(CallbackQueryHandler(new_roulette_top, pattern="roulette_top_.*"))
 
@@ -441,6 +446,11 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_place_roulette_bet, place_roulette_bet,
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_roulette_tops, roulette_tops))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_smuggler, smuggler))
+    dispatcher.add_handler(CommandHandler('castle_message_change', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_get_reward, get_reward, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('request_kabala', request_kabala))
     dispatcher.add_handler(CommandHandler('kabala', kabala, pass_user_data=True))
