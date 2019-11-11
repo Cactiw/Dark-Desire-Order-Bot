@@ -216,7 +216,8 @@ class AsyncBot(Bot):
         if message_type is None:
             message_type = 0
 
-        args, kwargs = self.check_and_translate(*args, **kwargs)
+        if message_type in frozenset([0]):
+            args, kwargs = self.check_and_translate(*args, **kwargs)
 
         lock = self.counter_lock
         lock.acquire()
