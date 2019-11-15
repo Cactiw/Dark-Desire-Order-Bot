@@ -3,6 +3,9 @@
 """
 
 from castle_files.libs.player import Player
+from castle_files.libs.castle.location import Location
+
+from castle_files.bin.mid import do_mailing
 
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz
 
@@ -16,13 +19,34 @@ import re
 
 
 def reward_edit_castle_message(player, reward):
-    print("reward")
+    central_square = Location.get_location(0)
+    format_values = central_square.special_info.get("enter_text_format_values")
+    format_values[0] = reward
+    central_square.update_location_to_database()
+    pass
+
+
+def reward_mailing(player, reward):
+    do_mailing(dispatcher.bot, reward)
+
+
+def reward_global_trigger(player, reward):
+    pass
+
+
+def reward_remove_global_trigger(player, reward):
     pass
 
 
 rewards = {"castle_message_change": {
-    "price": 5000, "moderation": True, "text": "Введите новое сообщение:", "get": reward_edit_castle_message},
-
+    "price": 5000, "moderation": True, "text": "Введите новое замковое сообщение:", "get": reward_edit_castle_message
+    },
+    "castle_mailing": {
+        "price": 10000, "moderation": True, "text": "Введите текст рассылки по замку", "get": reward_mailing
+    },
+    "global_trigger": {
+        "price": 5000, "moderation": True, "text": "Введите текст глобального триггера", "get": reward_global_trigger
+    }
 }
 
 
@@ -147,7 +171,7 @@ def moderate_reward(bot, update):
 
     if yes:
         try:
-            reward["get"](player=player, reward=reward)
+            reward["get"](player=player, reward=user_data["reward_text"])
         except Exception:
             logging.error(traceback.format_exc())
         bot.send_message(chat_id=player.id, text="Награда выдана.")
