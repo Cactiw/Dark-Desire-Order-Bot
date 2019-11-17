@@ -450,6 +450,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_smuggler, smuggler))
     dispatcher.add_handler(CommandHandler('castle_message_change', request_get_reward, pass_user_data=True,
                                           filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('castle_mailing', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_get_reward, get_reward, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('request_kabala', request_kabala))
