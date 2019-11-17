@@ -22,7 +22,7 @@ PING_LIMIT = 4
 
 
 def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes):
-    response = "Обнаруженные мобы:\n"
+    response = "Обнаруженные мобы{}:\n".format(", засада!" if minutes == 5 else "")
     avg_lvl = 0
     for i, name in enumerate(mobs):
         lvl = lvls[i]
@@ -174,7 +174,7 @@ def mob_help(bot, update):
                                 show_alert=True)
     else:
         helpers.append(update.callback_query.from_user.username)
-    minutes = 5 if 'ambush' in mes.text else 3
+    minutes = 5 if 'засада' in mes.text else 3
     response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs, minutes)
 
     try:
