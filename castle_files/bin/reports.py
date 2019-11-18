@@ -156,7 +156,8 @@ def add_report(bot, update, user_data):
     response = "Репорт учтён. Спасибо!\n" \
                "{}".format("Получено {}🔘!".format(reputation) if not user_data.get("rp_off") else "")
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
-    on_add_report(player, forward_message_date)
+    if exp != 0:
+        on_add_report(player, forward_message_date)
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"
