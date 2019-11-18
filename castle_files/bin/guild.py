@@ -543,8 +543,9 @@ def leave_guild(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
     if guild.commander_id == player.id:
-        bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
-        return
+        # bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
+        # return
+        guild.commander_id = None
     guild.delete_player(player)
     bot.send_message(chat_id=mes.chat_id, text="Вы успешно покинули гильдию")
     if update.callback_query is not None:
