@@ -24,6 +24,7 @@ MESSAGE_PER_CHAT_LIMIT = 3
 UNAUTHORIZED_ERROR_CODE = 2
 BADREQUEST_ERROR_CODE = 3
 TIMEOUT_ERROR_CODE = 5
+OTHER_ERROR_CODE = 10
 
 advanced_callback = multiprocessing.Queue()
 
@@ -136,6 +137,9 @@ class AsyncBot(Bot):
         except NetworkError:
             time.sleep(0.1)
             message = super(AsyncBot, self).send_message(*args, **kwargs)
+        except Exception:
+            logging.error(traceback.format_exc())
+            return OTHER_ERROR_CODE
         return message
 
     def send_order(self, order_id, chat_id, response, pin_enabled, notification, reply_markup=None, kwargs={}):
@@ -231,6 +235,9 @@ class AsyncBot(Bot):
                                                                                               "timeout_retry": True})
                 time.sleep(0.1)
                 send_backup = False
+            elif message == OTHER_ERROR_CODE:
+                response += "Неизвестная ошибка в чате {0}\n".format(chat_id)
+                pass
             else:
                 if pin:
                     try:
