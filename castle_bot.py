@@ -196,6 +196,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(new_roulette_top, pattern="roulette_top_.*"))
 
+    dispatcher.add_handler(CallbackQueryHandler(set_vote_variant, pattern="vote_\\d+_\\d+"))
+
+
 
     #
 
@@ -387,8 +390,6 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('votes', votes))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_vote_results, vote_results))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_vote, vote))
-
-    dispatcher.add_handler(CallbackQueryHandler(set_vote_variant, pattern="vote_\\d+_\\d+"))
 
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
