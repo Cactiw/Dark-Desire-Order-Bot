@@ -328,6 +328,9 @@ def set_vote_variant(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
         return
         pass
+    if Guild.get_guild(player.guild).is_academy():
+        bot.send_message(chat_id=mes.chat_id, text="Ученикам Академии запрещено голосовать.")
+        return
     parse = re.search("_(\\d+)_(\\d+)", data)
     if parse is None:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
