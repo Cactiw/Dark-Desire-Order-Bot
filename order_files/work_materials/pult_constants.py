@@ -17,14 +17,10 @@ defense = ["Деф дома 🖤", "В атаку!", ""]
 defense_to_order = ["\uD83D\uDDA4Деф!🛡", "Attack!", None]
 
 potions = ["⚗️ Атака", "⚗️ Деф"]
-potions_to_order = ["Пьем ⚔️АТК ⚗️зелья\nVial of Rage: <a href=\"https://t.me/share/url?url=/use_p01\">/use_p01</a>\n"
-                    "Potion of Rage: "
-                    "<a href=\"https://t.me/share/url?url=/use_p02\">/use_p02</a>\nBottle of Rage: "
-                    "<a href=\"https://t.me/share/url?url=/use_p03\">/use_p03</a>\n\n",
-                    "Пьем 🛡ДЕФ ⚗️зелья\nVial of Peace: <a href=\"https://t.me/share/url?url=/use_p04\">/use_p04</a>\n"
-                    "Potion of Peace: "
-                    "<a href=\"https://t.me/share/url?url=/use_p05\">/use_p05</a>\nBottle of Peace: "
-                    "<a href=\"https://t.me/share/url?url=/use_p06\">/use_p06</a>\n\n"]
+potions_to_order = ["<a href=\"https://t.me/share/url?url=/misc rage\">Пьем ⚔️АТК ⚗️зелья!</a>: "
+                    "<a href=\"https://t.me/share/url?url=/misc rage\">/misc rage</a>\n\n",
+                    "<a href=\"https://t.me/share/url?url=/misc peace\">Пьем 🛡ДЕФ ⚗️зелья</a>: "
+                    "<a href=\"https://t.me/share/url?url=/misc peace\">/misc peace</a>\n\n"]
 
 pult_status_default = {'divisions': [False, False, False, False, False, True], 'target': -1, 'defense': 2,
                        'time': -1, "tactics": 5}
