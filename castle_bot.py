@@ -342,16 +342,6 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('set_status', set_status))
     dispatcher.add_handler(CommandHandler('set_own_status', request_set_own_status))
 
-    # Хендлеры для триггеров
-    dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
-    dispatcher.add_handler(CommandHandler('create_global_trigger', add_trigger))
-    dispatcher.add_handler(CommandHandler('delete_trigger', remove_trigger))
-    dispatcher.add_handler(CommandHandler('triggers', triggers))
-    dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
-    dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
-
-    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
-
     # Хендлеры для чата гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_list, notify_guild_attack))
     dispatcher.add_handler(CommandHandler('notify_guild_sleeping', notify_guild_to_battle))
@@ -452,7 +442,14 @@ def castle_bot_processing():
                                           filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('castle_mailing', request_get_reward, pass_user_data=True,
                                           filters=filter_is_pm))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_get_reward, get_reward, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('castle_global_trigger', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('castle_delete_global_trigger', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('castle_change_chat_picture', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_get_reward, get_reward, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('request_kabala', request_kabala))
     dispatcher.add_handler(CommandHandler('kabala', kabala, pass_user_data=True))
@@ -523,6 +520,16 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_unrestrict_feedback, unrestrict_feedback))
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_ban_in_duty_chat, check_ban_in_duty_chat))
+
+    # Хендлеры для триггеров - тоже как можно ниже, из-за возможного совпадения глобальных триггеров с командами бота
+    dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
+    dispatcher.add_handler(CommandHandler('create_global_trigger', add_trigger))
+    dispatcher.add_handler(CommandHandler('delete_trigger', remove_trigger))
+    dispatcher.add_handler(CommandHandler('triggers', triggers))
+    dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
+    dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
+
+    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
     # Хендлеры далее специально ниже всех остальных, ибо невозможно проверять статус на эту исполнение этих команд
     dispatcher.add_handler(MessageHandler(Filters.text & filter_castle_gates, castle_gates, pass_user_data=True))

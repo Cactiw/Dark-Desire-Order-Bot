@@ -43,14 +43,14 @@ def get_message_type_and_data(message):
     return [trigger_type, data]
 
 
-def send_trigger_with_type_and_data(bot, update, trigger_type, data):
+def send_trigger_with_type_and_data(bot, chat_id, trigger_type, data):
     action = [bot.send_message, bot.send_video, bot.send_audio, bot.send_photo, bot.send_document, bot.send_sticker,
               bot.send_voice, bot.sendVideoNote]
     if trigger_type >= len(action):
         # Неверный тип триггера
         logging.warning("Incorrect trigger_type: {}".format(trigger_type))
         return -1
-    action[trigger_type](update.message.chat_id, data, parse_mode='HTML')
+    action[trigger_type](chat_id, data, parse_mode='HTML')
 
 
 def add_trigger(bot, update):
@@ -105,7 +105,7 @@ def send_trigger(bot, update):
     cursor.execute(request, (mes.text.lower(), chat_id))
     row = cursor.fetchone()
     trigger_type, data = row
-    send_trigger_with_type_and_data(bot, update, trigger_type, data)
+    send_trigger_with_type_and_data(bot, update.message.chat_id, trigger_type, data)
 
 
 def remove_trigger(bot, update):
