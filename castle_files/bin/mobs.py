@@ -100,22 +100,26 @@ def mob(bot, update):
                                                            minutes)
     player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
-        bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
-        bot.send_message(chat_id=mes.chat_id, text="Отправлено на канал. Спасибо!")
-        try:
-            # requests.post('http://127.0.0.1:5555/addMob',
-            #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
-            #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
-            #               timeout=0.3)
+        if 'It\'s an ambush!'.lower() in mes.text.lower():
+            bot.send_message(chat_id=mes.chat_id, text="Засады не отправляются на канал. "
+                                                       "Зовите бойцов вашей гильдии на помощь!")
+        else:
+            bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
+            bot.send_message(chat_id=mes.chat_id, text="Отправлено на канал. Спасибо!")
+            try:
+                # requests.post('http://127.0.0.1:5555/addMob',
+                #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+                #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
+                #               timeout=0.3)
 
-            pass
-            # Верно!
-            requests.post('http://ec2-18-184-54-121.eu-central-1.compute.amazonaws.com:5555/addMob',
-                          json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
-                                           "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
-                          timeout=0.3)
-        except Exception:
-            logging.error(traceback.format_exc())
+                pass
+                # Верно!
+                requests.post('http://ec2-18-184-54-121.eu-central-1.compute.amazonaws.com:5555/addMob',
+                              json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+                                               "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
+                              timeout=0.3)
+            except Exception:
+                logging.error(traceback.format_exc())
     else:
         ping_count = 0
         if not is_pm:
@@ -123,6 +127,8 @@ def mob(bot, update):
             try:
                 ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id))
             except Exception:
+                ping_list = None
+            if not ping_list:
                 ping_list = []
             if player.guild is not None or ping_list:
                 guild = Guild.get_guild(guild_id=player.guild)
@@ -136,7 +142,6 @@ def mob(bot, update):
                             on = pl.settings.get("mobs_notify")
                             if on is None:
                                 on = True
-                            print(on, pl.id != mes.from_user.id)
                             if on and pl.id != mes.from_user.id:
                                 ping.append(pl.username)
                     if ping:
