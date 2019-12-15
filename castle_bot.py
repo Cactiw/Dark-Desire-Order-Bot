@@ -65,7 +65,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     guild_commanders, g_info
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     guild_top_battles, show_worldtop
-from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend
+from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -273,6 +273,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_fight_club_message, fight_club))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_mob_message, mob))
     dispatcher.add_handler(CommandHandler('pretend', pretend))
+    dispatcher.add_handler(CommandHandler('mobs_notify', mobs_notify))
 
     # Приём репортов
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_report, add_report, pass_user_data=True))

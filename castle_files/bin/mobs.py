@@ -4,8 +4,10 @@
 
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor
 from castle_files.work_materials.filters.general_filters import filter_is_pm
+
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
+from castle_files.libs.castle.location import Location
 
 import datetime
 import re
@@ -117,16 +119,24 @@ def mob(bot, update):
     else:
         ping_count = 0
         if not is_pm:
-            if player.guild is not None:
+            barracks = Location.get_location(1)
+            try:
+                ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id))
+            except Exception:
+                ping_list = []
+            if player.guild is not None or ping_list:
                 guild = Guild.get_guild(guild_id=player.guild)
                 if guild is not None and guild.chat_id == mes.chat_id:
+                    ping_list += guild.members
+                if ping_list:
                     ping = []
-                    for pl_id in guild.members:
+                    for pl_id in ping_list:
                         pl = Player.get_player(pl_id)
                         if avg_lvl - 5 <= pl.lvl <= avg_lvl + 10:
                             on = pl.settings.get("mobs_notify")
                             if on is None:
-                                on = False
+                                on = True
+                            print(on, pl.id != mes.from_user.id)
                             if on and pl.id != mes.from_user.id:
                                 ping.append(pl.username)
                     if ping:
@@ -313,5 +323,29 @@ def pretend(bot, update):
                      parse_mode='HTML')
     return
 
+
+def mobs_notify(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    barracks = Location.get_location(1)
+    chats = barracks.special_info.get("mobs_notify")
+    if chats is None:
+        chats = {}
+        barracks.special_info.update({"mobs_notify": chats})
+    current = chats.get(str(mes.chat_id))
+    if current is None:
+        current = []
+        chats.update({str(mes.chat_id): current})
+    try:
+        current.remove(player.id)
+        bot.send_message(chat_id=mes.chat_id,
+                         text="<b>{}</b> удалён из списка пинга чата на мобов.".format(player.nickname),
+                         parse_mode='HTML')
+    except ValueError:
+        current.append(player.id)
+        bot.send_message(chat_id=mes.chat_id,
+                         text="<b>{}</b> добавлен в список пинга чата на мобов.".format(player.nickname),
+                         parse_mode='HTML')
+    barracks.update_location_to_database()
 
 
