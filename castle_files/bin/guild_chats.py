@@ -12,6 +12,7 @@ from castle_files.bin.telethon_script import castles_stats_queue
 from castle_files.bin.api import check_guilds_api_access
 
 from telegram.error import TelegramError
+from telegram import ChatPermissions
 
 import re
 import time
@@ -350,7 +351,8 @@ def mute(bot, update, args):
         return
     current += ban_for
     try:
-        bot.restrictChatMember(chat_id=mes.chat_id, user_id = mes.reply_to_message.from_user.id, until_date=current)
+        bot.restrictChatMember(chat_id=mes.chat_id, user_id = mes.reply_to_message.from_user.id, until_date=current,
+                               permissions=ChatPermissions(can_send_other_messages=False, can_send_messages=False))
     except TelegramError:
         bot.send_message(chat_id=update.message.chat_id, text='Ошибка. Проверьте, что бот имеет требуемые права.')
         return
