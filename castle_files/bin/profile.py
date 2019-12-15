@@ -270,8 +270,8 @@ def view_profile(bot, update):
     guild = Guild.get_guild(guild_id=requested_player.guild)
     if not check_whois_access(requested_player_id):
         if guild is None or not guild.check_high_access(requested_player_id):
-            bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
-                             reply_to_message_id=mes.message_id)
+            # bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
+            #                  reply_to_message_id=mes.message_id)
             has_access = False
     # Доступ к хуизу есть
     reply = False
@@ -326,6 +326,8 @@ def view_profile(bot, update):
                 get_status_text_by_id(player.status, player.id)), parse_mode='HTML', reply_to_message_id=mes.message_id)
             on_doc_status(requested_player)
         if not has_access:
+            bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.",
+                             reply_to_message_id=mes.message_id)
             return
         buttons = get_profile_buttons(player)
         if (player.guild is None or player.guild != requested_player.guild) and not check_whois_access(requested_player_id):
