@@ -132,6 +132,9 @@ def mob(bot, update):
                 ping_list = []
             if player.guild is not None or ping_list:
                 guild = Guild.get_guild(guild_id=player.guild)
+                if guild.is_academy() and mes.chat_id == guild.chat_id:
+                    # Пинги для академки отключены
+                    return
                 if guild is not None and guild.chat_id == mes.chat_id:
                     ping_list += guild.members
                 if ping_list:
