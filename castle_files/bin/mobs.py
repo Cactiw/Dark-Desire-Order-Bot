@@ -125,7 +125,7 @@ def mob(bot, update):
         if not is_pm:
             barracks = Location.get_location(1)
             try:
-                ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id))
+                ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id)).copy()
             except Exception:
                 ping_list = None
             if not ping_list:
