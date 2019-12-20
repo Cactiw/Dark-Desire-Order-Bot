@@ -73,7 +73,7 @@ rewards = {"castle_message_change": {
         "price": 10000, "moderation": True, "text": "Введите текст рассылки по замку:", "get": reward_mailing
     },
     "castle_global_trigger": {
-        "price": 5000, "moderation": True, "text": "Введите текст нового глобального триггера:",
+        "price": 5000, "moderation": True, "text": "Введите текст, который будет вызывать новый глобальный триггер:",
         "next": "Отправьте сообщение с триггером.", "get": reward_global_trigger
     },
     "castle_delete_global_trigger": {
