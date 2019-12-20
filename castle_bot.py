@@ -592,15 +592,15 @@ def castle_bot_processing():
     unloading_resources.start()
     processes.append(unloading_resources)
 
-    telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
-    telethon_script.start()
-    processes.append(telethon_script)
-
-    parse_stats_pr = threading.Thread(target=parse_stats, name="Stats Parse")
-    parse_stats_pr.start()
-    processes.append(parse_stats_pr)
-
     if enable_api:
+        telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
+        telethon_script.start()
+        processes.append(telethon_script)
+
+        parse_stats_pr = threading.Thread(target=parse_stats, name="Stats Parse")
+        parse_stats_pr.start()
+        processes.append(parse_stats_pr)
+
         api = threading.Thread(target=start_api, args=[])
         api.start()
         processes.append(api)
