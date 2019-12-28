@@ -6,6 +6,7 @@ from castle_files.work_materials.equipment_constants import get_equipment_by_cod
 from castle_files.bin.service_functions import count_week_by_battle_id, count_battle_id
 
 from castle_files.libs.quest import Quest
+from castle_files.libs.equipment import Equipment
 
 from psycopg2 import ProgrammingError
 import logging
@@ -36,7 +37,7 @@ class Player:
         self.defense = defense
         self.stamina = stamina
         self.pet = pet
-        self.equipment = equipment.copy()
+        self.equipment: {str: Equipment} = equipment.copy()
         self.game_class = game_class
         self.class_skill_lvl = class_skill_lvl
         self.last_access_time = time.time()

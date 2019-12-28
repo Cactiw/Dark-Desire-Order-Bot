@@ -62,7 +62,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
-    guild_commanders, g_info
+    guild_commanders, g_info, guild_repair
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify
@@ -319,6 +319,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('del_assistant', del_assistant))
 
     dispatcher.add_handler(CommandHandler('guild_reports', guild_reports))
+    dispatcher.add_handler(CommandHandler('guild_repair', guild_repair))
 
     dispatcher.add_handler(CommandHandler('guild_top_battles', guild_top_battles, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('academy_top_battles', guild_top_battles, filters=filter_is_pm))

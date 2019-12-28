@@ -45,6 +45,37 @@ def create_guild(bot, update):
     return
 
 
+def guild_repair(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Вы не в гильдии. Попросите командира добавить вас.")
+        return
+    if not guild.check_high_access(player.id):
+        bot.send_message(chat_id=update.message.chat_id, text="Функция доступна только командирам и заместителям.")
+        return
+    response = "Игроки, которым требуется ремонт:\n"
+    for pl_id in guild.members:
+        pl = Player.get_player(pl_id)
+        res_new = "{}<b>{}</b> - @{}\n".format(pl.castle, pl.nickname, pl.username)
+        has_broken = False
+        for key, eq in list(pl.equipment.items()):
+            if eq is None:
+                continue
+            if eq.condition == "broken":
+                res_new += "    {} {}\n        (<em>{}</em>)\n" \
+                           "".format(eq.name, " {} ".format(eq.quality) if eq.quality else "", key)
+                has_broken = True
+        res_new += "\n"
+        if has_broken:
+            response += res_new
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+
+
+
 # ДОРОГАЯ ОПЕРАЦИЯ - получение (и вывод в сообщении) списка ги
 # @run_async
 def list_guilds(bot, update):
@@ -984,6 +1015,7 @@ def change_guild_bool_state(bot, update):
         guild.mailing_enabled = not guild.mailing_enabled
     guild.update_to_database()
     mes = update.callback_query.message
+
     reply_markup = get_edit_guild_buttons(guild)
     new_text = get_edit_guild_text(guild)
     try:

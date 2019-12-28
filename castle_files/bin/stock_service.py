@@ -24,6 +24,7 @@ def get_item_code_by_name(name):
     if item is not None:
         return item.get("code")
     item = resources.get(name)
+    # print(name, item)
     return item
 
 
