@@ -9,7 +9,6 @@ import json
 import logging
 
 cursor = conn.cursor()
-cursor2 = conn.cursor()
 
 
 # Базовый класс - Локация
@@ -60,10 +59,12 @@ class Location:
     def load_location(self, other_process=False):
         new_cursor = cursor
         if other_process:
-            new_cursor = cursor2
+            new_cursor = conn.cursor()
         request = "select state, building_process, special_info from locations where location_id = %s"
         new_cursor.execute(request, (self.id,))
         row = new_cursor.fetchone()
+        if other_process:
+            cursor.close()
         if row is None:
             return -1
         self.state = row[0]
