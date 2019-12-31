@@ -419,6 +419,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("💲Магазин статусов"),
             ],
             [
+                KeyboardButton("🧳Контрабандист"),
+            ],
+            [
                 KeyboardButton("↩️ Назад"),
             ],
         ]

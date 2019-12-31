@@ -66,6 +66,7 @@ buttons_translate = {
     "🔘Выиграно": "🔘Won",
     "📈Топы в рулетке": "📈Roulette tops",
     "💲Магазин статусов": "💲Status shop",
+    "🧳Контрабандист": "🧳Smuggler",
 
     "🌲Лесопилка": "🌲Sawmill",
     "⛰Каменоломня": "⛰Quarry",
