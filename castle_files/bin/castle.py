@@ -517,7 +517,17 @@ def place_roulette_bet(bot, update, user_data):
                      reply_markup=buttons, parse_mode='HTML')
 
 
+def check_event_game() -> bool:
+    """
+    Проверяет, особая ли это игра (сейчас - последняя ли это игра в новом году
+    :return:
+    """
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    return datetime.datetime(2019, 12, 31, 20) < now < datetime.datetime(2020, 1, 1)
+
+
 def roulette_game(bot, job):
+    MULTIPLICATION = 20
     # CENTRAL_SQUARE_CHAT_ID = -1001346136061  # тест
     logging.error("Roulette game started")
     try:
@@ -559,12 +569,17 @@ def roulette_game(bot, job):
             except BadRequest:
                 pass
             time.sleep(interval)
-        player.reputation += total_placed
+        player.reputation += total_placed * MULTIPLICATION
         player.update()
         placed = len(players.get(player.id))
         response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
                    "<b>{}</b>🔘! (Поставил: {}🔘, {:.0f}%)\nПоздравляем!".format(
             r, player.nickname, player.username, total_placed, placed, placed / total_placed * 100)
+        if check_event_game():
+            response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
+                   "{}🔘 * {} = <b>{}</b> (Поставил: {}🔘, {:.0f}%)\nПоздравляем!\n\n🎉<b>С НОВЫМ ГОДОМ!</b>🎇".format(
+            r, player.nickname, player.username, total_placed, MULTIPLICATION, total_placed * MULTIPLICATION,
+                placed, placed / total_placed * 100)
         try:
             bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
         except BadRequest:
@@ -587,10 +602,18 @@ def roulette_game(bot, job):
         for player_id, rng in list(players.items()):
             player_played = games_played.get(str(player_id)) or 0
             games_played.update({str(player_id): player_played + 1})
-            bot.send_message(chat_id=player_id,
-                             text="🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%"
-                                  "".format("выиграли" if player_id == player.id else "проиграли",
-                                            len(rng) / total_placed * 100))
+            if check_event_game():
+                text = "🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%\n\n" \
+                       "".format("выиграли" if player_id == player.id else "проиграли", len(rng) / total_placed * 100)
+                if not player_id == player.id:
+                    pl = Player.get_player(player_id)
+                    pl.reputation += len(rng)
+                    pl.update()
+                    text += "Сюрприз! Жетоны возвращены!\n🎉<b>С НОВЫМ ГОДОМ!</b>🎇"
+            else:
+                text = "🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%" \
+                       "".format("выиграли" if player_id == player.id else "проиграли", len(rng) / total_placed * 100)
+            bot.send_message(chat_id=player_id, text=text)
         roulette.update_location_to_database()
     except Exception:
         logging.error(traceback.format_exc())
