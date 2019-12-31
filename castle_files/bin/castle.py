@@ -527,7 +527,7 @@ def check_event_game() -> bool:
 
 
 def roulette_game(bot, job):
-    MULTIPLICATION = 20
+    MULTIPLICATION = 10
     # CENTRAL_SQUARE_CHAT_ID = -1001346136061  # тест
     logging.error("Roulette game started")
     try:
@@ -607,9 +607,9 @@ def roulette_game(bot, job):
                        "".format("выиграли" if player_id == player.id else "проиграли", len(rng) / total_placed * 100)
                 if not player_id == player.id:
                     pl = Player.get_player(player_id)
-                    pl.reputation += len(rng)
+                    pl.reputation += len(rng) * 2
                     pl.update()
-                    text += "Сюрприз! Жетоны возвращены!\n🎉<b>С НОВЫМ ГОДОМ!</b>🎇"
+                    text += "Сюрприз! Жетоны возвращены в двойном размере!\n🎉<b>С НОВЫМ ГОДОМ!</b>🎇"
             else:
                 text = "🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%" \
                        "".format("выиграли" if player_id == player.id else "проиграли", len(rng) / total_placed * 100)
