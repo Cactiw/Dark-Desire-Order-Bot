@@ -171,53 +171,45 @@ texts_translate = {
     "Текущий статус:": "Current status:",
 
     "Квест выполнен.": "Quest completed.",
-    "Ежедневные квесты": "Daily Quests",
-    "Собрать в квестах": "Collect in the quests",
-    "Обратиться к миду <b>(\\d+)</b> раз": "Contact HQ {} time(s)",
-    "Обратиться к стражникам <b>(\\d+)</b> раз": "Contact guardians {} time(s)",
-    "Попросить аудиенции у Короля": "Ask for an audience with the 👑King",
-    "Посетить <b>(\\d+)</b> битвы": "Visit {} battles",
-    "/doc <b>(\\d+)</b> человека со статусом": "/doc {} people with the status",
-    "Выиграть <b>(\\d+)</b> арены": "Win {} arenas",
 
     "В дальнем темном углу вы видете мужчину. Своеобразная эмблема Черного Рынка выдает в нем "
       "связного с криминальными слоями Замка.\n"
       "- \"Ну ты баклань, если че по делу есть, или вали отсюда на, пока маслину не словил. "
       "На зырь, только быра-быра, кабанчиком.\"\n\n"
       "1\\) \"Услуги Шменкси\"- инвестиция в нелегальную уличную живопись.\n<em>Возможность делать "
-      "объявление как обращение короля. Нужна модерация.</em>\n<b>5000🔘</b>\n/castle_message_change\n\n"
+      "объявление как обращение короля.\n\\(Будет модерация\\).</em>\n<b>5000🔘</b>\n/castle_message_change\n\n"
       "2\\) \"Королевская голубятня\"- подкупить стражу у королевской голубятни.\n"
-      "<em>Возможность сделать рассылку раз в день. Нужна модерация.</em>\n<b>10000🔘</b>\n/castle_mailing\n\n"
+      "<em>Возможность сделать рассылку раз в день.\n\\(Будет модерация\\).</em>\n<b>10000🔘</b>\n/castle_mailing\n\n"
       "3\\) Операция \"Козел в огороде\" - найм банды отпетых отморозков и негодяев для "
       "бессмысленного ограбления со взломом.\nПускай ограбление Королевской типографии не назвать"
       "\"ограблением века\", но его точно запомнят по твоему личному глобальному триггеру!\n"
-      "<em>Личный глобальный тригер.\nНужна модерация.</em>\n<b>5000🔘</b>\n/castle_global_trigger\n\n"
+      "<em>Личный глобальный тригер.\n\\(Будет модерация\\).</em>\n<b>5000🔘</b>\n/castle_global_trigger\n\n"
       "4\\) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
       "почти \"ограбления века\".\nКто насрал в глобальные триггеры\\? Почистим!\n"
       "<em>Возможность удалить глобальный тригер.</em>\n<b>10000🔘</b>\n/castle_delete_global_trigger\n\n"
       "5\\) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
       "действенное средство. Забыл ее светящиеся крылья ты не сможешь никогда, а вот сменить"
       " знамена на флагштоках на глазах у всех - вполне.\n"
-      "<em>Выбор аватарки любого чата замка, кроме общего.\nНужна модерация.</em>\n"
+      "<em>Выбор аватарки любого чата замка, кроме общего.\n\\(Будет модерация\\).</em>\n"
       "<b>5000🔘</b>\n/castle_change_chat_picture\n\n":
             "In the far dark corner you see a man. A peculiar emblem of the Black Market gives it a connection with the criminal layers of the Castle.\n"
             "- \"Well, you're a cormorant, if th on business is, or get out of here on, while the olive is not caught. In the zyr only Birr-Birr, a horn.\"\n\n"
             "1) \"Shengxi Services\" - an investment in illegal street painting.\n"
-            "The ability to make an announcement as an appeal to the king. Moderation required.\n<b>5000🔘</b>\n"
+            "<em>The ability to make an announcement as an appeal to the king.\nThe reward will be moderated.</em>\n<b>5000🔘</b>\n"
             "/castle_message_change"
             "\n\n2) \"Royal dovecote\" - bribe the guards at the Royal dovecote."
-            "The ability to make a newsletter once a day. Moderation required.\n<b>10000🔘</b>\n/castle_mailing\n\n"
+            "<em>The ability to make a newsletter once a day.\nThe reward will be moderated.</em>\n<b>10000🔘</b>\n/castle_mailing\n\n"
             "3) Operation \"Goat in the garden\" - hiring a gang of inveterate thugs and scoundrels for a senseless burglary."
             "\nThe Royal printing house Heist may not be called the \"Heist of the century,\" but it will definitely "
-            "be remembered for your personal global trigger!\nPersonal global trigger.\nModeration required.\n"
+            "be remembered for your personal global trigger!\n<em>Personal global trigger.\nThe reward will be moderated.</em>\n"
             "<b>5000🔘</b>\n/castle_global_trigger\n\n"
             "4) special Operation \"Laundress in the Laundry\". "
             "The best search specialists will clean up the traces of the \"robbery of the century\".\n"
-            "Who gave a shit about global triggers? Clean it!\nThe ability to delete a global trigger.\n"
+            "Who gave a shit about global triggers? Clean it!\n<em>The ability to delete a global trigger.</em>\n"
             "<b>10000🔘</b>\n/castle_delete_global_trigger\n\n"
             "5) Powder of forgetfulness.\nFairy Vignette of Carnamah kindly left on the table its most effective tool. "
             "You can never forget its glowing wings, but you can change the banners on the flagpoles in front of everyone."
-            "\nThe choice of avatar of any castle chat group, except the main castle chat.\nModeration required.\n"
+            "\n<em>The ability to change an avatar of any castle chat group, except the main castle chat.\nThe reward will be moderated.</em>\n"
             "<b>5000🔘</b>\n/castle_change_chat_picture",
     "Введите новое замковое сообщение": "Enter new castle message",
     "Подтвердите": "Confirm",
