@@ -225,6 +225,8 @@ def castle_bot_processing():
                                           castle_hello))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
 
+    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
+
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
 
     # Язык бота
@@ -531,8 +533,6 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('triggers', triggers))
     dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
     dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
-
-    dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
     # Хендлеры далее специально ниже всех остальных, ибо невозможно проверять статус на эту исполнение этих команд
     dispatcher.add_handler(MessageHandler(Filters.text & filter_castle_gates, castle_gates, pass_user_data=True))
