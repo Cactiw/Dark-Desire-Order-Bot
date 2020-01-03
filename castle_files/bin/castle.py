@@ -569,7 +569,7 @@ def roulette_game(bot, job):
             except BadRequest:
                 pass
             time.sleep(interval)
-        player.reputation += total_placed * MULTIPLICATION
+        player.reputation += total_placed * (MULTIPLICATION if check_event_game() else 1)
         player.update()
         placed = len(players.get(player.id))
         response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
