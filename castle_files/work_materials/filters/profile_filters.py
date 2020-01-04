@@ -5,7 +5,7 @@ from castle_files.work_materials.globals import allowed_list, class_chats, castl
 
 from castle_files.libs.player import Player
 
-from castle_files.bin.profile import castle_chat_check
+from castle_files.bin.profile import castle_chat_check, class_chat_check
 
 import re
 
@@ -98,6 +98,14 @@ class FilterInClassChat(BaseFilter):
 
 
 filter_in_class_chat = FilterInClassChat()
+
+
+class FilterKickFromClassChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in list(class_chats.values()) and class_chat_check(message)
+
+
+filter_kick_from_class_chat = FilterKickFromClassChat()
 
 
 class FilterKickFromCastleChat(BaseFilter):

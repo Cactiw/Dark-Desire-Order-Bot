@@ -61,27 +61,44 @@ def revoke_class_link(game_class):
         return 1
 
 
-def class_chat_check(bot, update):
+def class_chat_check(mes):
+    if mes.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(mes.from_user.id):
+        return False
+    if mes.new_chat_members is not None:
+        users = mes.new_chat_members
+    else:
+        users = [mes.from_user]
+    for user in users:
+        player = Player.get_player(user.id)
+        if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id or \
+                player.castle != '🖤':
+            return True
+    return False
 
+
+def class_chat_player_check(player_id, chat_id):
+    player = Player.get_player(player_id)
+    if player is None or player.game_class is None or class_chats.get(player.game_class) != chat_id or \
+            player.castle != '🖤':
+        return True
+    return False
+
+
+def class_chat_kick(bot, update):
     mes = update.message
     if mes.new_chat_members is not None:
         users = mes.new_chat_members
     else:
         users = [update.message.from_user]
     for user in users:
-        user_id = user.id
-        player = Player.get_player(user.id)
-        if mes.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(mes.from_user.id):
-            return
-        if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id or \
-                player.castle != '🖤':
+        if class_chat_player_check(user.id, mes.chat_id):
             try:
                 cl = class_chats_inverted.get(mes.chat_id)
                 text = "Это чат <b>{}</b>. Он не для тебя.".format(cl)
                 if mes.chat_id == class_chats.get('Sentinel'):
                     text = "Ты зашел в чат Б-гоизбранных Стражей Скалы. Но этот чат не для тебя, ничтожество. " \
                            "Иди погуляй, алебарду тебе в задницу"
-                bot.kickChatMember(chat_id=mes.chat_id, user_id=user_id)
+                bot.kickChatMember(chat_id=mes.chat_id, user_id=user.id)
                 bot.send_message(chat_id=mes.chat_id,
                                  text=text, parse_mode='HTML')
             except TelegramError:
