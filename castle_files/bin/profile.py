@@ -290,8 +290,8 @@ def view_profile(bot, update):
                 cursor.execute(request, (username.partition("@")[2],))
                 row = cursor.fetchone()
                 if row is None:
-                    bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
-                    return
+                    bot.send_message(chat_id=mes.chat_id, text="Игрок @{} не найден.".format(username))
+                    continue
                 player_ids.append(row[0])
         else:
             # Поиск по нику в игре
