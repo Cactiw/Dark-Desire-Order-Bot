@@ -49,6 +49,9 @@ def request_set_own_status(bot, update):
     except IndexError:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
+    if len(new_status) <= 2:
+        bot.send_message(chat_id=mes.chat_id, text="Статус слишком короткий. Синтаксис: /set_own_status {Новый статус}")
+        return
     if player.reputation < OWN_STATUS_PRICE:
         bot.send_message(chat_id=mes.chat_id, text="Недостаточно 🔘 жетонов")
         return
