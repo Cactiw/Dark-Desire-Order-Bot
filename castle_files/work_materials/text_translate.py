@@ -180,18 +180,32 @@ texts_translate = {
       "объявление как обращение короля.\n\\(Будет модерация\\).</em>\n<b>5000🔘</b>\n/castle_message_change\n\n"
       "2\\) \"Королевская голубятня\"- подкупить стражу у королевской голубятни.\n"
       "<em>Возможность сделать рассылку раз в день.\n\\(Будет модерация\\).</em>\n<b>10000🔘</b>\n/castle_mailing\n\n"
-      "3\\) Операция \"Козел в огороде\" - найм банды отпетых отморозков и негодяев для "
+      "3\\) Рог Хельма Молоторукого - уникальный артефакт прошлого, дающий поистине необузданную "
+      "ярость защитникам родной крепости. Огромная мощь - это огромная ответственность!\n"
+      "<em>Запрос на массовый деф гильдии.</em>\n<b>5000🔘</b>\n/castle_g_def\n\n"
+      "4\\) Орден Храма Лотоса - мощный артефакт с черного рынка древностей. "
+      "Обладатель ордена имеет поистине катастрофический прирост доверия Короля и его советников.\n"
+      "<b>Но помни, при малейшем намеке на предательство этого доверия в прошлом или настоящем - "
+      "кара будет суровой.</b>\n<em>Возможность получить пин заранее.</em>\n<b>5000🔘</b>\n"
+      "/castle_request_pin\n\n"
+      "5\\) Операция \"Козел в огороде\" - найм банды отпетых отморозков и негодяев для "
       "бессмысленного ограбления со взломом.\nПускай ограбление Королевской типографии не назвать"
       "\"ограблением века\", но его точно запомнят по твоему личному глобальному триггеру!\n"
       "<em>Личный глобальный тригер.\n\\(Будет модерация\\).</em>\n<b>5000🔘</b>\n/castle_global_trigger\n\n"
-      "4\\) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
+      "6\\) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
       "почти \"ограбления века\".\nКто насрал в глобальные триггеры\\? Почистим!\n"
       "<em>Возможность удалить глобальный тригер.</em>\n<b>10000🔘</b>\n/castle_delete_global_trigger\n\n"
-      "5\\) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
+      "7\\) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
       "действенное средство. Забыл ее светящиеся крылья ты не сможешь никогда, а вот сменить"
       " знамена на флагштоках на глазах у всех - вполне.\n"
       "<em>Выбор аватарки любого чата замка, кроме общего.\n\\(Будет модерация\\).</em>\n"
-      "<b>5000🔘</b>\n/castle_change_chat_picture\n\n":
+      "<b>5000🔘</b>\n/castle_change_chat_picture\n\n"
+      "8\\) Доверительное письмо начальника Сыскной Службы Короны.\n"
+      "Корупированные чиновкники - бич любого государства. Но это и большие возможности. "
+      "Прикажите местной страже арестовать беднягу, ведь с этой грамотой у вас "
+      "неограниченные полномочия!\n"
+      "<em>Возможность впаять ридонли на 30 минут любому.</em>\n<b>5000🔘</b>\n"
+      "/castle_ro\n\n":
             "In the far dark corner you see a man. A peculiar emblem of the Black Market gives it a connection with the criminal layers of the Castle.\n"
             "- \"Well, you're a cormorant, if th on business is, or get out of here on, while the olive is not caught. In the zyr only Birr-Birr, a horn.\"\n\n"
             "1) \"Shengxi Services\" - an investment in illegal street painting.\n"
@@ -199,27 +213,64 @@ texts_translate = {
             "/castle_message_change"
             "\n\n2) \"Royal dovecote\" - bribe the guards at the Royal dovecote."
             "<em>The ability to make a newsletter once a day.\nThe reward will be moderated.</em>\n<b>10000🔘</b>\n/castle_mailing\n\n"
-            "3) Operation \"Goat in the garden\" - hiring a gang of inveterate thugs and scoundrels for a senseless burglary."
+            "3) The horn of helm Molotorukov - a unique artifact of the past, giving a truly unbridled "
+            "rage to the defenders of their native fortress. Great power is a great responsibility!\n"
+            "<em>Request for mass Guild Defense.</em>\n<b>5000🔘</b>\n /castle_g_def\n\n"
+            "4) The Order of the Lotus Temple is a powerful artifact from the black market of antiquities. "
+            "The holder of the order has a truly disastrous increase in the confidence of the King and his advisers.\n"
+            "<b>but remember, at the slightest hint of betrayal of this trust in the past or present - "
+            "the punishment will be severe.</b>\n<em>Possibility to get a battle order much earlier.</em>\n<b>5000🔘</b>\n"
+            "/castle_request_pin\n\n"
+            "5) Operation \"Goat in the garden\" - hiring a gang of inveterate thugs and scoundrels for a senseless burglary."
             "\nThe Royal printing house Heist may not be called the \"Heist of the century,\" but it will definitely "
             "be remembered for your personal global trigger!\n<em>Personal global trigger.\nThe reward will be moderated.</em>\n"
             "<b>5000🔘</b>\n/castle_global_trigger\n\n"
-            "4) special Operation \"Laundress in the Laundry\". "
+            "6) special Operation \"Laundress in the Laundry\". "
             "The best search specialists will clean up the traces of the \"robbery of the century\".\n"
             "Who gave a shit about global triggers? Clean it!\n<em>The ability to delete a global trigger.</em>\n"
             "<b>10000🔘</b>\n/castle_delete_global_trigger\n\n"
-            "5) Powder of forgetfulness.\nFairy Vignette of Carnamah kindly left on the table its most effective tool. "
+            "7) Powder of forgetfulness.\nFairy Vignette of Carnamah kindly left on the table its most effective tool. "
             "You can never forget its glowing wings, but you can change the banners on the flagpoles in front of everyone."
             "\n<em>The ability to change an avatar of any castle chat group, except the main castle chat.\nThe reward will be moderated.</em>\n"
-            "<b>5000🔘</b>\n/castle_change_chat_picture",
+            "<b>5000🔘</b>\n/castle_change_chat_picture\n\n"
+            "8) letter of Confidence from the head of the Crown Detective Service.\n"
+            "Corrupt officials are the scourge of any state. But these are also great opportunities. "
+            "Order the local guard to arrest the poor man, because with this letter you have "
+            "unlimited powers!\n"
+            "<em>the Ability to enable read only mode for 30 minutes to anyone.</em>\n<b>5000🔘</b>\n"
+            "/castle_ro\n\n",
     "Введите новое замковое сообщение": "Enter new castle message",
     "Подтвердите": "Confirm",
     "Получение награды отменено.": "The award has been canceled.",
+    "Награда выдана.": "The award has received.",
     "Введите текст рассылки по замку": "Enter castle mailing message",
     "Введите текст, который будет вызывать новый глобальный триггер": "Enter the text that will trigger the new global trigger",
     "Отправьте сообщение с триггером.": "Send a message with a trigger.",
     "Введите текст глобального триггера для удаления": "Enter the text of the global trigger to delete",
     "Введите название чата \\(в произвольной форме\\)": "Enter the name of the chat (in any form)",
     "Отправьте новую аватарку.": "Send a new avatar.",
+    "Вы получите пин на следующую битву заранее.": "You will get a next battle order much earlier",
+    "Всем гильдиям замка будет отправлен запрос о защите вашей гильдии.":
+        "A request to protect your Guild will be sent to all guilds of the castle.",
+    "Введите id человека, которому дать read only:": "Enter the id of the person to give read only to:",
+    "Количество 🔘жетонов было изменено на <b>(\\d+)</b>": "The number of 🔘tokens was changed on <b>{}</b>",
+
+    "Ты протягиваешь кошель с жетонами стражнику, шепча на ухо имя бедолаги.\n"
+         "-\"ШО, ПРЯМ СОВЕТНИКА КОРОЛЯ, ЗА ТАКИЕ-ТО ДЕНЬГИ?!\"\n"
+         "Стражники скручивают тебя и кидают в темницу. Пять минуток "
+         "посидишь - поумнеешь.":
+    "You hand a purse of tokens to the guard, whispering the poor man's name in his ear.\n"
+         "- \"REALLY, ADVISER OF THE KING, FOR SUCH MONEY?!\"\n"
+         "The guards twist you up and throw you in the dungeon. Five minutes "
+         "if you sit down, you'll grow wiser.",
+    "\"Стражу подкупили!\" - кричишь ты, пока тебя утаскивают в одиночку "
+         "на ближайшие пол часа.\nОтличное время подумать, где и когда ты умудрился "
+         "нажить себе врагов, что аж жетонов не пожалели, чтобы тебе насолить.\n"
+         "<em>30 минут вы не можете ничего писать в чатах с ботом.</em>":
+    "\"The guards were bribed!\"- you scream as you are dragged away alone "
+         "for the next half hour.\nGreat time to think about where and when you managed "
+         "to make enemies, that even tokens were not spared to annoy you.\n"
+         "<em>30 minutes you can't write anything in chat rooms with the bot.</em>",
 
     "Неверный синтаксис.": "Incorrect syntax.",
     "Недостаточно 🔘 жетонов": "Not enough 🔘 tokens",

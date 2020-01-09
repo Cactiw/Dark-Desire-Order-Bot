@@ -33,7 +33,8 @@ from castle_files.work_materials.filters.technical_tower_filters import filter_t
 from castle_files.work_materials.filters.quest_filters import filter_sawmill, filter_quarry, filter_treasury, \
     filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct, \
     filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result, filter_cw_arena_result
-from castle_files.work_materials.filters.reward_filters import filter_smuggler, filter_get_reward
+from castle_files.work_materials.filters.reward_filters import filter_smuggler, filter_get_reward, \
+    filter_reward_delete_message
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
     filter_decline_audience, filter_request_mid_feedback, filter_send_mid_feedback, filter_reply_to_mid_feedback, \
     filter_restrict_feedback, filter_unrestrict_feedback
@@ -54,7 +55,7 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
     set_status, guild_history, revoke_all_class_links, class_chat_kick, reports_history, profile_settings, \
     change_profile_setting, get_rangers, profile_exp, set_castle_chat, remove_players_from_chat
 from castle_files.bin.class_functions import add_trap, trap_stats
-from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
+from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_reputation, change_guilds_reputation
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
@@ -88,7 +89,8 @@ from castle_files.bin.vote import create_vote, add_vote_text, add_vote_variant, 
     vote_results, set_vote_classes, guild_unvoted_list
 from castle_files.bin.statuses import status_shop, buy_status, statuses, status_on, \
     request_set_own_status, set_own_status, moderate_status
-from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward
+from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
+    delete_message
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -225,6 +227,8 @@ def castle_bot_processing():
                                           castle_hello))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
 
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_reward_delete_message, delete_message))
+
     dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
@@ -327,6 +331,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('guild_reports', guild_reports))
     dispatcher.add_handler(CommandHandler('guild_repair', guild_repair))
+
+    dispatcher.add_handler(CommandHandler('change_reputation', change_reputation))
+    dispatcher.add_handler(CommandHandler('change_guilds_reputation', change_guilds_reputation))
 
     dispatcher.add_handler(CommandHandler('guild_top_battles', guild_top_battles, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('academy_top_battles', guild_top_battles, filters=filter_is_pm))
@@ -452,6 +459,12 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('castle_delete_global_trigger', request_get_reward, pass_user_data=True,
                                           filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('castle_change_chat_picture', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('castle_g_def', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('castle_request_pin', request_get_reward, pass_user_data=True,
+                                          filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('castle_ro', request_get_reward, pass_user_data=True,
                                           filters=filter_is_pm))
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_get_reward, get_reward, pass_user_data=True))
