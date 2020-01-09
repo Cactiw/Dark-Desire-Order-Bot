@@ -38,11 +38,11 @@ filter_get_reward = FilterGetReward()
 
 
 class FilterRewardDeleteMessage(BaseFilter):
-    def filter(self, update):
-        muted_time = muted_players.get(update.message.from_user.id)
+    def filter(self, message):
+        muted_time = muted_players.get(message.from_user.id)
         if muted_time is not None:
             if time.time() - muted_time > MUTED_MINUTES * 60:
-                muted_players.pop(update.message.from_user.id)
+                muted_players.pop(message.from_user.id)
             else:
                 return True
         return False
