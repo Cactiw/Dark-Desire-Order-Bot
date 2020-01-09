@@ -139,7 +139,7 @@ rewards = {"castle_message_change": {
     },
     "castle_ro": {
         "price": 5000, "moderation": False, "text": "Введите id человека, которому дать read only:",
-        "get": reward_remove_global_trigger
+        "get": reward_read_only
     },
 }
 
@@ -189,9 +189,9 @@ def smuggler(bot, update):
 
 
 def clear_reward_user_data(user_data):
-    pop_list = ["reward_moderation", "reward", "reward_text", "reward_additional_id"]
+    pop_list = ["reward_moderation", "reward_moderation_id", "reward", "reward_text", "reward_additional_id"]
     for pop_text in pop_list:
-        if pop_text is user_data:
+        if pop_text in user_data:
             user_data.pop(pop_text)
 
 
@@ -293,6 +293,7 @@ def answer_reward(bot, update, user_data):
                 reward["get"](player=player, reward=user_data.get("reward_text"), cost=reward["price"])
             except Exception:
                 logging.error(traceback.format_exc())
+            clear_reward_user_data(user_data)
     else:
         text = "Получение награды отменено."
         clear_reward_user_data(user_data)
