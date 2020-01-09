@@ -130,7 +130,7 @@ rewards = {"castle_message_change": {
         "next": "Отправьте новую аватарку.", "get": reward_change_castle_chat_picture
     },
     "castle_g_def": {
-        "price": 5000, "moderation": True, "text": "Всем гильдиям замка будет отправлен запрос о защите вашей гильдии.",
+        "price": 5000, "moderation": False, "text": "Всем гильдиям замка будет отправлен запрос о защите вашей гильдии.",
         "get": reward_g_def, "skip_enter_text": True
     },
     "castle_request_pin": {
@@ -186,6 +186,13 @@ def smuggler(bot, update):
                           "<em>Возможность впаять ридонли на 30 минут любому.</em>\n<b>5000🔘</b>\n"
                           "/castle_ro\n\n",
                      parse_mode='HTML')
+
+
+def clear_reward_user_data(user_data):
+    pop_list = ["reward_moderation", "reward", "reward_text", "reward_additional_id"]
+    for pop_text in pop_list:
+        if pop_text is user_data:
+            user_data.pop(pop_text)
 
 
 def request_reward_confirmation(bot, mes, reward, user_data):
@@ -288,8 +295,7 @@ def answer_reward(bot, update, user_data):
                 logging.error(traceback.format_exc())
     else:
         text = "Получение награды отменено."
-        user_data.pop("reward")
-        user_data.pop("reward_text")
+        clear_reward_user_data(user_data)
     try:
         bot.answerCallbackQuery(update.callback_query.id)
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=text)
@@ -338,6 +344,5 @@ def moderate_reward(bot, update):
         player.reputation += reward["price"]
         player.update()
         bot.send_message(chat_id=player.id, text="Награда не прошла модерацию.\n🔘Жетоны возвращены.")
-    user_data.pop("reward_moderation")
-    user_data.pop("reward")
-    user_data.pop("reward_text")
+    clear_reward_user_data(user_data)
+
