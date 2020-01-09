@@ -8,9 +8,10 @@ from castle_files.libs.castle.location import Location
 
 from castle_files.bin.mid import do_mailing
 from castle_files.bin.trigger import global_triggers_in, get_message_type_and_data
-from castle_files.bin.service_functions import check_access
+from castle_files.bin.service_functions import check_access, get_time_remaining_to_battle
 
-from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor
+from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor, job, \
+    MID_CHAT_ID
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, TelegramError
@@ -79,6 +80,16 @@ def reward_g_def(player, reward, cost, *args, **kwargs):
                                 text="Не забудьте снять жетоны тем, "
                                      "кого не будет в дефе <b>{}</b> в ближайшую битву!".format(guild.tag),
                                 parse_mode='HTML')
+    job.run_once(when=get_time_remaining_to_battle() + datetime.timedelta(minutes=5),
+                 callback=g_def_remind_after_battle, context={"tag": guild.tag})
+
+
+def g_def_remind_after_battle(bot, job):
+    bot.send_message(chat_id=MID_CHAT_ID,
+                     text="Не забудьте снять жетоны тем, "
+                          "кто не был в дефе <b>{}</b> в прошедшую битву!".format(job.context.get("tag")),
+                     parse_mode='HTML')
+
 
 
 def reward_request_pin(player, reward, cost, *args, **kwargs):
