@@ -7,7 +7,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.work_materials.globals import dispatcher
 
-from castle_files.bin.rewards import muted_players, MUTED_MINUTES
+from castle_files.bin.rewards import muted_players
 
 import time
 
@@ -41,7 +41,7 @@ class FilterRewardDeleteMessage(BaseFilter):
     def filter(self, message):
         muted_time = muted_players.get(message.from_user.id)
         if muted_time is not None:
-            if time.time() - muted_time > MUTED_MINUTES * 60:
+            if time.time() > muted_time:
                 muted_players.pop(message.from_user.id)
             else:
                 return True

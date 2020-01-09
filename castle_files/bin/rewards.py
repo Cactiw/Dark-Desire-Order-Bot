@@ -8,6 +8,7 @@ from castle_files.libs.castle.location import Location
 
 from castle_files.bin.mid import do_mailing
 from castle_files.bin.trigger import global_triggers_in, get_message_type_and_data
+from castle_files.bin.service_functions import check_access
 
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor
 
@@ -89,6 +90,7 @@ def reward_change_castle_chat_picture(player, reward, *args, **kwargs):
 
 
 MUTED_MINUTES = 30
+FORBID_MUTED_MINUTES = 30
 muted_players = {}
 
 
@@ -99,9 +101,21 @@ def reward_read_only(player, reward, cost, *args, **kwargs):
         player.update()
         dispatcher.bot.send_message(player.id, text="Игрок не найден. Жетоны возвращены.")
         return
-    muted_players.update({player.id: time.time()})
-    dispatcher.bot.send_message(chat_id=mute_player.id,
-                                text="Стражу подкупили! 30 минут вы не можете ничего писать в чатах с ботом.")
+    if check_access(mute_player.id):
+        # Хотят забанить чела из мида
+        muted_players.update({mute_player.id: time.time() + FORBID_MUTED_MINUTES * 60})
+        dispatcher.bot.send_message(chat_id=mute_player.id,
+                                    text="Ты протягиваешь кошель с жетонами стражнику, шепча на ухо имя бедолаги.\n"
+                                         "-\"ШО, ПРЯМ СОВЕТНИКА КОРОЛЯ, ЗА ТАКИЕ-ТО ДЕНЬГИ?!\"\n"
+                                         "Стражники скручивают тебя и кидают в темницу. Пять минуток "
+                                         "посидишь - поумнеешь.")
+    else:
+        muted_players.update({mute_player.id: time.time() + MUTED_MINUTES * 60})
+        dispatcher.bot.send_message(chat_id=mute_player.id,
+                                    text="\"Стражу подкупили!\" - кричишь ты, пока тебя утаскивают в одиночку "
+                                         "на ближайшие пол часа.\nОтличное время подумать, где и когда ты умудрился "
+                                         "нажить себе врагов, что аж жетонов не пожалели, чтобы тебе насолить.\n"
+                                         "<em>30 минут вы не можете ничего писать в чатах с ботом.</em>")
 
 
 def delete_message(bot, update):
