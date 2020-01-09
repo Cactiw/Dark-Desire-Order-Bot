@@ -3,6 +3,7 @@
 """
 
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
 
 from castle_files.bin.mid import do_mailing
@@ -11,12 +12,13 @@ from castle_files.bin.trigger import global_triggers_in, get_message_type_and_da
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TelegramError
 
 import logging
 import traceback
 import datetime
 import re
+import time
 
 
 def reward_edit_castle_message(player, reward, *args, **kwargs):
@@ -62,8 +64,51 @@ def reward_remove_global_trigger(player, reward, cost, *args, **kwargs):
     pass
 
 
+def reward_g_def(player, reward, cost, *args, **kwargs):
+    guild = Guild.get_guild(player.guild)
+    if guild is None:
+        dispatcher.bot.send_message(player.id, text="Гильдия не найдена. Вы должны состоять в гильдии. "
+                                                    "Жетоны возвращены.")
+        player.reputation += cost
+        player.update()
+        return
+    do_mailing(dispatcher.bot, "Вы слышите звуки рога! Это {} зазывает сынов и дочерей Скалы на защиту!\n"
+                               "/g_def {}".format(guild.tag, guild.tag))
+    dispatcher.bot.send_message(chat_id=STATUSES_MODERATION_CHAT_ID,
+                                text="Не забудьте снять жетоны тем, "
+                                     "кого не будет в дефе <b>{}</b> в ближайшую битву!".format(guild.tag),
+                                parse_mode='HTML')
+
+
+def reward_request_pin(player, reward, cost, *args, **kwargs):
+    pass
+
+
 def reward_change_castle_chat_picture(player, reward, *args, **kwargs):
     pass
+
+
+MUTED_MINUTES = 30
+muted_players = {}
+
+
+def reward_read_only(player, reward, cost, *args, **kwargs):
+    mute_player = Player.get_player(reward)
+    if mute_player is None:
+        player.reputation += cost
+        player.update()
+        dispatcher.bot.send_message(player.id, text="Игрок не найден. Жетоны возвращены.")
+        return
+    muted_players.update({player.id: time.time()})
+    dispatcher.bot.send_message(chat_id=mute_player.id,
+                                text="Стражу подкупили! 30 минут вы не можете ничего писать в чатах с ботом.")
+
+
+def delete_message(bot, update):
+    try:
+        bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
+    except TelegramError:
+        pass
 
 
 rewards = {"castle_message_change": {
@@ -83,7 +128,19 @@ rewards = {"castle_message_change": {
     "castle_change_chat_picture": {
         "price": 5000, "moderation": True, "text": "Введите название чата (в произвольной форме):",
         "next": "Отправьте новую аватарку.", "get": reward_change_castle_chat_picture
-    }
+    },
+    "castle_g_def": {
+        "price": 5000, "moderation": True, "text": "Всем гильдиям замка будет отправлен запрос о защите вашей гильдии.",
+        "get": reward_g_def, "skip_enter_text": True
+    },
+    "castle_request_pin": {
+        "price": 5000, "moderation": True, "text": "Вы получите пин на следующую битву заранее.",
+        "get": reward_request_pin, "skip_enter_text": True
+    },
+    "castle_ro": {
+        "price": 5000, "moderation": False, "text": "Введите id человека, которому дать read only:",
+        "get": reward_remove_global_trigger
+    },
 }
 
 
@@ -95,22 +152,49 @@ def smuggler(bot, update):
                           "- \"Ну ты баклань, если че по делу есть, или вали отсюда на, пока маслину не словил. "
                           "На зырь, только быра-быра, кабанчиком.\"\n\n"
                           "1) \"Услуги Шменкси\"- инвестиция в нелегальную уличную живопись.\n<em>Возможность делать "
-                          "объявление как обращение короля.\n(Будет модерация).</em>\n<b>5000🔘</b>\n/castle_message_change\n\n"
+                          "объявление как обращение короля.\n(Будет модерация).</em>\n<b>5000🔘</b>\n"
+                          "/castle_message_change\n\n"
                           "2) \"Королевская голубятня\"- подкупить стражу у королевской голубятни.\n"
-                          "<em>Возможность сделать рассылку раз в день.\n(Будет модерация).</em>\n<b>10000🔘</b>\n/castle_mailing\n\n"
+                          "<em>Возможность сделать рассылку раз в день.\n(Будет модерация).</em>\n<b>10000🔘</b>\n"
+                          "/castle_mailing\n\n"
                           "3) Операция \"Козел в огороде\" - найм банды отпетых отморозков и негодяев для "
                           "бессмысленного ограбления со взломом.\nПускай ограбление Королевской типографии не назвать"
                           "\"ограблением века\", но его точно запомнят по твоему личному глобальному триггеру!\n"
-                          "<em>Личный глобальный тригер.\n(Будет модерация).</em>\n<b>5000🔘</b>\n/castle_global_trigger\n\n"
-                          "4) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
+                          "<em>Личный глобальный тригер.\n(Будет модерация).</em>\n<b>5000🔘</b>\n"
+                          "/castle_global_trigger\n\n"
+                          "4) Рог Хельма Молоторукого - уникальный артефакт прошлого, дающий поистине необузданную "
+                          "ярость защитникам родной крепости. Огромная мощь - это огромная ответственность!\n"
+                          "<em>Запрос на массовый деф гильдии.</em>\n<b>5000🔘</b>\n/castle_g_def\n\n"
+                          "5) Орден Храма Лотоса - мощный артефакт с черного рынка древностей. "
+                          "Обладатель ордена имеет поистине катастрофический прирост доверия Короля и его советников.\n"
+                          "<b>Но помни, при малейшем намеке на предательство этого доверия в прошлом или настоящем - "
+                          "кара будет суровой.</b>\n\n<em>Возможность получить пин заранее.</em>\n<b>5000🔘</b>\n"
+                          "/castle_request_pin\n\n"
+                          "6) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
                           "почти \"ограбления века\".\nКто насрал в глобальные триггеры? Почистим!\n"
-                          "<em>Возможность удалить глобальный тригер.</em>\n<b>10000🔘</b>\n/castle_delete_global_trigger\n\n"
-                          "5) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
+                          "<em>Возможность удалить глобальный тригер.</em>\n<b>10000🔘</b>\n"
+                          "/castle_delete_global_trigger\n\n"
+                          "7) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
                           "действенное средство. Забыл ее светящиеся крылья ты не сможешь никогда, а вот сменить"
                           " знамена на флагштоках на глазах у всех - вполне.\n"
                           "<em>Выбор аватарки любого чата замка, кроме общего.\n(Будет модерация).</em>\n"
-                          "<b>5000🔘</b>\n/castle_change_chat_picture\n\n",
+                          "<b>5000🔘</b>\n/castle_change_chat_picture\n\n"
+                          "8) Доверительное письмо начальника Сыскной Службы Короны.\n"
+                          "Корупированные чиновкники - бич любого государства. Но это и большие возможности. "
+                          "Прикажите местной страже арестовать беднягу, ведь с этой грамотой у вас "
+                          "неограниченные полномочия!\n\n"
+                          "<em>Возможность впаять ридонли на 30 минут любому.</em>\n<b>5000🔘</b>\n"
+                          "/castle_ro\n\n",
                      parse_mode='HTML')
+
+
+def request_reward_confirmation(bot, mes, reward, user_data):
+    buttons = InlineKeyboardMarkup([[
+        InlineKeyboardButton(text="✅Да", callback_data="p_reward yes"),
+        InlineKeyboardButton(text="❌Нет", callback_data="p_reward no")]])
+    bot.send_message(chat_id=mes.chat_id, text="Подтвердите:\n{}\n<em>{}</em>".format(reward["text"],
+                                                                                      user_data["reward_text"]),
+                     parse_mode='HTML', reply_markup=buttons)
 
 
 def request_get_reward(bot, update, user_data):
@@ -125,8 +209,14 @@ def request_get_reward(bot, update, user_data):
     if player.reputation < reward["price"]:
         bot.send_message(chat_id=mes.chat_id, text="Недостаточно 🔘 жетонов")
         return
-    user_data.update({"status": "requested_reward", "reward": mes.text[1:]})
-    bot.send_message(chat_id=mes.chat_id, text=reward["text"])
+    if reward.get("skip_enter_text"):
+        # Ничего вводть не надо, сразу на подтверждение кидаю
+        user_data.update({"status": "tea_party", "reward": mes.text[1:], "reward_text": reward.get("text")})
+        request_reward_confirmation(bot, mes, reward, user_data)
+    else:
+        # Запрос ввода текста для награды
+        user_data.update({"status": "requested_reward", "reward": mes.text[1:]})
+        bot.send_message(chat_id=mes.chat_id, text=reward["text"])
 
 
 def get_reward(bot, update, user_data):
@@ -147,12 +237,7 @@ def get_reward(bot, update, user_data):
         return
     else:
         user_data.update({"status": "tea_party", "reward_text": reward_text})
-    buttons = InlineKeyboardMarkup([[
-        InlineKeyboardButton(text="✅Да", callback_data="p_reward yes"),
-        InlineKeyboardButton(text="❌Нет", callback_data="p_reward no")]])
-    bot.send_message(chat_id=mes.chat_id, text="Подтвердите:\n{}\n<em>{}</em>".format(reward["text"],
-                                                                                      user_data["reward_text"]),
-                     parse_mode='HTML', reply_markup=buttons)
+    request_reward_confirmation(bot, mes, reward, user_data)
 
 
 def answer_reward(bot, update, user_data):

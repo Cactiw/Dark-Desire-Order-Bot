@@ -45,7 +45,7 @@ def do_mailing(bot, text):
         guild = Guild.get_guild(guild_id=guild_id)
         if guild is None:
             continue
-        if (guild.division is None or guild.division != "Луки") and guild.mailing_enabled:
+        if (guild.division is None or guild.division not in ["Луки", "Траст"]) and guild.mailing_enabled:
             bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
 
 
