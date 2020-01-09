@@ -55,7 +55,7 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
     set_status, guild_history, revoke_all_class_links, class_chat_kick, reports_history, profile_settings, \
     change_profile_setting, get_rangers, profile_exp, set_castle_chat, remove_players_from_chat
 from castle_files.bin.class_functions import add_trap, trap_stats
-from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs
+from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_reputation, change_guilds_reputation
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
@@ -331,6 +331,9 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('guild_reports', guild_reports))
     dispatcher.add_handler(CommandHandler('guild_repair', guild_repair))
+
+    dispatcher.add_handler(CommandHandler('change_reputation', change_reputation))
+    dispatcher.add_handler(CommandHandler('change_guilds_reputation', change_guilds_reputation))
 
     dispatcher.add_handler(CommandHandler('guild_top_battles', guild_top_battles, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('academy_top_battles', guild_top_battles, filters=filter_is_pm))

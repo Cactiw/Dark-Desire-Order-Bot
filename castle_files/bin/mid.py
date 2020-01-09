@@ -2,11 +2,13 @@
 Всякие функции, связанные с мидом - рассылки по гильдиям и так далее
 """
 from castle_files.libs.guild import Guild
+from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location
 
 from castle_files.bin.guild_chats import rangers_notify_start
 from castle_files.bin.api import grassroots_update_players, grassroots_update_stock, send_potion_stats, \
     update_stock_for_fails
+from castle_files.bin.service_functions import check_access
 
 from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID, \
     high_access_list
@@ -19,6 +21,7 @@ from telegram.error import TelegramError
 import threading
 import datetime
 import time
+import re
 
 
 def mailing(bot, update):
@@ -68,6 +71,71 @@ def mail_and_pin(bot, update):
         except TelegramError:
             pass
     bot.send_message(update.message.chat_id, text="Успешно отправлено!", reply_to_message_id=mes.message_id)
+
+
+def change_player_reputation(player_id, reputation_change):
+    """
+    Изменяет репутацию игрока с id player_id на reputation_change (или до нуля, если требуется списать больше, чем есть)
+    """
+    player = Player.get_player(player_id)
+    if player is None:
+        return 1
+    player.reputation += reputation_change
+    if player.reputation < 0:
+        player.reputation = 0
+    player.update()
+    dispatcher.bot.send_message(chat_id=player.id, parse_mode='HTML',
+                                text="Количество 🔘жетонов было изменено на <b>{}</b>".format(reputation_change))
+    return 0
+
+
+def change_guild_reputation(guild_tag, reputation_change):
+    """
+    Изменяет репутацию всех игроков в гильдии с тегом guild_tag на reputation_change
+    """
+    guild = Guild.get_guild(guild_tag=guild_tag)
+    if guild is None:
+        return 1
+    for player_id in guild.members:
+        change_player_reputation(player_id, reputation_change)
+    return 0
+
+
+def change_reputation(bot, update):
+    mes = update.message
+    if not check_access(mes.from_user.id):
+        bot.send_message(chat_id=mes.chat_id, text="Доступ запрещен.")
+        return
+    parse = re.search(" (\\d+) (-?\\d+)", mes.text)
+    if parse is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис. Пример: /change_reputation 205356091 10000")
+        return
+    player_id, add_reputation = int(parse.group(1)), int(parse.group(2))
+    if change_player_reputation(player_id, add_reputation) == 1:
+        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден")
+    else:
+        bot.send_message(chat_id=mes.chat_id, text="🔘Жетоны изменены.")
+
+
+def change_guilds_reputation(bot, update):
+    mes = update.message
+    if not check_access(mes.from_user.id):
+        bot.send_message(chat_id=mes.chat_id, text="Доступ запрещен.")
+        return
+    parse = re.search("( (.+))* (-?\\d+)", mes.text)
+    tags = parse.group(2).split()
+    add_reputation = int(parse.group(3))
+    success, failed = "", ""
+    for tag in tags:
+        if change_guild_reputation(tag, add_reputation) == 0:
+            success += "{} ".format(tag)
+        else:
+            failed += "{} ".format(tag)
+    bot.send_message(chat_id=mes.chat_id, text="Успешно: <b>{}</b>\n"
+                                               "Неудачно (не найдены гильдии): <b>{}</b>".format(success, failed),
+                     parse_mode='HTML')
+
+
 
 
 def plan_battle_jobs():
