@@ -74,7 +74,7 @@ def reward_g_def(player, reward, cost, *args, **kwargs):
         player.reputation += cost
         player.update()
         return
-    do_mailing(dispatcher.bot, "Вы слышите звуки рога! Это {} зазывает сынов и дочерей Скалы на защиту!\n"
+    do_mailing(dispatcher.bot, "📣📣📣Вы слышите звуки рога! Это {} зазывает сынов и дочерей Скалы на защиту!\n"
                                "/g_def {}".format(guild.tag, guild.tag))
     dispatcher.bot.send_message(chat_id=STATUSES_MODERATION_CHAT_ID,
                                 text="Не забудьте снять жетоны тем, "
