@@ -246,4 +246,5 @@ def get_status_text_by_id(status_id: int, player_id=None) -> str:
 
 def get_status_message_by_text(text: str) -> str:
     s = statuses_to_messages.get(text)
-    return s if s is not None else random.choice(default_status_messages).format(text)
+    # return s if s is not None else random.choice(default_status_messages).format(text)
+    return s if s is not None else text
