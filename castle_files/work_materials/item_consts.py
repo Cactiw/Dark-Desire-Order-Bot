@@ -78,7 +78,7 @@ items = {
     "92": ["Minotaur Sword", "Minotaur Sword part", 6],
     "93": ["Phoenix Sword", "Phoenix Sword part", 6],
     "94": ["Heavy Fauchard", "Heavy Fauchard part", 6],
-    "95": ["Guisarme", "Guisarme part", 5],
+    "95": ["Guisarme", "Guisarme part", 6],
     "96": ["Meteor Bow", "Meteor Bow part", 5],
     "97": ["Nightfall Bow", "Nightfall Bow part", 5],
     "98": ["Black Morningstar", "Black Morningstar part", 6],
