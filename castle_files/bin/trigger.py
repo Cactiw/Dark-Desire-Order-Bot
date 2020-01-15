@@ -12,34 +12,20 @@ global_triggers_in = []
 
 types = {0: "text", 1: "video", 2: "audio", 3: "photo", 4: "document", 5: "sticker", 6: "voice", 7: "Кружок"}
 
+def get_message_type_and_data(mes) -> (int, str):
+    types = [mes.text, mes.video, mes.audio, mes.photo, mes.document, mes.sticker, mes.voice, mes.video_note]
+    cursor = next((el for el in types if el != None and el != []), None)
+    mes_type = types.index(cursor)
+    if mes_type == 7:
+        cursor = cursor[-1]
 
-def get_message_type_and_data(message):
-    trigger_type, data = None, None
-    if message.text:
-        trigger_type = 0
-        data = message.text
-    elif message.video:
-        trigger_type = 1
-        data = message.video.file_id
-    elif message.audio:
-        trigger_type = 2
-        data = message.audio.file_id
-    elif message.photo:
-        trigger_type = 3
-        data = message.photo[-1].file_id
-    elif message.document:
-        trigger_type = 4
-        data = message.document.file_id
-    elif message.sticker:
-        trigger_type = 5
-        data = message.sticker.file_id
-    elif message.voice:
-        trigger_type = 6
-        data = message.voice.file_id
-    elif message.video_note:
-        trigger_type = 7
-        data = message.video_note.file_id
-    return [trigger_type, data]
+    if mes_type == 1:
+        data = mes.text
+    else:
+        data = cursor.file_id
+
+    return [mes_type, data]
+
 
 
 def send_trigger_with_type_and_data(bot, update, trigger_type, data):
