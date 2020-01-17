@@ -2,16 +2,20 @@ import logging, time
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 from order_files.work_materials.globals import cursor, order_chats, deferred_orders, job, moscow_tz, CALLBACK_CHAT_ID, \
-    local_tz, conn
+    local_tz, conn, admin_ids, LOGS_CHAT_ID, MAX_MESSAGE_LENGTH
 from order_files.libs.deferred_order import DeferredOrder
 from order_files.work_materials.pult_constants import divisions as division_const, castles, defense_to_order, \
     potions_to_order
 from order_files.libs.bot_async_messaging import order_backup_queue
 from order_files.libs.pult import Pult
+from order_files.libs.bot_async_messaging import advanced_callback
 from order_files.bin.buttons import get_order_buttons
+
+from bin.service_functions import count_next_battle_time
 
 import order_files.work_materials.globals as globals
 import datetime
+import threading
 
 
 def build_menu(buttons,
@@ -75,36 +79,82 @@ def attackCommand(bot, update):
     return
 
 
+def wait_debug(bot, orders_count):
+    orders = {}
+    orders_full = 0
+    while orders_full < orders_count:
+        data = advanced_callback.get()
+        chat_id = data.get("chat_id")
+        d = orders.get(chat_id)
+        if d is None:
+            d = {}
+            orders.update({chat_id: d})
+        for t in ["begin", "sent", "pin_end", "wait_start", "wait_end"]:
+            if t in list(data):
+                d.update({t: data.get(t)})
+        # print(chat_id, d, *(k in d for k in ["begin", "sent", "pin_end", "wait_start", "wait_end"]))
+        if all(k in d for k in ["begin", "sent", "pin_end", "wait_start", "wait_end"]):
+            orders_full += 1
+        # print(orders_full)
+    response = "Рассылка в <b>{}</b>:\n".format(time.time())
+    for chat_id, data in list(orders.items()):
+        begin, wait_start, wait_end, sent, pin_end = data.get("begin"), data.get("wait_start"), data.get("wait_end"),\
+                                                     data.get("sent"), data.get("pin_end")
+        if not all([begin, wait_start, wait_end, sent, pin_end]):
+            continue
+        new_response = "Chat_id: <code>{}</code>" \
+                       "\nВремя ожидания: <b>{}</b>\nВремя отправки: <b>{}</b>\nВремя пина: <b>{}</b>" \
+                       "\nОбщее время пина: <b>{}</b>" \
+                       "\n\n".format(chat_id, wait_end - wait_start,
+                                     sent - wait_end, pin_end - sent, pin_end - wait_end)
+        if len(response + new_response) > 4096:
+            bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
+            response = ""
+        response += new_response
+    bot.send_message(chat_id=admin_ids[0], text=response, parse_mode='HTML')
+
+
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
+    time_to_battle = count_next_battle_time() - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    if time_to_battle >= datetime.timedelta(seconds=55):
+        recashe_order_chats()
     time_begin = datetime.datetime.now()
     time_add_str = "" if time is None else time.strftime("%H:%M")
     pot_str = ""
     for i, p in enumerate(potions):
         if p:
             pot_str += potions_to_order[i]
-    response = "{3}⚔️{0}\n{1}{2}\n\n{4}" \
-               "\n".format(castle_target, "🛡{}\n".format(castle_target if defense == "Attack!"
+    response = "{3}⚔:{0}\n{1}{2}\n\n{4}" \
+               "\n".format(castle_target, "🛡:{}\n".format(castle_target if defense == "Attack!"
                                                          else defense) if defense is not None else "",
                            "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
+    if '⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡' in response:
+        response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🛡ФУЛЛ ДЕФ!🛡")
     buttons = get_order_buttons(castle_target, defense)
     orders_sent = 0
     if divisions == 'ALL':
         for chat in order_chats:
-            bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
-                           notification=not chat[2], reply_markup=buttons)
-            orders_sent += 1
+            if chat[3] != 'Траст':
+                bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
+                               notification=not chat[2], reply_markup=buttons)
+                orders_sent += 1
     else:
         current_divisions = []
         for i in range(0, len(divisions)):
             if divisions[i]:
                 current_divisions.append(division_const[i])
+        if len(current_divisions) == 1 and current_divisions[0] == 'Луки':
+            # Пин только лукам
+            response = response.replace("⚔", "🏹")
+            buttons.inline_keyboard[0][0].text = buttons.inline_keyboard[0][0].text.replace("⚔", "🏹")
         for chat in order_chats:
             if chat[3] in current_divisions:
                 bot.send_order(order_id=globals.order_id, chat_id=chat[0], response=response, pin_enabled=chat[1],
                                notification=not chat[2], reply_markup=buttons)
                 orders_sent += 1
+    threading.Thread(target=wait_debug, args=(bot, orders_sent)).start()
     response = ""
     orders_OK = 0
     orders_failed = 0
@@ -226,3 +276,5 @@ def refill_deferred_orders():
             deferred_orders.append(current)
         row = cursor.fetchone()
     logging.info("Orders refilled")
+
+

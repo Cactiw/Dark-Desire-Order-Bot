@@ -11,7 +11,7 @@ class FilterBeginDuty(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Заступить на вахту") and \
+        return filter_is_pm(message) and message.text in ["Заступить на вахту", "Go on duty"] and \
             user_data.get("status") == 'castle_gates'
 
 
@@ -23,7 +23,7 @@ class FilterEndDuty(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Покинуть вахту") and \
+        return filter_is_pm(message) and message.text in ["Покинуть вахту", "Leave duty"] and \
             user_data.get("status") == 'castle_gates' and user_data.get('on_duty')
 
 
@@ -35,7 +35,7 @@ class FilterRequestDutyFeedback(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Обратиться к 💂‍♂Стражам") and \
+        return filter_is_pm(message) and message.text in ["Talk to 💂‍♂Guardians", "Обратиться к 💂‍♂Стражам"] and \
             user_data.get("status") == 'castle_gates' and not user_data.get('on_duty')
 
 
@@ -57,7 +57,8 @@ class FilterReplyToDutyFeedback(BaseFilter):
     def filter(self, message):
         return message.chat_id == SENTINELS_DUTY_CHAT_ID and message.reply_to_message is not None and \
                message.reply_to_message.from_user.id == CASTLE_BOT_ID and \
-               message.reply_to_message.forward_from is not None
+               (message.reply_to_message.forward_from is not None or (
+                       'Запрос к стражнику' in message.reply_to_message.text and '#r' in message.reply_to_message.text))
 
 
 filter_reply_to_duty_feedback = FilterReplyToDutyFeedback()

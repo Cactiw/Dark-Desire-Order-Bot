@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import cursor, moscow_tz
+from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID
 from castle_files.bin.service_functions import get_admin_ids, check_access
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
@@ -6,6 +6,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 import datetime
+import logging
 
 triggers_in = {}
 global_triggers_in = []
@@ -28,11 +29,14 @@ def get_message_type_and_data(mes) -> (int, str):
 
 
 
-def send_trigger_with_type_and_data(bot, update, trigger_type, data):
-    mes = update.message
-    action = [bot.send_message,  bot.send_video,   bot.send_audio, bot.send_photo,
-              bot.send_document, bot.send_sticker, bot.send_voice, bot.sendVideoNote][trigger_type]
-    action(mes.chat_id, data, parse_mode='HTML')
+def send_trigger_with_type_and_data(bot, chat_id, trigger_type, data):
+    action = [bot.send_message, bot.send_video, bot.send_audio, bot.send_photo, bot.send_document, bot.send_sticker,
+              bot.send_voice, bot.sendVideoNote]
+    if trigger_type >= len(action):
+        # Неверный тип триггера
+        logging.warning("Incorrect trigger_type: {}".format(trigger_type))
+        return -1
+    action[trigger_type](chat_id, data, parse_mode='HTML')
 
 
 def add_trigger(bot, update):
@@ -50,6 +54,9 @@ def add_trigger(bot, update):
             trigger_list = []
             triggers_in.update({mes.chat_id: trigger_list})
     else:
+        if mes.from_user.id != SUPER_ADMIN_ID:
+            return
+
         chat_id = 0
         trigger_list = global_triggers_in
     list_triggers = triggers_in.get(chat_id) if chat_id else global_triggers_in
@@ -84,7 +91,7 @@ def send_trigger(bot, update):
     cursor.execute(request, (mes.text.lower(), chat_id))
     row = cursor.fetchone()
     trigger_type, data = row
-    send_trigger_with_type_and_data(bot, update, trigger_type, data)
+    send_trigger_with_type_and_data(bot, update.message.chat_id, trigger_type, data)
 
 
 def remove_trigger(bot, update):

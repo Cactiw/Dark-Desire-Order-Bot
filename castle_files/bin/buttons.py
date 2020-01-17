@@ -6,7 +6,40 @@ from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup,
 from castle_files.bin.service_functions import check_access
 from castle_files.libs.castle.location import Location, status_to_location
 from castle_files.libs.player import Player
+from castle_files.libs.guild import Guild
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
+
+
+def get_profile_buttons(player, whois_access=False, self_request=False):
+    buttons = [
+        [
+            InlineKeyboardButton("История гильдий", callback_data="pr_guild_history_{}".format(player.id)),
+        ],
+    ]
+    if whois_access:
+        buttons[0].append(InlineKeyboardButton("Репорты",
+                                               callback_data="pr_reports_history_{}".format(player.id)),)
+    if self_request:
+        buttons.append([
+            InlineKeyboardButton("🔥Опыт", callback_data="pr_exp_{}".format(player.id)),
+            InlineKeyboardButton("⚙️Настройки", callback_data="pr_settings_{}".format(player.id)),
+        ])
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_profile_settings_buttons(player):
+    buttons = [
+        [
+            InlineKeyboardButton("🛒Уведомления о продаже", callback_data="prssoldnotify_{}".format(player.id)),
+            InlineKeyboardButton("📦Изменения стока", callback_data="prsstocknotify_{}".format(player.id)),
+        ],
+        [
+            InlineKeyboardButton("📌Пинг на мобов", callback_data="prsmobsping_{}".format(player.id)),
+        ],
+    ]
+    if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+        buttons[1].append(InlineKeyboardButton("📌Пинг на аим", callback_data="prsaimping_{}".format(player.id)))
+    return InlineKeyboardMarkup(buttons)
 
 
 def get_edit_guild_buttons(guild):
@@ -14,11 +47,13 @@ def get_edit_guild_buttons(guild):
         [
             InlineKeyboardButton("Изменить командира", callback_data="gccmdr_{}".format(guild.id)),
             InlineKeyboardButton("Изменить чат гильдии", callback_data="gccht_{}".format(guild.id)),
+            InlineKeyboardButton("Изменить дивизион", callback_data="gcdvs_{}".format(guild.id)),
         ],
         [
-            InlineKeyboardButton("Изменить дивизион", callback_data="gcdvs_{}".format(guild.id)),
+            InlineKeyboardButton("Отключить /mailing" if guild.mailing_enabled else "Включить /mailing",
+                                 callback_data="gcm_{}".format(guild.id)),
             InlineKeyboardButton("Отключить приказы" if guild.orders_enabled else "Включить приказы",
-                                 callback_data="gco_{}".format(guild.id))
+                                 callback_data="gco_{}".format(guild.id)),
         ],
         [
             InlineKeyboardButton("Отключить пины" if guild.pin_enabled else "Включить пины",
@@ -60,9 +95,20 @@ def get_guild_settings_buttons(guild):
     buttons = [
         [
             InlineKeyboardButton("{} выдачу ресурсов".format("Отключить" if guild.settings is not None and
-                                                                        guild.settings.get("withdraw") else "Включить"),
+                                                             guild.settings.get("withdraw") else "Включить"),
                                  callback_data="gswith_{}".format(guild.id)),
-            ]
+            InlineKeyboardButton("{} снятие пина".format("Отключить" if guild.settings is not None and
+                                                         guild.settings.get("unpin") else "Включить"),
+                                 callback_data="gsunpin_{}".format(guild.id)),
+        ],
+        [
+            InlineKeyboardButton("{} напоминалку в 12".format("Отключить" if guild.settings is not None and
+                                                              guild.settings.get("arena_notify") else "Включить"),
+                                 callback_data="gsarenanotify_{}".format(guild.id)),
+            InlineKeyboardButton("{} пинги к битве".format("Отключить" if guild.settings is not None and
+                                                           guild.settings.get("battle_notify") else "Включить"),
+                                 callback_data="gsbattlenotify_{}".format(guild.id)),
+        ]
     ]
     return InlineKeyboardMarkup(buttons)
 
@@ -93,23 +139,59 @@ def get_tops_buttons(stat, curr='all'):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_roulette_tops_buttons(curr=""):
+    buttons = [
+        [
+            InlineKeyboardButton("{}🔘Выиграно".format('✅' if curr == 'roulette_won' else ""),
+                                 callback_data="roulette_top_won"),
+            InlineKeyboardButton("{}🏆Игр выиграно".format('✅' if curr == 'roulette_games_won' else ""),
+                                 callback_data="roulette_top_games_won"),
+            InlineKeyboardButton("{}🎰Игр сыграно".format('✅' if curr == 'roulette_games_played' else ""),
+                                 callback_data="roulette_top_games_played"),
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_vote_buttons(vote, choice=None):
+    buttons = []
+    for i, var in enumerate(vote.variants):
+        buttons.append([InlineKeyboardButton(text=var, callback_data="vote_{}_{}".format(vote.id, i))])
+    if choice is not None:
+        buttons[choice][0].text = '✅' + buttons[choice][0].text
+    return InlineKeyboardMarkup(buttons)
+
+
 # Функция, которая возвращает кнопки для любого статуса. Принимает на вход user_data, в котором читает поле "status",
 # далее генерирует и возвращает кнопки
 def get_general_buttons(user_data, player=None, only_buttons=False):
     status = user_data.get("status")
     rp_off = user_data.get("rp_off")
     buttons = None
-    if rp_off:
+    if rp_off and status in ["central_square", "rp_off"]:
         buttons = [
             [
                 KeyboardButton("👀 Профиль"),
                 KeyboardButton("👥 Гильдия"),
+                KeyboardButton("📈Топы"),
+            ],
+            [
+                KeyboardButton("🔖Связь с МИД"),
+                KeyboardButton("🗂Обновления"),
+                KeyboardButton("📰Инструкция"),
             ]
         ]
-    if status is None or status == "default":
+        if player is not None:
+            if player.guild is not None:
+                guild = Guild.get_guild(player.guild)
+                if guild is not None:
+                    if guild.check_high_access(player.id):
+                        pass
+                        # buttons[0].append(KeyboardButton("📜Список гильдий"))
+    elif status is None or status == "default":
         status = "central_square"
         user_data.update({"status": status})
-    if status == "central_square":
+    elif status in ["central_square"]:  # , "":
         buttons = [
             [
                 KeyboardButton(Location.get_location(1).name),
@@ -118,27 +200,42 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 ],
             [
                 KeyboardButton("🔭 Башня ТехМаг наук"),  # ❗
-                KeyboardButton("🏚 Стройплощадка"),
+                KeyboardButton("🏤Мандапа Славы"),
+                # KeyboardButton("📈Топы"),
                 # KeyboardButton("🏚 Не построено"),
             ],
             [
                 KeyboardButton("↔️ Подойти к указателям"),
+                KeyboardButton("🏚 Стройплощадка"),
                 # KeyboardButton("↩️ Назад"),
             ]
         ]
-        hall = Location.get_location(8)
-        if hall is not None and hall.is_constructed():
-            buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
+        # Стройка Мандапы Славы окончена
+        # hall = Location.get_location(8)
+        # if hall is not None and hall.is_constructed():
+        #     buttons[1].insert(1, KeyboardButton("🏤Мандапа Славы"))
+
+        tea_party = Location.get_location(9)
+        if tea_party is not None and tea_party.is_constructed():
+            buttons[1].insert(2, KeyboardButton("🍵Чайная лига"))
+
     elif status == 'barracks':
         buttons = [
             [
                 KeyboardButton("👀 Посмотреть в зеркало"),
                 KeyboardButton("👥 Посмотреть ведомость гильдии"),
-                ],
+            ],
             [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
+        if player is not None:
+            if player.guild is not None:
+                guild = Guild.get_guild(player.guild)
+                if guild is not None:
+                    if guild.check_high_access(player.id):
+                        pass
+                        # buttons.insert(1, [KeyboardButton("📜Изучить список гильдий")])
     elif status == 'throne_room':
         buttons = [
             [
@@ -158,13 +255,14 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         if player is not None and player.id in [king_id, SUPER_ADMIN_ID]:
             buttons[1].append(KeyboardButton("Кабинет Короля"))
     elif status in ['mid_feedback', 'duty_feedback', 'sending_guild_message', 'editing_debrief',
-                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "treasury"]:
+                    'changing_castle_message', 'sending_bot_guild_message', 'editing_update_message', "treasury",
+                    "awaiting_roulette_bet"]:
         buttons = [
             [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
-    elif status in ["sawmill", "quarry", "construction"]:
+    elif status in ["sawmill", "quarry", "construction", "exploration", "pit"]:
         buttons = [
             [
                 KeyboardButton("👀 Профиль"),
@@ -185,11 +283,11 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         else:
             buttons = [
                 [
-                    KeyboardButton("Обратиться к 💂‍♂Стражам"),
-                ],
-                [
                     KeyboardButton("🌲Лесопилка"),
                     KeyboardButton("⛰Каменоломня"),
+                ],
+                [
+                    KeyboardButton("Обратиться к 💂‍♂Стражам"),
                 ],
                 [
                     KeyboardButton("↩️ Назад"),
@@ -225,6 +323,7 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
         buttons = [
             [
                 # KeyboardButton("🔖Обратиться к магу"),
+                KeyboardButton("📰Манускрипт"),
                 KeyboardButton("🗂Архив объявлений"),
             ],
             [
@@ -263,15 +362,78 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             [
                 KeyboardButton("⚔️Атака"),
                 KeyboardButton("🛡Защита"),
-            ],
-            [
-                KeyboardButton("🌲Дерево"),
-                KeyboardButton("⛰Камень"),
-                KeyboardButton("🏚Стройка"),
+                KeyboardButton("🔥Опыт"),
             ],
             [
                 KeyboardButton("↩️ Назад"),
             ]
+        ]
+        if not rp_off:
+            buttons.insert(1, [
+                KeyboardButton("🌲Дерево"),
+                KeyboardButton("⛰Камень"),
+                KeyboardButton("🏚Стройка"),
+            ])
+    elif status == 'manuscript':
+        buttons = [
+            [
+                KeyboardButton("👤Игроки"),
+                KeyboardButton("👥Гильдии"),
+                KeyboardButton("📓Гайды"),
+            ],
+            [
+                KeyboardButton("🖋Триггеры"),
+                KeyboardButton("📦Сток"),
+                # KeyboardButton("🏠Профсоюзы"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+        if not rp_off:
+            buttons[1].insert(0, KeyboardButton("↔️Указатели"))
+    elif status == 'guides':
+        buttons = [
+            [
+                KeyboardButton("⚗️Алхимик"),
+                KeyboardButton("⚒Кузнец"),
+                KeyboardButton("📦Добытчик"),
+            ],
+            [
+                KeyboardButton("🏹Лучник"),
+                KeyboardButton("⚔Рыцарь"),
+                KeyboardButton("🛡Защитник"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ]
+        ]
+    elif status == 'tea_party':
+        buttons = [
+            # [
+            # KeyboardButton("Разведка"),
+            # KeyboardButton("Рыть котлован"),
+            # ],
+            [
+                KeyboardButton("🎰Рулетка"),
+                KeyboardButton("💲Магазин статусов"),
+            ],
+            [
+                KeyboardButton("🧳Контрабандист"),
+            ],
+            [
+                KeyboardButton("↩️ Назад"),
+            ],
+        ]
+    elif status == 'roulette':
+        buttons = [
+            [
+                KeyboardButton("🔸Сделать ставку"),
+                KeyboardButton("📈Топы в рулетке"),
+            ],
+            [
+                KeyboardButton("↩️ Назад")
+            ],
         ]
     if only_buttons or buttons is None:
         return buttons
@@ -284,7 +446,8 @@ def get_text_to_general_buttons(user_data, player=None):
     rp_off = user_data.get("rp_off")
     if location_id is None:
         user_data.update({"location_id": 0})
-    if rp_off:
+    print(rp_off, status)
+    if rp_off and status in ["central_square", "rp_off"]:
         return "Доброго времени суток!\nВыберите действие:"
     if status is None or status == "default":
         return "Вы входите в замок Скалы. Выберите, куда направиться!"
@@ -296,7 +459,7 @@ def get_text_to_general_buttons(user_data, player=None):
                 return "Вы заняты делом. Окончание через <b>{:02.0f}:{:02.0f}</b>".format(seconds_left // 60,
                                                                                           (seconds_left % 60) // 1)
     if location_id is not None:
-        return Location.get_location_enter_text_by_id(location_id)
+        return Location.get_location_enter_text_by_id(location_id, player=player)
 
 
 def send_general_buttons(user_id, user_data, bot=None):

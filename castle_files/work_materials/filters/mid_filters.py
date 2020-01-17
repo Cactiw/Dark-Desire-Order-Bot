@@ -8,7 +8,8 @@ from castle_files.work_materials.globals import MID_CHAT_ID
 
 class FilterMailing(BaseFilter):
     def filter(self, message):
-        return message.chat_id == MID_CHAT_ID and message.text.startswith("/mailing")
+        return message.chat_id == MID_CHAT_ID and (message.text.startswith("/mailing")
+                                                   or message.text.startswith("/debrief"))
 
 
 filter_mailing = FilterMailing()

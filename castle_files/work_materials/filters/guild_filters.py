@@ -43,11 +43,22 @@ filter_change_guild_chat = FilterChangeGuildChat()
 
 class FilterViewGuild(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and (message.text.startswith("👥 Посмотреть ведомость гильдии") or
-                                          message.text.startswith("👥 Гильдия"))
+        return filter_is_pm(message) and (message.text in ["👥 Посмотреть ведомость гильдии",
+                                                           "👥 View Guild List"] or
+                                          message.text in ["👥 Гильдия",
+                                                           "👥 Guild"])
 
 
 filter_view_guild = FilterViewGuild()
+
+
+class FilterViewGuildsCommanders(BaseFilter):
+    def filter(self, message):
+        return filter_is_pm(message) and message.text in ["📜Список гильдий", "📜Изучить список гильдий",
+                                                          "📜List of Guilds", "📜View List of Guilds"]
+
+
+filter_view_guilds_commanders = FilterViewGuildsCommanders()
 
 
 class FilterRemovePlayer(BaseFilter):

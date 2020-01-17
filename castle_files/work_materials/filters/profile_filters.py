@@ -1,19 +1,39 @@
 from telegram.ext import BaseFilter
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
-from castle_files.work_materials.globals import allowed_list
+from castle_files.work_materials.globals import allowed_list, class_chats, castle_chats, CASTLE_CHAT_ID
 
 from castle_files.libs.player import Player
+
+from castle_files.bin.profile import castle_chat_check, class_chat_check
 
 import re
 
 
 class FilterNotRegistered(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and Player.get_player(message.from_user.id) is None
+        return Player.get_player(message.from_user.id) is None
 
 
 filter_not_registered = FilterNotRegistered()
+
+
+class FilterJoinedCastleChat(BaseFilter):
+    def filter(self, message):
+        return message.new_chat_members and message.chat_id == CASTLE_CHAT_ID
+
+
+filter_joined_castle_chat = FilterJoinedCastleChat()
+
+
+class FilterInCastleChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id == CASTLE_CHAT_ID
+
+
+filter_in_castle_chat = FilterInCastleChat()
+
+
 
 
 class FilterForbidden(BaseFilter):
@@ -45,8 +65,8 @@ filter_is_profile = FilterIsProfile()
 
 class FilterViewHero(BaseFilter):
     def filter(self, message):
-        return filter_is_pm(message) and (message.text.startswith("👀 Посмотреть в зеркало") or
-                                          message.text.startswith("👀 Профиль"))
+        return filter_is_pm(message) and (message.text in [
+            "👀 Посмотреть в зеркало", "👀 Профиль", "👀 Profile", "👀 Look in the mirror"])
 
 
 filter_view_hero = FilterViewHero()
@@ -70,3 +90,27 @@ class FilterSetClass(BaseFilter):
 
 
 filter_set_class = FilterSetClass()
+
+
+class FilterInClassChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in list(class_chats.values())
+
+
+filter_in_class_chat = FilterInClassChat()
+
+
+class FilterKickFromClassChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in list(class_chats.values()) and class_chat_check(message)
+
+
+filter_kick_from_class_chat = FilterKickFromClassChat()
+
+
+class FilterKickFromCastleChat(BaseFilter):
+    def filter(self, message):
+        return message.chat_id in castle_chats and castle_chat_check(message)
+
+
+filter_kick_from_castle_chat = FilterKickFromCastleChat()

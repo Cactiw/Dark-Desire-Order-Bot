@@ -9,7 +9,6 @@ import json
 import logging
 
 cursor = conn.cursor()
-cursor2 = conn.cursor()
 
 
 # Базовый класс - Локация
@@ -38,12 +37,14 @@ class Location:
         return locations.get(location_id)
 
     @staticmethod
-    def get_location_enter_text_by_id(location_id, without_format=False):
+    def get_location_enter_text_by_id(location_id, player=None, without_format=False):
         location = Location.get_location(location_id)
         if location is None:
             return None
         if hasattr(location, "update_enter_text"):
             location.update_enter_text()
+        if hasattr(location, "get_text_for_player"):
+            return location.get_text_for_player(player)
         if location.special_info is None:
             return location.enter_text
         insert_values = location.special_info.get("enter_text_format_values")
@@ -58,10 +59,12 @@ class Location:
     def load_location(self, other_process=False):
         new_cursor = cursor
         if other_process:
-            new_cursor = cursor2
+            new_cursor = conn.cursor()
         request = "select state, building_process, special_info from locations where location_id = %s"
         new_cursor.execute(request, (self.id,))
         row = new_cursor.fetchone()
+        if other_process:
+            cursor.close()
         if row is None:
             return -1
         self.state = row[0]
@@ -69,6 +72,7 @@ class Location:
         self.special_info = row[2]
 
     def update_location_to_database(self):
+        cursor = conn.cursor()
         request = "update locations set state = %s, building_process = %s, special_info = %s where location_id = %s"
         cursor.execute(request, (self.state, self.building_process,
                                  json.dumps(self.special_info) if self.special_info is not None else None, self.id))
@@ -177,6 +181,18 @@ class ConstructionPlate(Location):
         self.refill_current_buildings_info()
 
 
+class TeaParty(Location):
+    def get_text_for_player(self, player):
+        daily_quests = player.quests_info.get("daily_quests")
+        if not daily_quests:
+            return
+        text = "\n\nЕжедневные квесты:\n"
+        for quest in daily_quests:
+            text += "{}\n".format(quest.get_description())
+        return self.enter_text + text
+
+
+
 #
 
 """
@@ -187,21 +203,25 @@ class ConstructionPlate(Location):
 
 throne_room = ThroneRoom(2, "🏛 Тронный зал",
                          "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы "
-                         "и даже попросить аудиенции у ВРИО 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
-                         special_info={"enter_text_format_values": ["DjedyBreaM", "Дебриф"],
-                                       "mid_players": [231900398, 205356091], "banned_in_feedback": [],
+                         "и даже попросить аудиенции у 👑@{}\n\n📜\n{}", need_clicks_to_construct=1000,
+                         special_info={"enter_text_format_values": ["ZVIIR", "Дебриф"],
+                                       "mid_players": [231900398, 320474708], "banned_in_feedback": [],
                                        "treasury": {"wood": 0, "stone": 0}})
 throne_room.create_location_in_database()
 central_square = Location(0, "⛲️ Центральная площадь",
-                          "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n\n"
-                          "На лобном месте, левее фонтана, прибит пергамент с важным объявлением:\n📜\n<em>{}</em>\n📜\n"
-                          "Заверено печатью и подписью Короля.\n\nТекущее состояние казны: 🌲Дерево: <b>{}</b>, "
+                          "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
+                          "Холодный ветер пробирает до костей и на площади немноголюдно.\nЗИМА БЛИЗКО!\n\n"
+                          "На лобном месте, левее фонтана, прибит пергамент с важной новостью:\n📜\n<em>{}</em>\n📜\n"
+                          "Заверенно подписью и печатью Короля.\n\n"
+                          "По правую руку во всю работает команда землемеров, строительная площадка работает в 3 смены."
+                          "\n\nТекущее состояние казны: 🌲Дерево: <b>{}</b>, "
                           "⛰Камень: <b>{}</b>\n\n"
-                          "<a href=\"https://t.me/joinchat/GFFOhRbguH_dJK_6eiccIg\">Чат центральной площади</a>",
+                          "<a href=\"https://t.me/joinchat/DdKE7kUfsmDVIC2DJymw_A\">Чат центральной площади</a>",
                           special_info={"enter_text_format_values": [
                               "Добро пожаловать в Скалу.\nСнова.", throne_room.treasury.wood,
                               throne_room.treasury.stone]
                           })
+# Заверено печатью и подписью Короля.
 central_square.create_location_in_database()
 try:
     old = central_square.special_info.get("enter_text_format_values")
@@ -211,7 +231,7 @@ except IndexError:
     # первый запуск с казной
     logging.error("Old format values in central square")
     pass
-barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.")
+barracks = Location(1, "🎪 Казарма", "Вы заходите в казарму.", special_info={"class_links": {}})
 barracks.create_location_in_database()
 castle_gates = Location(3, "⛩ Врата замка",
                         "Вы подошли к вратам замка. Здесь как всегда немноголюдно. На посту дежурят стражи Скалы, "
@@ -241,6 +261,19 @@ hall_of_fame = Location(8, "🏤Мандапа Славы", "Мандапа Сл
                         need_res_to_construct={"wood": 500, "stone": 500})
 hall_of_fame.create_location_in_database()
 
+tea_party = TeaParty(9, "🍵Чайная Лига", "Чайная лига. Здесь ты сможешь узнать новости замка, получить работенку, "
+                        "заработать деньжат и , вероятно, заслужить славу и уважение.\n",
+                     need_clicks_to_construct=15000, state=False, building_process=-1,
+                     need_res_to_construct={"wood": 60000, "stone": 60000}
+                     )
+tea_party.create_location_in_database()
+
+roulette = Location(10, "🎰Рулетка", "Рулетка. Здесь ты можешь посоревноваться в удаче с другими игроками.\n"
+                    "Игры проходят каждые 3 часа с 9 до 21 часа по МСК.\n\nНа ближайшую игру поставлено "
+                    "<b>{}</b> 🔘жетонов.",
+                    special_info={"enter_text_format_values": [0], "placed": {}, "total_placed": 0, "won": {}})
+roulette.create_location_in_database()
+
 
 # ТОВАРИЩ! СОЗДАЛ ЛОКАЦИЮ -- ВНЕСИ В СЛОВАРИ НИЖЕ!
 
@@ -255,6 +288,8 @@ status_to_location = {
     "treasury": 6,
     "construction_plate": 7,
     "hall_of_fame": 8,
+    "tea_party": 9,
+    "roulette": 10,
 }
 
 # Словарь с локациями - { id локации : объект класса Location }
@@ -269,4 +304,6 @@ locations = {
     6: throne_room.treasury,
     7: construction_plate,
     8: hall_of_fame,
+    9: tea_party,
+    10: roulette,
 }

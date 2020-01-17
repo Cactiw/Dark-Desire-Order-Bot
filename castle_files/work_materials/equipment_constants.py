@@ -10,10 +10,16 @@ main_hand = [
     Equipment("main_hand", "w", "05", "Knight's sword", 16, 0, 1),
     Equipment("main_hand", "w", "06", "Elven sword", 22, 0, 1),
     Equipment("main_hand", "w", "07", "Rapier", 27, 0, 1),
-    Equipment("main_hand", "w", "21", "Elven Bow", 16, 5, 1),
-    Equipment("main_hand", "w", "22", "Forest Bow", 18, 6, 1),
+    Equipment("main_hand", "w", "08", "Short spear", 3, 1, 0),
+    Equipment("main_hand", "w", "09", "Long spear", 3, 1, 0),
+    Equipment("main_hand", "w", "10", "Lance", 11, 5, 0),
     Equipment("main_hand", "w", "11", "Elven spear", 12, 7, 1),
     Equipment("main_hand", "w", "12", "Halberd", 14, 10, 1),
+    Equipment("main_hand", "w", "18", "Elven Bow", 4, 1, 0),
+    Equipment("main_hand", "w", "19", "Wooden Bow", 8, 2, 0),
+    Equipment("main_hand", "w", "20", "Long Bow", 12, 4, 0),
+    Equipment("main_hand", "w", "21", "Elven Bow", 16, 5, 1),
+    Equipment("main_hand", "w", "22", "Forest Bow", 18, 6, 1),
     Equipment("main_hand", "w", "26", "Steel axe", 9, 9, 1),
     Equipment("main_hand", "w", "27", "Mithril axe", 11, 11, 1),
     Equipment("main_hand", "w", "28", "Champion Sword", 31, 0, 2),
@@ -242,6 +248,8 @@ fill_names()
 
 
 def get_equipment_by_code(code):
+    if code is None:
+        return None
     eq_type = code[0]
     eq_code = code[1:]
     eq_list = list(equipment.values())
@@ -250,3 +258,14 @@ def get_equipment_by_code(code):
             if eq.code == eq_code and eq.type == eq_type:
                 return copy.deepcopy(eq)
     return None
+
+
+def get_equipment_by_name(eq_name):
+    names_list = list(equipment_names.items())
+    code = None
+    for name, item_code in names_list:
+        if name in eq_name:
+            code = item_code
+            break
+    eq = get_equipment_by_code(code)
+    return eq

@@ -1,11 +1,16 @@
 """
 В этом модуле находятся все функции для фидбека в виртуальном замке, например, аудиенция у короля, обращение в мид
 """
-from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID
+from castle_files.work_materials.globals import cursor, king_id, moscow_tz, MID_CHAT_ID, SENTINELS_DUTY_CHAT_ID, \
+    DEFAULT_CASTLE_STATUS
 from castle_files.bin.buttons import get_general_buttons
-from castle_files.libs.castle.location import Location
+from castle_files.bin.castle import back
+from castle_files.bin.quest_triggers import on_king_audience, on_mid_request
 
-from order_files.bin.pult_callback import count_next_battle_time
+from castle_files.libs.castle.location import Location
+from castle_files.libs.player import Player
+
+from bin.service_functions import count_next_battle_time
 
 import datetime
 import re
@@ -16,20 +21,30 @@ MID_REQUEST_FORBID_MINUTES = 15
 
 
 # Запрос на аудиенцию у Короля (возможно, когда-нибудь уберу прямые запросы в базу данных)
-def request_king_audience(bot, update):
+def request_king_audience(bot, update, user_data):
     if update.message.from_user.id == king_id:
         bot.send_message(chat_id=update.message.from_user.id, text="Это уже похоже на онанизм. Впрочем, навряд ли Вам "
                                                                    "нужно разрешение, чтобы говорить с самим собой.")
+        return
+    last_audience = user_data.get("last_king_audience")
+    if last_audience is not None and datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - last_audience < \
+            datetime.timedelta(hours=8):
+        bot.send_message(chat_id=update.message.from_user.id,
+                         text="\"Аудиенцию можно просить не чаще одного раза в 8 часов\", — сообщил дворецкий")
         return
     request = "insert into king_audiences(request_player_id, king_player_id, date_created) " \
               "values (%s, %s, %s) returning audience_id"
     cursor.execute(request, (update.message.from_user.id, king_id,
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
     row = cursor.fetchone()
+    user_data.update({"last_king_audience": datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)})
     bot.send_message(chat_id=king_id,
                      text="@{} просит аудиенции! \nПринять: /accept_king_audience_{}\nОтказать: "
                           "/decline_king_audience_{}".format(update.message.from_user.username, row[0], row[0]))
     bot.send_message(chat_id=update.message.from_user.id, text="Запрос об аудиенции отправлен. Ожидайте ответа")
+
+    player = Player.get_player(update.message.from_user.id)
+    on_king_audience(player)
 
 
 # Функция, которая возвращает [ id запросившего аудиенцию : id аудиенции ], или [-1], если произошла ошибка
@@ -107,10 +122,16 @@ def send_mid_feedback(bot, update, user_data):
         return
     threading.Thread(target=forward_then_reply_to_mid, args=(bot, update.message)).start()
     user_data.update({"status": "throne_room"})
+    rp_off = user_data.get("rp_off")
+    if rp_off:
+        user_data.update({"status": DEFAULT_CASTLE_STATUS})
     reply_markup = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Ваше обращение к Совету было озвучено. Если оно было по делу, то ожидайте ответа, "
                           "но бойтесь его кары, если это не так!", reply_markup=reply_markup)
+
+    player = Player.get_player(player_id=update.message.from_user.id)
+    on_mid_request(player)
 
 
 def forward_then_reply_to_mid(bot, message):
@@ -123,7 +144,17 @@ def forward_then_reply_to_mid(bot, message):
 
 
 def send_reply_to_mid_request(bot, update):
-    bot.forwardMessage(chat_id=update.message.reply_to_message.forward_from.id, from_chat_id=update.message.chat_id,
+    mes = update.message.reply_to_message
+    if mes.forward_from is None:
+        chat_id = re.search("#r(\\d+)", mes.text)
+        if chat_id is None:
+            bot.send_message(chat_id=update.message.chat_id, text="Ошибка.",
+                             reply_to_message_id=update.message.message_id)
+            return
+        chat_id = int(chat_id.group(1))
+    else:
+        chat_id = update.message.reply_to_message.forward_from.id
+    bot.forwardMessage(chat_id=chat_id, from_chat_id=update.message.chat_id,
                        message_id=update.message.message_id)
     bot.send_message(chat_id=update.message.chat_id, text="Ответ успешно отправлен",
                      reply_to_message_id=update.message.message_id)

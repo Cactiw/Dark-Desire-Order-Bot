@@ -1,32 +1,17 @@
-from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn
+from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc
+
+from castle_files.bin.service_functions import count_battle_id
+from castle_files.bin.stock import get_item_code_by_name
+from castle_files.bin.quest_triggers import on_add_report
+
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 import re
 import datetime
+import json
 
 REPORT_REPUTATION_COUNT = 5
-
-
-# Функция, которая считает id битвы по сообщению, крайне желательно переписать нормально, похоже на костыль
-def count_battle_id(message):
-    first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
-    interval = datetime.timedelta(hours=8)
-    try:
-        forward_message_date = local_tz.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    except ValueError:
-        try:
-            forward_message_date = message.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
-        except ValueError:
-            forward_message_date = message.forward_date
-    except AttributeError:
-        forward_message_date = local_tz.localize(message.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    time_from_first_battle = forward_message_date - first_battle
-    battle_id = 0
-    while time_from_first_battle > interval:
-        time_from_first_battle -= interval
-        battle_id = battle_id + 1
-    return battle_id
 
 
 def count_battle_time(battle_id):
@@ -38,13 +23,22 @@ def count_battle_time(battle_id):
     return target_battle
 
 
-def add_report(bot, update):
+def add_report(bot, update, user_data):
     mes = update.message
     s = mes.text
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    line = re.search(".(.*)\\s⚔:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
+
+    try:
+        forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except ValueError:
+        try:
+            forward_message_date = mes.forward_date
+        except AttributeError:
+            forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+
+    line = re.search("[🍆🍁☘🌹🐢🦇🖤️]*(.*)\\s⚔:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
     """ 
     . - замок, (.*)\\s - никнейм в игре - от замка до эмодзи атаки. ⚔:(\\d+) - Парсинг атаки в конкретной битве
     \\(? - Возможно атака подверглась модификациям, тогда сразу после числа атаки будет открывающая скобка. 
@@ -70,6 +64,75 @@ def add_report(bot, update):
     stock = re.search("📦Stock:\\s+(-?\\d+)", s)
     stock = int(stock.group(1)) if stock is not None else 0
     battle_id = count_battle_id(mes)
+    hp = re.search("❤️Hp: (-?\\d+)", s)
+    hp = int(hp.group(1)) if hp is not None else 0
+    outplay = re.search("You outplayed (.+) by ⚔️(\\d+)", s)
+    outplay_dict = {}
+    if outplay is not None:
+        outplay_nickname = outplay.group(1)
+        outplay_attack = int(outplay.group(2))
+        outplay_dict.update({"nickname": outplay_nickname, "attack": outplay_attack})
+
+    if 'Encounter:' in s or ('hit' in s.lower() and 'miss' in s.lower() and 'last hit' in s.lower()):
+        # Репорт с мобов
+        earned = re.search("Получено: (.+) \\((\\d+)\\)", s)
+        if earned is not None:
+            name = earned.group(1)
+            count = earned.group(2)
+            code = get_item_code_by_name(name)
+            if code is None:
+                code = name
+            drop = player.mobs_info.get("drop")
+            if drop is None:
+                drop = {}
+                player.mobs_info.update({"drop": drop})
+            drop.update({forward_message_date.timestamp(): {"code": code, "count": 1}})
+            player.update()
+        names, lvls, buffs = [], [], []
+        for string in mes.text.splitlines():
+            parse = re.search("(.+) lvl\\.(\\d+)", string)
+            if parse is not None:
+                name = parse.group(1)
+                lvl = int(parse.group(2))
+                names.append(name)
+                lvls.append(lvl)
+                buffs.append("")
+            else:
+                parse = re.search("  ╰ (.+)", string)
+                if parse is not None:
+                    buff = parse.group(1)
+                    buffs.pop()
+                    buffs.append(buff)
+        hit = re.search("Your attacks: (\\d+)", s)
+        hit = int(hit.group(1)) if hit is not None else 0
+        miss = re.search("Hostile strikes: (\\d+)", s)
+        miss = int(miss.group(1)) if miss is not None else 0
+        last_hit = re.search("Last hit: (\\d+)", s)
+        last_hit = int(last_hit.group(1)) if last_hit is not None else 0
+        request = "select report_id from mob_reports where date_created = %s and player_id = %s"
+        cursor.execute(request, (forward_message_date, player.id))
+        row = cursor.fetchone()
+        if row is not None:
+            return
+        request = "insert into mob_reports(player_id, date_created, attack, additional_attack, defense, " \
+                  "additional_defense, lvl, exp, gold, stock, mob_names, mob_lvls, buffs, hp, hit, miss, last_hit) " \
+                  "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(request, (player.id, forward_message_date, attack, additional_attack, defense,
+                                 additional_defense, lvl, exp, gold, stock, names, lvls, buffs, hp, hit, miss, last_hit))
+        return
+
+    equip = re.search("Found: (.+) \\(from (.+)\\)", s)
+    equip_change = None
+    if equip is not None:
+        name = equip.group(1)
+        found_from = equip.group(2)
+        equip_change = {"status": "Found", "name": name, "from": found_from}
+    else:
+        equip = re.search("Lost: (.+)", s)
+        if equip is not None:
+            name = equip.group(1)
+            equip_change = {"status": "Lost", "name": name}
+
     request = "select report_id from reports where battle_id = %s and player_id = %s"
     cursor.execute(request, (battle_id, player.id))
     row = cursor.fetchone()
@@ -77,19 +140,12 @@ def add_report(bot, update):
         bot.send_message(chat_id=mes.from_user.id, text="Репорт за эту битву уже учтён!")
         return
     request = "insert into reports(player_id, battle_id, attack, additional_attack, defense, additional_defense, lvl, "\
-              "exp, gold, stock) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+              "exp, gold, stock, equip, outplay) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, battle_id, attack, additional_attack, defense, additional_defense, lvl, exp,
-                             gold, stock))
+                             gold, stock, json.dumps(equip_change, ensure_ascii=False) if equip_change is not None else
+                             None, json.dumps(outplay_dict, ensure_ascii=False) if outplay_dict is not None else None))
 
-    try:
-        forward_message_date = local_tz.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    except ValueError:
-        try:
-            forward_message_date = mes.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
-        except ValueError:
-            forward_message_date = mes.forward_date
-    except AttributeError:
-        forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    player.count_reports()
     reputation = REPORT_REPUTATION_COUNT
 
     if forward_message_date < datetime.datetime(year=2019, month=5, day=29, hour=12):
@@ -97,8 +153,11 @@ def add_report(bot, update):
 
     player.reputation += reputation
     player.update()
-    bot.send_message(chat_id=mes.from_user.id, text="Репорт учтён. Спасибо!\nПолучено "
-                                                    "{}🔘!".format(reputation))
+    response = "Репорт учтён. Спасибо!\n" \
+               "{}".format("Получено {}🔘!".format(reputation) if not user_data.get("rp_off") else "")
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+    if exp != 0:
+        on_add_report(player, forward_message_date)
     """
     bot.send_message(chat_id=mes.from_user.id,
                      text="<b>{}</b> ⚔:{}{} 🛡:{}{} Lvl: {}\n"
@@ -109,6 +168,44 @@ def add_report(bot, update):
                                     lvl, exp, gold, stock),
                      parse_mode='HTML')
     """
+
+
+def battle_drop(bot, update):
+    mes = update.message
+    request = "select battle_id, equip from reports where player_id = %s and equip is not null " \
+              "order by battle_id desc limit 20"
+    cursor.execute(request, (mes.from_user.id,))
+    rows = cursor.fetchall()
+    response = "Последние изменения в экипировке по репортам:\n"
+    for row in rows:
+        found_from = row[1].get("from")
+        response += "{} - <code>{}</code>: <b>{}</b> {}" \
+                    "\n".format(count_battle_time(row[0]), row[1].get("status"), row[1].get("name"),
+                                "(От {})".format(found_from) if found_from is not None else "")
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def battle_equip(bot, update):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID:
+        return
+    battle_id = re.search("\\d+", mes.text)
+    if battle_id is None:
+        battle_id = count_battle_id(mes)
+    else:
+        battle_id = int(battle_id.group(0))
+    full = 'full' in mes.text
+    request = "select player_id, equip from reports where battle_id = %s and equip is not null " \
+              "order by equip ->> 'status'"
+    cursor.execute(request, (battle_id,))
+    rows = cursor.fetchall()
+    response = "Дроп с битвы {} - {} :\n".format(battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
+    for row in rows:
+        name, found_from = row[1].get("name"), row[1].get("from")
+        player = Player.get_player(row[0])
+        response += "{}<b>{}</b> {}\n".format("{} ".format((player.castle + player.nickname) if full else ""),
+                                              name, "(От {})".format(found_from) if found_from is not None else "")
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
 # VERY EXPENSIVE OPERATION
@@ -135,6 +232,9 @@ def battle_stats(bot, update):
                                                        count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     while row is not None:
         player = Player.get_player(row[0])
+        if player.castle != '🖤':
+            row = cursor1.fetchone()
+            continue
         if player.guild is None:
             guild = guilds[-1]
         else:
@@ -151,8 +251,8 @@ def battle_stats(bot, update):
         total_attack += values[1]
         total_defense += values[2]
         total_gold += values[3]
-        response += "<b>{}</b> - {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, " \
-                    "💰: <b>{}</b>\n".format(guild.tag, values[0], values[1], values[2], values[3])
+        response += "<code>{:<3}</code>-👣{} ⚔️{} 🛡{} 💰{}" \
+                    "\n".format(guild.tag, values[0], values[1], values[2], values[3])
     response += "\nВсего: {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, " \
                     "💰: <b>{}</b>\n".format(total_reports, total_attack, total_defense, total_gold)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')

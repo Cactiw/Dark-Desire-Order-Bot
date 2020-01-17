@@ -11,7 +11,8 @@ class FilterRequestAudience(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Попросить аудиенции у 👑Короля") and \
+        return filter_is_pm(message) and message.text in ["Попросить аудиенции у 👑Короля",
+                                                          "Ask for an audience with 👑King"] and \
             user_data.get("status") == 'throne_room'
 
 
@@ -39,8 +40,10 @@ class FilterRequestMidFeedback(BaseFilter):
         user_data = dispatcher.user_data.get(message.from_user.id)
         if user_data is None:
             return False
-        return filter_is_pm(message) and message.text.startswith("Обратиться к командному составу") and \
-            user_data.get("status") == 'throne_room'
+        return filter_is_pm(message) and ((message.text in ["Обратиться к командному составу",
+                                                            "Contact the command staff"] and
+            user_data.get("status") == 'throne_room') or message.text in ['🔖Связь с МИД',
+                                                                          '🔖 Headquarters feedback'])
 
 
 filter_request_mid_feedback = FilterRequestMidFeedback()
@@ -61,7 +64,8 @@ class FilterReplyToMidFeedback(BaseFilter):
     def filter(self, message):
         return message.chat_id == MID_CHAT_ID and message.reply_to_message is not None and \
                message.reply_to_message.from_user.id == CASTLE_BOT_ID and \
-               message.reply_to_message.forward_from is not None
+               (message.reply_to_message.forward_from is not None or (
+                       'Запрос к МИДу' in message.reply_to_message.text and '#r' in message.reply_to_message.text))
 
 
 filter_reply_to_mid_feedback = FilterReplyToMidFeedback()

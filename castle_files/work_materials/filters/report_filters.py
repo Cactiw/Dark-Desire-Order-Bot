@@ -5,7 +5,7 @@ import re
 
 class FilterIsReport(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and re.match("[🍆🍁☘🌹🐢🦇🖤]+", message.text) is not None and \
+        return filter_is_chat_wars_forward(message) and re.search("[🍆🍁☘🌹🐢🦇🖤]+", message.text) is not None and \
                re.search("Твои результаты в бою:", message.text) is not None
 
 

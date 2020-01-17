@@ -6,12 +6,15 @@ from castle_files.work_materials.globals import SENTINELS_DUTY_CHAT_ID, CASTLE_B
 
 from castle_files.bin.service_functions import check_access
 from castle_files.bin.buttons import get_general_buttons
+from castle_files.bin.quest_triggers import on_duty_request
+
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 
 import logging
 import traceback
 import threading
+import re
 
 
 def revoke_duty_link(bot, update):
@@ -108,6 +111,9 @@ def send_duty_feedback(bot, update, user_data):
     bot.send_message(chat_id=update.message.from_user.id,
                      text="Вы обратились к стражникам у городских ворот. Ожидайте ответа.", reply_markup=reply_markup)
 
+    player = Player.get_player(update.message.from_user.id)
+    on_duty_request(player)
+
 
 def forward_then_reply_to_duty(bot, message):
     mes = bot.forwardMessage(chat_id=SENTINELS_DUTY_CHAT_ID, from_chat_id=message.chat_id, message_id=message.message_id)
@@ -119,7 +125,17 @@ def forward_then_reply_to_duty(bot, message):
 
 
 def send_reply_to_duty_request(bot, update):
-    bot.forwardMessage(chat_id=update.message.reply_to_message.forward_from.id, from_chat_id=update.message.chat_id,
+    mes = update.message.reply_to_message
+    if mes.forward_from is None:
+        chat_id = re.search("#r(\\d+)", mes.text)
+        if chat_id is None:
+            bot.send_message(chat_id=update.message.chat_id, text="Ошибка.",
+                             reply_to_message_id=update.message.message_id)
+            return
+        chat_id = int(chat_id.group(1))
+    else:
+        chat_id = update.message.reply_to_message.forward_from.id
+    bot.forwardMessage(chat_id=chat_id, from_chat_id=update.message.chat_id,
                        message_id=update.message.message_id)
     bot.send_message(chat_id=update.message.chat_id, text="Ответ успешно отправлен",
                      reply_to_message_id=update.message.message_id)

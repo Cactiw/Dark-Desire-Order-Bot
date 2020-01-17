@@ -1,9 +1,11 @@
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_update_history_buttons
+from castle_files.bin.mid import do_mailing
 
 from castle_files.libs.castle.location import Location
 from castle_files.libs.guild import Guild
 
 from castle_files.work_materials.globals import cursor, moscow_tz, MY_CHANNEL_ID
+from castle_files.work_materials.faq_constants import faq_texts
 
 import re
 import datetime
@@ -12,6 +14,26 @@ import datetime
 def technical_tower(bot, update, user_data):
     user_data.update({"status": "technical_tower", "location_id": 5})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def manuscript(bot, update, user_data):
+    user_data.update({"status": "manuscript"})
+    buttons = get_general_buttons(user_data)
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Перед вами находится манускрипт. Выберите раздел:", reply_markup=buttons)
+
+
+def guides(bot, update, user_data):
+    pass
+    # user_data.update({"status": "guides"})
+    # buttons = get_general_buttons(user_data)
+    # bot.send_message(chat_id=update.message.from_user.id,
+    #                  text="Выберите раздел:", reply_markup=buttons)
+
+
+def view_manuscript_category(bot, update):
+    bot.send_message(chat_id=update.message.from_user.id, text=faq_texts.get(update.message.text), parse_mode='HTML',
+                     disable_web_page_preview=True)
 
 
 def my_cabinet(bot, update, user_data):
@@ -63,9 +85,7 @@ def request_bot_guild_message_notify(bot, update, user_data):
 
 def send_bot_guild_message_notify(bot, update, user_data):
     user_data.update({"status": "my_cabinet"})
-    for guild_id in Guild.guild_ids:
-        guild = Guild.get_guild(guild_id=guild_id)
-        bot.send_message(chat_id=guild.chat_id, text=update.message.text, parse_mode='HTML', )
+    do_mailing(bot, update.message.text)
     bot.send_message(update.message.from_user.id, text="Успешно отправлено!",
                      reply_markup=get_general_buttons(user_data))
 

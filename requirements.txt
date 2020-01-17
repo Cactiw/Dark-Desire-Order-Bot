@@ -1,0 +1,7 @@
+python-telegram-bot
+psycopg2-binary
+telethon
+pika
+pytz
+tzlocal
+pySocks

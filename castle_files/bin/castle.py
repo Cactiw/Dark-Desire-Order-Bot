@@ -1,15 +1,18 @@
 """
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
-from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons
+from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons, \
+    get_roulette_tops_buttons
 from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
+from castle_files.bin.mid import do_mailing, fill_mid_players
+from castle_files.bin.quests import return_from_quest
 from castle_files.libs.castle.location import Location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
-    classes_to_emoji
+    classes_to_emoji, CENTRAL_SQUARE_CHAT_ID, job, moscow_tz, dispatcher
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
@@ -18,8 +21,14 @@ from telegram.error import BadRequest, TelegramError
 import re
 import logging
 import traceback
+import random
+import time
+import datetime
 
+ROULETTE_MAX_BET_LIMIT = 50
+ROULETTE_HOUR_LIMIT = 18
 TOP_NUM_PLAYERS = 20
+KABALA_GAIN = 2000
 
 emoji_to_class = dict_invert(classes_to_emoji)
 
@@ -27,10 +36,10 @@ emoji_to_class = dict_invert(classes_to_emoji)
 def change_rp(bot, update, user_data):
     if update.message.from_user.id != update.message.chat_id:
         return
+    user_data.update({"status": DEFAULT_CASTLE_STATUS})
     rp_off = user_data.get("rp_off")
     if rp_off:
         user_data.pop("rp_off")
-        user_data.update({"status": DEFAULT_CASTLE_STATUS})
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
     user_data.update({"status": "rp_off", "rp_off": True})
@@ -68,16 +77,45 @@ def back(bot, update, user_data):
         "treasury": "throne_room",
 
         "hall_of_fame": "central_square",
-        "tops": "hall_of_fame",
+        # "tops": "hall_of_fame",
+
+        "tops": "central_square",
+
+        "manuscript": "technical_tower",
+        "guides": "manuscript",
+
+        "tea_party": "central_square",
+        "exploration": "tea_party",
+        "pit": "tea_party",
+
+        "roulette": "tea_party",
+        "awaiting_roulette_bet": "roulette",
 
     }
+
+    statuses_rp_off = {
+        "tops": DEFAULT_CASTLE_STATUS,
+        "mid_feedback": DEFAULT_CASTLE_STATUS,
+
+
+        "manuscript": DEFAULT_CASTLE_STATUS,
+    }
+
     status = user_data.get("status")
     if status is None:
         send_general_buttons(update.message.from_user.id, user_data, bot=bot)
         return
-    if status in ["sawmill", "quarry", "construction"]:
+    if status in ["sawmill", "quarry", "construction", "exploration", "pit", "waiting_second_player_for_quest",
+                  "two_quest"]:
+        if "quest_name" in user_data:
+            return_from_quest(update.message.from_user.id, user_data)
         bot.send_message(chat_id=update.message.from_user.id, text="Операция отменена.")
-    new_status = statuses_back.get(status)
+    rp_off = user_data.get("rp_off") or False
+    new_status = None
+    if rp_off:
+        new_status = statuses_rp_off.get(status)
+    if new_status is None:
+        new_status = statuses_back.get(status)
     new_location = Location.get_id_by_status(new_status)
     user_data.update({"status": new_status, "location_id": new_location})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
@@ -98,7 +136,7 @@ def guide_signs(bot, update):  # TODO: сделать нормально
                           "публикуются новости о работе ордена над усовершенствованием техно-магических "
                           "приспособлений Скалы."
                           "\n\n🏤<b>Мандапа Славы</b> -  почетное место, где увековечены герои Скалы, их подвиги и "
-                          "заслуги перед замком. Вечная слава и почет!\n\n❓\n\n❓\n\n❓\n\n❓\n\n❓\n\n"
+                          "заслуги перед замком. Вечная слава и почет!\n\n❓\n\n❓\n\n"
                           "<em>На указателях ещё много места, возможно, в будущем, "
                           "там появятся новые строки</em>", parse_mode='HTML')
 
@@ -138,17 +176,6 @@ def castle_gates(bot, update, user_data):
         response += "\nКак страж, ты имеешь возможность заступить на вахту\n"
     reply_markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=reply_markup)
-
-
-# Заполнение списка мида, запускать при старте бота и при обновлении состава
-def fill_mid_players(other_process=False):
-    high_access_list.clear()
-    throne = Location.get_location(2)
-    if other_process:
-        throne.load_location(other_process=True)
-    mid_players = throne.special_info.get("mid_players")
-    for player_id in mid_players:
-        high_access_list.append(player_id)
 
 
 # Посмотреть состав мида
@@ -199,9 +226,7 @@ def request_guild_message_notify(bot, update, user_data):
 
 def send_guild_message_notify(bot, update, user_data):
     user_data.update({"status": "headquarters"})
-    for guild_id in Guild.guild_ids:
-        guild = Guild.get_guild(guild_id=guild_id)
-        bot.send_message(chat_id=guild.chat_id, text=update.message.text, parse_mode='HTML')
+    do_mailing(bot, update.message.text)
     bot.send_message(update.message.from_user.id, text="Успешно отправлено!")
 
 
@@ -265,7 +290,7 @@ def adding_general(bot, update, user_data):
     fill_mid_players()
     bot.send_message(chat_id=update.message.from_user.id, text="@{} теперь генерал!".format(player.username))
     user_data.update({"status": "king_cabinet"})
-    update_request_queue.put(["update_mid"])
+    # update_request_queue.put(["update_mid"])
 
 
 def remove_general(bot, update):
@@ -287,7 +312,7 @@ def remove_general(bot, update):
     fill_mid_players()
     bot.send_message(chat_id=update.message.from_user.id,
                      text="@{} сослан в тортугу и больше не генерал".format(player.username))
-    update_request_queue.put(["update_mid"])
+    # update_request_queue.put(["update_mid"])
 
 
 def hall_of_fame(bot, update, user_data):
@@ -295,14 +320,19 @@ def hall_of_fame(bot, update, user_data):
     if not hall.is_constructed() and update.message.from_user.id != SUPER_ADMIN_ID:
         unknown_input(bot, update, user_data)
         return
+    tops(bot, update, user_data, response="Вы входите в Мандапу Славы - почетное место, где увековечены герои Скалы, "
+                                          "их подвиги и заслуги перед замком. На стене развешены лучшие из лучших.\n\n")
+    """
     user_data.update({"status": "hall_of_fame", "location_id": 8})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+    """
 
 
-def tops(bot, update, user_data):
+def tops(bot, update, user_data, response=""):
     user_data.update({"status": "tops"})
     buttons = get_general_buttons(user_data)
-    bot.send_message(chat_id=update.message.chat_id, text="Выберите категорию:", reply_markup=buttons)
+    response += "Выберите категорию:"
+    bot.send_message(chat_id=update.message.chat_id, text=response, reply_markup=buttons)
 
 
 def get_tops_text(player, stat, stat_text, game_class=None):
@@ -322,10 +352,20 @@ def get_tops_text(player, stat, stat_text, game_class=None):
                       "additional_info ->> 'resource' = '{}' {}group by nickname, game_class, lvl, player_id order by "\
                       "res_count desc;".format(stat, "and game_class = '{}'"
                                                      "".format(game_class) if game_class is not None else "")
+    elif stat.startswith("roulette"):
+        select = stat.partition("roulette_")[2]
+        request = "select nickname, count, game_class, lvl, players.id from locations, json_each(special_info -> '{}')"\
+                  " as a(id, count) inner join players on a.id::text::integer = players.id where " \
+                  "location_id = 10 order by " \
+                  "count::text::integer desc".format(select)  # Этот запрос составлялся час. Помянем.
+
     else:
-        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' {}" \
-                  "order by {} desc".format(stat, "and game_class = '{}' ".format(game_class) if
+        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' and {} is not null " \
+                  "and api_info -> 'token' is not null {}" \
+                  "order by {} desc".format(stat, stat, "and game_class = '{}' ".format(game_class) if
                                             game_class is not None else "", stat)
+        response += "<em>Обратите внимание, в топе отображаются только игроки, подключившие API (команда /auth).</em>" \
+                    "\n\n"
     cursor.execute(request)
     row = cursor.fetchone()
     num = 0
@@ -334,8 +374,8 @@ def get_tops_text(player, stat, stat_text, game_class=None):
         num += 1
         class_icon = classes_to_emoji.get(row[2]) or '❔'
         if row[4] == player.id:
-            response_new = "<b>{}) {}</b><code>{:<3}</code><b> 🏅: {} {}{}</b> 🔻\n".format(num, stat_text, row[1],
-                                                                                          row[3], class_icon, row[0])
+            response_new = "<b>{}) {}</b><code>{:<3}</code><b> 🏅: {} {}{}</b> 🔻" \
+                           "\n".format(num, stat_text, row[1] or "???", row[3], class_icon, row[0])
             found = True
             if num <= TOP_NUM_PLAYERS:
                 response += response_new
@@ -344,7 +384,7 @@ def get_tops_text(player, stat, stat_text, game_class=None):
             response += "\n...\n" + response_old + response_new
         else:
             response_old = "<code>{}</code>) {}<code>{:<3}</code> 🏅: <code>{}</code> {}{}" \
-                           "\n".format(num, stat_text, row[1], row[3], class_icon, row[0])
+                           "\n".format(num, stat_text, row[1] or "???", row[3], class_icon, row[0])
             if num <= TOP_NUM_PLAYERS:
                 response += response_old
             else:
@@ -360,8 +400,9 @@ def get_tops_text(player, stat, stat_text, game_class=None):
 def top_stat(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    text_to_stats = {"⚔️Атака": "attack", "🛡Защита": "defense", "🌲Дерево": "wood", "⛰Камень": "stone",
-                     "🏚Стройка": "construction"}
+    text_to_stats = {"⚔️Атака": "attack", "⚔️Attack": "attack", "🛡Защита": "defense", "🛡Defence": "defense",
+                     "🔥Опыт": "exp", "🔥Experience": "exp", "🌲Дерево": "wood", "🌲Wood": "wood", "⛰Камень": "stone",
+                     "⛰Stone": "stone", "🏚Стройка": "construction", "🏚Construction": "construction"}
     stat = text_to_stats.get(mes.text)
     response = get_tops_text(player, stat, mes.text[0])
     buttons = get_tops_buttons(stat)
@@ -369,7 +410,7 @@ def top_stat(bot, update):
 
 
 def send_new_top(bot, update):
-    stat_to_text = {"attack": "⚔️", "defense": "🛡", "wood": "🌲", "stone": "⛰", "construction": "🏚"}
+    stat_to_text = {"attack": "⚔️", "defense": "🛡", "exp": "🔥", "wood": "🌲", "stone": "⛰", "construction": "🏚"}
     mes = update.callback_query.message
     data = update.callback_query.data
     parse = re.search("top_([^_]+)_(.*)", data)
@@ -397,6 +438,271 @@ def send_new_top(bot, update):
     except TelegramError:
         pass
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def roulette_main(bot, update, user_data):
+    user_data.update({"status": "roulette", "location_id": 10})
+    send_general_buttons(update.message.from_user.id, user_data, bot=bot)
+
+
+def request_roulette_bet(bot, update, user_data):
+    mes = update.message
+    user_data.update({"status": "awaiting_roulette_bet"})
+    roulette = Location.get_location(10)
+    placed = roulette.special_info["placed"].get(str(mes.from_user.id))
+    if placed is None:
+        placed = 0
+    buttons = get_general_buttons(user_data)
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Введите количество 🔘жетонов для ставки:\nМинимальная ставка: 10🔘\n\n"
+                          "Ваша ставка: <b>{}</b>🔘.\n"
+                          "Доступно: <b>{}</b>🔘.{}\n\n<em>Обратите внимание, отменить ставку невозможно.</em>"
+                          "".format(placed, player.reputation,
+                                    "\nМаксимальная ставка: <b>{}</b>🔘".format(ROULETTE_MAX_BET_LIMIT) if
+                                    datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time() <
+                                    datetime.time(hour=ROULETTE_HOUR_LIMIT) else ""),
+                     reply_markup=buttons, parse_mode='HTML')
+
+
+def place_roulette_bet(bot, update, user_data):
+    mes = update.message
+    bet = re.search("(\\d+)", mes.text)
+    if bet is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис. Пожалуйста, пришлите в ответ целое число "
+                                                   "не меньше 10")
+        return
+    bet = int(bet.group(1))
+    if bet < 10:
+        bot.send_message(chat_id=mes.chat_id, text="Минимальная ставка: 10🔘.")
+        return
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    if bet > player.reputation:
+        bot.send_message(chat_id=mes.chat_id, text="У вас не хватает 🔘жетонов!")
+        return
+    roulette = Location.get_location(10)
+    if roulette.special_info.get("game_running"):
+        bot.send_message(chat_id=mes.chat_id, text="Игра началась. Ставки закрыты!")
+        return
+    placed = roulette.special_info["placed"].get(str(mes.from_user.id))
+    if placed is None:
+        placed = 0
+    placed += bet
+    if datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time() < datetime.time(hour=ROULETTE_HOUR_LIMIT):
+        if placed > ROULETTE_MAX_BET_LIMIT:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Максимальная ставка: <b>{}</b>🔘.\n"
+                                  "На последнюю игру каждые сутки ставки не ограничены.".format(ROULETTE_MAX_BET_LIMIT),
+                             parse_mode='HTML')
+            return
+    player.reputation -= bet
+    player.update()
+    roulette.special_info["placed"].update({str(mes.from_user.id): placed})
+    total_placed = roulette.special_info["total_placed"]
+    if total_placed is None:
+        total_placed = 0
+    total_placed += bet
+    roulette.special_info["total_placed"] = total_placed
+    roulette.special_info["enter_text_format_values"] = [total_placed]  # Если изменится вид сообщения, поменять
+    roulette.update_location_to_database()
+    user_data.update({"status": "roulette"})
+    buttons = get_general_buttons(user_data, player=player)
+    bot.send_message(chat_id=mes.from_user.id,
+                     text="Ставка успешно сделана. Удачи на игре!\n\nРезультаты будут на <a href="
+                          "\"https://t.me/joinchat/DdKE7kUfsmDVIC2DJymw_A\">⛲️Центральной площади</a>",
+                     reply_markup=buttons, parse_mode='HTML')
+
+
+def check_event_game() -> bool:
+    """
+    Проверяет, особая ли это игра (сейчас - последняя ли это игра в новом году
+    :return:
+    """
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    return datetime.datetime(2019, 12, 31, 20) < now < datetime.datetime(2020, 1, 1)
+
+
+def roulette_game(bot, job):
+    MULTIPLICATION = 10
+    # CENTRAL_SQUARE_CHAT_ID = -1001346136061  # тест
+    logging.error("Roulette game started")
+    try:
+        response = "🎰РУЛЕТКА🎰\n\n"
+        roulette = Location.get_location(10)
+        total_placed = roulette.special_info["total_placed"] or 0
+        print(total_placed, roulette.special_info["placed"])
+        if total_placed == 0:
+            bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response + "Никто не сделал ставок. Игра не состоялась.")
+            plan_roulette_games()
+            return
+        players, position = {}, 1
+        for player_id, placed in list(roulette.special_info["placed"].items()):
+            players.update({int(player_id): range(position, position + placed)})
+            position += placed
+        response += "Игра начинается!"
+        mes = bot.sync_send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response)
+        intervals = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01]
+        progress = ["\\_", "|", "/_", "-"]
+        i = 0
+        r, player = None, None
+        for interval in intervals:
+            found = False
+            r = random.randint(1, position)
+            for player_id, rng in list(players.items()):
+                if r in rng:
+                    player = Player.get_player(player_id)
+                    response = "🎰РУЛЕТКА🎰\nРозыгрыш {}🔘\n\nБилет №{} (<b>{}</b>)\n\nИдёт игра {}" \
+                               "".format(total_placed, r, player.nickname, progress[i])
+                    found = True
+                    break
+            if not found:
+                logging.error("Roulette interval not found, r = {}, rngs = {}".format(r, list(players.values())))
+            i += 1
+            if i % 4 == 0:
+                i = 0
+            try:
+                bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+            except BadRequest:
+                pass
+            time.sleep(interval)
+        player.reputation += total_placed * (MULTIPLICATION if check_event_game() else 1)
+        player.update()
+        placed = len(players.get(player.id))
+        response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
+                   "<b>{}</b>🔘! (Поставил: {}🔘, {:.0f}%)\nПоздравляем!".format(
+            r, player.nickname, player.username, total_placed, placed, placed / total_placed * 100)
+        if check_event_game():
+            response = "🎰РУЛЕТКА🎰\n\nБилет №{} (<b>{}</b>)!\n\nПобедитель - @{}, и он забирает себе " \
+                   "{}🔘 * {} = <b>{}</b> (Поставил: {}🔘, {:.0f}%)\nПоздравляем!\n\n🎉<b>С НОВЫМ ГОДОМ!</b>🎇".format(
+            r, player.nickname, player.username, total_placed, MULTIPLICATION, total_placed * MULTIPLICATION,
+                placed, placed / total_placed * 100)
+        try:
+            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, parse_mode='HTML')
+        except BadRequest:
+            pass
+
+        roulette.special_info.update({"enter_text_format_values": [0], "placed": {}, "total_placed": 0})
+        won, games_won, games_played = roulette.special_info.get("won"), roulette.special_info.get("games_won"), \
+                                       roulette.special_info.get("games_played")
+        if games_won is None:
+            games_won = {}
+            roulette.special_info.update({"games_won": games_won})
+        if games_played is None:
+            games_played = {}
+            roulette.special_info.update({"games_played": games_played})
+        player_won = won.get(str(player.id)) or 0
+        player_games_won = games_won.get(str(player.id)) or 0
+        roulette.special_info["won"].update({str(player.id): player_won + total_placed - placed})
+        games_won.update({str(player.id): player_games_won + 1})
+        roulette.update_location_to_database()
+        for player_id, rng in list(players.items()):
+            player_played = games_played.get(str(player_id)) or 0
+            games_played.update({str(player_id): player_played + 1})
+            if check_event_game():
+                text = "🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%\n\n" \
+                       "".format("выиграли" if player_id == player.id else "проиграли", len(rng) / total_placed * 100)
+                if not player_id == player.id:
+                    pl = Player.get_player(player_id)
+                    pl.reputation += len(rng)
+                    pl.update()
+                    text += "Сюрприз! Жетоны возвращены!\n🎉<b>С НОВЫМ ГОДОМ!</b>🎇"
+            else:
+                text = "🎰РУЛЕТКА🎰\nИгра завершена. Вы {}. Ваш шанс на победу: {:.0f}%" \
+                       "".format("выиграли" if player_id == player.id else "проиграли", len(rng) / total_placed * 100)
+            bot.send_message(chat_id=player_id, text=text)
+        roulette.update_location_to_database()
+    except Exception:
+        logging.error(traceback.format_exc())
+    time.sleep(1)
+    plan_roulette_games()
+
+
+def plan_roulette_games():
+    logging.error("Planning roulette game")
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    roulette_time = now.replace(hour=9, minute=0, second=0)
+    limit_time = now.replace(hour=21, minute=0, second=0)
+    while roulette_time < now and roulette_time <= limit_time:
+        roulette_time += datetime.timedelta(hours=3, minutes=0)
+    if roulette_time > limit_time:
+        roulette_time = datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(hour=9))
+    tea_party = Location.get_location(9)
+    if tea_party.is_constructed():
+        job.run_once(roulette_game, when=roulette_time)
+        logging.error("Roulette planned on {}".format(roulette_time))
+    # print(roulette_time)
+    # job.run_once(roulette_game, 60)  # тест
+
+
+def roulette_tops(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    text = get_tops_text(player=player, stat="roulette_won", stat_text="🔘")  # roulette_games_won, roulette_games_played
+    buttons = get_roulette_tops_buttons(curr="roulette_won")
+    bot.send_message(chat_id=mes.chat_id, text=text, reply_markup=buttons, parse_mode='HTML')
+
+
+def new_roulette_top(bot, update):
+    stats = {"roulette_won": "🔘", "roulette_games_won": "🏆", "roulette_games_played": "🎰"}
+    data, mes = update.callback_query.data, update.callback_query.message
+    new_stat = "roulette_" + data.partition("roulette_top_")[2]
+    player = Player.get_player(update.callback_query.from_user.id)
+    new_text, new_buttons = get_tops_text(player=player, stat=new_stat, stat_text=stats.get(new_stat)), \
+                            get_roulette_tops_buttons(curr=new_stat)
+    if new_text != mes.text or new_buttons != mes.reply_markup:
+        try:
+            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text,
+                                reply_markup=new_buttons, parse_mode='HTML')
+        # except Exception:
+        # logging.error(traceback.format_exc())
+        except BadRequest:
+            pass
+        except TelegramError:
+            pass
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def request_kabala(bot, update):
+    if update.message.from_user.id != SUPER_ADMIN_ID:
+        return
+    text = """Уважаемый/ая воин/мастер (нужное подчеркнуть)!
+Чайная Лига предварительно одобрила вам кредит на 2000 Жетонов!
+Для одобрения нажмите /kabala"""
+    count = 0
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id)
+        if guild is not None:
+            for player_id in guild.members:
+                user_data = dispatcher.user_data.get(player_id)
+                if 'kabala_time' in user_data:
+                    user_data.pop('kabala_time')
+                bot.send_message(chat_id=player_id, text=text)
+                count += 1
+    bot.send_message(chat_id=SUPER_ADMIN_ID, text="Предлложение о кредите разослано {} игрокам".format(count))
+
+
+def kabala(bot, update, user_data):
+    text = """Вчитываясь в текст подписанного только что договора, маленькими буквами внизу ты обнаружил условия:
+
+<em>Кредитная программа "Жетон в каждый дом" предоставляется на условиях  ежедневной сдачи репортов. В случае неуплаты репортами Чайная Лига вправе в одностороннем порядке применить любые санкции по устранению нарушения Договора, вплоть до ректального зондирования.</em>
+
+Заверенно печатью и подписью Короля.
+
+ПОЗДРАВЛЯЕМ!"""
+    mes = update.message
+    if 'kabala_time' in user_data:
+        bot.send_message(chat_id=mes.chat_id, text="Предложение одноразовое.")
+        return
+    player = Player.get_player(mes.from_user.id)
+    player.reputation += KABALA_GAIN
+    player.update()
+    user_data.update({"kabala_time": time.time()})
+    bot.send_message(chat_id=player.id, text=text, parse_mode='HTML')
+
 
 
 def count_reputation_sum(bot, update):

@@ -5,6 +5,7 @@
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
+from castle_files.bin.academy import change_headmaster
 from castle_files.bin.service_functions import check_access
 from castle_files.bin.reports import count_battle_id, count_battle_time
 
@@ -14,7 +15,7 @@ from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_bu
 
 from telegram.error import TelegramError
 
-from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID
+from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
 from telegram.ext.dispatcher import run_async
 
 import logging
@@ -26,7 +27,7 @@ MAX_MESSAGE_LENGTH = 4000
 # Создание новой гильдии
 def create_guild(bot, update):
     guild_tag = update.message.text.partition(' ')[2]
-    if len(guild_tag) <= 0 or len(guild_tag) > 3:
+    if len(guild_tag) <= 0 or len(guild_tag) > 10:
         bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис. Укажите тэг новой гильдии.")
         return
     if any(c in guild_tag for c in ['\f', '\n', '\r', '\t', '\v', ' ']):
@@ -42,6 +43,37 @@ def create_guild(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="Гильдия успешно создана! Отредактируйте её: "
                                                           "/edit_guild_{}".format(guild.id))
     return
+
+
+def guild_repair(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Вы не в гильдии. Попросите командира добавить вас.")
+        return
+    if not guild.check_high_access(player.id):
+        bot.send_message(chat_id=update.message.chat_id, text="Функция доступна только командирам и заместителям.")
+        return
+    response = "Игроки, которым требуется ремонт:\n"
+    for pl_id in guild.members:
+        pl = Player.get_player(pl_id)
+        res_new = "{}<b>{}</b> - @{}\n".format(pl.castle, pl.nickname, pl.username)
+        has_broken = False
+        for key, eq in list(pl.equipment.items()):
+            if eq is None:
+                continue
+            if eq.condition == "broken":
+                res_new += "    {} {}\n        (<em>{}</em>)\n" \
+                           "".format(eq.name, " {} ".format(eq.quality) if eq.quality else "", key)
+                has_broken = True
+        res_new += "\n"
+        if has_broken:
+            response += res_new
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+
 
 
 # ДОРОГАЯ ОПЕРАЦИЯ - получение (и вывод в сообщении) списка ги
@@ -70,6 +102,87 @@ def list_guilds(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
+def guild_commanders(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    if player is None:
+        return
+    guild = Guild.get_guild(player.guild)
+    if not (check_access(player.id)):  # or (guild is not None and guild.check_high_access(player.id))):
+        return
+    response = "Список 🎖гильдий, 🎗командиров и 🎖замов:\n"
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id=guild_id)
+        if guild is None:
+            logging.warning("Guild is None for the id {}".format(guild_id))
+            continue
+        commander = Player.get_player(guild.commander_id, notify_on_error=False)
+        response_new = "<b>{}</b>{}\n🎗: @{}".format(guild.tag, " --- " + guild.name if guild.name is not None else "",
+                                                    commander.username if commander is not None else "Нет")
+        if guild.assistants:
+            response_new += "\n🎖: "
+        for player_id in guild.assistants:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                continue
+            response_new += "@{} ".format(player.username)
+        response_new += "\n--------------------------\n"
+        if len(response + response_new) > MAX_MESSAGE_LENGTH:
+            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            response = ""
+        response += response_new
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+
+
+def g_info(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+    guild = Guild.get_guild(player.guild)
+    guild_tag = mes.text.split()
+    if len(guild_tag) == 1:
+        if guild is None:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                                  "командира добавить вас в гильдейском чате.")
+            return
+        requested_guild = guild
+    else:
+        guild_tag = guild_tag[1]
+        if not (check_access(player.id) or (guild is not None and guild.check_high_access(player.id))):
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Особист мрачно взглянул на вас. Его глаза будто пронзали насквозь.\n"
+                                  "\"Не вашего уровня сведенья.\", — наконец процедил он.")
+            return
+        requested_guild = Guild.get_guild(guild_tag=guild_tag)
+        if requested_guild is None:
+            bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена")
+            return
+    commander = Player.get_player(requested_guild.commander_id, notify_on_error=False)
+    glory, lvl, members = requested_guild.api_info.get("glory"), requested_guild.api_info.get("lvl"), \
+        requested_guild.api_info.get("members")
+    response = "<b>{}</b>\n{}🎗Командир: {}\n".format(
+        "{} ({})".format(requested_guild.name, requested_guild.tag) if requested_guild.name is not None else
+        requested_guild.tag, "🏅: <b>{}</b>, 🎖: <b>{}</b>, 👥: <b>{}</b>\n".format(lvl, glory, members) if
+        all([lvl, glory, members]) else "", "<b>{}</b> (@{})".format(commander.nickname, commander.username)
+        if commander is not None else "Нет")
+
+    if guild.id == requested_guild.id:
+        # Информация о своей гильдии
+        if guild.assistants:
+            response += "🎖Заместители: "
+            for player_id in guild.assistants:
+                player = Player.get_player(player_id, notify_on_error=False)
+                if player is None:
+                    continue
+                response += "@{} ".format(player.username)
+        response += "\n\n"
+        stock_size, stock_limit = guild.api_info.get("stock_size"), guild.api_info.get("stock_limit")
+        if stock_size is not None and stock_limit is not None:
+            response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>".format(stock_size, stock_limit)
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+
+
 # @dispatcher.run_async # Не работает
 def guild_info(bot, update):
     mes = update.message
@@ -77,17 +190,33 @@ def guild_info(bot, update):
     if player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
         return
-    if player.guild is None:
-        bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
-                                                   "командира добавить вас в гильдейском чате.")
-        return
-    guild = Guild.get_guild(guild_id=player.guild)
+    if 'academy' in mes.text:
+        if mes.chat_id != mes.from_user.id:
+            return
+        guild = Guild.get_academy()
+        if player.id not in guild.members and player.id not in guild.assistants and player.id != guild.commander_id:
+            return
+    else:
+        if player.guild is None:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                                  "командира добавить вас в гильдейском чате.")
+            return
+        guild = Guild.get_guild(guild_id=player.guild)
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
     commander = Player.get_player(guild.commander_id)
     response = "[<b>{}</b>]  {}\n".format(guild.tag, guild.name or "")
     response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
+    if guild.invite_link is None:
+        try:
+            guild.invite_link = bot.exportChatInviteLink(guild.chat_id)
+            if guild.invite_link is not None:
+                guild.invite_link = guild.invite_link[22:]  # Обрезаю https://t.me/joinchat/
+                guild.update_to_database()
+        except TelegramError:
+            pass
     response += "Чат отряда: {}, id: {}" \
                 "\n{}\n".format(guild.chat_name or "Не задан",
                                 "<code>{}</code>".format(guild.chat_id) if guild.chat_id is not None else "Не задан",
@@ -101,27 +230,53 @@ def guild_info(bot, update):
 
 
 def guild_reports(bot, update):
-    mes = update.callback_query.message
-    requested_player = Player.get_player(update.callback_query.from_user.id)
-    battle_id = count_battle_id(mes)
-    if requested_player is None:
-        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
-        return
-    guild_id = requested_player.guild
-    if guild_id is None:
-        bot.send_message(chat_id=mes.chat_id,
-                         text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
-                              "командира добавить вас в гильдейском чате.")
-        return
-    guild = Guild.get_guild(guild_id=guild_id)
+    if update.message is not None:
+        # Сообщение с вызовом списка репортов.
+        mes = update.message
+        requested_player_id = mes.from_user.id
+        if not check_access(mes.from_user.id):
+            bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
+            return
+        try:
+            guild_tag = mes.text.split()[1]
+        except IndexError:
+            bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
+            return
+        guild = Guild.get_guild(guild_tag=guild_tag)
+        try:
+            battle_id = int(mes.text.split()[2])
+        except (IndexError, ValueError):
+            battle_id = count_battle_id(message=None)
+    else:
+        # Нажатие на кнопку "репорты" в меню гильдии.
+        mes = update.callback_query.message
+        data = update.callback_query.data
+        requested_player_id = update.callback_query.from_user.id
+        guild_id = re.search("_(\\d+)", data)
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+            return
+        guild_id = int(guild_id.group(1))
+        requested_player = Player.get_player(requested_player_id)
+        battle_id = count_battle_id(mes)
+        if requested_player is None:
+            bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
+            return
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id,
+                             text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
+                                  "командира добавить вас в гильдейском чате.")
+            return
+        guild = Guild.get_guild(guild_id=guild_id)
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
-    if not guild.check_high_access(update.callback_query.from_user.id):
+    if not guild.check_high_access(requested_player_id) and update.callback_query is not None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
         return
     guild.sort_players_by_exp()
-    response = "Статистика гильдии по битве {}:\n".format(count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
+    response = "Статистика гильдии <b>{}</b> по битве <b>{}</b> (№ <b>{}</b>):" \
+               "\n".format(guild.tag, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"), battle_id)
     unsent_reports = []
     for player_id in guild.members:
         request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
@@ -144,9 +299,10 @@ def guild_reports(bot, update):
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
-    if response != "":
+    if response != "" and update.callback_query is not None:
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
-    response = "\nНе сдали репорты:\n"
+        response = ""
+    response += "\nНе сдали репорты:\n"
     for player_id in unsent_reports:
         player = Player.get_player(player_id)
         if player is None:
@@ -158,7 +314,8 @@ def guild_reports(bot, update):
         response += response_new
     response += "\nВсего: <b>{}/{}</b> репортов".format(guild.members_count - len(unsent_reports), len(guild.members))
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
-    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    if update.callback_query is not None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 def get_guild_settings_text(guild):
@@ -167,21 +324,46 @@ def get_guild_settings_text(guild):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw = settings.get("withdraw")
+    withdraw, unpin, arena_notify, battle_notify = settings.get("withdraw"), settings.get("unpin"), \
+        settings.get("arena_notify"), settings.get("battle_notify")
     if withdraw is None:
         withdraw = True
         settings.update({"withdraw": withdraw})
-    response += "🏷Выдача ресурсов <b>{}</b>".format("✅включена" if withdraw else "❌отключена")
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("🏷Выдача ресурсов",
+                                                         "✅включена" if withdraw else "❌отключена")
+
+    if unpin is None:
+        unpin = True
+        settings.update({"unpin": unpin})
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("📌Открепление пина",
+                                                         "✅включено" if unpin else "❌отключено")
+
+    if arena_notify is None:
+        arena_notify = True
+        settings.update({"arena_notify": arena_notify})
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("🔔Напоминалка в 12",
+                                                         "✅включена" if arena_notify else "❌отключена")
+
+    if battle_notify is None:
+        battle_notify = True
+        settings.update({"battle_notify": battle_notify})
+    response += "<code>{:<20}</code> <b>{}</b>\n".format("⚔️️Пинги к битве",  # Не имею ни малейшего понятия, почему 20
+                                                         "✅включены" if battle_notify else "❌отключены")
     return response
 
 
 def guild_setting(bot, update):
     mes = update.callback_query.message
+    data = update.callback_query.data
+    guild_id = re.search("_(\\d+)", data)
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+        return
+    guild_id = int(guild_id.group(1))
     requested_player = Player.get_player(update.callback_query.from_user.id)
     if requested_player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
         return
-    guild_id = requested_player.guild
     if guild_id is None:
         bot.send_message(chat_id=mes.chat_id,
                          text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
@@ -201,13 +383,24 @@ def guild_setting(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
-def edit_guild_withdraw(bot, update):
+def edit_guild_setting(bot, update):
+    data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin", "gsarenanotify": "arena_notify",
+                       "gsbattlenotify": "battle_notify"}
     mes = update.callback_query.message
+    data = update.callback_query.data
+    setting = data_to_setting.get(data.partition("_")[0])
+    if setting is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+        return
+    guild_id = re.search("_(\\d+)", data)
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+        return
+    guild_id = int(guild_id.group(1))
     requested_player = Player.get_player(update.callback_query.from_user.id)
     if requested_player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
         return
-    guild_id = requested_player.guild
     if guild_id is None:
         bot.send_message(chat_id=mes.chat_id,
                          text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
@@ -224,12 +417,12 @@ def edit_guild_withdraw(bot, update):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw = settings.get("withdraw")
-    if withdraw is None:
-        withdraw = True
-        settings.update({"withdraw": withdraw})
-    settings.update({"withdraw": not withdraw})
-    guild.update_to_database()
+    cur = settings.get(setting)
+    if cur is None:
+        cur = True
+        settings.update({setting: cur})
+    settings.update({setting: not cur})
+    guild.update_to_database(need_order_recashe=False)
     response = get_guild_settings_text(guild)
     buttons = get_guild_settings_buttons(guild)
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response, reply_markup=buttons,
@@ -240,11 +433,16 @@ def edit_guild_withdraw(bot, update):
 def list_players(bot, update, guild_id=None):
     mes = update.callback_query.message
     if guild_id is None:
+        data = update.callback_query.data
+        guild_id = re.search("_(\\d+)", data)
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+            return
+        guild_id = int(guild_id.group(1))
         player = Player.get_player(update.callback_query.from_user.id)
         if player is None:
             bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
             return
-        guild_id = player.guild
         if guild_id is None:
             bot.send_message(chat_id=mes.chat_id,
                              text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
@@ -254,20 +452,38 @@ def list_players(bot, update, guild_id=None):
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
+    if guild.tag == 'АКАДЕМИЯ':
+        user_id = update.callback_query.from_user.id
+        if user_id != guild.commander_id and user_id not in guild.assistants:
+            return
     response = "Список игроков в гильдии <b>{}</b>\n".format(guild.tag)
     guild.sort_players_by_exp()
     guild.calculate_attack_and_defense()
     high_access = guild.check_high_access(update.callback_query.from_user.id)
+    if high_access:
+        response += "<em>🖇 — полный доступ к АПИ, 📎 — без экипировки</em>\n\n"
     for player_id in guild.members:
         player = Player.get_player(player_id)
         if player is None:
             logging.warning("Player in guild is None, guild = {}, player_id = {}".format(guild.tag, player_id))
             continue
-        response_new = "<b>{}</b>\n🏅: <code>{}</code>, ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
-                       "".format(player.nickname, player.lvl, player.attack, player.defense, )
+        api_text = ""
+        if high_access:
+            token = player.api_info.get("token")
+            if token is not None:
+                access = player.api_info.get("access") or []
+                if "gear" in access:
+                    api_text = "🖇"
+                else:
+                    api_text = "📎"
+        rp1, rp2, rp3 = player.get_reports_count()
+        response_new = "{}<b>{}</b> @{} {}\n🔥<code>{}</code>,🏅<code>{}\n⚔{}, 🛡{}, " \
+                       "🎖{}/{}</code>" \
+                       "".format(classes_to_emoji.get(player.game_class) or "", player.nickname, player.username,
+                                 api_text, player.exp, player.lvl, player.attack, player.defense, rp1, rp2)
         if high_access:
             response_new += "\nПоказать профиль: /view_profile_{}" \
-                       "\nУдалить из гильдии: /remove_player_{}".format(player.id, player.id)
+                       "".format(player.id)
         response_new += "\n\n"
         if len(response + response_new) > MAX_MESSAGE_LENGTH:
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
@@ -293,16 +509,33 @@ def remove_player(bot, update):
     if current_player is None:
         return
     guild = Guild.get_guild(guild_id=current_player.guild)
-    if guild is None:
-        bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
-        return
+    player_to_remove = Player.get_player(player_id)
+    player_to_remove_guild = guild
+    if player_to_remove_guild is not None and player_to_remove_guild.is_academy():
+        # Костыль на учителей в академке без гильдии (такие бывают, да)
+        pass
+    else:
+        if guild is None:
+            bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
+            return
     if not guild.check_high_access(current_player.id):
         bot.send_message(chat_id=mes.chat_id, text="Право распоряжаться людьми необходимо заслужить.")
         return
-    player_to_remove = Player.get_player(player_id)
+
     if player_to_remove is None or player_to_remove.id not in guild.members:
-        bot.send_message(chat_id=mes.chat_id, text="Вы можете удалять игроков только в своей гильдии.")
-        return
+        player_to_remove_guild = Guild.get_guild(player_to_remove.guild)
+        if player_to_remove_guild is not None and player_to_remove_guild.is_academy() and \
+                player_to_remove_guild.check_high_access(current_player.id):
+            pass
+        else:
+            if player_to_remove.guild is not None:
+                player_to_remove_guild = Guild.get_guild(player_to_remove.guild)
+                if player_id == player_to_remove_guild.commander_id or player_id in player_to_remove_guild.assistants:
+                    pass
+                else:
+                    bot.send_message(chat_id=mes.chat_id, text="Вы можете удалять игроков только в своей гильдии.")
+                    return
+    guild = player_to_remove_guild
     guild.delete_player(player_to_remove)
     bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно удалён из гильдии "
                                                           "<b>{}</b>".format(player_to_remove.nickname, guild.tag),
@@ -317,9 +550,16 @@ def leave_guild(bot, update):
     if update.message is not None:
         mes = update.message
         user_id = mes.from_user.id
+        guild_id = None
     else:
         mes = update.callback_query.message
         user_id = update.callback_query.from_user.id
+        data = update.callback_query.data
+        guild_id = re.search("_(\\d+)", data)
+        if guild_id is None:
+            bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+            return
+        guild_id = int(guild_id.group(1))
     player = Player.get_player(user_id)
     if player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
@@ -327,13 +567,16 @@ def leave_guild(bot, update):
     if player.guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
         return
-    guild = Guild.get_guild(guild_id=player.guild)
+    if guild_id is None:
+        guild_id = player.guild
+    guild = Guild.get_guild(guild_id=guild_id)
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
     if guild.commander_id == player.id:
-        bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
-        return
+        # bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
+        # return
+        guild.commander_id = None
     guild.delete_player(player)
     bot.send_message(chat_id=mes.chat_id, text="Вы успешно покинули гильдию")
     if update.callback_query is not None:
@@ -346,13 +589,17 @@ def add(bot, update):
     if player is None:
         bot.send_message(chat_id=update.message.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
         return
-    guild = Guild.get_guild(guild_id=player.guild)
-    if guild is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Гильдия не найдена.")
-        return
-    if player.guild != guild.id:
-        bot.send_message(chat_id=update.message.chat_id, text="Можно добавлять игроков только в свою гильдию")
-        return
+    academy = Guild.get_academy()
+    if academy is not None and update.message.chat_id == academy.chat_id:
+        guild = academy
+    else:
+        guild = Guild.get_guild(guild_id=player.guild)
+        if guild is None:
+            bot.send_message(chat_id=update.message.chat_id, text="Гильдия не найдена.")
+            return
+        if player.guild != guild.id:
+            bot.send_message(chat_id=update.message.chat_id, text="Можно добавлять игроков только в свою гильдию")
+            return
     if update.message.chat_id != guild.chat_id:
         bot.send_message(chat_id=update.message.chat_id, text="Добавлять игроков в гильдию можно только в официальном "
                                                               "чате гильдии")
@@ -451,7 +698,7 @@ def del_assistant(bot, update):
     if not guild.check_high_access(player_to_add.id):
         bot.send_message(chat_id=update.message.chat_id, text="Игрок и не являлся замом.")
         return
-    if player_to_add.id == guild.commander_id:
+    if player_to_add.id == guild.commander_id and False:
         bot.send_message(chat_id=update.message.chat_id, text="Нельзя свергнуть командира.")
         return
     guild.assistants.remove(player_to_add.id)
@@ -464,11 +711,16 @@ def del_assistant(bot, update):
 
 def assistants(bot, update):
     mes = update.callback_query.message
+    data = update.callback_query.data
+    guild_id = re.search("_(\\d+)", data)
+    if guild_id is None:
+        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Начните сначала.")
+        return
+    guild_id = int(guild_id.group(1))
     player = Player.get_player(update.callback_query.from_user.id)
     if player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Отправьте /hero из @ChatWarsBot.")
         return
-    guild_id = player.guild
     if guild_id is None:
         bot.send_message(chat_id=mes.chat_id,
                          text="Вы не состоите в гильдии. Вступите в гильдию в игре и попросите "
@@ -514,6 +766,7 @@ def get_edit_guild_text(guild):
                               if guild.invite_link is not None else "")
     response += "\n\n⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
     response += "Дивизион: <b>{}</b>\n".format(guild.division or "не задан")
+    response += "Рассылка <b>{}</b>\n".format("включена" if guild.mailing_enabled else "оключена")
     response += "Приказы <b>{}</b>\n".format("включены" if guild.orders_enabled else "оключены")
     response += "Сообщения <b>{}</b>\n".format("пинятся" if guild.pin_enabled else "не пинятся")
     response += "Пины <b>{}</b>\n".format("громкие" if not guild.disable_notification else "тихие")
@@ -580,6 +833,7 @@ def delete_guild(bot, update):
                             text="Гильдия <b>{}</b> успешно удалена".format(guild.tag), parse_mode='HTML')
     except TelegramError:
         pass
+    guild.fill_guild_ids()
 
 
 def cancel_delete_guild(bot, update):
@@ -624,6 +878,9 @@ def change_guild_commander(bot, update, user_data):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена. Начните сначала.")
         return
     print(player.guild_tag, player.guild_tag, guild.tag)
+    if guild.tag == "АКАДЕМИЯ":
+        change_headmaster(bot, update, player, guild, user_data)
+        return
     if player.guild_tag is not None and player.guild_tag != guild.tag:
         bot.send_message(chat_id=mes.chat_id, text="Командир может командовать только своей гильдией")
 
@@ -754,8 +1011,11 @@ def change_guild_bool_state(bot, update):
         guild.pin_enabled = not guild.pin_enabled
     elif edit_type == 'n':
         guild.disable_notification = not guild.disable_notification
+    elif edit_type == 'm':
+        guild.mailing_enabled = not guild.mailing_enabled
     guild.update_to_database()
     mes = update.callback_query.message
+
     reply_markup = get_edit_guild_buttons(guild)
     new_text = get_edit_guild_text(guild)
     try:

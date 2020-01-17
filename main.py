@@ -1,10 +1,13 @@
 import multiprocessing
+import threading
 import logging
 
 from order_bot import order_bot_processing
 from castle_bot import castle_bot_processing
 
 from castle_files.bin.telethon_script import script_work
+
+import sys
 
 
 console = logging.StreamHandler()
@@ -16,9 +19,16 @@ log_file.setLevel(logging.ERROR)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO, handlers=[log_file, console])
 
+# mpl = multiprocessing.log_to_stderr()
+# mpl.setLevel(logging.INFO)
 
-# script_work()  # Для авторизации на новой машине
+if len(sys.argv) > 1:
+    for arg in sys.argv[1:]:
+        if arg == "--auth":
+            logging.info("Starting telethon auth")
+            script_work()  # Для авторизации на новой машине
 
+# order_bot_processing()
 processes = []
 order_bot_process = multiprocessing.Process(target=order_bot_processing)
 order_bot_process.start()
@@ -28,7 +38,7 @@ castle_bot_process = multiprocessing.Process(target=castle_bot_processing)
 castle_bot_process.start()
 processes.append(castle_bot_process)
 try:
-    processes[1].join()
+    processes[0].join()
 except KeyboardInterrupt:
     pass
 print("ended")
