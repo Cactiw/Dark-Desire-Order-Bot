@@ -7,26 +7,25 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 import datetime
 import logging
+import re
 
 triggers_in = {}
 global_triggers_in = []
 
 types = {0: "text", 1: "video", 2: "audio", 3: "photo", 4: "document", 5: "sticker", 6: "voice", 7: "Кружок"}
 
-def get_message_type_and_data(mes) -> (int, str):
-    types = [mes.text, mes.video, mes.audio, mes.photo, mes.document, mes.sticker, mes.voice, mes.video_note]
-    cursor = next((el for el in types if el != None and el != []), None)
-    mes_type = types.index(cursor)
-    if mes_type == 7:
-        cursor = cursor[-1]
 
+def get_message_type_and_data(mes) -> (int, str):
+    trigger_types = [mes.text, mes.video, mes.audio, mes.photo, mes.document, mes.sticker, mes.voice, mes.video_note]
+    trigger_cursor = next((el for el in trigger_types if el is not None and el != []), None)
+    mes_type = trigger_types.index(trigger_cursor)
+    if mes_type == 7:
+        trigger_cursor = trigger_types[-1]
     if mes_type == 1:
         data = mes.text
     else:
-        data = cursor.file_id
-
+        data = trigger_cursor.file_id
     return [mes_type, data]
-
 
 
 def send_trigger_with_type_and_data(bot, chat_id, trigger_type, data):
@@ -120,6 +119,7 @@ def remove_trigger(bot, update):
     cursor.execute(request, (text, chat_id))
     bot.send_message(chat_id=mes.chat_id, text="Триггер успешно удалён!", reply_to_message_id=mes.message_id)
 
+
 def triggers(bot, update):
     mes = update.message
     if filter_is_pm(mes):
@@ -127,31 +127,28 @@ def triggers(bot, update):
     if mes.from_user.id not in get_admin_ids(bot=bot, chat_id=mes.chat_id):
         bot.send_message(chat_id=mes.chat_id, text="Доступ только у админов.", reply_to_message_id=mes.message_id)
         return
-    local = trigger_listmain(mes.chat_id)
-    globals = trigger_listmain(0)
-    response=f"<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n{local}\n\n<b>Глобальные триггеры</b>:\n{globals}"
-    kolvo_sumb = len(response)
-    lim = MAX_MESSAGE_LENGTH
-    if kolvo_sumb > lim:
-        old_a = 0
-        while kolvo_sumb > lim:
-            new_a = old_a
-            new_a += 1
-            bot.send_message(chat_id=mes.chat_id, text=response[(old_a * lim):(new_a * lim)], parse_mode = 'HTML')
-            old_a +=1
-            kolvo_sumb -= lim
-        return
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
+    local = get_triggers_list(mes.chat_id)
+    global_triggers = get_triggers_list(0)
+    response = f"<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n{local}\n\n" \
+               f"<b>Глобальные триггеры</b>:\n{global_triggers}"
+    pattern = re.compile("(.*)\n([^\n]*$)", re.DOTALL)
+    while len(response) > MAX_MESSAGE_LENGTH:
+        # Если не влезает в одно сообщение
+        # Отрезаем последнюю влезающую строку, отправляем сообщение без неё, склеиваем то, что не влезло, повторяем
+        parse = re.match(pattern, response[:MAX_MESSAGE_LENGTH])
+        bot.send_message(chat_id=mes.chat_id, text=parse.group(1), parse_mode='HTML')
+        response = parse.group(2) + response[MAX_MESSAGE_LENGTH:]
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
-def trigger_listmain(trigger_chat_id):
+def get_triggers_list(trigger_chat_id):
     returned = ''
-    cursor.execute("select text_in, creator, date_created from triggers where chat_id = %s", (trigger_chat_id))
+    cursor.execute("select text_in, creator, date_created from triggers where chat_id = %s", (trigger_chat_id,))
     row = cursor.fetchall()
     if row:
         for i in row:
             returned += f'<code>{i[0]}</code> — создал <code>{i[1]}</code> {i[2].strftime("%d/%m/%y %H:%M:%S")}\n'
-    else: 
+    else:
         pass
     return returned
 
