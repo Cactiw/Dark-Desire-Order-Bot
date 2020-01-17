@@ -79,6 +79,11 @@ def resource_return(bot, job):
     player.update_to_database()
     job.context[1].update({"status": "castle_gates"})
     buttons = get_general_buttons(job.context[1], player)
+    if job.context[0] in construction_jobs:
+        try:
+            construction_jobs.pop(job.context[0])
+        except Exception:
+            logging.error(traceback.format_exc())
     request = "insert into castle_logs(player_id, action, result, additional_info, date) values (%s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, "collect_resources", 1, json.dumps({"resource": res, "count": count}),
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
@@ -537,9 +542,10 @@ def plan_update_daily_quests():
     plan_work(update_daily_quests, 0, 0, 0)
 
 
-
 def load_construction_jobs():
-    global quest_players
+    """
+    Запускается при старте, перезапускает работы для квестов и стройки - помещает их в сллварь quest_players
+    """
     try:
         f = open('castle_files/backup/construction_jobs', 'rb')
         up = pickle.load(f)
@@ -571,8 +577,11 @@ def load_construction_jobs():
                 logging.error(traceback.format_exc())
         f.close()
         f = open('castle_files/backup/quest_players', 'rb')
+        t = pickle.load(f)
         with quest_lock:
-            quest_players = pickle.load(f)
+            quest_players.clear()
+            quest_players.update(t)
+        f.close()
     except FileNotFoundError:
         pass
     except Exception:
