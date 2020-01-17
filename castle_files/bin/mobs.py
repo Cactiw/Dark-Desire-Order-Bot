@@ -105,7 +105,9 @@ def mob(bot, update):
                                                        "Зовите бойцов вашей гильдии на помощь!")
         else:
             bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
-            bot.send_message(chat_id=mes.chat_id, text="Отправлено на канал. Спасибо!")
+            bot.send_message(chat_id=mes.chat_id, parse_mode='HTML',
+                             text="Отправлено на <a href=\"https://t.me/mobs_skala_cw3\">канал</a>, а также в "
+                                  "<a href=\"https://t.me/CwMobsNotifyBot\">бота</a>. Спасибо!")
             try:
                 # requests.post('http://127.0.0.1:5555/addMob',
                 #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
