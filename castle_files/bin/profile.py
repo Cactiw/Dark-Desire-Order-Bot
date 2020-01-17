@@ -310,6 +310,8 @@ def view_profile(bot, update):
                     bot.send_message(chat_id=mes.chat_id, text="Игрок {} не найден.".format(username))
                     continue
                 player_ids.append(row[0])
+            if not player_ids:
+                return
         else:
             # Поиск по нику в игре
             request = "select id from players where lower(nickname) = %s or lower(nickname) like %s"
