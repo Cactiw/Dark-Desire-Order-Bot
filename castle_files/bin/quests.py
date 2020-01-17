@@ -565,6 +565,7 @@ def load_construction_jobs():
             if remaining_time < 0:
                 try:
                     job.run_once(callback, 0.1, context=context)
+                    print("Job started in 0.1 seconds...")
                 except Exception:
                     logging.error(traceback.format_exc())
                     pass
@@ -573,6 +574,7 @@ def load_construction_jobs():
                 construction_jobs.update({k: MyJob(job.run_once(callback, remaining_time,
                                                                 context=context),
                                                    remaining_time)})
+                print("Job started")
             except Exception:
                 logging.error(traceback.format_exc())
         f.close()
