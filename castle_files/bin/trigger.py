@@ -7,6 +7,7 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 import datetime
 import logging
+import re
 
 triggers_in = {}
 global_triggers_in = []
@@ -14,33 +15,17 @@ global_triggers_in = []
 types = {0: "text", 1: "video", 2: "audio", 3: "photo", 4: "document", 5: "sticker", 6: "voice", 7: "Кружок"}
 
 
-def get_message_type_and_data(message):
-    trigger_type, data = None, None
-    if message.text:
-        trigger_type = 0
-        data = message.text
-    elif message.video:
-        trigger_type = 1
-        data = message.video.file_id
-    elif message.audio:
-        trigger_type = 2
-        data = message.audio.file_id
-    elif message.photo:
-        trigger_type = 3
-        data = message.photo[-1].file_id
-    elif message.document:
-        trigger_type = 4
-        data = message.document.file_id
-    elif message.sticker:
-        trigger_type = 5
-        data = message.sticker.file_id
-    elif message.voice:
-        trigger_type = 6
-        data = message.voice.file_id
-    elif message.video_note:
-        trigger_type = 7
-        data = message.video_note.file_id
-    return [trigger_type, data]
+def get_message_type_and_data(mes) -> (int, str):
+    trigger_types = [mes.text, mes.video, mes.audio, mes.photo, mes.document, mes.sticker, mes.voice, mes.video_note]
+    trigger_cursor = next((el for el in trigger_types if el is not None and el != []), None)
+    mes_type = trigger_types.index(trigger_cursor)
+    if mes_type == 7:
+        trigger_cursor = trigger_types[-1]
+    if mes_type == 1:
+        data = mes.text
+    else:
+        data = trigger_cursor.file_id
+    return [mes_type, data]
 
 
 def send_trigger_with_type_and_data(bot, chat_id, trigger_type, data):
@@ -142,33 +127,30 @@ def triggers(bot, update):
     if mes.from_user.id not in get_admin_ids(bot=bot, chat_id=mes.chat_id):
         bot.send_message(chat_id=mes.chat_id, text="Доступ только у админов.", reply_to_message_id=mes.message_id)
         return
-    request = "select text_in, creator, date_created from triggers where chat_id = %s"
-    cursor.execute(request, (mes.chat_id,))
-    row = cursor.fetchone()
-    response = "<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n"
-    while row is not None:
-        response_new = "<code>{}</code> — создал <code>{}</code> {}\n".format(row[0], row[1],
-                                                                           row[2].strftime("%d/%m/%y %H:%M:%S"))
-        if len(response + response_new) > MAX_MESSAGE_LENGTH:
-            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
-            response = ""
-        response += response_new
-        row = cursor.fetchone()
-    # TODO избавиться от дублирования кода
-    request = "select text_in, creator, date_created from triggers where chat_id = 0"
-    cursor.execute(request)
-    row = cursor.fetchone()
-    response += "\n\n<b>Глобальные триггеры</b>:\n"
-    while row is not None:
-        response_new = "<code>{}</code> — создал <code>{}</code> {}\n".format(row[0], row[1],
-                                                                           row[2].strftime("%d/%m/%y %H:%M:%S"))
-        if len(response + response_new) > MAX_MESSAGE_LENGTH:
-            bot.send_message(chat_id=mes.chat_id, text=response, parse_mode = 'HTML')
-            response = ""
-        response += response_new
-        row = cursor.fetchone()
-    # TODO избавиться от дублирования кода
+    local = get_triggers_list(mes.chat_id)
+    global_triggers = get_triggers_list(0)
+    response = f"<b>Список триггеров</b>:\n<b>Локальные триггеры</b>:\n{local}\n\n" \
+               f"<b>Глобальные триггеры</b>:\n{global_triggers}"
+    pattern = re.compile("(.*)\n([^\n]*$)", re.DOTALL)
+    while len(response) > MAX_MESSAGE_LENGTH:
+        # Если не влезает в одно сообщение
+        # Отрезаем последнюю влезающую строку, отправляем сообщение без неё, склеиваем то, что не влезло, повторяем
+        parse = re.match(pattern, response[:MAX_MESSAGE_LENGTH])
+        bot.send_message(chat_id=mes.chat_id, text=parse.group(1), parse_mode='HTML')
+        response = parse.group(2) + response[MAX_MESSAGE_LENGTH:]
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def get_triggers_list(trigger_chat_id):
+    returned = ''
+    cursor.execute("select text_in, creator, date_created from triggers where chat_id = %s", (trigger_chat_id,))
+    row = cursor.fetchall()
+    if row:
+        for i in row:
+            returned += f'<code>{i[0]}</code> — создал <code>{i[1]}</code> {i[2].strftime("%d/%m/%y %H:%M:%S")}\n'
+    else:
+        pass
+    return returned
 
 
 def fill_triggers_lists():
