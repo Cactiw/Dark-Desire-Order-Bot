@@ -114,6 +114,7 @@ from castle_files.libs.castle.location import Location
 import castle_files.work_materials.globals as file_globals
 
 
+import json
 import threading
 import multiprocessing
 import logging
@@ -153,6 +154,11 @@ def castle_hello(bot, update):
                          reply_to_message_id=mes.message_id, parse_mode='HTML', disable_web_page_preview=True)
         notified.append(mes.from_user.id)
         cp.update_location_to_database()
+
+
+def show_data(bot, update, user_data):
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text=json.dumps(user_data, skipkeys=True, ensure_ascii=False, indent=4, default=lambda x: str(x)))
 
 
 def skip(bot, update):
@@ -217,6 +223,8 @@ def castle_bot_processing():
     #                                                                         # редактирований сообщений
     dispatcher.add_handler(CommandHandler('start', start, filters=filter_is_pm, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
+
+    dispatcher.add_handler(CommandHandler('show_data', show_data, filters=filter_is_pm, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))
