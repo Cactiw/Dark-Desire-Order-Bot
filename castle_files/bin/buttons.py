@@ -188,10 +188,9 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                     if guild.check_high_access(player.id):
                         pass
                         # buttons[0].append(KeyboardButton("📜Список гильдий"))
-    elif status is None or status == "default":
+    elif status is None or status in ["default", "central_square"]:
         status = "central_square"
         user_data.update({"status": status})
-    elif status in ["central_square"]:  # , "":
         buttons = [
             [
                 KeyboardButton(Location.get_location(1).name),
