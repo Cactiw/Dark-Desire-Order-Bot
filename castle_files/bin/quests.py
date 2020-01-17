@@ -68,6 +68,7 @@ def treasury(bot, update, user_data):
 def resource_return(bot, job):
     cursor = conn.cursor()
     if job.context[1].get("status") not in ["sawmill", "quarry"]:
+        logging.warning("Status not in  [\"sawmill\", \"quarry\"], status = {}".format(job.context[1].get("status")))
         return
     statuses_to_res = {"sawmill": "wood", "quarry": "stone"}
     res = statuses_to_res.get(job.context[1].get("status"))
@@ -558,7 +559,7 @@ def load_construction_jobs():
             if callback is None:
                 logging.error("Callback is None for status {}".format(v[0]))
                 continue
-            if v[2] is None:
+            if v[2] is None or True:  # Always get user_data from dispatcher.user_data - it must be changed in callback
                 context = [k, dispatcher.user_data.get(k)]
             else:
                 context = v[2]
