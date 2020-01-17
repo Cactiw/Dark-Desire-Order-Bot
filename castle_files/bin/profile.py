@@ -644,10 +644,11 @@ def update_ranger_class_skill_lvl(bot, update):
     if player is None:
         return
     if player.game_class != 'Ranger':
-        bot.send_message(chat_id=mes.chat_id,
-                         text="Учёт уровня скиллов пока доступен только лучникам. Для добавления информации о классе "
-                              "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\"")
-        return
+        # bot.send_message(chat_id=mes.chat_id,
+        #                  text="Учёт уровня скиллов пока доступен только лучникам. Для добавления информации о классе "
+        #                       "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\"")
+        # return
+        pass  # Reborned players can have a different class
     class_skill = int(mes.text.partition("Aiming")[0][:-2].split()[-1])
     logging.info("class_skill = {0}".format(class_skill))
     player.class_skill_lvl = class_skill
