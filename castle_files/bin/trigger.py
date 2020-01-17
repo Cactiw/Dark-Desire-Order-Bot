@@ -144,10 +144,10 @@ def triggers(bot, update):
 def get_triggers_list(trigger_chat_id):
     returned = ''
     cursor.execute("select text_in, creator, date_created from triggers where chat_id = %s", (trigger_chat_id,))
-    row = cursor.fetchall()
-    if row:
-        for i in row:
-            returned += f'<code>{i[0]}</code> — создал <code>{i[1]}</code> {i[2].strftime("%d/%m/%y %H:%M:%S")}\n'
+    rows = cursor.fetchall()
+    if rows:
+        for row in rows:
+            returned += f'<code>{row[0]}</code> — создал <code>{row[1]}</code> {row[2].strftime("%d/%m/%y %H:%M:%S")}\n'
     else:
         pass
     return returned
