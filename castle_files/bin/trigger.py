@@ -21,7 +21,7 @@ def get_message_type_and_data(mes) -> (int, str):
     mes_type = trigger_types.index(trigger_cursor)
     if mes_type == 7:
         trigger_cursor = trigger_types[-1]
-    if mes_type == 1:
+    if mes_type == 0:
         data = mes.text
     else:
         data = trigger_cursor.file_id
