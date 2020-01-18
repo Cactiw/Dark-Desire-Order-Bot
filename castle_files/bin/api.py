@@ -25,6 +25,8 @@ import datetime
 
 import re
 
+MAX_PLAYERS_AUTO_UPDATE_PER_SECOND = 3
+
 
 cwapi = CW3API(cwuser, cwpass)
 
@@ -190,23 +192,23 @@ def players_update_monitor():
                 guild.api_info.update()
                 logging.debug("Updating {} through CW3 API".format(guild.tag))
 
-
-            request = "select id from players where api_info -> 'token' is not null order by last_updated limit 1"
-            cursor.execute(request)
+            request = "select id from players where api_info -> 'token' is not null order by last_updated limit %s"
+            cursor.execute(request, (MAX_PLAYERS_AUTO_UPDATE_PER_SECOND,))
             row = cursor.fetchone()
-            if row is None:
-                logging.error("Request is None in players_update_monitor")
-                return 0
-            player = Player.get_player(row[0])
-            cwapi.update_player(player.id, player=player)
-            logging.debug("Updating {} through CW3 API".format(player.nickname))
+            while row is not None:
+                if row is None:
+                    logging.error("Request is None in players_update_monitor")
+                    return 0
+                player = Player.get_player(row[0])
+                cwapi.update_player(player.id, player=player)
+                logging.debug("Updating {} through CW3 API".format(player.nickname))
+                if not cwapi.active:
+                    return 0
+                access = player.api_info.get("access")
+                if access is not None and "gear" in access:
+                    cwapi.update_gear(player.id, player=player)
+                row = cursor.fetchone()
             time.sleep(1)
-            if not cwapi.active:
-                return 0
-            access = player.api_info.get("access")
-            if access is not None and "gear" in access:
-                cwapi.update_gear(player.id, player=player)
-                time.sleep(1)
         except Exception:
             logging.error(traceback.format_exc())
 
