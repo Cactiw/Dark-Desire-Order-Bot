@@ -29,7 +29,7 @@ from castle_files.work_materials.filters.castle_filters import filter_central_sq
 from castle_files.work_materials.filters.technical_tower_filters import filter_technical_tower, filter_my_cabinet, \
     filter_request_change_update_message, filter_change_update_message, filter_request_bot_guild_message_notify, \
     filter_send_bot_guild_message_notify, filter_update_history, filter_manuscript, filter_view_manuscript_category, \
-    filter_guides
+    filter_guides, filter_commits_history
 from castle_files.work_materials.filters.quest_filters import filter_sawmill, filter_quarry, filter_treasury, \
     filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct, \
     filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result, filter_cw_arena_result
@@ -95,6 +95,7 @@ from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
 from castle_files.bin.reports import add_report, battle_stats, battle_equip, battle_drop
+from castle_files.bin.git_functions import last_commits
 from castle_files.bin.tasks import plan_daily_tasks
 
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
@@ -419,6 +420,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_manuscript, manuscript, pass_user_data=True))
     # dispatcher.add_handler(MessageHandler(Filters.text & filter_guides, guides, pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_manuscript_category, view_manuscript_category))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_commits_history, last_commits))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_my_cabinet, my_cabinet, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_treasury, treasury, pass_user_data=True))

@@ -29,6 +29,18 @@ class FilterManuscript(BaseFilter):
 filter_manuscript = FilterManuscript()
 
 
+class FilterCommitsHistory(BaseFilter):
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return filter_is_pm(message) and message.text in ["🧾История коммитов", "🧾Commits history"] and \
+            user_data.get("status") in ['technical_tower']
+
+
+filter_commits_history = FilterCommitsHistory()
+
+
 class FilterGuides(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)

@@ -5,3 +5,4 @@ pika
 pytz
 tzlocal
 pySocks
+gitpython

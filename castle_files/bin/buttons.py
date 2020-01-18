@@ -326,13 +326,14 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
                 KeyboardButton("🗂Архив объявлений"),
             ],
             [
+                KeyboardButton("🧾История коммитов"),
+            ],
+            [
                 KeyboardButton("↩️ Назад"),
             ]
         ]
         if player is not None and player.id == SUPER_ADMIN_ID:
-            buttons.insert(1, [
-                KeyboardButton("💻Кабинет ботодела"),
-            ])
+            buttons[1].insert(1, KeyboardButton("💻Кабинет ботодела"))
     elif status == 'my_cabinet':
         buttons = [
             [
