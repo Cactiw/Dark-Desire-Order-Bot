@@ -17,12 +17,14 @@ types = {0: "text", 1: "video", 2: "audio", 3: "photo", 4: "document", 5: "stick
 
 def get_message_type_and_data(mes) -> (int, str):
     trigger_types = [mes.text, mes.video, mes.audio, mes.photo, mes.document, mes.sticker, mes.voice, mes.video_note]
-    trigger_cursor = next((el for el in trigger_types if el is not None and el != []), None)
+    trigger_cursor = next((el for el in trigger_types if el), None)
     mes_type = trigger_types.index(trigger_cursor)
     if mes_type == 7:
         trigger_cursor = trigger_types[-1]
     if mes_type == 0:
         data = mes.text
+    elif mes_type == 3:
+        data = trigger_cursor[-1].file_id
     else:
         data = trigger_cursor.file_id
     return [mes_type, data]
