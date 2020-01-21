@@ -16,7 +16,7 @@ queue`s overthlow.
 `cd /etc/postgresql/10/main`
 (10 is version number, replace for your one)
 
-`vim pg_hba.conf`
+`sudo vim pg_hba.conf`
 
 
 
