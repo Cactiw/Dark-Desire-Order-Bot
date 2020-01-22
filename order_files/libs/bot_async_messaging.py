@@ -241,8 +241,10 @@ class AsyncBot(Bot):
             else:
                 if pin:
                     try:
+                        disable_notification = None if notification else True  # Необходимый костыль, иначе всегда тихо
+                        #                                                      # (баг библиотеки)
                         super(AsyncBot, self).pinChatMessage(chat_id=chat_id, message_id=message.message_id,
-                                                             disable_notification=not notification)
+                                                             disable_notification=disable_notification)
                     except Unauthorized:
                         response += "Недостаточно прав для закрепления сообщения в чате {0}\n".format(chat_id)
                         pass
