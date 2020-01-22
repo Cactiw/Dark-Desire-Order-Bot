@@ -47,7 +47,7 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
     if len(helpers) >= 5:
         buttons[0].pop(1)
-    return [response, InlineKeyboardMarkup(buttons), avg_lvl]
+    return [response, InlineKeyboardMarkup(buttons), avg_lvl, remaining_time]
 
 
 def mob(bot, update):
@@ -96,13 +96,15 @@ def mob(bot, update):
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
     minutes = 5 if 'ambush' in mes.text else 3
-    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs,
-                                                           minutes)
+    response, buttons, avg_lvl, remaining_time = get_mobs_text_and_buttons(link, names, lvls, helpers,
+                                                                           forward_message_date, buffs, minutes)
     player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
         if 'It\'s an ambush!'.lower() in mes.text.lower():
             bot.send_message(chat_id=mes.chat_id, text="Засады не отправляются на канал. "
                                                        "Зовите бойцов вашей гильдии на помощь!")
+        elif remaining_time <= datetime.timedelta(0):
+            bot.send_message(chat_id=mes.chat_id, text="Время истекло. На канал не отправлено.")
         else:
             bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
             bot.send_message(chat_id=mes.chat_id, parse_mode='HTML',
@@ -122,7 +124,7 @@ def mob(bot, update):
                               timeout=0.3)
             except Exception:
                 logging.error(traceback.format_exc())
-    else:
+    elif remaining_time > datetime.timedelta(0):
         ping_count = 0
         if not is_pm:
             barracks = Location.get_location(1)
