@@ -197,7 +197,8 @@ def mob_help(bot, update):
     else:
         helpers.append(update.callback_query.from_user.username)
     minutes = 5 if 'засада' in mes.text else 3
-    response, buttons, avg_lvl = get_mobs_text_and_buttons(link, names, lvls, helpers, forward_message_date, buffs, minutes)
+    response, buttons, avg_lvl, remailing_time = get_mobs_text_and_buttons(link, names, lvls, helpers,
+                                                                           forward_message_date, buffs, minutes)
 
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
