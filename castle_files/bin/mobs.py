@@ -2,12 +2,15 @@
 Здесь находятся функции обработки событий, связаннх с мобами
 """
 
-from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor
+from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor, mobs_messages, mobs_lock, \
+    dispatcher
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
+
+from castle_files.bin.api import cwapi
 
 import datetime
 import re
@@ -15,16 +18,22 @@ import logging
 import traceback
 import requests
 import json
+import time
+import copy
 
 import psycopg2
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 PING_LIMIT = 4
+MOBS_UPDATE_INTERVAL_SECS = 10
 
 
-def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes):
+def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, created_player_id):
     response = "Обнаруженные мобы{}:\n".format(", засада!" if minutes == 5 else "")
+
+    # minutes = 3 * 60
+
     avg_lvl = 0
     for i, name in enumerate(mobs):
         lvl = lvls[i]
@@ -34,6 +43,9 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     avg_lvl /= len(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
+    created_player = Player.get_player(player_id=created_player_id, notify_on_error=False)
+    response += "\n\n" + get_player_stats_text(created_player)
+
 
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     remaining_time = datetime.timedelta(minutes=minutes) - (now - forward_message_date)
@@ -48,6 +60,20 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     if len(helpers) >= 5:
         buttons[0].pop(1)
     return [response, InlineKeyboardMarkup(buttons), avg_lvl, remaining_time]
+
+
+def get_mobs_info_by_link(link):
+    request = "select mob_names, mob_lvls, date_created, helpers, buffs, minutes, created_player from mobs where link = %s"
+    cursor.execute(request, (link,))
+    row = cursor.fetchone()
+    return row
+
+
+def get_mobs_text_by_link(link):
+    mobs, lvls, helpers, forward_message_date, buffs, minutes, player_id = get_mobs_info_by_link(link)
+    response = get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, player_id)
+    return response
+
 
 
 def mob(bot, update):
@@ -76,12 +102,14 @@ def mob(bot, update):
         forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     except Exception:
         forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
-    request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel, buffs) values (" \
-              "%s, %s, %s, %s, %s, %s, %s)"
+    request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel, buffs, " \
+              "minutes) values (" \
+              "%s, %s, %s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
+    minutes = 5 if 'ambush' in mes.text else 3
     helpers = []
     try:
-        cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm, buffs))
+        cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm, buffs, minutes))
     except psycopg2.IntegrityError:
         # logging.error(traceback.format_exc())
         request = "select on_channel, helpers from mobs where link = %s"
@@ -97,7 +125,8 @@ def mob(bot, update):
             cursor.execute(request, (link,))
     minutes = 5 if 'ambush' in mes.text else 3
     response, buttons, avg_lvl, remaining_time = get_mobs_text_and_buttons(link, names, lvls, helpers,
-                                                                           forward_message_date, buffs, minutes)
+                                                                           forward_message_date, buffs, minutes,
+                                                                           mes.from_user.id)
     player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
         if 'It\'s an ambush!'.lower() in mes.text.lower():
@@ -166,6 +195,75 @@ def mob(bot, update):
     return
 
 
+def send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link, forward_message_date):
+    if is_pm:
+        chat_id = MOB_CHAT_ID
+    else:
+        chat_id = mes.chat_id
+    if player.api_info.get("token") is None:
+        bot.send_message(chat_id=player.id,
+                         text="Для отображения информации о ваших статах и хп предоставьте достук бота к API (/auth)")
+        access = False
+    else:
+        access = True
+        response += "\n\nИнформация о игроке запрошена, ожидайте ответа API..."
+    new_mes = bot.sync_send_message(chat_id=chat_id, text=response, parse_mode='HTML')
+    with mobs_lock:
+        lst = mobs_messages.get(link)
+        if lst is None:
+            lst = []
+            mobs_messages.update({link: lst})
+        lst.append({"chat_id": mes.chat_id, "message_id": new_mes.message_id,
+                    "cw_send_time": forward_message_date.timestamp(), "access": access, "last_update_time": time.time()})
+    if access:
+        player.api_info.update({"mobs_link": link})
+        player.update()
+        cwapi.update_player(player_id=player.id, player=player)
+
+
+def get_player_stats_text(player: Player):
+    if player is None:
+        return ""
+    response = "{}🏅: {}⚔️ {}❤️\n".format(player.lvl, player.attack, player.hp if player.hp is not None else "❔")
+    return response
+
+
+def mobs_messages_update_monitor():
+    logging.info("Started mobs messages updating")
+    while True:
+        try:
+            with mobs_lock:
+                iter_dict = copy.deepcopy(mobs_messages)
+            print(iter_dict)
+            for link in list(iter_dict):
+                print(link)
+                update_mobs_messages_by_link(link)
+
+        except Exception:
+            traceback.format_exc()
+        time.sleep(1)
+
+
+def update_mobs_messages_by_link(link):
+    now = time.time()
+    remaining_time = datetime.timedelta(0)
+    lst = mobs_messages.get(link)
+    if not lst:
+        return
+    for mes_info in lst:
+        chat_id, message_id, cw_send_time, access,\
+            last_update_time = mes_info.get("chat_id"), mes_info.get("message_id"), \
+            mes_info.get("cw_send_time"), mes_info.get("access"), mes_info.get("last_update_time")
+
+        if now - last_update_time >= MOBS_UPDATE_INTERVAL_SECS:
+            text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
+            dispatcher.bot.editMessageText(chat_id=chat_id, message_id=message_id, text=text,
+                                           reply_markup=buttons, parse_mode='HTML')
+    if remaining_time < datetime.timedelta(0):
+        with mobs_lock:
+            mobs_messages.pop(link)
+
+
 def get_helpers_text(helpers):
     response = "Помощники:\n"
     for username in helpers:
@@ -181,13 +279,11 @@ def mob_help(bot, update):
         bot.send_message(chat_id=update.callback_query.from_user.id, text="Произошла ошибка.")
         return
     link = link.group(1)
-    request = "select mob_names, mob_lvls, date_created, helpers, buffs from mobs where link = %s"
-    cursor.execute(request, (link,))
-    row = cursor.fetchone()
-    if row is None:
+    try:
+        names, lvls, forward_message_date, helpers, buffs, minutes, player_id = get_mobs_info_by_link(link)
+    except (ValueError, TypeError):
         bot.send_message(chat_id=update.callback_query.from_user.id, text="Событие не найдено")
         return
-    names, lvls, forward_message_date, helpers, buffs = row
     if update.callback_query.from_user.username in helpers:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ты уже помог!", show_alert=True)
         return
@@ -198,7 +294,8 @@ def mob_help(bot, update):
         helpers.append(update.callback_query.from_user.username)
     minutes = 5 if 'засада' in mes.text else 3
     response, buttons, avg_lvl, remailing_time = get_mobs_text_and_buttons(link, names, lvls, helpers,
-                                                                           forward_message_date, buffs, minutes)
+                                                                           forward_message_date, buffs, minutes,
+                                                                           player_id)
 
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=response,
@@ -360,5 +457,3 @@ def mobs_notify(bot, update):
                          text="<b>{}</b> добавлен в список пинга чата на мобов.".format(player.nickname),
                          parse_mode='HTML')
     barracks.update_location_to_database()
-
-

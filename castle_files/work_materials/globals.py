@@ -1,6 +1,7 @@
 import pytz
 import tzlocal
 import psycopg2
+import threading
 
 from config import Production_castle_token, request_kwargs, psql_creditals, cwuser, ServerIP, CONNECT_TYPE
 from libs.updater_async import AsyncUpdater
@@ -67,6 +68,9 @@ MY_CHANNEL_ID = -1001341013464
 construction_jobs = {}
 castle_chats = []
 
+
+mobs_lock = threading.Lock()
+mobs_messages: {str: [{}]} = {}
 
 allowed_list = []
 

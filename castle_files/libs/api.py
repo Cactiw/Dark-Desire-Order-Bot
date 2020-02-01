@@ -328,6 +328,13 @@ class CW3API:
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
             player.update_to_database()
+
+            mobs_link = player.api_info.get("mobs_link")
+            if mobs_link is not None:
+                from castle_files.bin.mobs import update_mobs_messages_by_link
+                update_mobs_messages_by_link(mobs_link)
+                # Обновление сообщения с мобами
+                pass
         except Exception:
             logging.error(traceback.format_exc())
 
