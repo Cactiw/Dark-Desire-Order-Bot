@@ -65,13 +65,13 @@ filter_player_stock_resources = FilterPlayerStockResources()
 class FilterPlayerAuction(BaseFilter):
     def filter(self, message):
         return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
-               message.text.startswith("You have for sale:")
+               "🛎Welcome to auction!" in message.text and "You have for sale:" in message.text
 
 
 filter_player_auction = FilterPlayerAuction()
 
 
-# Сообщение - форвард доступных вещей для продажи с аука из чв3 и в личке
+# Сообщение - форвард /misc из чв3 и в личке
 class FilterPlayerMisc(BaseFilter):
     def filter(self, message):
         return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
