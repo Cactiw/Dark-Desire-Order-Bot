@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor, mobs_messages, mobs_lock, \
-    dispatcher
+    dispatcher, conn
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.libs.player import Player
@@ -20,8 +20,11 @@ import requests
 import json
 import time
 import copy
+import threading
 
 import psycopg2
+
+import castle_files.work_materials.globals as globals
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -31,9 +34,6 @@ MOBS_UPDATE_INTERVAL_SECS = 10
 
 def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, created_player_id):
     response = "Обнаруженные мобы{}:\n".format(", засада!" if minutes == 5 else "")
-
-    # minutes = 3 * 60
-
     avg_lvl = 0
     for i, name in enumerate(mobs):
         lvl = lvls[i]
@@ -44,7 +44,7 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     if helpers:
         response += "\n" + get_helpers_text(helpers)
     created_player = Player.get_player(player_id=created_player_id, notify_on_error=False)
-    response += "\n\n" + get_player_stats_text(created_player)
+    response += "\n" + get_player_stats_text(created_player, forward_message_date)
 
 
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
@@ -63,14 +63,16 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
 
 
 def get_mobs_info_by_link(link):
+    cursor = conn.cursor()
     request = "select mob_names, mob_lvls, date_created, helpers, buffs, minutes, created_player from mobs where link = %s"
     cursor.execute(request, (link,))
     row = cursor.fetchone()
+    cursor.close()
     return row
 
 
 def get_mobs_text_by_link(link):
-    mobs, lvls, helpers, forward_message_date, buffs, minutes, player_id = get_mobs_info_by_link(link)
+    mobs, lvls, forward_message_date, helpers, buffs, minutes, player_id = get_mobs_info_by_link(link)
     response = get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, player_id)
     return response
 
@@ -135,7 +137,8 @@ def mob(bot, update):
         elif remaining_time <= datetime.timedelta(0):
             bot.send_message(chat_id=mes.chat_id, text="Время истекло. На канал не отправлено.")
         else:
-            bot.send_message(chat_id=MOB_CHAT_ID, text=response, parse_mode='HTML', reply_markup=buttons)
+            threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
+                                                                        forward_message_date)).start()
             bot.send_message(chat_id=mes.chat_id, parse_mode='HTML',
                              text="Отправлено на <a href=\"https://t.me/mobs_skala_cw3\">канал</a>, а также в "
                                   "<a href=\"https://t.me/CwMobsNotifyBot\">бота</a>. Спасибо!")
@@ -191,7 +194,8 @@ def mob(bot, update):
                                 ping_count = 0
                         if text != "Мобы!\n":
                             bot.send_message(chat_id=mes.chat_id, text=text)
-        bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=buttons)
+    threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
+                                                                forward_message_date)).start()
     return
 
 
@@ -200,7 +204,9 @@ def send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
         chat_id = MOB_CHAT_ID
     else:
         chat_id = mes.chat_id
-    if player.api_info.get("token") is None:
+    if player is None:
+        access = False
+    elif player.api_info.get("token") is None:
         bot.send_message(chat_id=player.id,
                          text="Для отображения информации о ваших статах и хп предоставьте достук бота к API (/auth)")
         access = False
@@ -221,30 +227,30 @@ def send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
         cwapi.update_player(player_id=player.id, player=player)
 
 
-def get_player_stats_text(player: Player):
-    if player is None:
+def get_player_stats_text(player: Player, forward_message_date):
+    if player is None or player.api_info.get("token") is None:
         return ""
-    response = "{}🏅: {}⚔️ {}❤️\n".format(player.lvl, player.attack, player.hp if player.hp is not None else "❔")
+    response = "🏅: {} ⚔: {}️ ❤: {}️\n".format(
+        player.lvl, player.attack,
+        player.hp if player.hp is not None and player.last_updated > forward_message_date else "❔")
     return response
 
 
 def mobs_messages_update_monitor():
     logging.info("Started mobs messages updating")
-    while True:
+    while globals.processing:
         try:
             with mobs_lock:
                 iter_dict = copy.deepcopy(mobs_messages)
-            print(iter_dict)
             for link in list(iter_dict):
-                print(link)
                 update_mobs_messages_by_link(link)
 
         except Exception:
-            traceback.format_exc()
+            logging.error(traceback.format_exc())
         time.sleep(1)
 
 
-def update_mobs_messages_by_link(link):
+def update_mobs_messages_by_link(link, force_update=False):
     now = time.time()
     remaining_time = datetime.timedelta(0)
     lst = mobs_messages.get(link)
@@ -255,10 +261,11 @@ def update_mobs_messages_by_link(link):
             last_update_time = mes_info.get("chat_id"), mes_info.get("message_id"), \
             mes_info.get("cw_send_time"), mes_info.get("access"), mes_info.get("last_update_time")
 
-        if now - last_update_time >= MOBS_UPDATE_INTERVAL_SECS:
+        if force_update or now - last_update_time >= MOBS_UPDATE_INTERVAL_SECS:
             text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
             dispatcher.bot.editMessageText(chat_id=chat_id, message_id=message_id, text=text,
                                            reply_markup=buttons, parse_mode='HTML')
+            mes_info.update({"last_update_time": time.time()})
     if remaining_time < datetime.timedelta(0):
         with mobs_lock:
             mobs_messages.pop(link)
