@@ -307,6 +307,8 @@ class CW3API:
             player.lvl = profile.get("lvl")
             player.exp = profile.get("exp")
             player.guild_tag = profile.get("guild_tag")
+            player.hp = profile.get("hp")
+            player.hp = profile.get("maxHp")
             if "🎗" in player.nickname:  # Отключено в связи с эмодзи в никах
                 pass
             else:
@@ -328,6 +330,16 @@ class CW3API:
             player.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
             player.update_to_database()
+
+            mobs_link = player.api_info.get("mobs_link")
+            if mobs_link is not None:
+                logging.info("Updating mobs message...")
+                from castle_files.bin.mobs import update_mobs_messages_by_link
+                update_mobs_messages_by_link(mobs_link, force_update=True)
+                player.api_info.pop("mobs_link")
+                player.update()
+                # Обновление сообщения с мобами
+                pass
         except Exception:
             logging.error(traceback.format_exc())
 

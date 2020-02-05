@@ -67,7 +67,8 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     guild_commanders, g_info, guild_repair
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, \
     guild_top_battles, show_worldtop
-from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify
+from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify, \
+    mobs_messages_update_monitor
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
     not_constructed, watch_portraits, fill_mid_players, king_cabinet, add_general, adding_general, remove_general, \
     request_change_castle_message, change_castle_message, headquarters, \
@@ -617,6 +618,11 @@ def castle_bot_processing():
     unloading_resources = threading.Thread(target=resources_monitor, name="Castle Unloading Resources", args=())
     unloading_resources.start()
     processes.append(unloading_resources)
+
+    mobs_messages_updating = threading.Thread(target=mobs_messages_update_monitor,
+                                              name="Mobs messages update Monitor", args=())
+    mobs_messages_updating.start()
+    processes.append(mobs_messages_updating)
 
     if enable_api:
         telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
