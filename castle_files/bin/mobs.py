@@ -137,8 +137,8 @@ def mob(bot, update):
         elif remaining_time <= datetime.timedelta(0):
             bot.send_message(chat_id=mes.chat_id, text="Время истекло. На канал не отправлено.")
         else:
-            threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
-                                                                        forward_message_date)).start()
+            threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons,
+                                                                        is_pm, link, forward_message_date)).start()
             bot.send_message(chat_id=mes.chat_id, parse_mode='HTML',
                              text="Отправлено на <a href=\"https://t.me/mobs_skala_cw3\">канал</a>, а также в "
                                   "<a href=\"https://t.me/CwMobsNotifyBot\">бота</a>. Спасибо!")
@@ -194,12 +194,12 @@ def mob(bot, update):
                                 ping_count = 0
                         if text != "Мобы!\n":
                             bot.send_message(chat_id=mes.chat_id, text=text)
-    threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
+    threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link,
                                                                 forward_message_date)).start()
     return
 
 
-def send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link, forward_message_date):
+def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link, forward_message_date):
     if is_pm:
         chat_id = MOB_CHAT_ID
     else:
@@ -213,7 +213,7 @@ def send_mob_message_and_start_updating(bot, mes, player, response, is_pm, link,
     else:
         access = True
         response += "\n\nИнформация о игроке запрошена, ожидайте ответа API..."
-    new_mes = bot.sync_send_message(chat_id=chat_id, text=response, parse_mode='HTML')
+    new_mes = bot.sync_send_message(chat_id=chat_id, text=response, reply_markup=buttons, parse_mode='HTML')
     with mobs_lock:
         lst = mobs_messages.get(link)
         if lst is None:
