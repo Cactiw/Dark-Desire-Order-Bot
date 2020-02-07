@@ -265,10 +265,12 @@ def update_mobs_messages_by_link(link, force_update=False):
         if force_update or now - last_update_time >= MOBS_UPDATE_INTERVAL_SECS:
             text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
             try:
+                logging.info("Remaining time: {}".format(remaining_time))
                 dispatcher.bot.editMessageText(chat_id=chat_id, message_id=message_id, text=text,
                                                reply_markup=buttons, parse_mode='HTML')
                 time.sleep(0.3)
             except TimeoutError:
+                logging.warning("Got TimeoutError while updating mobs message, sleeping...")
                 time.sleep(1)
             mes_info.update({"last_update_time": time.time()})
     if remaining_time < datetime.timedelta(0):
