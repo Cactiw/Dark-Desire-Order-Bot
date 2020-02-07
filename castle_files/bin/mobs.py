@@ -27,6 +27,7 @@ import psycopg2
 import castle_files.work_materials.globals as globals
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.error import TimedOut, TelegramError
 
 PING_LIMIT = 4
 MOBS_UPDATE_INTERVAL_SECS = 10
@@ -253,29 +254,29 @@ def mobs_messages_update_monitor():
 
 def update_mobs_messages_by_link(link, force_update=False):
     now = time.time()
-    remaining_time = datetime.timedelta(0)
     lst = mobs_messages.get(link)
     if not lst:
         return
+    text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
+    if remaining_time < datetime.timedelta(0):
+        with mobs_lock:
+            mobs_messages.pop(link)
+        force_update = True
     for mes_info in lst:
         chat_id, message_id, cw_send_time, access,\
             last_update_time = mes_info.get("chat_id"), mes_info.get("message_id"), \
             mes_info.get("cw_send_time"), mes_info.get("access"), mes_info.get("last_update_time")
 
         if force_update or now - last_update_time >= MOBS_UPDATE_INTERVAL_SECS:
-            text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
             try:
                 logging.info("Remaining time: {}".format(remaining_time))
                 dispatcher.bot.editMessageText(chat_id=chat_id, message_id=message_id, text=text,
                                                reply_markup=buttons, parse_mode='HTML')
                 time.sleep(0.3)
-            except TimeoutError:
+            except TimedOut:
                 logging.warning("Got TimeoutError while updating mobs message, sleeping...")
                 time.sleep(1)
             mes_info.update({"last_update_time": time.time()})
-    if remaining_time < datetime.timedelta(0):
-        with mobs_lock:
-            mobs_messages.pop(link)
 
 
 def get_helpers_text(helpers):
