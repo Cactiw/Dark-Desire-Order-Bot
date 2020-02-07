@@ -194,8 +194,8 @@ def mob(bot, update):
                                 ping_count = 0
                         if text != "Мобы!\n":
                             bot.send_message(chat_id=mes.chat_id, text=text)
-    threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link,
-                                                                forward_message_date)).start()
+        threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link,
+                                                                    forward_message_date)).start()
     return
 
 
