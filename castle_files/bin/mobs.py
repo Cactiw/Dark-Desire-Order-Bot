@@ -219,8 +219,9 @@ def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_
         if lst is None:
             lst = []
             mobs_messages.update({link: lst})
-        lst.append({"chat_id": mes.chat_id, "message_id": new_mes.message_id,
-                    "cw_send_time": forward_message_date.timestamp(), "access": access, "last_update_time": time.time()})
+        lst.append({"chat_id": chat_id, "message_id": new_mes.message_id,
+                    "cw_send_time": forward_message_date.timestamp(), "access": access,
+                    "last_update_time": time.time()})
     if access:
         player.api_info.update({"mobs_link": link})
         player.update()
