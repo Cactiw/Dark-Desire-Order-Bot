@@ -372,6 +372,19 @@ def unrestrict(bot, update, args):
     # dispatcher.bot.unban_chat_member(chat_id=chat_id, user_id=SUPER_ADMIN_ID)
 
 
+def send_message_to_chat(bot, update):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID:
+        return
+    pattern = re.compile("/\\S+ (-?\\d+) (.+)", re.DOTALL)
+    parse = re.match(pattern, mes.text)
+    if parse is None:
+        bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис. Образец: /send_message_to_chat {chat_id} {text}")
+        return
+    chat_id, text = int(parse.group(1)), parse.group(2)
+    bot.send_message(chat_id=chat_id, text=text, parse_mode='HTML')
+
+
 def ranger_notify(bot, job):
     context = job.context
     response = "Поднимай свой лук, <b>{0}</b>\n@{1}".format(context[1], context[0])

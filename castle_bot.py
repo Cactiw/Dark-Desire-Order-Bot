@@ -66,7 +66,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
     guild_commanders, g_info, guild_repair
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, unrestrict, \
-    guild_top_battles, show_worldtop
+    send_message_to_chat, guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify, \
     mobs_messages_update_monitor
 from castle_files.bin.castle import central_square, barracks, back, throne_room, castle_gates, guide_signs, \
@@ -373,6 +373,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('ro', mute, pass_args=True))
     dispatcher.add_handler(CommandHandler('unrestrict', unrestrict, pass_args=True))
+    dispatcher.add_handler(CommandHandler('send_message_to_chat', send_message_to_chat))
 
     dispatcher.add_handler(CommandHandler('worldtop', show_worldtop))
 
