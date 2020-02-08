@@ -34,7 +34,9 @@ MOBS_UPDATE_INTERVAL_SECS = 10
 
 
 def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, created_player_id):
-    response = "Обнаруженные мобы{}:\n".format(", засада!" if minutes == 5 else "")
+    created_player = Player.get_player(player_id=created_player_id, notify_on_error=False)
+    response = "{}Обнаруженные мобы{}:\n".format(created_player.castle if created_player is not None else "",
+                                                 ", засада!" if minutes == 5 else "")
     avg_lvl = 0
     for i, name in enumerate(mobs):
         lvl = lvls[i]
@@ -44,7 +46,6 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     avg_lvl /= len(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
-    created_player = Player.get_player(player_id=created_player_id, notify_on_error=False)
     response += "\n" + get_player_stats_text(created_player, forward_message_date)
 
 
@@ -157,44 +158,45 @@ def mob(bot, update):
                               timeout=0.3)
             except Exception:
                 logging.error(traceback.format_exc())
-    elif remaining_time > datetime.timedelta(0):
-        ping_count = 0
-        if not is_pm:
-            barracks = Location.get_location(1)
-            try:
-                ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id)).copy()
-            except Exception:
-                ping_list = None
-            if not ping_list:
-                ping_list = []
-            if player.guild is not None or ping_list:
-                guild = Guild.get_guild(guild_id=player.guild)
-                if guild.is_academy() and mes.chat_id == guild.chat_id:
-                    # Пинги для академки отключены
-                    return
-                if guild is not None and guild.chat_id == mes.chat_id:
-                    ping_list += guild.members
-                if ping_list:
-                    ping = []
-                    for pl_id in ping_list:
-                        pl = Player.get_player(pl_id)
-                        if avg_lvl - 5 <= pl.lvl <= avg_lvl + 10:
-                            on = pl.settings.get("mobs_notify")
-                            if on is None:
-                                on = True
-                            if on and pl.id != mes.from_user.id:
-                                ping.append(pl.username)
-                    if ping:
-                        text = "Мобы!\n"
-                        for username in ping:
-                            text += "@{} ".format(username)
-                            ping_count += 1
-                            if ping_count >= PING_LIMIT:
+    else:
+        if remaining_time > datetime.timedelta(0):
+            ping_count = 0
+            if not is_pm:
+                barracks = Location.get_location(1)
+                try:
+                    ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id)).copy()
+                except Exception:
+                    ping_list = None
+                if not ping_list:
+                    ping_list = []
+                if player.guild is not None or ping_list:
+                    guild = Guild.get_guild(guild_id=player.guild)
+                    if guild.is_academy() and mes.chat_id == guild.chat_id:
+                        # Пинги для академки отключены
+                        return
+                    if guild is not None and guild.chat_id == mes.chat_id:
+                        ping_list += guild.members
+                    if ping_list:
+                        ping = []
+                        for pl_id in ping_list:
+                            pl = Player.get_player(pl_id)
+                            if avg_lvl - 5 <= pl.lvl <= avg_lvl + 10:
+                                on = pl.settings.get("mobs_notify")
+                                if on is None:
+                                    on = True
+                                if on and pl.id != mes.from_user.id:
+                                    ping.append(pl.username)
+                        if ping:
+                            text = "Мобы!\n"
+                            for username in ping:
+                                text += "@{} ".format(username)
+                                ping_count += 1
+                                if ping_count >= PING_LIMIT:
+                                    bot.send_message(chat_id=mes.chat_id, text=text)
+                                    text = "Мобы!\n"
+                                    ping_count = 0
+                            if text != "Мобы!\n":
                                 bot.send_message(chat_id=mes.chat_id, text=text)
-                                text = "Мобы!\n"
-                                ping_count = 0
-                        if text != "Мобы!\n":
-                            bot.send_message(chat_id=mes.chat_id, text=text)
         threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link,
                                                                     forward_message_date)).start()
     return
