@@ -308,7 +308,7 @@ class CW3API:
             player.exp = profile.get("exp")
             player.guild_tag = profile.get("guild_tag")
             player.hp = profile.get("hp")
-            player.hp = profile.get("maxHp")
+            player.max_hp = profile.get("maxHp")
             if "🎗" in player.nickname:  # Отключено в связи с эмодзи в никах
                 pass
             else:

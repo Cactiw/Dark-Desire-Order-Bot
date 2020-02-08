@@ -232,9 +232,11 @@ def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_
 def get_player_stats_text(player: Player, forward_message_date):
     if player is None or player.api_info.get("token") is None:
         return ""
-    response = "🏅: {} ⚔: {}️ ❤: {}️\n".format(
+    response = "🏅: {} ⚔: {} ❤: {} {}\n".format(
         player.lvl, player.attack,
-        player.hp if player.hp is not None and player.last_updated > forward_message_date else "❔")
+        player.hp if player.hp is not None and player.last_updated > forward_message_date else "❔",
+        "/ {}".format(player.max_hp) if player.max_hp is not None and
+        player.last_updated > forward_message_date else "",)
     return response
 
 
