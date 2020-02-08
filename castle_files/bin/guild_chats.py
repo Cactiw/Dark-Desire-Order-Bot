@@ -360,6 +360,18 @@ def mute(bot, update, args):
     return
 
 
+def unrestrict(bot, update, args):
+    if update.message.from_user.id != SUPER_ADMIN_ID:
+        return
+    chat_id = int(args[0])
+    current = time.time()
+    current += 30
+    bot.restrictChatMember(chat_id=chat_id, user_id=SUPER_ADMIN_ID, until_date=current,
+                           permissions=ChatPermissions(can_send_other_messages=True, can_send_messages=True))
+    bot.send_message(chat_id=SUPER_ADMIN_ID, text="Ограничения сняты")
+    # dispatcher.bot.unban_chat_member(chat_id=chat_id, user_id=SUPER_ADMIN_ID)
+
+
 def ranger_notify(bot, job):
     context = job.context
     response = "Поднимай свой лук, <b>{0}</b>\n@{1}".format(context[1], context[0])
