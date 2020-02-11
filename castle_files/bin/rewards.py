@@ -292,6 +292,8 @@ def answer_reward(bot, update, user_data):
                 bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                         text="Одна из наград уже проходит модерацию. Пожалуйста, подождите окончания",
                                         show_alert=True)
+                player.reputation += reward["price"]
+                player.update()
                 return
             add_mes_id = None
             mes_to_forward_id = user_data.get("reward_additional_id")
