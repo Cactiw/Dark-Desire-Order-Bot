@@ -1,8 +1,9 @@
 from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list, allowed_list, cursor, moscow_tz, \
-    local_tz, job, utc
+    local_tz, job, utc, dispatcher
 from mwt import MWT
 
 import datetime
+import re
 
 
 def cancel(bot, update, user_data):
@@ -12,6 +13,23 @@ def cancel(bot, update, user_data):
         user_data.pop("edit_guild_id")
     bot.send_message(chat_id=update.message.chat_id, text="Операция отменена.")
     return
+
+
+def pop_from_user_data(bot, update):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID:
+        return
+    parse = re.search("/pop_from_user_data (\\d+) (.+)", mes.text)
+    if parse is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис.")
+        return
+    user_id, pop_value = int(parse.group(1)), parse.group(2)
+    user_data = dispatcher.user_data.get(user_id)
+    if user_data is None or pop_value not in user_data:
+        bot.send_message(chat_id=update.message.chat_id, text="Не найдено")
+        return
+    user_data.pop(pop_value)
+    bot.send_message(chat_id=mes.chat_id, text="Успешно")
 
 
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло

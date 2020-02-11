@@ -49,7 +49,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
     stock, ws, players_update_monitor, autospend_gold
-from castle_files.bin.service_functions import cancel, fill_allowed_list
+from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
     set_status, guild_history, revoke_all_class_links, class_chat_kick, reports_history, profile_settings, \
@@ -226,6 +226,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('start', start, filters=filter_is_pm, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
+    dispatcher.add_handler(CommandHandler('pop_from_user_data', pop_from_user_data))
     dispatcher.add_handler(CommandHandler('show_data', show_data, filters=filter_is_pm, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
