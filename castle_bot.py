@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api
+    CONNECT_TYPE, enable_api, SUPER_ADMIN_ID
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -158,7 +158,9 @@ def castle_hello(bot, update):
         cp.update_location_to_database()
 
 
-def show_data(bot, update, user_data):
+def show_data(bot, update, user_data, args):
+    if args and update.message.from_user.id == SUPER_ADMIN_ID:
+        user_data = dispatcher.user_data.get(int(args[0]))
     bot.send_message(chat_id=update.message.from_user.id,
                      text=json.dumps(user_data, skipkeys=True, ensure_ascii=False, indent=4, default=lambda x: str(x)))
 
@@ -227,7 +229,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('cancel', cancel, pass_user_data=True))
 
     dispatcher.add_handler(CommandHandler('pop_from_user_data', pop_from_user_data))
-    dispatcher.add_handler(CommandHandler('show_data', show_data, filters=filter_is_pm, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('show_data', show_data, filters=filter_is_pm, pass_user_data=True,
+                                          pass_args=True))
 
     dispatcher.add_handler(CommandHandler('dokument', view_profile))
     dispatcher.add_handler(CommandHandler('document', view_profile))
