@@ -569,7 +569,8 @@ def get_profile_settings_text(player):
         stock_change = True
     response += "<code>{:<26}</code> <b>{}</b>\n".format("📦Изменения в стоке",
                                                          "✅включены" if stock_change else "❌отключены")
-    if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+    # if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+    if player.class_skill_lvl is not None:
         if rangers_notify is None:
             rangers_notify = True
         response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на аим",

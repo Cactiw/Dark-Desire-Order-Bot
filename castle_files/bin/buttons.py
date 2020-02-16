@@ -37,7 +37,8 @@ def get_profile_settings_buttons(player):
             InlineKeyboardButton("📌Пинг на мобов", callback_data="prsmobsping_{}".format(player.id)),
         ],
     ]
-    if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+    # if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
+    if player.class_skill_lvl is not None:
         buttons[1].append(InlineKeyboardButton("📌Пинг на аим", callback_data="prsaimping_{}".format(player.id)))
     return InlineKeyboardMarkup(buttons)
 
