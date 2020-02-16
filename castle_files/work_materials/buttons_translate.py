@@ -16,6 +16,7 @@ buttons_translate = {
     "🛒Уведомления о продаже": "🛒Sale notifications",
     "📦Изменения стока": "📦Stock changes",
     "📌Пинг на мобов": "📌Mobs pings",
+    "📌Пинг на аим": "📌Aim ping",
     "Заместители": "Deputies",
     "Настройки": "Settings",
     "Список игроков": "Player list",
