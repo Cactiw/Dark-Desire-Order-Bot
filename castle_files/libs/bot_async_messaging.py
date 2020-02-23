@@ -96,6 +96,10 @@ class AsyncBot(Bot):
     # Необходим заданный атрибут dispatcher у bot
     def get_message_group(self, player_id):
         user_data = self.dispatcher.user_data.get(player_id)
+        if user_data is None:
+            # Групповой чат, заведём user_data
+            user_data = {}
+            self.dispatcher.user_data.update({player_id: user_data})
         id = user_data.get("message_group")
         if id is None:
             group = MessageGroup(player_id)

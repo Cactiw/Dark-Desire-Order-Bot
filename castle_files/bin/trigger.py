@@ -138,9 +138,10 @@ def triggers(bot, update):
         # Если не влезает в одно сообщение
         # Отрезаем последнюю влезающую строку, отправляем сообщение без неё, склеиваем то, что не влезло, повторяем
         parse = re.match(pattern, response[:MAX_MESSAGE_LENGTH])
-        bot.send_message(chat_id=mes.chat_id, text=parse.group(1), parse_mode='HTML')
+        bot.group_send_message(chat_id=mes.chat_id, text=parse.group(1), parse_mode='HTML')
         response = parse.group(2) + response[MAX_MESSAGE_LENGTH:]
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.send_message_group(mes.chat_id)
 
 
 def get_triggers_list(trigger_chat_id):
