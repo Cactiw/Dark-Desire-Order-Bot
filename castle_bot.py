@@ -237,6 +237,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('dok', view_profile))
     dispatcher.add_handler(CommandHandler('doc', view_profile))
 
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
+
     dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered & filter_joined_castle_chat,
                                           castle_hello))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
@@ -250,8 +252,6 @@ def castle_bot_processing():
     # Язык бота
     dispatcher.add_handler(CommandHandler('en', change_lang, filters=filter_is_pm, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('ru', change_lang, filters=filter_is_pm, pass_user_data=True))
-
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_profile, add_class_from_player))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_set_class, update_ranger_class_skill_lvl))
