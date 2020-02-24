@@ -1,4 +1,4 @@
-from telethon.sync import TelegramClient, events
+from telethon.sync import TelegramClient, events, connection
 from telethon.tl.types import PeerChannel
 
 from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID
@@ -7,9 +7,15 @@ try:
     from config import phone, username, password, api_id, api_hash
 except ImportError:
     pass
+try:
+    from config import telethon_proxy
+except ImportError:
+    telethon_proxy = None
 
 from multiprocessing import Queue
+import socks
 import logging
+
 logging.getLogger('telethon').setLevel(logging.WARNING)
 
 castles_stats_queue = Queue()
@@ -21,7 +27,12 @@ guilds_str = ""
 
 def script_work():
     global client
-    admin_client = TelegramClient(username, api_id, api_hash)
+    if telethon_proxy is not None:
+        proxy = (telethon_proxy["host"], telethon_proxy["port"], telethon_proxy["secret"])
+        admin_client = TelegramClient(username, api_id, api_hash, proxy=proxy,
+                                      connection=connection.tcpmtproxy.ConnectionTcpMTProxyIntermediate)
+    else:
+        admin_client = TelegramClient(username, api_id, api_hash)
     # admin_client.start(phone, password)
     #
     # client = admin_client
