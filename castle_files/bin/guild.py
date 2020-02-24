@@ -4,6 +4,7 @@
 """
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
+from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.academy import change_headmaster
 from castle_files.bin.service_functions import check_access
@@ -16,12 +17,15 @@ from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_bu
 from telegram.error import TelegramError
 
 from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
+
+from order_files.work_materials.pult_constants import divisions as divisions_const
+
 from telegram.ext.dispatcher import run_async
 
 import logging
 import re
 
-MAX_MESSAGE_LENGTH = 4000
+GUILD_ROWS_ON_PAGE = 3
 
 
 # Создание новой гильдии
@@ -72,6 +76,28 @@ def guild_repair(bot, update):
             response += res_new
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
+
+
+
+def guilds(bot, update):
+    divisions = divisions_const[:2]
+    guilds_divided = build_divisions_guilds_list(divisions)
+
+
+def build_divisions_guilds_list(divisions: list):
+    ret = {}
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id)
+        division = guild.division if guild.division in divisions else "Без дивизиона"
+        div_info = ret.get(division)
+        if div_info is None:
+            div_info = {"guilds": [], "atk": 0, "def": 0}
+            ret.update({division: div_info})
+        guilds = div_info.get("guilds")
+        guilds.append(guild)
+        div_info.update({"atk": guild.get_attack() + div_info.get("atk", 0),
+                         "def": guild.get_defense() + div_info.get("def", 0)})
+    return ret
 
 
 
