@@ -626,7 +626,7 @@ class CW3API:
             "token": token,
             "action": "requestStock"
         })
-        print("published")
+        logging.debug("published")
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
     def update_guild_info(self, player_id, player=None):

@@ -25,7 +25,7 @@ import datetime
 
 import re
 
-MAX_PLAYERS_AUTO_UPDATE_PER_SECOND = 3
+MAX_PLAYERS_AUTO_UPDATE_PER_SECOND = 2
 
 
 cwapi = CW3API(cwuser, cwpass)
