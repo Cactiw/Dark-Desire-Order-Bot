@@ -14,13 +14,13 @@ from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_bu
     get_guild_settings_buttons
 
 
-from telegram.error import TelegramError
-
 from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
 
 from order_files.work_materials.pult_constants import divisions as divisions_const
 
 from telegram.ext.dispatcher import run_async
+from telegram.error import TelegramError
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import logging
 import re
@@ -80,15 +80,70 @@ def guild_repair(bot, update):
 
 
 def guilds(bot, update):
-    divisions = divisions_const[:2]
+    divisions = divisions_const[:3]
     guilds_divided = build_divisions_guilds_list(divisions)
+    buttons = get_divisions_buttons(guilds_divided, 0)
+    bot.send_message(chat_id=update.message.chat_id, text=get_divisions_text(guilds_divided), parse_mode='HTML',
+                     reply_markup=buttons)
+    print(guilds_divided)
+
+
+def guilds_division_change_page(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    new_page = re.search("guilds_divisions_page_(\\d+)", data)
+    if new_page is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка. Попробуйте снова.",
+                                show_alert=True)
+        return
+    new_page = int(new_page.group(1))
+    divisions = divisions_const[:3]
+    guilds_divided = build_divisions_guilds_list(divisions)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=get_divisions_text(guilds_divided),
+                        reply_markup=get_divisions_buttons(guilds_divided, new_page), parse_mode='HTML')
+
+
+def get_divisions_buttons(guilds_divided: dict, page: int):
+    buttons = []
+    max_guilds_num = max(len(data.get("guilds")) for data in list(guilds_divided.values()))
+    for row_num in range(GUILD_ROWS_ON_PAGE):
+        buttons.append([])
+        for division, guilds_info in list(guilds_divided.items()):
+            guilds: [Guild] = guilds_info.get("guilds")
+            try:
+                guild = guilds[page * GUILD_ROWS_ON_PAGE + row_num]
+                buttons[row_num].append(InlineKeyboardButton(
+                    text=guild.tag, callback_data="guilds_divisions_{}".format(guild.id)))
+            except IndexError:
+                guild = None
+                buttons[row_num].append(InlineKeyboardButton("➖", callback_data="skip"))
+    if page * GUILD_ROWS_ON_PAGE < max_guilds_num:
+        buttons.append([InlineKeyboardButton("➡", callback_data="guilds_divisions_page_{}".format(page + 1))])
+    if page > 0:
+        buttons.append([InlineKeyboardButton("⬅", callback_data="guilds_divisions_page_{}".format(page - 1))])
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_divisions_text(guilds_divided: dict):
+    DIVIDER = "    "
+    response = "<code>"
+    for name in guilds_divided:
+        response += "{:9<}{}".format(name, DIVIDER)
+    response += "\n"
+    stages = {"⚔️": "atk", "🛡": "def"}
+    for stage_name, key in list(stages.items()):
+        for division, data in list(guilds_divided.items()):
+            response += "{}{:5<}{}".format(stage_name, data.get(key), DIVIDER)
+        response += "\n"
+    response += "</code>"
+    return response
 
 
 def build_divisions_guilds_list(divisions: list):
     ret = {}
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id)
-        division = guild.division if guild.division in divisions else "Без дивизиона"
+        division = guild.division if guild.division in divisions else "➖"
         div_info = ret.get(division)
         if div_info is None:
             div_info = {"guilds": [], "atk": 0, "def": 0}
