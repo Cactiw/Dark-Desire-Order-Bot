@@ -217,7 +217,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(guilds_division_change_page, pattern="guilds_divisions_page_\\d+"))
 
-
+    dispatcher.add_handler(CallbackQueryHandler(skip))
 
     #
 
