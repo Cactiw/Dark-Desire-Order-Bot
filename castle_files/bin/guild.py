@@ -80,6 +80,8 @@ def guild_repair(bot, update):
 
 
 def guilds(bot, update):
+    if not check_access(update.message.from_user.id):
+        return
     divisions = get_edit_divisions()
     guilds_divided = build_divisions_guilds_list(divisions)
     buttons = get_divisions_buttons(guilds_divided, 0)
@@ -93,6 +95,8 @@ def get_edit_divisions():
 
 
 def guilds_division_change_page(bot, update):
+    if not check_access(update.callback_query.from_user.id):
+        return
     mes = update.callback_query.message
     data = update.callback_query.data
     new_page = re.search("guilds_divisions_page_(\\d+)", data)
@@ -166,6 +170,8 @@ def build_divisions_guilds_list(divisions: list):
 
 
 def edit_guild_inline(bot, update):
+    if not check_access(update.callback_query.from_user.id):
+        return
     mes = update.callback_query.message
     data = update.callback_query.data
     parse = re.search("guilds_divisions_(\\d+)_page_(\\d+)", data)
@@ -183,6 +189,8 @@ def edit_guild_inline(bot, update):
 
 
 def inline_edit_guild_division(bot, update):
+    if not check_access(update.callback_query.from_user.id):
+        return
     divisions = get_edit_divisions()
     mes = update.callback_query.message
     data = update.callback_query.data
@@ -1130,6 +1138,8 @@ def change_guild_division(bot, update, user_data):
 
 
 def change_guild_bool_state(bot, update):
+    if not check_access(update.callback_query.from_user.id):
+        return
     try:
         guild_id = int(update.callback_query.data.split("_")[1])
         new = "new" in update.callback_query.data
