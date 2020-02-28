@@ -80,11 +80,11 @@ def get_guild_inline_buttons(guild: Guild, page):
         ],
         [
             InlineKeyboardButton("Дивизион: {}".format(guild.division),
-                                 callback_data="guild_change_division_{}".format(guild.id))
+                                 callback_data="guild_change_division_{}_page_{}".format(guild.id, page))
         ],
         [
             InlineKeyboardButton("Отключить /mailing" if guild.mailing_enabled else "Включить /mailing",
-                                 callback_data="gcm_{}_new".format(guild.id)),
+                                 callback_data="gcm_{}_new_page_{}".format(guild.id, page)),
         ],
         [
             InlineKeyboardButton("Отключить приказы" if guild.orders_enabled else "Включить приказы",

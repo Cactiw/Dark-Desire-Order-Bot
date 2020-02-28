@@ -80,11 +80,16 @@ def guild_repair(bot, update):
 
 
 def guilds(bot, update):
-    divisions = divisions_const[:3]
+    divisions = get_edit_divisions()
     guilds_divided = build_divisions_guilds_list(divisions)
     buttons = get_divisions_buttons(guilds_divided, 0)
     bot.send_message(chat_id=update.message.chat_id, text=get_divisions_text(guilds_divided), parse_mode='HTML',
                      reply_markup=buttons)
+
+
+def get_edit_divisions():
+    return divisions_const[:3]
+
 
 
 def guilds_division_change_page(bot, update):
@@ -96,7 +101,7 @@ def guilds_division_change_page(bot, update):
                                 show_alert=True)
         return
     new_page = int(new_page.group(1))
-    divisions = divisions_const[:3]
+    divisions = get_edit_divisions()
     guilds_divided = build_divisions_guilds_list(divisions)
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=get_divisions_text(guilds_divided),
                         reply_markup=get_divisions_buttons(guilds_divided, new_page), parse_mode='HTML')
@@ -175,6 +180,35 @@ def edit_guild_inline(bot, update):
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=text,
                         reply_markup=buttons, parse_mode='HTML')
     bot.answer_callback_query(callback_query_id=update.callback_query.id)
+
+
+def inline_edit_guild_division(bot, update):
+    divisions = get_edit_divisions()
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    parse = re.search("guild_change_division_(\\d+)_page_(\\d+)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка. Попробуйте снова.",
+                                show_alert=True)
+        return
+    guild_id, page = int(parse.group(1)), int(parse.group(2))
+    guild = Guild.get_guild(guild_id)
+    try:
+        current = divisions.index(guild.division)
+    except ValueError:
+        current = len(divisions) - 1
+    if current == len(divisions) - 1:
+        current = -1
+    current += 1
+    new = divisions[current]
+    guild.division = new
+    guild.update_to_database()
+    text = get_edit_guild_text(guild)
+    buttons = get_guild_inline_buttons(guild, page)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=text,
+                        reply_markup=buttons, parse_mode='HTML')
+    bot.answer_callback_query(callback_query_id=update.callback_query.id)
+
 
 
 
