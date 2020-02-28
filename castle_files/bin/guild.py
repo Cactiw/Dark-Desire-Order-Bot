@@ -136,7 +136,7 @@ def get_divisions_buttons(guilds_divided: dict, page: int):
 
 
 def get_divisions_text(guilds_divided: dict):
-    DIVIDER = "  "
+    DIVIDER = " "
     response = "<code>"
     for name in guilds_divided:
         response += "{:<10}{}".format(name, DIVIDER)
