@@ -64,7 +64,8 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
-    guild_commanders, g_info, guild_repair
+    guild_commanders, g_info, guild_repair, guilds, guilds_division_change_page, edit_guild_inline, \
+    inline_edit_guild_division
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, unrestrict, \
     send_message_to_chat, guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify, \
@@ -192,7 +193,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_division, pattern="gcdvs_\\d+", pass_user_data=True))
 
     # Хендлер на любые изменения булеанов в гильдиях
-    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opnm]_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(change_guild_bool_state, pattern="gc[opnm]_\\d+.*"))
 
     dispatcher.add_handler(CallbackQueryHandler(list_players, pattern="gipl_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
@@ -215,7 +216,11 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(set_vote_variant, pattern="vote_\\d+_\\d+"))
 
+    dispatcher.add_handler(CallbackQueryHandler(edit_guild_inline, pattern="guilds_divisions_\\d+"))
+    dispatcher.add_handler(CallbackQueryHandler(inline_edit_guild_division, pattern="guild_change_division_\\d+.*"))
+    dispatcher.add_handler(CallbackQueryHandler(guilds_division_change_page, pattern="guilds_divisions_page_\\d+"))
 
+    dispatcher.add_handler(CallbackQueryHandler(skip))
 
     #
 
@@ -576,6 +581,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('count_reputation_sum', count_reputation_sum))
 
+    dispatcher.add_handler(CommandHandler('guilds', guilds))
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
 

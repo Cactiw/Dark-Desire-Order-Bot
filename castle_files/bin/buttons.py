@@ -66,6 +66,47 @@ def get_edit_guild_buttons(guild):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_guild_inline_buttons(guild: Guild, page):
+    commander = Player.get_player(guild.commander_id) if guild.commander_id is not None else "Нет"
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="🎗:{} @{} ⚔️{}🛡{}".format(
+                    commander.nickname, commander.username, commander.attack, commander.defense) if
+                    isinstance(commander, Player) else "Нет командира", callback_data="gccmdr_{}".format(guild.id))
+        ],
+        [
+            InlineKeyboardButton("Чат: {}".format(guild.chat_name or "Нет"), callback_data="gccht_{}".format(guild.id)),
+        ],
+        [
+            InlineKeyboardButton("Дивизион: {}".format(guild.division),
+                                 callback_data="guild_change_division_{}_page_{}".format(guild.id, page))
+        ],
+        [
+            InlineKeyboardButton("Отключить /mailing" if guild.mailing_enabled else "Включить /mailing",
+                                 callback_data="gcm_{}_new_page_{}".format(guild.id, page)),
+        ],
+        [
+            InlineKeyboardButton("Отключить приказы" if guild.orders_enabled else "Включить приказы",
+                                 callback_data="gco_{}_new_page_{}".format(guild.id, page)),
+        ],
+        [
+            InlineKeyboardButton("Отключить пины" if guild.pin_enabled else "Включить пины",
+                                 callback_data="gcp_{}_new_page_{}".format(guild.id, page)),
+        ],
+        [
+            InlineKeyboardButton("Включить уведомления" if guild.disable_notification else "Выключить уведомления",
+                                 callback_data="gcn_{}_new_page_{}".format(guild.id, page)),
+        ],
+
+        [
+            InlineKeyboardButton("↩️Назад", callback_data="guilds_divisions_page_{}".format(page))
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
+
 def get_delete_guild_buttons(guild):
     buttons = [
         [
