@@ -113,7 +113,8 @@ def get_divisions_buttons(guilds_divided: dict, page: int):
             try:
                 guild = guilds[page * GUILD_ROWS_ON_PAGE + row_num]
                 buttons[row_num].append(InlineKeyboardButton(
-                    text=guild.tag, callback_data="guilds_divisions_{}".format(guild.id)))
+                    text="{}|⚔{:.1f}\\{:.1f}".format(guild.tag, guild.get_attack() / 1000., guild.get_defense() / 1000.),
+                    callback_data="guilds_divisions_{}".format(guild.id)))
             except IndexError:
                 guild = None
                 buttons[row_num].append(InlineKeyboardButton("➖", callback_data="skip"))
@@ -125,15 +126,15 @@ def get_divisions_buttons(guilds_divided: dict, page: int):
 
 
 def get_divisions_text(guilds_divided: dict):
-    DIVIDER = "    "
+    DIVIDER = "  "
     response = "<code>"
     for name in guilds_divided:
-        response += "{:9<}{}".format(name, DIVIDER)
+        response += "{:<10}{}".format(name, DIVIDER)
     response += "\n"
     stages = {"⚔️": "atk", "🛡": "def"}
     for stage_name, key in list(stages.items()):
         for division, data in list(guilds_divided.items()):
-            response += "{}{:5<}{}".format(stage_name, data.get(key), DIVIDER)
+            response += "{}{:<8}{}".format(stage_name, data.get(key), DIVIDER)
         response += "\n"
     response += "</code>"
     return response
@@ -143,7 +144,9 @@ def build_divisions_guilds_list(divisions: list):
     ret = {}
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id)
-        division = guild.division if guild.division in divisions else "➖"
+        division = guild.division if guild.division in divisions else "Нет"
+        if division == "Нет":
+            continue
         div_info = ret.get(division)
         if div_info is None:
             div_info = {"guilds": [], "atk": 0, "def": 0}
