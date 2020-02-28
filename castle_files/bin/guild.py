@@ -11,7 +11,7 @@ from castle_files.bin.service_functions import check_access
 from castle_files.bin.reports import count_battle_id, count_battle_time
 
 from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_buttons, get_view_guild_buttons, \
-    get_guild_settings_buttons
+    get_guild_settings_buttons, get_guild_inline_buttons
 
 
 from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
@@ -85,7 +85,6 @@ def guilds(bot, update):
     buttons = get_divisions_buttons(guilds_divided, 0)
     bot.send_message(chat_id=update.message.chat_id, text=get_divisions_text(guilds_divided), parse_mode='HTML',
                      reply_markup=buttons)
-    print(guilds_divided)
 
 
 def guilds_division_change_page(bot, update):
@@ -101,6 +100,7 @@ def guilds_division_change_page(bot, update):
     guilds_divided = build_divisions_guilds_list(divisions)
     bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=get_divisions_text(guilds_divided),
                         reply_markup=get_divisions_buttons(guilds_divided, new_page), parse_mode='HTML')
+    bot.answer_callback_query(callback_query_id=update.callback_query.id)
 
 
 def get_divisions_buttons(guilds_divided: dict, page: int):
@@ -113,8 +113,9 @@ def get_divisions_buttons(guilds_divided: dict, page: int):
             try:
                 guild = guilds[page * GUILD_ROWS_ON_PAGE + row_num]
                 buttons[row_num].append(InlineKeyboardButton(
-                    text="{}|⚔{:.1f}\\{:.1f}".format(guild.tag, guild.get_attack() / 1000., guild.get_defense() / 1000.),
-                    callback_data="guilds_divisions_{}".format(guild.id)))
+                    text="{}|⚔{:.1f}\\{:.1f}".format(guild.tag, guild.get_attack() / 1000., guild.get_defense() / 1000.)
+                    if guild.orders_enabled else "❌{}".format(guild.tag),
+                    callback_data="guilds_divisions_{}_page_{}".format(guild.id, page)))
             except IndexError:
                 guild = None
                 buttons[row_num].append(InlineKeyboardButton("➖", callback_data="skip"))
@@ -153,9 +154,27 @@ def build_divisions_guilds_list(divisions: list):
             ret.update({division: div_info})
         guilds = div_info.get("guilds")
         guilds.append(guild)
-        div_info.update({"atk": guild.get_attack() + div_info.get("atk", 0),
-                         "def": guild.get_defense() + div_info.get("def", 0)})
+        if guild.orders_enabled:
+            div_info.update({"atk": guild.get_attack() + div_info.get("atk", 0),
+                             "def": guild.get_defense() + div_info.get("def", 0)})
     return ret
+
+
+def edit_guild_inline(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    parse = re.search("guilds_divisions_(\\d+)_page_(\\d+)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка. Попробуйте снова.",
+                                show_alert=True)
+        return
+    guild_id, page = int(parse.group(1)), int(parse.group(2))
+    guild = Guild.get_guild(guild_id)
+    buttons = get_guild_inline_buttons(guild, page)
+    text = get_edit_guild_text(guild)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=text,
+                        reply_markup=buttons, parse_mode='HTML')
+    bot.answer_callback_query(callback_query_id=update.callback_query.id)
 
 
 
@@ -1079,6 +1098,8 @@ def change_guild_division(bot, update, user_data):
 def change_guild_bool_state(bot, update):
     try:
         guild_id = int(update.callback_query.data.split("_")[1])
+        new = "new" in update.callback_query.data
+        page = int(update.callback_query.data.partition("page_")[2]) if new else 0
     except ValueError:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                 text="Произошла ошибка. Попробуйте ещё раз")
@@ -1099,8 +1120,7 @@ def change_guild_bool_state(bot, update):
         guild.mailing_enabled = not guild.mailing_enabled
     guild.update_to_database()
     mes = update.callback_query.message
-
-    reply_markup = get_edit_guild_buttons(guild)
+    reply_markup = get_guild_inline_buttons(guild, page) if new else get_edit_guild_buttons(guild)
     new_text = get_edit_guild_text(guild)
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=new_text, reply_markup=reply_markup,
