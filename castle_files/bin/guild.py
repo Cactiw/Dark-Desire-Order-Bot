@@ -25,7 +25,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import logging
 import re
 
-GUILD_ROWS_ON_PAGE = 3
+GUILD_ROWS_ON_PAGE = 8
 
 
 # Создание новой гильдии
