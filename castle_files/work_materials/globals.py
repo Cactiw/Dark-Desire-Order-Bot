@@ -43,6 +43,8 @@ cursor = conn.cursor()
 
 DEFAULT_CASTLE_STATUS = 'central_square'
 
+HOME_CASTLE = "🖤"
+
 CHAT_WARS_ID = 265204902
 SUPER_ADMIN_ID = 231900398
 high_access_list = [231900398, 205356091]

@@ -15,6 +15,7 @@ import time
 import logging
 import traceback
 import re
+import sys
 
 MESSAGE_PER_SECOND_LIMIT = 29
 MESSAGE_PER_CHAT_LIMIT = 3
@@ -202,6 +203,38 @@ class AsyncBot(Bot):
             logging.error(traceback.format_exc())
         return args, kwargs
 
+    def adapt_message(self, *args, **kwargs):
+        """
+        Если сообщение идёт в личку, то производит различные необходимые модификации
+        """
+        try:
+            from castle_files.libs.player import Player
+            chat_id = kwargs.get('chat_id')
+            if chat_id is None:
+                try:
+                    chat_id = args[0]
+                except IndexError:
+                    chat_id = 0
+
+            player = Player.get_player(player_id=chat_id, notify_on_error=False)
+            if player is None:
+                return args, kwargs
+            mes_text: str = kwargs.get('text')
+            if mes_text is None:
+                mes_text = args[1]
+                if not isinstance(mes_text, str):
+                    return args, kwargs
+            if player.has_unvoted_votes():
+                mes_text += "\n\n<b>В замке проходит голосование! Сделайте свой выбор!</b>: /votes"
+                if "forbid_entities" not in kwargs:
+                    kwargs.update({"parse_mode": "HTML"})
+                kwargs.update({"text": mes_text})
+            return args, kwargs
+        except Exception:
+            logging.error("Error in adapting message: {}".format(traceback.format_exc()))
+            return args, kwargs
+
+
     def editMessageText(self, *args, **kwargs):
         args, kwargs = self.check_and_translate(*args, **kwargs)
         return super(AsyncBot, self).editMessageText(*args, **kwargs)
@@ -221,6 +254,7 @@ class AsyncBot(Bot):
             message_type = 0
 
         if message_type in frozenset([0]):
+            args, kwargs = self.adapt_message(*args, **kwargs)
             args, kwargs = self.check_and_translate(*args, **kwargs)
 
         lock = self.counter_lock
@@ -291,6 +325,11 @@ class AsyncBot(Bot):
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
             logging.error(traceback.format_exc())
+            if sys.exc_info()[1].message.startswith('Can\'t parse entities') and "parse_mode" in kwargs:
+                logging.error("Resending without parse mode...")
+                kwargs.pop("parse_mode")
+                kwargs.update({"forbid_entities": True})
+                return self.actually_send_message(*args, **kwargs)
             return BADREQUEST_ERROR_CODE
         except (TimedOut, NetworkError):
             logging.error(traceback.format_exc())

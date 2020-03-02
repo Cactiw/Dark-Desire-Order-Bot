@@ -1,12 +1,13 @@
 """
 В этом модуле объявляется класс Player - класс, хранящий все данных о конкретном игроке.
 """
-from castle_files.work_materials.globals import conn, dispatcher
+from castle_files.work_materials.globals import conn, dispatcher, HOME_CASTLE
 from castle_files.work_materials.equipment_constants import get_equipment_by_code
 from castle_files.bin.service_functions import count_week_by_battle_id, count_battle_id
 
 from castle_files.libs.quest import Quest
 from castle_files.libs.equipment import Equipment
+from castle_files.libs.vote import Vote
 
 from psycopg2 import ProgrammingError
 import logging
@@ -89,6 +90,23 @@ class Player:
                      self.__previous_reports_count >= 0):
             self.count_reports()
         return [self.__current_reports_count, self.__previous_reports_count, self.__total_reports_count]
+
+
+    def check_vote_ability(self):
+        """
+        Метод проверки возможности игрока голосовать
+        """
+        from castle_files.libs.guild import Guild
+        return self.castle == HOME_CASTLE and self.guild is not None and not Guild.get_guild(self.guild).is_academy()
+
+    def has_unvoted_votes(self):
+        for vote in Vote.active_votes:
+            if vote.check_active():
+                if vote.get_choice(self.id) is None and vote.check_player_class_suitable(self):
+                    return True
+        return False
+
+
 
     """
     Метод получения игрока по его id. Сначала проверяется, находится ли игрок в словаре players, то есть был ли

@@ -113,6 +113,7 @@ from castle_files.bin.telethon_script import castles_stats_queue
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
+from castle_files.libs.vote import Vote
 
 import castle_files.work_materials.globals as file_globals
 
@@ -618,6 +619,7 @@ def castle_bot_processing():
     plan_daily_tasks()
     fill_union_chats()
     load_construction_jobs()
+    Vote.fill_active_votes()
     # Запуск потоков и процессов
     processes = []
     file_globals.processing = True

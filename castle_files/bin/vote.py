@@ -218,6 +218,7 @@ def start_vote(bot, update):
     vote.started = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     vote.update()
     bot.send_message(chat_id=mes.chat_id, text="Голосование <b>{}</b> началось!".format(vote.name), parse_mode='HTML')
+    Vote.fill_active_votes()
 
 
 def votes(bot, update):
@@ -246,8 +247,9 @@ def votes(bot, update):
 
 def get_vote_text(vote, choice=None):
     response = "<b>{}</b>:\n{}\n\n".format(vote.name, vote.text)
-    response += "Завершение через: <code>{}</code>\n".format(str(vote.started + vote.duration - datetime.datetime.now(
-        tz=moscow_tz).replace(tzinfo=None)).split('.')[0])
+    remaining_time = vote.started + vote.duration - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    response += "Завершение через: <code>{}</code>\n".format(str(remaining_time).split('.')[0]) if \
+        remaining_time > datetime.timedelta(0) else "Голосование завершено!\n"
     if vote.classes is not None and vote.classes and not all(vote.classes):
         cl_text = ""
         for i, b in enumerate(vote.classes):
@@ -305,11 +307,7 @@ def vote(bot, update):
             return
     except Exception:
         logging.error(traceback.format_exc())
-    choice = None
-    for i, ch in enumerate(vote.choices):
-        if player.id in ch:
-            choice = i
-            break
+    choice = vote.get_choice(player.id)
     response = get_vote_text(vote, choice)
     buttons = get_vote_buttons(vote, choice)
     bot.send_message(chat_id=mes.chat_id, text=response, reply_markup=buttons, parse_mode='HTML')

@@ -283,7 +283,15 @@ texts_translate = {
     "Награда получается": "The reward is obtained",
 
 
-
+    "В замке проходит голосование! Сделайте свой выбор!": "A vote is being held in the castle! Make your choice!",
+    "Доступные голосования в замке:": "Available votes in the castle:\n"
+                                      "<em>Sorry, the voting text is only available in Russian</em>",
+    "Принять участие в голосовании:": "Take part in the voting:",
+    "Завершение через:": "Completion via:",
+    "Доступные варианты:": "Available options:",
+    "Ваш выбор:": "Your choice:",
+    "Не сделан": "Not done",
+    "Голосование завершено!": "Voting is complete!",
 
     "Голосование доступно только жителям 🖤Скалы!": "This vote is available only for 🖤Rock players",
     "Голосование доступно только членам гильдий.": "This vote is available only for guild players",
