@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc
+from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc, SKIPPED_DIVISIONS
 
 from castle_files.bin.service_functions import count_battle_id
 from castle_files.bin.stock import get_item_code_by_name
@@ -219,7 +219,7 @@ def battle_stats(bot, update):
     guilds = []
     for guild_id in Guild.guild_ids:
         guild = Guild.get_guild(guild_id=guild_id)
-        if guild is None:
+        if guild is None or guild.division in SKIPPED_DIVISIONS:
             continue
         guild.clear_counted_reports()
         guilds.append(guild)
@@ -245,14 +245,30 @@ def battle_stats(bot, update):
     total_attack = 0
     total_defense = 0
     total_gold = 0
+    guilds.sort(key=lambda x: (x.division or "", x.get_counted_report_values()[0]), reverse=True)
+    current_division = guilds[0].division
+    division_reports, division_attack, division_defense, division_gold = 0, 0, 0, 0
     for guild in guilds:
+        if guild.division != current_division:
+            response += "Дивизион {}:\nВсего: {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, 💰: <b>{}</b>\n\n" \
+                        "".format(current_division, division_reports, division_attack, division_defense, division_gold)
+            total_attack += division_attack
+            total_defense += division_defense
+            total_gold += division_gold
+            total_reports += division_reports
+            division_reports, division_attack, division_defense, division_gold = 0, 0, 0, 0
+
+            current_division = guild.division
+
         values = guild.get_counted_report_values()
-        total_reports += values[0]
-        total_attack += values[1]
-        total_defense += values[2]
-        total_gold += values[3]
+        division_reports += values[0]
+        division_attack += values[1]
+        division_defense += values[2]
+        division_gold += values[3]
         response += "<code>{:<3}</code>-👣{} ⚔️{} 🛡{} 💰{}" \
                     "\n".format(guild.tag, values[0], values[1], values[2], values[3])
+
+
     response += "\nВсего: {} репортов, ⚔️: <b>{}</b>, 🛡: <b>{}</b>, " \
                     "💰: <b>{}</b>\n".format(total_reports, total_attack, total_defense, total_gold)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
