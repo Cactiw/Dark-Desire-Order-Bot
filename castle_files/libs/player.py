@@ -100,10 +100,11 @@ class Player:
         return self.castle == HOME_CASTLE and self.guild is not None and not Guild.get_guild(self.guild).is_academy()
 
     def has_unvoted_votes(self):
-        for vote in Vote.active_votes:
-            if vote.check_active():
-                if vote.get_choice(self.id) is None and vote.check_player_class_suitable(self):
-                    return True
+        if self.check_vote_ability():
+            for vote in Vote.active_votes:
+                if vote.check_active():
+                    if vote.get_choice(self.id) is None and vote.check_player_class_suitable(self):
+                        return True
         return False
 
 
