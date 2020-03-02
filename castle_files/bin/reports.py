@@ -245,7 +245,7 @@ def battle_stats(bot, update):
     total_attack = 0
     total_defense = 0
     total_gold = 0
-    guilds.sort(key=lambda x: (x.division or "", x.get_counted_report_values()[0]), reverse=True)
+    guilds.sort(key=lambda x: (x.division or "", x.get_counted_report_values()[1]), reverse=True)
     current_division = guilds[0].division
     division_reports, division_attack, division_defense, division_gold = 0, 0, 0, 0
     for guild in guilds:
