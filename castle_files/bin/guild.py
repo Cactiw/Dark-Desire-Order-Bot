@@ -166,6 +166,9 @@ def build_divisions_guilds_list(divisions: list):
         if guild.orders_enabled:
             div_info.update({"atk": guild.get_attack() + div_info.get("atk", 0),
                              "def": guild.get_defense() + div_info.get("def", 0)})
+    for data in list(ret.values()):
+        data.update({"guilds": sorted(data.get("guilds"), key=lambda x: (x.orders_enabled, x.get_attack()),
+                                      reverse=True)})
     return ret
 
 
