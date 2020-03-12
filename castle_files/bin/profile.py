@@ -449,7 +449,7 @@ def hero(bot, update, user_data):
         # bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
         # return
     player = Player.get_player(mes.from_user.id, notify_on_error=False)
-    if player.id == 402027858 and player.castle != '🖤' and castle == '🖤':
+    if player is not None and player.id == 402027858 and player.castle != '🖤' and castle == '🖤':
         # Рыбак вернулся!
         bot.send_message(chat_id=player.id,
                          text="Стражи с гулким стуком ударяют копьями о землю. Врата медленно "
