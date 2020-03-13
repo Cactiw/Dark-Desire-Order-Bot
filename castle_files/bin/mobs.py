@@ -138,6 +138,8 @@ def mob(bot, update):
                                                        "Зовите бойцов вашей гильдии на помощь!")
         elif remaining_time <= datetime.timedelta(0):
             bot.send_message(chat_id=mes.chat_id, text="Время истекло. На канал не отправлено.")
+        # elif re.search("(boar|wolf|bear)", mes.text) is not None and 'resist' in mes.text:
+        #     pass
         else:
             threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons,
                                                                         is_pm, link, forward_message_date)).start()

@@ -417,7 +417,8 @@ def reports_history(bot, update):
     if requested_player is None:
         bot.send_message(chat_id=mes.chat_id, text="Игрок не найден.")
         return
-    if not check_whois_access(player.id) and (requested_player.guild is None or requested_player.guild != player.guild):
+    if player.id != requested_player.id and not check_whois_access(player.id) and (
+            requested_player.guild is None or requested_player.guild != player.guild):
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
         bot.send_message(chat_id=mes.chat_id, text="Доступ запрещён.")
         return
