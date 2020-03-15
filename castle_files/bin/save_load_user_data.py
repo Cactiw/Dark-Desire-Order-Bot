@@ -1,5 +1,4 @@
 import castle_files.work_materials.globals as file_globals
-from castle_files.bin.guild_chats import worldtop
 from castle_files.bin.quests import construction_jobs, quest_players, quest_lock
 
 from castle_files.libs.api import CW3API
@@ -74,9 +73,6 @@ def save_data():
                 f = open('castle_files/backup/construction_jobs', 'wb+')
                 pickle.dump(dump, f)
                 f.close()
-            f = open('castle_files/backup/worldtop', 'wb+')
-            pickle.dump(worldtop, f)
-            f.close()
             f = open('castle_files/backup/castle_chats', 'wb+')
             pickle.dump(file_globals.castle_chats, f)
             f = open('castle_files/backup/quest_players', 'wb+')

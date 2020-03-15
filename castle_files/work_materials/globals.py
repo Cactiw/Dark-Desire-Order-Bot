@@ -15,6 +15,8 @@ except ImportError:
     enable_api = True
 
 castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
+emodji_to_castle_names = {'🍆': 'ferma', '🍁': 'amber', '☘': 'oplot', '🌹': 'rassvet', '🐢': 'tortuga', '🦇': 'night',
+                          '🖤': 'skala'}
 
 classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel', 'Master', 'Esquire']
 classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',

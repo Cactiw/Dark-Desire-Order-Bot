@@ -385,7 +385,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('unrestrict', unrestrict, pass_args=True))
     dispatcher.add_handler(CommandHandler('send_message_to_chat', send_message_to_chat))
 
-    dispatcher.add_handler(CommandHandler('worldtop', show_worldtop))
+    dispatcher.add_handler(CommandHandler('worldtop', show_worldtop, pass_args=True))
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_stock_withdraw, send_withdraw))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_give_resource, send_withdraw))

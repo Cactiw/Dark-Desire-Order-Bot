@@ -1,7 +1,8 @@
 from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID, \
-    moscow_tz, conn, utc
+    moscow_tz, conn, utc, castles, emodji_to_castle_names
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids, \
     count_battle_id, count_battles_in_this_week, plan_work
+from castle_files.bin.reports import count_battle_time
 
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
@@ -28,7 +29,34 @@ MAX_TOP_PLAYERS_SHOW = 5
 MAX_TOP_PLAYERS_SHOW_WEEK = 10
 
 
-worldtop = {'🍆': 70, '🍁': 51, '☘': 45, '🌹': 72, '🐢': 204, '🦇': 26, '🖤': 33}
+def load_worldtop(battle_id: int = None) -> dict:
+    """
+    Загружает /worldtop после битвы с battle_id
+    :return: { str: int }
+    """
+    if battle_id is None:
+        battle_id = count_battle_id()
+    request = "select ferma, amber, oplot, rassvet, tortuga, night, skala from worldtop where battle_id = %s"
+    cursor.execute(request, (battle_id,))
+    row = cursor.fetchone()
+    if not row:
+        return {}
+    worldtop = {k: v for k, v in zip(castles, row)}
+    sort_worldtop(worldtop)
+    return worldtop
+
+
+def save_worldtop(worldtop: dict, battle_id: int = None):
+    if battle_id is None:
+        battle_id = count_battle_id()
+    request = "insert into worldtop(battle_id, "
+    args = [battle_id]
+    for k, v in list(worldtop.items()):
+        request += "{}, ".format(emodji_to_castle_names.get(k))
+        args.append(v)
+    request = request[:-2] + ')' + 'values(%s, %s, %s, %s, %s, %s, %s, %s)'
+    cursor.execute(request, args)
+
 
 
 def parse_stats():
@@ -66,6 +94,7 @@ def parse_stats():
             if response_all != "Игроки, попавшие в топ:\n":
                 dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
             worldtop_strings = data.split("\n\n")[-1].splitlines()
+            worldtop = load_worldtop(battle_id=count_battle_id() - 1)
             for string in worldtop_strings:
                 parse = re.search("(.).* \\+(\\d+) 🏆 очков", string)
                 if parse is None:
@@ -75,8 +104,9 @@ def parse_stats():
                 score = worldtop.get(castle)
                 score += count
                 worldtop.update({castle: score})
-                sort_worldtop()
+                sort_worldtop(worldtop)
                 logging.info("Worldtop updated: {}: {}".format(castle, count))
+            save_worldtop(worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
         else:
             #  Сообщение о пиратстве
@@ -112,17 +142,26 @@ def parse_stats():
         data = castles_stats_queue.get()
 
 
-def sort_worldtop(old=None):
-    if old is None:
-        old = worldtop
-    t = dict(sorted(list(old.items()), key=lambda x: x[1], reverse=True))
+def sort_worldtop(worldtop):
+    t = dict(sorted(list(worldtop.items()), key=lambda x: x[1], reverse=True))
     worldtop.clear()
     for k, v in list(t.items()):
         worldtop.update({k: v})
+    return worldtop
 
 
-def show_worldtop(bot, update):
-    response = "Worldtop:\n"
+def show_worldtop(bot, update, args):
+    battle_id = None
+    if args:
+        try:
+            battle_id = int(args[0])
+            if battle_id < 0:
+                battle_id = count_battle_id() + battle_id
+        except ValueError:
+            pass
+    worldtop = load_worldtop(battle_id=battle_id)
+    response = "Worldtop: {}\n".format("битва {}\n({}):".format(
+        battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S")) if battle_id is not None else "")
     i = 1
     for k, v in list(worldtop.items()):
         response += "# {} {}: <code>{:>5}</code> 🏆 очков\n".format(i, k, v)
