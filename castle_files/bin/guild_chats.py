@@ -1,5 +1,5 @@
 from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID, \
-    moscow_tz, conn, utc, castles, emodji_to_castle_names
+    moscow_tz, conn, utc, castles, emodji_to_castle_names, WORLDTOP_CHANGES_CHANNEL_ID, SON_CHAT_ID
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids, \
     count_battle_id, count_battles_in_this_week, plan_work
 from castle_files.bin.reports import count_battle_time
@@ -19,6 +19,8 @@ import re
 import time
 import datetime
 import logging
+import copy
+import traceback
 
 
 ping_by_chat_id = {}
@@ -47,15 +49,35 @@ def load_worldtop(battle_id: int = None) -> dict:
 
 
 def save_worldtop(worldtop: dict, battle_id: int = None):
-    if battle_id is None:
-        battle_id = count_battle_id()
-    request = "insert into worldtop(battle_id, "
-    args = [battle_id]
+    try:
+        if battle_id is None:
+            battle_id = count_battle_id()
+        request = "insert into worldtop(battle_id, "
+        args = [battle_id]
+        for k, v in list(worldtop.items()):
+            request += "{}, ".format(emodji_to_castle_names.get(k))
+            args.append(v)
+        request = request[:-2] + ')' + 'values(%s, %s, %s, %s, %s, %s, %s, %s)'
+        cursor.execute(request, args)
+    except Exception:
+        logging.error(traceback.format_exc())
+
+
+def get_castle_place_in_worldtop(worldtop: dict, castle: str) -> int:
+    place = 1
     for k, v in list(worldtop.items()):
-        request += "{}, ".format(emodji_to_castle_names.get(k))
-        args.append(v)
-    request = request[:-2] + ')' + 'values(%s, %s, %s, %s, %s, %s, %s, %s)'
-    cursor.execute(request, args)
+        if k == castle:
+            return place
+        place += 1
+    return None
+
+
+def sort_worldtop(worldtop):
+    t = dict(sorted(list(worldtop.items()), key=lambda x: x[1], reverse=True))
+    worldtop.clear()
+    for k, v in list(t.items()):
+        worldtop.update({k: v})
+    return worldtop
 
 
 
@@ -95,6 +117,7 @@ def parse_stats():
                 dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
             worldtop_strings = data.split("\n\n")[-1].splitlines()
             worldtop = load_worldtop(battle_id=count_battle_id() - 1)
+            old_worldtop = copy.deepcopy(worldtop)
             for string in worldtop_strings:
                 parse = re.search("(.).* \\+(\\d+) 🏆 очков", string)
                 if parse is None:
@@ -107,6 +130,7 @@ def parse_stats():
                 sort_worldtop(worldtop)
                 logging.info("Worldtop updated: {}: {}".format(castle, count))
             save_worldtop(worldtop)
+            send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
         else:
             #  Сообщение о пиратстве
@@ -142,12 +166,23 @@ def parse_stats():
         data = castles_stats_queue.get()
 
 
-def sort_worldtop(worldtop):
-    t = dict(sorted(list(worldtop.items()), key=lambda x: x[1], reverse=True))
-    worldtop.clear()
-    for k, v in list(t.items()):
-        worldtop.update({k: v})
-    return worldtop
+def send_worldtop_update(old_worldtop: dict, worldtop: dict):
+    send_chats = [SON_CHAT_ID]
+    response = "Worldtop changes:\n"
+    i = 0
+    for k, v in list(worldtop.items()):
+        i += 1
+        change = v - old_worldtop.get(k)
+        place_change = get_castle_place_in_worldtop(old_worldtop, k) - i
+        response += "# <code>{}({}){}:{:>5}🏆(+{:>2})</code>\n".format(
+            i, "{}{}".format("🔺" if place_change > 0 else "🔻" if place_change < 0 else "▪️",
+                               # "+" if place_change > 0 else "-" if place_change < 0 else " ",
+                               abs(place_change)),
+            k, v, change)
+    mes = dispatcher.bot.sync_send_message(chat_id=WORLDTOP_CHANGES_CHANNEL_ID, text=response, parse_mode='HTML')
+    for chat_id in send_chats:
+        dispatcher.bot.forward_message(chat_id=chat_id, from_chat_id=mes.chat_id, message_id=mes.message_id)
+
 
 
 def show_worldtop(bot, update, args):
