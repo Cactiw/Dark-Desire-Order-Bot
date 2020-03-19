@@ -7,6 +7,9 @@ from castle_files.libs.player import Player
 
 
 def change_headmaster(bot, update, player, guild, user_data):
+    """
+    Функция изменения ректора Академии
+    """
     guild.commander_id = player.id
     guild.update_to_database()
     if "status" in user_data:
@@ -21,6 +24,9 @@ def change_headmaster(bot, update, player, guild, user_data):
 
 
 def add_teacher(bot, update):
+    """
+    Фукнция добавления учителя
+    """
     mes = update.message
     academy = Guild.get_guild(guild_tag="АКАДЕМИЯ")
     if academy is None:
@@ -51,6 +57,9 @@ def add_teacher(bot, update):
 
 
 def del_teacher(bot, update):
+    """
+    Функция удаления учителя
+    """
     mes = update.message
     academy = Guild.get_guild(guild_tag="АКАДЕМИЯ")
     if academy is None:

@@ -26,22 +26,32 @@ import datetime
 import re
 
 MAX_PLAYERS_AUTO_UPDATE_PER_SECOND = 2
+GUILD_UPDATE_INTERVAL_SECONDS = 20
 
 
 cwapi = CW3API(cwuser, cwpass)
 
 
 def start_api():
+    """
+    Функция запуска апи
+    """
     cwapi.start()
 
 
 def auth(bot, update):
+    """
+    Функция авторизации API CW3 (команда /auth)
+    """
     cwapi.request_auth_token(update.message.from_user.id)
     bot.send_message(chat_id=update.message.chat_id, text="Пришлите форвард сообщения, полученного от @ChatWarsBot.\n"
                                                           "Если ничего не пришло, то попробуйте ещё раз позже.")
 
 
 def grant_auth_token(bot, update):
+    """
+    Функция обработки пересланного сообщения от чв с кодом авторизации АПИ
+    """
     mes = update.message
     code = re.match("Code (\\d+) to authorize", mes.text)
     if code is None:
@@ -59,6 +69,9 @@ def grant_auth_token(bot, update):
 
 
 def update(bot, update):
+    """
+    Запрос обновления профиля (команда /update)
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     if player is None:
@@ -85,6 +98,9 @@ def update(bot, update):
 
 
 def update_stock(bot, update):
+    """
+    Запрос обновления стока (команда /update_stock)
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     if player is None:
@@ -98,6 +114,9 @@ def update_stock(bot, update):
 
 
 def update_guild(bot, update):
+    """
+    Запрос обновления гильдии (команда /update_guild)
+    """
     mes = update.message
     try:
         cwapi.update_guild_info(mes.from_user.id)
@@ -109,6 +128,11 @@ def update_guild(bot, update):
 
 
 def get_player_with_api_access_from_guild(guild: Guild):
+    """
+    Функция, возвращающая человека гильдии, который давал доступ к апи (для обновления гильдии)
+    :param guild: Guild
+    :return: Int (player.id) or None
+    """
     # for player_id in guild.members:
     #     player = Player.get_player(player_id)
     #     token = player.api_info.get("token")
@@ -120,6 +144,13 @@ def get_player_with_api_access_from_guild(guild: Guild):
 
 
 def check_guilds_api_access(bot=None, job=None):
+    """
+    Проверка наличия доступа к АПИ у зарегистрированных гильдий.
+    Вызывается отложенно, выполняется в фоне.
+    :param bot: Bot
+    :param job: Job
+    :return: None
+    """
     if job is None:
         reset = False
     else:
@@ -146,6 +177,12 @@ def check_guilds_api_access(bot=None, job=None):
 
 
 def search_for_players_with_api_access(guild: Guild):
+    """
+    Запрашивает обновление всех игроков гильдии.
+    Если получен конкретный ответ, запоминает, что у игрока гильдии есть доступ к обновлению информации о ней.
+    :param guild: Guild
+    :return: None
+    """
     logging.info("Requesting information about {} players with API access".format(guild.tag))
     guild.api_info.update({"api_players": []})
     for player_id in guild.members:
@@ -157,6 +194,12 @@ def search_for_players_with_api_access(guild: Guild):
 
 
 def players_update_monitor():
+    """
+    Выполняется на всём протяжении функционирования бота. Раз в секунду запрашивает обновление
+    MAX_PLAYERS_AUTO_UPDATE_PER_SECOND профилей игроков, ранее всего обновлявших свои профили.
+    Раз в GUILD_UPDATE_INTERVAL_SECONDS секунд вызывает обновление гильдии, которая не обновлялась дольше всего.
+    :return: None
+    """
     cursor = conn.cursor()
     time.sleep(7)
 
@@ -173,7 +216,7 @@ def players_update_monitor():
                     time_to_battle > datetime.timedelta(minutes=30, hours=7):
                 time.sleep(1)
                 continue
-            if i % 20 == 0:
+            if i % GUILD_UPDATE_INTERVAL_SECONDS == 0:
                 # Обновление гильдии
                 request = "select guild_id from guilds order by last_updated nulls first"
                 cursor.execute(request)
@@ -213,7 +256,15 @@ def players_update_monitor():
             logging.error(traceback.format_exc())
 
 
-def repair_comparator(shop, castle):
+def repair_comparator(shop: dict, castle: str):
+    """
+    Компаратор для лавок с починкой и ремонтом.
+    Лавки с замком игрока (castle) располагаются в самом конце (в самом низу сообщения).
+    Общая сортировка происходит по цене починки
+    :param shop: Словавь с описанием лавки, полученный от API
+    :param castle: Замок игрока (строка, состоящая из одного символа)
+    :return:
+    """
     shop_castle = shop.get("ownerCastle")
     gold = shop.get("maintenanceCost")
     if shop_castle == castle:
@@ -222,6 +273,12 @@ def repair_comparator(shop, castle):
 
 
 def ws_comparator(shop, castle):
+    """
+    Аналогично компаратору для починки, но сортировка происходит по количеству маны
+    :param shop: Словавь с описанием лавки, полученный от API
+    :param castle: Замок игрока (строка, состоящая из одного символа)
+    :return:
+    """
     shop_castle = shop.get("ownerCastle")
     mana = shop.get("mana")
     if shop_castle == castle:
@@ -230,6 +287,9 @@ def ws_comparator(shop, castle):
 
 
 def repair(bot, update):
+    """
+    Показывает список лавок с открытым обслуживанием (команда /repair)
+    """
     mes = update.message
     shops = cwapi.api_info.get("shops")
     if shops is None or not shops:
@@ -258,6 +318,9 @@ def repair(bot, update):
 
 
 def ws(bot, update):
+    """
+    Выполянет поиск на наличие товара в лавках (команда /ws ...)
+    """
     mes = update.message
     find_item = mes.text.partition(" ")[2].lower()
     if len(find_item) <= 3:
@@ -303,6 +366,9 @@ def ws(bot, update):
 
 
 def stock(bot, update):
+    """
+    Выводит сток игрока (команда /stock)
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     if player is None:
@@ -404,6 +470,9 @@ def stock(bot, update):
 
 
 def autospend_gold(bot, update):
+    """
+    Функция для автослива голды... Не дописана, не работает
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     access = player.api_info.get("access") or []
@@ -419,6 +488,10 @@ def autospend_gold(bot, update):
 
 
 def grassroots_update_players(bot, job):
+    """
+    Запрос на обновление профилей всех игроков (на текущий момент обновляется только сток(grassroots_update_stock),
+    профили и так обновляются постоянно)
+    """
     cursor = conn.cursor()
     request = "select id, api_info from players where api_info ->> 'token' is not null"
     cursor.execute(request)
@@ -438,6 +511,9 @@ def grassroots_update_players(bot, job):
 
 
 def grassroots_update_stock(bot, job):
+    """
+    Запрос на обновление стока всех игроков, и гильдий
+    """
     print("starting updating")
     change_send = job.context.get("change_send") or False
     cursor = conn.cursor()
@@ -481,6 +557,9 @@ def grassroots_update_stock(bot, job):
 
 
 def update_stock_for_fails(bot, job):
+    """
+    Если по какой-то причине ответ от API получен не был для определённых игроков, то выполняется повторный запрос
+    """
     cursor = conn.cursor()
     request = "select id, api_info from players where api_info ->> 'token' is not null and (api_info ->> " \
               "'change_stock_send')::boolean is true"
@@ -493,6 +572,9 @@ def update_stock_for_fails(bot, job):
 
 
 def send_potion_stats(bot, job):
+    """
+    Отправка статистики покупки банок по замкам в чат МИДа
+    """
     clear = job.context[0]
     potions = cwapi.api_info.get("potions_info")
     if potions is None:

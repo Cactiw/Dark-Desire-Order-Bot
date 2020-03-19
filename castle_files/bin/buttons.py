@@ -483,6 +483,12 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
 
 
 def get_text_to_general_buttons(user_data, player=None):
+    """
+    Возвращает текст, который нужно отправить по умолчанию с статусом в user_data
+    :param user_data: Словарь user_data, функция использует значения 'status' и 'rp_off'
+    :param player: Player
+    :return: Str
+    """
     status = user_data.get("status")
     location_id = user_data.get("location_id")
     rp_off = user_data.get("rp_off")
