@@ -35,6 +35,9 @@ emoji_to_class = dict_invert(classes_to_emoji)
 
 
 def change_rp(bot, update, user_data):
+    """
+    Функция смены режима работы бота (команды /change_rp)
+    """
     if update.message.from_user.id != update.message.chat_id:
         return
     user_data.update({"status": DEFAULT_CASTLE_STATUS})
@@ -50,6 +53,10 @@ def change_rp(bot, update, user_data):
 
 
 def back(bot, update, user_data):
+    """
+    Функция обработки кнопки ↩️Назад (↩️Back) - возврат на предыдущую локацию, а также отмена текущего действия
+    (Добыча ресурсов, квест, ...)
+    """
     statuses_back = {
         "barracks": "central_square",
         "central_square": "central_square",
@@ -123,6 +130,9 @@ def back(bot, update, user_data):
 
 
 def guide_signs(bot, update):  # TODO: сделать нормально
+    """
+    Отправка текста указателей (↔️ See the signs)
+    """
     bot.send_message(chat_id=update.message.from_user.id,
                      text="🗺Указатели гласят:\n"
                           "🎪<b>Казарма</b>- штаб-квартира твоей гильдии. "
@@ -143,31 +153,49 @@ def guide_signs(bot, update):  # TODO: сделать нормально
 
 
 def not_constructed(bot, update):
+    """
+    Стройплощадка, когда нет строительства
+    """
     bot.send_message(chat_id=update.message.chat_id,
                      text="Свободное место под возведение жизненно важных городских построек и сооружений.\n"
                           "Сейчас в замке нет активного строительства. Следите за новостями.")
 
 
 def welcome(bot, update, user_data):
+    """
+    Функция, вызываемая при успешной регистрации
+    """
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def central_square(bot, update, user_data):
+    """
+    Функция, вызываемая при входе на Центральную Площадь
+    """
     user_data.update({"status": "central_square", "location_id": 0})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def barracks(bot, update, user_data):
+    """
+    Функция, вызываемая при входе в казарму
+    """
     user_data.update({"status": "barracks", "location_id": 1})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def throne_room(bot, update, user_data):
+    """
+    Функция, вызываемая при входе в тронный зал
+    """
     user_data.update({"status": "throne_room", "location_id": 2})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def castle_gates(bot, update, user_data):
+    """
+    Функция, вызываемая при подходе к вратам замка
+    """
     location_id = 3
     user_data.update({"status": "castle_gates", "location_id": 3})
     response = Location.get_location_enter_text_by_id(location_id)
@@ -181,6 +209,9 @@ def castle_gates(bot, update, user_data):
 
 # Посмотреть состав мида
 def watch_portraits(bot, update):
+    """
+    Функция, показывающая советников короля (МИДа)
+    """
     response = "Стены замка увешаны портретами текущих генералов Скалы:\n"
     for user_id in high_access_list:
         player = Player.get_player(user_id, notify_on_error=False)
@@ -191,11 +222,17 @@ def watch_portraits(bot, update):
 
 
 def headquarters(bot, update, user_data):
+    """
+    Штаб-квартира МИДа
+    """
     user_data.update({"status": "headquarters", "location_id": 4})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def request_change_debrief(bot, update, user_data):
+    """
+    Функция запроса смены дебрифа в Тронном Зале
+    """
     user_data.update({"status": "editing_debrief"})
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id,
@@ -205,6 +242,9 @@ def request_change_debrief(bot, update, user_data):
 
 
 def change_debrief(bot, update, user_data):
+    """
+    Непосредственно смена дебрифа на новый
+    """
     user_data.update({"status": "throne_room", "location_id": 2})
     throne = Location.get_location(2)
     format_values = throne.special_info.get("enter_text_format_values")
@@ -219,6 +259,9 @@ def change_debrief(bot, update, user_data):
 
 
 def request_guild_message_notify(bot, update, user_data):
+    """
+    Функция запроса рассылки по гильдиям
+    """
     user_data.update({"status": "sending_guild_message"})
     buttons = get_general_buttons(user_data)
     bot.send_message(chat_id=update.message.from_user.id, text="Следующее сообщение будет разослано во все гильдии",
@@ -226,12 +269,18 @@ def request_guild_message_notify(bot, update, user_data):
 
 
 def send_guild_message_notify(bot, update, user_data):
+    """
+    Непосредственно рассылка по гильдиям
+    """
     user_data.update({"status": "headquarters"})
     do_mailing(bot, update.message.text)
     bot.send_message(update.message.from_user.id, text="Успешно отправлено!")
 
 
 def king_cabinet(bot, update, user_data):
+    """
+    Функция, вызываемая при входе в кабинет Короля
+    """
     response = "Вы входите в свой кабинет. Память услужливо подсказывает вам текущий список генералов:\n"
     for user_id in high_access_list:
         player = Player.get_player(user_id, notify_on_error=False)
@@ -245,6 +294,9 @@ def king_cabinet(bot, update, user_data):
 
 
 def request_change_castle_message(bot, update, user_data):
+    """
+    Запрос смены сообщения Короля (на Центральной Площади)
+    """
     central = Location.get_location(0)
     current_message = central.special_info.get("enter_text_format_values")
     user_data.update({"status": "changing_castle_message"})
@@ -255,6 +307,9 @@ def request_change_castle_message(bot, update, user_data):
 
 
 def change_castle_message(bot, update, user_data):
+    """
+    Смена сообщения Короля
+    """
     central = Location.get_location(0)
     old_format = central.special_info.get("enter_text_format_values")
     old_format[0] = update.message.text
@@ -265,11 +320,17 @@ def change_castle_message(bot, update, user_data):
 
 
 def add_general(bot, update, user_data):
+    """
+    Функция запроса добавления Генерала
+    """
     user_data.update({"status": "adding_general"})
     bot.send_message(chat_id=update.message.from_user.id, text="Введите id нового генерала, или нажмите \"Назад\"")
 
 
 def adding_general(bot, update, user_data):
+    """
+    Добавление Генерала
+    """
     mes = update.message
     try:
         player_id = int(mes.text)
@@ -295,6 +356,9 @@ def adding_general(bot, update, user_data):
 
 
 def remove_general(bot, update):
+    """
+    Функция удаления Генерала
+    """
     mes = update.message
     player_id = re.search("_(\\d+)", mes.text)
     if player_id is None:
@@ -317,6 +381,9 @@ def remove_general(bot, update):
 
 
 def hall_of_fame(bot, update, user_data):
+    """
+    Функция, вызываемая при входе в Зал Славы
+    """
     hall = Location.get_location(8)
     if not hall.is_constructed() and update.message.from_user.id != SUPER_ADMIN_ID:
         unknown_input(bot, update, user_data)
@@ -330,13 +397,31 @@ def hall_of_fame(bot, update, user_data):
 
 
 def tops(bot, update, user_data, response=""):
+    """
+    Показ сообщения с топами
+    :param bot: Bot instance
+    :param update: Update instance
+    :param user_data: user_data Dictionary
+    :param response: Строка, к которой будут добавлены топы (позволяет разместить объявление поверх сообщения)
+    :return: None
+    """
     user_data.update({"status": "tops"})
     buttons = get_general_buttons(user_data)
     response += "Выберите категорию:"
     bot.send_message(chat_id=update.message.chat_id, text=response, reply_markup=buttons)
 
 
-def get_tops_text(player, stat, stat_text, game_class=None):
+def get_tops_text(player: Player, stat: str, stat_text: str, game_class: str = None) -> str:
+    """
+    Функция, возвращающая текст сообщения с топами.
+    Осуществляет выборку, сортировку, представления топов в красивом виде.
+
+    :param player: Player instance - Player, who requested tops message
+    :param stat: Str - Stat, which top has been required (e.g. "attack")
+    :param stat_text: Str - Stat representation, which will be visible (e.g. "⚔️Attack")
+    :param game_class: Str - Game class, which top is needed to be shown (e.g. "knight")
+    :return: Str - Result tops text.
+    """
     response = "Топ {} по замку:\n".format(stat_text)
     found = False
     if player is None:
@@ -399,6 +484,9 @@ def get_tops_text(player, stat, stat_text, game_class=None):
 
 
 def top_stat(bot, update):
+    """
+    Функция, показывающая топы по выбранной категории (атака, стройка)
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     text_to_stats = {"⚔️Атака": "attack", "⚔️Attack": "attack", "🛡Защита": "defense", "🛡Defence": "defense",
@@ -411,6 +499,10 @@ def top_stat(bot, update):
 
 
 def send_new_top(bot, update):
+    """
+    Функция обрабатывает нажатия на инлайн кнопки топов (выбор класса)
+    Редактирует сообщение, и отвечает на запрос
+    """
     stat_to_text = {"attack": "⚔️", "defense": "🛡", "exp": "🔥", "wood": "🌲", "stone": "⛰", "construction": "🏚"}
     mes = update.callback_query.message
     data = update.callback_query.data
@@ -442,11 +534,17 @@ def send_new_top(bot, update):
 
 
 def roulette_main(bot, update, user_data):
+    """
+    Функция, вызывающаяся при входе в рулетку
+    """
     user_data.update({"status": "roulette", "location_id": 10})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
 
 
 def request_roulette_bet(bot, update, user_data):
+    """
+    Запрос ставки в рулетке
+    """
     mes = update.message
     user_data.update({"status": "awaiting_roulette_bet"})
     roulette = Location.get_location(10)
@@ -469,6 +567,9 @@ def request_roulette_bet(bot, update, user_data):
 
 
 def place_roulette_bet(bot, update, user_data):
+    """
+    Функция осуществления ставки в рулетке
+    """
     mes = update.message
     bet = re.search("(\\d+)", mes.text)
     if bet is None:
@@ -529,6 +630,9 @@ def check_event_game() -> bool:
 
 
 def roulette_game(bot, job):
+    """
+    Функция обработки игры в рулетке
+    """
     MULTIPLICATION = 10
     # CENTRAL_SQUARE_CHAT_ID = -1001346136061  # тест
     logging.error("Roulette game started")
@@ -626,6 +730,9 @@ def roulette_game(bot, job):
 
 
 def plan_roulette_games():
+    """
+    Планирует ближайшую игру в рулетке. Запускается снова каждый раз по окончанию игры.
+    """
     logging.error("Planning roulette game")
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     roulette_time = now.replace(hour=9, minute=0, second=0)
@@ -643,6 +750,9 @@ def plan_roulette_games():
 
 
 def roulette_tops(bot, update):
+    """
+    Вывод топов игры в рулетку. Из-за особенностей реализации, вынесено в отдельную функцию от топов по статам.
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     text = get_tops_text(player=player, stat="roulette_won", stat_text="🔘")  # roulette_games_won, roulette_games_played
@@ -651,6 +761,9 @@ def roulette_tops(bot, update):
 
 
 def new_roulette_top(bot, update):
+    """
+    Обработчик нажатий на инлайн кнопки в топах рулетки
+    """
     stats = {"roulette_won": "🔘", "roulette_games_won": "🏆", "roulette_games_played": "🎰"}
     data, mes = update.callback_query.data, update.callback_query.message
     new_stat = "roulette_" + data.partition("roulette_top_")[2]
@@ -671,6 +784,9 @@ def new_roulette_top(bot, update):
 
 
 def request_kabala(bot, update):
+    """
+    Сбрасывает инфу о кабале у всех игроков, рассылает всем предложение взять кредит.
+    """
     if update.message.from_user.id != SUPER_ADMIN_ID:
         return
     text = """Уважаемый/ая воен/мастер (нужное подчеркнуть)!
@@ -692,6 +808,9 @@ def request_kabala(bot, update):
 
 
 def kabala(bot, update, user_data):
+    """
+    Взятие кабалы игроком.
+    """
     text = """Вчитываясь в текст подписанного только что договора, маленькими буквами внизу ты обнаружил условия:
 Кредитная программа "Жетон в каждый дом" предоставляется на условиях  ежедневной сдачи репортов. В случае неуплаты репортами Чайная Лига вправе в одностороннем порядке применить любые санкции по устранению нарушения Договора, вплоть до ректального зондирования.
 
@@ -711,6 +830,10 @@ def kabala(bot, update, user_data):
 
 
 def count_reputation_sum(bot, update):
+    """
+    Функция для отлавливания багов и их использования. Команда /count_reputation_sum
+    Выводит разницу между полученными "легально" жетонами и текущими жетонами у игроков.
+    """
     request = "select action, player_id from castle_logs"
     cursor.execute(request)
     rep = {}
