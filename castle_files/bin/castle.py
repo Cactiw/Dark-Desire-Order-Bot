@@ -539,6 +539,8 @@ def roulette_game(bot, job):
         print(total_placed, roulette.special_info["placed"])
         if total_placed == 0:
             bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response + "Никто не сделал ставок. Игра не состоялась.")
+            time.sleep(5)  # Необходимо, ибо порой работа начинается чуть раньше указанного срока.
+            #              # И в случае не сделанных ставок, она мгновенно перезапустится.
             plan_roulette_games()
             return
         players, position = {}, 1
