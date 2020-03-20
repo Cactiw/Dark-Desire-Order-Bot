@@ -25,10 +25,11 @@ import random
 import time
 import datetime
 
-ROULETTE_MAX_BET_LIMIT = 50
-ROULETTE_HOUR_LIMIT = 18
-TOP_NUM_PLAYERS = 20
-KABALA_GAIN = 10000
+ROULETTE_MAX_BET_LIMIT = 50  # В играх с ограниченной ставкой
+ROULETTE_HOUR_LIMIT = 18  # Последняя игра с ограниченной ставкой в сутки (часы, 24 формат)
+ROULETTE_LAST_GAME_HOUR = 21  # Последняя игра в сутки (после которой ставки снова ограничены, часы, 24 формат)
+TOP_NUM_PLAYERS = 20  # Сколько выводить игроков в топе
+KABALA_GAIN = 10000  # Количество жетонов, доступных для займа (/kabala)
 
 emoji_to_class = dict_invert(classes_to_emoji)
 
@@ -492,7 +493,8 @@ def place_roulette_bet(bot, update, user_data):
     if placed is None:
         placed = 0
     placed += bet
-    if datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time() < datetime.time(hour=ROULETTE_HOUR_LIMIT):
+    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
+    if now < datetime.time(hour=ROULETTE_HOUR_LIMIT) or now > datetime.time(hour=ROULETTE_LAST_GAME_HOUR):
         if placed > ROULETTE_MAX_BET_LIMIT:
             bot.send_message(chat_id=mes.chat_id,
                              text="Максимальная ставка: <b>{}</b>🔘.\n"
