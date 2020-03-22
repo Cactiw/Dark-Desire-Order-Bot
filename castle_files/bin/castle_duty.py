@@ -18,6 +18,9 @@ import re
 
 
 def revoke_duty_link(bot, update):
+    """
+    Функция перевыпуска ссылки в чат стражи
+    """
     gates = Location.get_location(3)
     try:
         invite_link = bot.exportChatInviteLink(SENTINELS_DUTY_CHAT_ID)
