@@ -372,6 +372,16 @@ def guild_info(bot, update):
                                 "<a href=\"{}\">Вступить</a>".format("https://t.me/joinchat/" + guild.invite_link)
                                 if guild.invite_link is not None else "")
 
+    stock_size, stock_limit = guild.api_info.get("stock_size"), guild.api_info.get("stock_limit")
+    if stock_size is not None and stock_limit is not None:
+        response += "\n"
+        response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>".format(stock_size, stock_limit)
+    response += "\n"
+    glory, lvl, members = guild.api_info.get("glory"), guild.api_info.get("lvl"), \
+                          guild.api_info.get("members")
+    response += "🏅Lvl: <b>{}</b>, 🎖Glory: <b>{}</b>\n👥Members (API): <b>{}</b>\n".format(lvl, glory, members) if \
+        all([lvl, glory, members]) else ""
+
     response += "\nИгроков в гильдии: <b>{}</b>\n".format(guild.members_count)
     response += "⚔: <b>{}</b>, 🛡: <b>{}</b>\n".format(guild.get_attack(), guild.get_defense())
     buttons = get_view_guild_buttons(guild, user_id=mes.from_user.id)
