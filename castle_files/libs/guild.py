@@ -147,6 +147,13 @@ class Guild:
 
         player.guild = None
         player.update()
+
+        try:
+            self.api_info.get("api_players").remove(player.id)
+        except Exception:
+            logging.warning("Can not remove api access record while deleting player from guild:\n"
+                            "{}".format(traceback.format_exc()))
+
         self.update_to_database()
         if self.__attack is not None and self.__defense is not None:
             self.__attack -= player.attack
