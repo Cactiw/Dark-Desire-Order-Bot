@@ -495,7 +495,7 @@ class CW3API:
                 if self.guild_changes_work is None:
                     self.guild_changes_work = threading.Timer(60, self.send_guild_changes_to_mid)
                     self.guild_changes_work.start()
-                response = "Итоги битвы <b>{}</b>\n".format(guild.tag)
+                response = "Итоги битвы {}<b>{}</b>\n".format(guild.castle, guild.tag)
                 response += "<b>🎖Glory:</b> <code>{}</code>\n\n".format(glory - old_glory)
                 response += self.get_stock_change_text(old_stock, stock)
                 self.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
