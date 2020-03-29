@@ -570,6 +570,28 @@ def update_stock_for_fails(bot, job):
         cwapi.update_stock(player.id, player=player)
         row = cursor.fetchone()
 
+    request = "select guild_id from guilds where api_info -> 'change_stock_send' is true"
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    count_all = 0
+    for row in rows:
+        guild = Guild.get_guild(guild_id=row[0])
+        api_players = guild.api_info.get("api_players")
+        if len(api_players) > 0:
+            api_players.pop(0)
+        if not api_players:
+            guild.api_info.clear()
+            bot.send_message(chat_id=SUPER_ADMIN_ID, parse_mode='HTML',
+                             text="Гильдию <b>{}</b> невозможно обновить - нет игроков с доступом к АПИ.")
+            continue
+        player_id = api_players[0]
+        cwapi.update_guild_info(player_id)
+        logging.info("Requested {} update".format(guild.tag))
+        count_all += 1
+    if count_all > 0:
+        bot.send_message(chat_id=SUPER_ADMIN_ID, parse_mode='HTML',
+                         text="Повторно запрошено обновление <b>{}</b> гильдий, игроки с доступом к АПИ подвинуты")
+
 
 def send_potion_stats(bot, job):
     """
