@@ -470,9 +470,9 @@ class CW3API:
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
             name, glory, lvl, members, stock_size, stock_limit, \
-                player_id, tag = payload.get("name"), payload.get("glory"), payload.get("level"), \
+                player_id, tag, castle = payload.get("name"), payload.get("glory"), payload.get("level"), \
                 payload.get("members"),  payload.get("stockSize"), payload.get("stockLimit"), payload.get("userId"), \
-                payload.get("tag")
+                payload.get("tag"), payload.get("castle")
             got_stock = payload.get("stock")
             stock = {}
             for i_name, count in list(got_stock.items()):
@@ -511,6 +511,7 @@ class CW3API:
                 api_players.append(player_id)
             guild.api_info.update({"stock": stock, "glory": glory, "lvl": lvl, "members": members,
                                    "stock_size": stock_size, "stock_limit": stock_limit})
+            guild.castle = castle
             guild.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
             guild.update_to_database(need_order_recashe=False)
         except Exception:
