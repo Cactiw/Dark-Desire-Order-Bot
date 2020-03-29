@@ -310,7 +310,7 @@ def g_info(bot, update):
     glory, lvl, members = requested_guild.api_info.get("glory"), requested_guild.api_info.get("lvl"), \
         requested_guild.api_info.get("members")
     response = "{}<b>{}</b>\n{}🎗Командир: {}\n".format(
-        guild.castle,
+        requested_guild.castle,
         "{} ({})".format(requested_guild.name, requested_guild.tag) if requested_guild.name is not None else
         requested_guild.tag, "🏅: <b>{}</b>, 🎖: <b>{}</b>, 👥: <b>{}</b>\n".format(lvl, glory, members) if
         all([lvl, glory, members]) else "", "<b>{}</b> (@{})".format(commander.nickname, commander.username)
