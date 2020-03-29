@@ -195,6 +195,12 @@ def show_worldtop(bot, update, args):
         except ValueError:
             pass
     worldtop = load_worldtop(battle_id=battle_id)
+    if worldtop is None and battle_id is None:
+        battle_id = count_battle_id()
+        for i in range(6):
+            worldtop = load_worldtop(battle_id - i)
+            if worldtop is not None:
+                break
     response = "Worldtop: {}\n".format("битва {}\n({}):".format(
         battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S")) if battle_id is not None else "")
     i = 1
