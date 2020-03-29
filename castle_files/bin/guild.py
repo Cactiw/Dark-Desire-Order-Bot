@@ -309,7 +309,8 @@ def g_info(bot, update):
     commander = Player.get_player(requested_guild.commander_id, notify_on_error=False)
     glory, lvl, members = requested_guild.api_info.get("glory"), requested_guild.api_info.get("lvl"), \
         requested_guild.api_info.get("members")
-    response = "<b>{}</b>\n{}🎗Командир: {}\n".format(
+    response = "{}<b>{}</b>\n{}🎗Командир: {}\n".format(
+        guild.castle,
         "{} ({})".format(requested_guild.name, requested_guild.tag) if requested_guild.name is not None else
         requested_guild.tag, "🏅: <b>{}</b>, 🎖: <b>{}</b>, 👥: <b>{}</b>\n".format(lvl, glory, members) if
         all([lvl, glory, members]) else "", "<b>{}</b> (@{})".format(commander.nickname, commander.username)
@@ -355,7 +356,7 @@ def guild_info(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
     commander = Player.get_player(guild.commander_id)
-    response = "[<b>{}</b>]  {}\n".format(guild.tag, guild.name or "")
+    response = "{}[<b>{}</b>]  {}\n".format(guild.castle, guild.tag, guild.name or "")
     response += "Командир: {}\n".format("@" + commander.username if commander is not None else "Не задан")
     if guild.invite_link is None:
         try:
@@ -423,8 +424,9 @@ def guild_reports(bot, update):
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Вы более не являетесь заместителем")
         return
     guild.sort_players_by_exp()
-    response = "Статистика гильдии <b>{}</b> по битве <b>{}</b> (№ <b>{}</b>):" \
-               "\n".format(guild.tag, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"), battle_id)
+    response = "Статистика гильдии {}<b>{}</b> по битве <b>{}</b> (№ <b>{}</b>):" \
+               "\n".format(guild.castle, guild.tag, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"),
+                           battle_id)
     unsent_reports = []
     for player_id in guild.members:
         request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
@@ -467,7 +469,7 @@ def guild_reports(bot, update):
 
 
 def get_guild_settings_text(guild):
-    response = "Гильдия <b>{}</b>\n\n".format(guild.tag)
+    response = "Гильдия {}<b>{}</b>\n\n".format(guild.castle, guild.tag)
     settings = guild.settings
     if settings is None:
         settings = {}
@@ -604,7 +606,7 @@ def list_players(bot, update, guild_id=None):
         user_id = update.callback_query.from_user.id
         if user_id != guild.commander_id and user_id not in guild.assistants:
             return
-    response = "Список игроков в гильдии <b>{}</b>\n".format(guild.tag)
+    response = "Список игроков в гильдии {}<b>{}</b>\n".format(guild.castle, guild.tag)
     guild.sort_players_by_exp()
     guild.calculate_attack_and_defense()
     high_access = guild.check_high_access(update.callback_query.from_user.id)
@@ -768,8 +770,9 @@ def add(bot, update):
         return
     guild.add_player(player_to_add)
 
-    bot.send_message(chat_id=update.message.chat_id, text="<b>{}</b> успешно добавлен в гильдию "
-                                                          "<b>{}</b>".format(player_to_add.nickname, guild.tag),
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="<b>{}</b> успешно добавлен в гильдию "
+                          "{}<b>{}</b>".format(player_to_add.nickname, guild.castle, guild.tag),
                      parse_mode='HTML')
 
 
@@ -811,7 +814,8 @@ def add_assistant(bot, update):
     guild.assistants.append(player_to_add.id)
     guild.update_to_database()
     bot.send_message(chat_id=update.message.chat_id,
-                     text="<b>{}</b> теперь заместитель в гильдии <b>{}</b>".format(player_to_add.nickname, guild.tag),
+                     text="<b>{}</b> теперь заместитель в гильдии {}<b>{}</b>".format(player_to_add.nickname,
+                                                                                      guild.castle, guild.tag),
                      parse_mode='HTML', reply_to_message_id=update.message.message_id)
 
 
@@ -852,8 +856,8 @@ def del_assistant(bot, update):
     guild.assistants.remove(player_to_add.id)
     guild.update_to_database()
     bot.send_message(chat_id=update.message.chat_id,
-                     text="<b>{}</b> более не является заместителем в гильдии <b>{}</b>".format(player_to_add.nickname,
-                                                                                                guild.tag),
+                     text="<b>{}</b> более не является заместителем в гильдии {}<b>{}</b>"
+                          "".format(player_to_add.nickname, guild.castle, guild.tag),
                      parse_mode='HTML', reply_to_message_id=update.message.message_id)
 
 
@@ -884,7 +888,7 @@ def assistants(bot, update):
     if not guild.assistants:
         response = "В гильдии пока нет заместителей.\n"
     else:
-        response = "Список заместителей гильдии <b>{}</b>:\n".format(guild.tag)
+        response = "Список заместителей гильдии {}<b>{}</b>:\n".format(guild.castle, guild.tag)
         for player_id in guild.assistants:
             current_player = Player.get_player(player_id)
             if current_player is None:
@@ -936,7 +940,7 @@ def edit_guild(bot, update):
     if guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена")
         return
-    response = "Гильдия <b>{}</b>\n".format(guild.tag)
+    response = "Гильдия {}<b>{}</b>\n".format(guild.castle, guild.tag)
     response += get_edit_guild_text(guild)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML', reply_markup=get_edit_guild_buttons(guild))
     return
@@ -954,9 +958,9 @@ def request_delete_guild(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
         return
     buttons = get_delete_guild_buttons(guild)
-    bot.send_message(chat_id=mes.chat_id, text="Вы действительно хотите удалить гильдию <b>{}</b>?\n\n"
+    bot.send_message(chat_id=mes.chat_id, text="Вы действительно хотите удалить гильдию {}<b>{}</b>?\n\n"
                                                "<b>Внимание!!! Это приведёт к потере всех данных о гильдии и отключению"
-                                               " пинов в их чате!!!</b>".format(guild.tag),
+                                               " пинов в их чате!!!</b>".format(guild.castle, guild.tag),
                      parse_mode='HTML', reply_markup=buttons)
 
 
@@ -978,7 +982,8 @@ def delete_guild(bot, update):
     try:
         bot.editMessageText(chat_id=update.callback_query.message.chat_id,
                             message_id=update.callback_query.message.message_id,
-                            text="Гильдия <b>{}</b> успешно удалена".format(guild.tag), parse_mode='HTML')
+                            text="Гильдия {}<b>{}</b> успешно удалена".format(guild.castle, guild.tag),
+                            parse_mode='HTML')
     except TelegramError:
         pass
     guild.fill_guild_ids()
@@ -1043,8 +1048,8 @@ def change_guild_commander(bot, update, user_data):
         user_data.pop("status")
     if "edit_guild_id" in user_data:
         user_data.pop("edit_guild_id")
-    bot.send_message(chat_id=update.message.chat_id, text="Командиром гильдии <b>{}</b> назначен <b>{}</b> "
-                                                          "{}".format(guild.tag, player.nickname,
+    bot.send_message(chat_id=update.message.chat_id, text="Командиром гильдии {}<b>{}</b> назначен <b>{}</b> "
+                                                          "{}".format(guild.castle, guild.tag, player.nickname,
                                                                       "(@{})".format(player.username)
                                                                       if player.username is not None else ""),
                      parse_mode='HTML')
@@ -1080,7 +1085,8 @@ def change_guild_chat(bot, update, user_data):
         return
     try:
         message = bot.sync_send_message(chat_id=chat_id, text="Это теперь официальный чат гильдии "
-                                                              "<b>{}</b>".format(guild.tag), parse_mode='HTML')
+                                                              "{}<b>{}</b>".format(guild.castle, guild.tag),
+                                        parse_mode='HTML')
         chat = bot.getChat(message.chat_id)
         if chat is None:
             bot.send_message(chat_id=update.message.chat_id, text="Произошла ошибка. Проверьте id "
