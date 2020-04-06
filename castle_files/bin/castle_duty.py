@@ -35,6 +35,9 @@ def revoke_duty_link(bot, update):
 
 
 def ask_to_revoke_duty_link():
+    """
+    При запуске бота предлагает проверить ссылку в чат стражи и перевыпустить её при необходимости
+    """
     gates = Location.get_location(3)
     invite_link = gates.special_info.get("invite_link")
 
@@ -46,6 +49,9 @@ def ask_to_revoke_duty_link():
 
 
 def begin_duty(bot, update, user_data):
+    """
+    Функция начала вахты для игрока (стражника)
+    """
     mes = update.message
     player_id = mes.from_user.id
     player = Player.get_player(player_id)
@@ -81,6 +87,9 @@ def begin_duty(bot, update, user_data):
 
 
 def end_duty(bot, update, user_data):
+    """
+    Функция выхода со стражи (раньше кикала игрока из чата)
+    """
     mes = update.message
     player_id = mes.from_user.id
     player = Player.get_player(player_id)
@@ -102,12 +111,18 @@ def end_duty(bot, update, user_data):
 
 
 def request_duty_feedback(bot, update, user_data):
+    """
+    Функция запроса отправки сообщения стражникам
+    """
     user_data.update({"status": "duty_feedback"})
     bot.send_message(chat_id=update.message.chat_id, text="Следующее сообщение будет отправлено стражникам на вахте!",
                      reply_markup=get_general_buttons(user_data))
 
 
 def send_duty_feedback(bot, update, user_data):
+    """
+    Функция  отправки сообщения стражникам
+    """
     threading.Thread(target=forward_then_reply_to_duty, args=(bot, update.message)).start()
     user_data.update({"status": "castle_gates"})
     reply_markup = get_general_buttons(user_data, player=Player.get_player(update.message.from_user.id))
@@ -119,6 +134,9 @@ def send_duty_feedback(bot, update, user_data):
 
 
 def forward_then_reply_to_duty(bot, message):
+    """
+    Функция, которая отправляет сообщение в чат стражи (запускается в отдельном потоке... зачем??)
+    """
     mes = bot.forwardMessage(chat_id=SENTINELS_DUTY_CHAT_ID, from_chat_id=message.chat_id, message_id=message.message_id)
     bot.send_message(chat_id=SENTINELS_DUTY_CHAT_ID,
                      text="Запрос к стражнику от @{} #r{}\nЗаблокировать пользователя: "
@@ -128,6 +146,9 @@ def forward_then_reply_to_duty(bot, message):
 
 
 def send_reply_to_duty_request(bot, update):
+    """
+    Функция для ответа стражников на запрос к ним (в чате стражи)
+    """
     mes = update.message.reply_to_message
     if mes.forward_from is None:
         chat_id = re.search("#r(\\d+)", mes.text)
@@ -145,6 +166,9 @@ def send_reply_to_duty_request(bot, update):
 
 
 def check_ban_in_duty_chat(bot, update):
+    """
+    Функция, которая проверяет, можно ли игроку зайти (и писать) в чат стражи
+    """
     gates = Location.get_location(3)
     players_on_duty = gates.special_info.get("players_on_duty")
     user_id = update.message.from_user.id
