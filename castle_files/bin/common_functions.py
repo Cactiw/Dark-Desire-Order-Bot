@@ -16,6 +16,9 @@ import sys
 
 # Некорректный ввод
 def unknown_input(bot, update, user_data):
+    """
+    Функция ответа на неопознанный ввод в ЛС - присылает кнопки и текст текущей локации
+    """
     if filter_is_pm(update.message):
         player = Player.get_player(update.message.from_user.id, notify_on_error=False)
         if player is None:
@@ -59,6 +62,10 @@ def change_lang(bot, update, user_data):
 
 
 def sql(bot, update):
+    """
+    Функция выполнения sql запроса (только для меня!)
+    Также говорит в конце, сколько строк затронул запрос (при запросе на изменение)
+    """
     if update.message.from_user.id != SUPER_ADMIN_ID:
         return
     cursor = conn.cursor()

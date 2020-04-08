@@ -66,6 +66,9 @@ def get_king_audience(bot, update):
 
 
 def accept_king_audience(bot, update):
+    """
+    Принять Аудиенцию
+    """
     return_value = get_king_audience(bot, update)
     if return_value[0] == -1:
         return
@@ -78,6 +81,9 @@ def accept_king_audience(bot, update):
 
 
 def decline_king_audience(bot, update):
+    """
+    Отказать в аудиенции
+    """
     return_value = get_king_audience(bot, update)
     if return_value[0] == -1:
         return
@@ -92,6 +98,9 @@ def decline_king_audience(bot, update):
 
 
 def check_mid_feedback_time_access(bot, update):
+    """
+    Функция проверки возможности писать в чат МИДа (запрещено в промежуток +- 15 минут от битвы)
+    """
     remaining_before_battle_time = count_next_battle_time() - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     battle_interval = datetime.timedelta(hours=8)
     forbid_interval = datetime.timedelta(minutes=MID_REQUEST_FORBID_MINUTES)
@@ -104,6 +113,9 @@ def check_mid_feedback_time_access(bot, update):
 
 
 def request_mid_feedback(bot, update, user_data):
+    """
+    Функция запроса обращения в МИД
+    """
     mes = update.message
     if not check_mid_feedback_time_access(bot, update):
         return
@@ -118,6 +130,9 @@ def request_mid_feedback(bot, update, user_data):
 
 
 def send_mid_feedback(bot, update, user_data):
+    """
+    Функция отправки обращения в МИД
+    """
     if not check_mid_feedback_time_access(bot, update):
         return
     threading.Thread(target=forward_then_reply_to_mid, args=(bot, update.message)).start()
@@ -135,6 +150,10 @@ def send_mid_feedback(bot, update, user_data):
 
 
 def forward_then_reply_to_mid(bot, message):
+    """
+    Отправка сообщения в чат МИДа
+    Сначала отправляется сообщение форвардом, потом ответом на него сервисное сообщение
+    """
     mes = bot.forwardMessage(chat_id=MID_CHAT_ID, from_chat_id=message.chat_id, message_id=message.message_id)
     bot.send_message(chat_id=MID_CHAT_ID,
                      text="Запрос к МИДу от @{} #r{}\nЗаблокировать пользователя: "
@@ -144,6 +163,9 @@ def forward_then_reply_to_mid(bot, message):
 
 
 def send_reply_to_mid_request(bot, update):
+    """
+    Функция ответа на обращение в МИД
+    """
     mes = update.message.reply_to_message
     if mes.forward_from is None:
         chat_id = re.search("#r(\\d+)", mes.text)
@@ -161,6 +183,9 @@ def send_reply_to_mid_request(bot, update):
 
 
 def restrict_feedback(bot, update):
+    """
+    Функция ограничения возможности обращения в МИД
+    """
     mes = update.message
     user_id = re.search("_(\\d+)", mes.text)
     if user_id is None:
@@ -188,6 +213,9 @@ def restrict_feedback(bot, update):
 
 
 def unrestrict_feedback(bot, update):
+    """
+    Функция снятия ограничений с игрока по обращению в МИД
+    """
     mes = update.message
     user_id = re.search("_(\\d+)", mes.text)
     if user_id is None:

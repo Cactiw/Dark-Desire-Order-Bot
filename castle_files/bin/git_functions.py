@@ -10,6 +10,9 @@ import datetime
 
 
 def last_commits(bot, update):
+    """
+    Функция показывает список последних коммитов в локальном репозитории
+    """
     repo = git.Repo(os.getcwd())
     # master = repo.head.reference
     # repo.git.

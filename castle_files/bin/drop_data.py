@@ -7,6 +7,7 @@ import datetime
 
 
 # ReiRose LTD 2019
+# Данный модуль полностью писал Рей - я в него не суюсь - Cactiw
 
 
 def count_next_daytime():

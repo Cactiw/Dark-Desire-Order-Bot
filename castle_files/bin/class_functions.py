@@ -13,6 +13,9 @@ import datetime
 
 
 def add_trap(bot, update):
+    """
+    Функция сохраняет результаты сработавшей ловушки
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     if player is None:
@@ -50,6 +53,9 @@ def add_trap(bot, update):
 
 
 def trap_stats(bot, update):
+    """
+    Функция для просмотра статистики по сработавшим ловушкам (Item - count (%))
+    """
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     if player is None:
