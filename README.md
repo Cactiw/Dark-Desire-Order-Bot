@@ -58,14 +58,20 @@ Login into psql and set your password
 
 `create database darkdesirecastlebot;`
 
-`sudo timedatectl set-timezone Europe/Moscow`
-(To set server timezone to Moscow)
+`\q`
 
-`git clone https://github.com/Cactiw/Dark-Desire-Order-Bot.git`
 
-`cd Dark-Desire-Order-Bot`
+Set server timezone to Moscow (Preferred, but not necessary):
 
-`sudo pip3 install -r requirements.txt`
+    `sudo timedatectl set-timezone Europe/Moscow`
+
+Clone the repository:
+    
+    `git clone https://github.com/Cactiw/Dark-Desire-Order-Bot.git`
+    
+    `cd Dark-Desire-Order-Bot`
+    
+    `sudo pip3 install -r requirements.txt`
 
 And create config.py file like this:
 
