@@ -570,7 +570,7 @@ def update_stock_for_fails(bot, job):
         cwapi.update_stock(player.id, player=player)
         row = cursor.fetchone()
 
-    request = "select guild_id from guilds where api_info -> 'change_stock_send' is true"
+    request = "select guild_id from guilds where (api_info -> 'change_stock_send')::text::boolean is true"
     cursor.execute(request)
     rows = cursor.fetchall()
     count_all = 0
