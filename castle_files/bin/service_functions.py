@@ -46,6 +46,10 @@ def plan_work(callback, hour, minute, second, context={}):
     job.run_once(callback, when=send_time, context=context)
 
 
+def great_format_time(dt: datetime.datetime) -> str:
+    return dt.strftime("%d/%m/%y %H:%M:%S")
+
+
 def get_message_forward_time(message):
     try:
         forward_message_date = utc.localize(message.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
