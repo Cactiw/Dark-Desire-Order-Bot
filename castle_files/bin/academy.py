@@ -5,6 +5,18 @@
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
+from castle_files.bin.service_functions import great_format_time
+
+from castle_files.work_materials.globals import ACADEMY_HQ_CHAT_ID, SUPER_ADMIN_ID, moscow_tz, job
+
+import datetime
+import time
+import logging
+
+
+SUNDAY_INDEX = 6
+ACADEMY_NOTIFY_HOUR = 12
+
 
 def change_headmaster(bot, update, player, guild, user_data):
     """
@@ -90,3 +102,37 @@ def del_teacher(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text="<b>{}</b> больше не учитель!".format(player_to_add.nickname),
                      parse_mode='HTML', reply_to_message_id=update.message.message_id)
+
+
+def send_guilds_stats(bot, job):
+    """
+    Раз в неделю отправляет в штаб академки инфу о текущем составе гильдий
+    """
+    response = "Гильдии Скалы на {}:\n" \
+               "<em>👥 - число игроков по боту, 👥(API) - число игроков в ги по АПИ, 🏅 - уровень гильдии</em>\n" \
+               "".format(datetime.date.today().strftime("%d/%m/%y"))
+    for guild_id in Guild.guild_ids:
+        guild = Guild.get_guild(guild_id)
+        if not guild.is_active():
+            continue
+        if guild.castle != "🖤":
+            continue
+        lvl, members = guild.api_info.get("lvl"), guild.api_info.get("members")
+        response += "<b>{}</b> 👥{} {}\n".format(guild.tag, guild.members_count,
+                                                "(API - {}) 🏅{}".format(members, lvl) if lvl else "")
+    bot.send_message(chat_id=ACADEMY_HQ_CHAT_ID, text=response, parse_mode='HTML')
+
+    time.sleep(1)
+    plan_academy_guilds_stats_send()
+
+
+def plan_academy_guilds_stats_send():
+    today = datetime.date.today()
+    target = datetime.datetime.combine(today + datetime.timedelta(days=SUNDAY_INDEX - today.weekday()),
+                                       datetime.time(ACADEMY_NOTIFY_HOUR))
+    if target - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) < datetime.timedelta(0):
+        # Время уже прошло, планируем на следующую неделю
+        target += datetime.timedelta(days=7)
+    job.run_once(send_guilds_stats, target)
+    logging.info("Academy guild stats notify planned on {}".format(great_format_time(target)))
+

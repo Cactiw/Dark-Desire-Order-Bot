@@ -8,6 +8,7 @@ from castle_files.bin.guild_chats import arena_notify, top_notify, check_guilds_
 from castle_files.bin.service_functions import plan_work
 from castle_files.bin.guild_chats import plan_arena_notify, plan_top_notify
 from castle_files.bin.quests import plan_update_daily_quests
+from castle_files.bin.academy import plan_academy_guilds_stats_send
 
 
 # Запускается один раз при старте бота; осуществляет планирование всех рассылок, привязанных ко времени и
@@ -20,6 +21,8 @@ def plan_daily_tasks(bot=None, job=None):
     plan_guilds_api_players_update()
     plan_roulette_games()
     plan_update_daily_quests()
+
+    plan_academy_guilds_stats_send()
     # plan_work(plan_daily_tasks, 0, 0, 10)
 
 
