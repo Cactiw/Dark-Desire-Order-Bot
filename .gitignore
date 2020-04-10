@@ -5,5 +5,7 @@ config*
 *.pem
 __pycache__/
  .idea/
+sessions/*
+!sessions/.empty
 castle_files/backup/*
 !castle_files/backup/empty
