@@ -27,12 +27,13 @@ guilds_str = ""
 
 def script_work():
     global client
+    session_path = "./sessions/{}".format(username)
     if telethon_proxy is not None:
         proxy = (telethon_proxy["host"], telethon_proxy["port"], telethon_proxy["secret"])
-        admin_client = TelegramClient(username, api_id, api_hash, proxy=proxy,
+        admin_client = TelegramClient(session_path, api_id, api_hash, proxy=proxy,
                                       connection=connection.tcpmtproxy.ConnectionTcpMTProxyIntermediate)
     else:
-        admin_client = TelegramClient(username, api_id, api_hash)
+        admin_client = TelegramClient(session_path, api_id, api_hash)
     # admin_client.start(phone, password)
     #
     # client = admin_client
