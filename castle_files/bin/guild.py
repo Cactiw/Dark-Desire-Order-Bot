@@ -123,7 +123,7 @@ def get_divisions_buttons(guilds_divided: dict, page: int):
                 guild = guilds[page * GUILD_ROWS_ON_PAGE + row_num]
                 buttons[row_num].append(InlineKeyboardButton(
                     text="{}|⚔{:.1f}\\{:.1f}".format(guild.tag, guild.get_attack() / 1000., guild.get_defense() / 1000.)
-                    if guild.orders_enabled else "❌{}".format(guild.tag),
+                    if guild.is_active() else "❌{}".format(guild.tag),
                     callback_data="guilds_divisions_{}_page_{}".format(guild.id, page)))
             except IndexError:
                 guild = None
@@ -163,7 +163,7 @@ def build_divisions_guilds_list(divisions: list):
             ret.update({division: div_info})
         guilds = div_info.get("guilds")
         guilds.append(guild)
-        if guild.orders_enabled:
+        if guild.is_active():
             div_info.update({"atk": guild.get_attack() + div_info.get("atk", 0),
                              "def": guild.get_defense() + div_info.get("def", 0)})
     for data in list(ret.values()):

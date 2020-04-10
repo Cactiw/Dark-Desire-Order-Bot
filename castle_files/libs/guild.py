@@ -230,8 +230,11 @@ class Guild:
     def get_academy():
         return Guild.get_guild(guild_tag="АКАДЕМИЯ")
 
-    def is_academy(self):
+    def is_academy(self) -> bool:
         return self.tag == "АКАДЕМИЯ"
+
+    def is_active(self) -> bool:
+        return self.orders_enabled
 
     @staticmethod
     def fill_guild_ids():
