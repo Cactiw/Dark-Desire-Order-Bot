@@ -14,7 +14,12 @@ import json
 REPORT_REPUTATION_COUNT = 5
 
 
-def count_battle_time(battle_id):
+def count_battle_time(battle_id) -> datetime.datetime:
+    """
+    Служебная функция, считающая время битвы с battle_id
+    :param battle_id: Int - Id битвы, время которой нужно посчитать
+    :return: datetime
+    """
     first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
     target_battle = first_battle
     interval = datetime.timedelta(hours=8)
@@ -24,6 +29,9 @@ def count_battle_time(battle_id):
 
 
 def add_report(bot, update, user_data):
+    """
+    Функция сохранения репорта от игрока
+    """
     mes = update.message
     s = mes.text
     player = Player.get_player(mes.from_user.id)
