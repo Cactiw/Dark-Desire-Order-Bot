@@ -5,7 +5,8 @@ from castle_files.work_materials.globals import dispatcher, updater, conn, Produ
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
-    filter_is_profile, filter_not_registered, filter_forbidden, filter_set_class, filter_in_class_chat, \
+    filter_is_profile, filter_not_registered, filter_not_registered_do_not_notify, \
+    filter_forbidden, filter_set_class, filter_in_class_chat, \
     filter_kick_from_castle_chat, filter_kick_from_castle_chat, filter_joined_castle_chat, filter_in_castle_chat
 from castle_files.work_materials.filters.class_filters import filter_archer_trap
 from castle_files.work_materials.filters.mid_filters import filter_mailing_pin, filter_mailing
@@ -225,7 +226,7 @@ def castle_bot_processing():
 
     #
 
-    # Конец хендлеров инлайн кнопок
+    # Конец хендлеров инлайн кнопок  ---------------------------------------------------------------------------------
 
     # dispatcher.add_handler(MessageHandler(Filters.all & filter_forbidden, skip))  # Отключение регистрации
     dispatcher.add_handler(MessageHandler(
@@ -245,7 +246,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_hero, hero, pass_user_data=True))
 
-    dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered & filter_joined_castle_chat,
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered_do_not_notify & filter_joined_castle_chat,
                                           castle_hello))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_in_castle_chat, skip))
 
@@ -297,6 +298,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.command & filter_split_union, split_union))
     dispatcher.add_handler(MessageHandler(Filters.all & filter_need_to_ban_in_union_chat, check_and_kick))
 
+    dispatcher.add_handler(MessageHandler(Filters.all & filter_not_registered_do_not_notify & ~filter_is_pm, skip))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_registered & filter_is_pm, unknown_input,
                                           pass_user_data=True))
 

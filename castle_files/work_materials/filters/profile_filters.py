@@ -18,6 +18,17 @@ class FilterNotRegistered(BaseFilter):
 filter_not_registered = FilterNotRegistered()
 
 
+class FilterNotRegisteredDoNotNotify(BaseFilter):
+    """
+    Фильтр, который проверяет, что человек НЕ зарегистрирован, но при этом не спамит ему в личку
+    """
+    def filter(self, message):
+        return Player.get_player(message.from_user.id, notify_on_error=False) is None
+
+
+filter_not_registered_do_not_notify = FilterNotRegisteredDoNotNotify()
+
+
 class FilterJoinedCastleChat(BaseFilter):
     def filter(self, message):
         return message.new_chat_members and message.chat_id == CASTLE_CHAT_ID
