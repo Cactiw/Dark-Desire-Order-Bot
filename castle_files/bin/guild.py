@@ -438,6 +438,7 @@ def guild_reports(bot, update):
                "\n".format(guild.castle, guild.tag, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"),
                            battle_id)
     unsent_reports = []
+    attack, defense = 0, 0
     for player_id in guild.members:
         request = "select player_id, lvl, attack, additional_attack, defense, additional_defense, exp, gold, stock " \
                   "from reports where player_id = %s and battle_id = %s "
@@ -459,6 +460,10 @@ def guild_reports(bot, update):
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = ""
         response += response_new
+
+        attack += row[2]
+        defense += row[4]
+    response += "\nВсего: ⚔️<b>{} 🛡{}</b>\n".format(attack, defense)
     if response != "" and update.callback_query is not None:
         bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
         response = ""
