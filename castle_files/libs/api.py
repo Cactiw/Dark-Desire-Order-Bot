@@ -498,6 +498,9 @@ class CW3API:
                 response = "Итоги битвы {}<b>{}</b>\n".format(guild.castle, guild.tag)
                 response += "<b>🎖Glory:</b> <code>{}</code>\n\n".format(glory - old_glory)
                 response += self.get_stock_change_text(old_stock, stock)
+                attack, defense, exp, gold, stock = guild.count_battle_stats()
+                response += "\nПредыдущая битва:\n<code>Атака: {:>4}⚔\nЗащита:{:>4}🛡\nОпыт: {:>5}🔥\nЗолото:{:>4}💰\n" \
+                            "Сток:  {:>4}📦</code>\n".format(attack, defense, exp, gold, stock)
                 self.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
                 guild.api_info.pop("change_stock_send")
                 guild.update_to_database(need_order_recashe=False)

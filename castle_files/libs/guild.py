@@ -4,6 +4,7 @@
 from castle_files.work_materials.globals import conn, moscow_tz
 
 from castle_files.libs.player import Player
+from castle_files.bin.service_functions import count_battle_id
 from globals import update_request_queue
 
 import logging
@@ -110,6 +111,28 @@ class Guild:
             self.update_to_database(need_order_recashe=False)
         except (TypeError, AttributeError, ValueError):
             logging.error(traceback.format_exc())
+
+    def count_battle_stats(self, battle_id: int = None):
+        if battle_id is None:
+            battle_id = count_battle_id() - 1
+        cursor = conn.cursor()
+        request = "select r.attack, r.defense, r.exp, r.gold, r.stock " \
+                  "from reports r join players p on r.player_id = p.id where p.guild = %s and r.battle_id = %s"
+        cursor.execute(request, (self.id, battle_id))
+        row = cursor.fetchone()
+        total_attack, total_defense, total_exp, total_gold, total_stock = 0, 0, 0, 0, 0
+        while row:
+            attack, defense, exp, gold, stock = row
+            total_attack += attack
+            total_defense += defense
+            total_exp += exp
+            total_gold += gold
+            total_stock += stock
+
+            row = cursor.fetchone()
+
+        return total_attack, total_defense, total_exp, total_gold, total_stock
+
 
     # Метод для добавления игрока в гильдию
     def add_player(self, player_to_add):
