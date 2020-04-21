@@ -414,8 +414,8 @@ class CW3API:
                 response_lost += "{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
                                                        "{}💰".format(price * change) if price != 0 else "❔")
                 gold_lost += change * price
-        response_added += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_added) if gold_added > 0 else ""
-        response_lost += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_lost) if gold_lost < 0 else ""
+        response_added += "<b>В сумме:</b> <code>{}</code>💰\n\n".format(gold_added) if gold_added > 0 else ""
+        response_lost += "<b>В сумме:</b> <code>{}</code>💰\n\n".format(gold_lost) if gold_lost < 0 else ""
         response += response_added if gold_added > 0 else "" + response_lost if gold_lost < 0 else ""
         response += "<b>Всего:</b> <code>{}</code>💰\n".format(gold_added + gold_lost)
         return response
