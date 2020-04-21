@@ -385,7 +385,7 @@ class CW3API:
 
 
     def get_stock_change_text(self, old_stock, new_stock):
-        response = "Изменения в стоке:\n"
+        response = "📦Изменения в стоке:\n"
         prices = self.api_info.get("prices") or {}
         changes = {}
         for code, count in list(old_stock.items()):
@@ -400,7 +400,7 @@ class CW3API:
             change = count - old_count
             if change != 0:
                 changes.update({code: change})
-        response_added, response_lost = "\n<b>➕Приобретено:</b>\n", "\n<b>➖Потеряно:</b>\n"
+        response_added, response_lost = "<b>➕Приобретено:</b>\n", "\n<b>➖Потеряно:</b>\n"
         gold_added, gold_lost = 0, 0
         changes_sorted = {k: v for k, v in sorted(list(changes.items()),
                                                   key=lambda x: (prices.get(x[0]) or 10000) * x[1])}
@@ -416,8 +416,8 @@ class CW3API:
                 gold_lost += change * price
         response_added += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_added) if gold_added > 0 else ""
         response_lost += "<b>В сумме:</b> <code>{}</code>💰\n".format(gold_lost) if gold_lost < 0 else ""
-        response += response_added + response_lost
-        response += "\n<b>Всего:</b> <code>{}</code>💰".format(gold_added + gold_lost)
+        response += response_added if gold_added > 0 else "" + response_lost if gold_lost < 0 else ""
+        response += "<b>Всего:</b> <code>{}</code>💰\n".format(gold_added + gold_lost)
         return response
 
     def on_stock_info(self, channel, method, header, body):
