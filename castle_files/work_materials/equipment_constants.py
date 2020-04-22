@@ -46,6 +46,14 @@ main_hand = [
     Equipment("main_hand", "w", "97", "Nightfall Bow", 32, 12, 4),
     Equipment("main_hand", "w", "98", "Black Morningstar", 19, 21, 4),
     Equipment("main_hand", "w", "99", "Maiming Bulawa", 22, 22, 4),
+    Equipment("main_hand", "w", "101", "Lightbane Katana", 50, 0, 5),
+    Equipment("main_hand", "w", "102", "Doom Warglaive", 55, 0, 5),
+    Equipment("main_hand", "w", "103", "Decimation Harpoon", 26, 24, 5),
+    Equipment("main_hand", "w", "104", "Sinister Ranseur", 29, 29, 5),
+    Equipment("main_hand", "w", "105", "Heartstriker Bow", 36, 14, 5),
+    Equipment("main_hand", "w", "106", "Windstalker Bow", 40, 15, 5),
+    Equipment("main_hand", "w", "107", "Malificent Maul", 24, 26, 5),
+    Equipment("main_hand", "w", "108", "Brutalizer Flail", 25, 29, 5),
 
     Equipment("main_hand", "e", "143", "Witchling Staff", 19, 14, 2),
     Equipment("main_hand", "e", "144", "War Club", 17, 14, 2),
@@ -68,6 +76,8 @@ second_hand = [
     Equipment("second_hand", "w", "45", "Ghost dagger", 12, 1, 3),
     Equipment("second_hand", "w", "46", "Lion Knife", 13, 0, 3),
     Equipment("second_hand", "w", "91", "Griffin Knife", 15, 0, 4),
+    Equipment("main_hand", "w", "100", "Poniard", 19, 0, 5),
+
 
     Equipment("second_hand", "e", "152", "Demon Whip", 15, 1, 2),
     Equipment("second_hand", "e", "153", "Werewolf Knife", 0, 0, 2),
@@ -83,6 +93,7 @@ second_hand = [
     Equipment("second_hand", "a", "49", "Crusader Shield", 1, 12, 3),
     Equipment("second_hand", "a", "54", "Royal Shield", 1, 13, 3),
     Equipment("second_hand", "a", "82", "Council Shield", 0, 15, 4),
+    Equipment("second_hand", "a", "113", "Overseer shield", 0, 20, 5),
 
     Equipment("second_hand", "e", "113", "Walker Shield", 0, 12, 2),
     Equipment("second_hand", "e", "118", "Zombie Shield", 1, 14, 2),
@@ -106,6 +117,9 @@ head = [
     Equipment("head", "a", "79", "Council Helmet", 8, 25, 4),
     Equipment("head", "a", "88", "Celestial Helmet", 6, 20, 4),
     Equipment("head", "a", "84", "Griffin Helmet", 11, 18, 4),
+    Equipment("head", "a", "106", "Manticore Helmet", 14, 24, 5),
+    Equipment("head", "a", "107", "Overseer Helmet", 10, 33, 5),
+    Equipment("head", "a", "108", "Discarnate Circlet", 9, 25, 5),
 
     Equipment("head", "e", "102", "Witchling Circlet", 2, 12, 2),
     Equipment("head", "e", "106", "Witch Circlet", 0, 0, 2),
@@ -136,6 +150,9 @@ gloves = [
     Equipment("gloves", "a", "81", "Council Gauntlets", 5, 15, 4),
     Equipment("gloves", "a", "90", "Celestial Bracers", 5, 13, 4),
     Equipment("gloves", "a", "86", "Griffin Gloves", 7, 12, 4),
+    Equipment("head", "a", "106", "Manticore Gloves", 11, 15, 5),
+    Equipment("head", "a", "107", "Overseer Gauntlets", 6, 19, 5),
+    Equipment("head", "a", "108", "Discarnate Bracers", 7, 15, 5),
 
     Equipment("gloves", "e", "104", "Witchling Bracers", 1, 9, 2),
     Equipment("gloves", "e", "108", "Witch Bracers", 0, 0, 2),
@@ -167,6 +184,9 @@ armor = [
     Equipment("armor", "a", "78", "Council Armor", 13, 42, 4),
     Equipment("armor", "a", "87", "Celestial Armor", 11, 34, 4),
     Equipment("armor", "a", "83", "Griffin Armor", 16, 34, 4),
+    Equipment("head", "a", "106", "Manticore Armor", 24, 45, 5),
+    Equipment("head", "a", "107", "Overseer Armor", 18, 60, 5),
+    Equipment("head", "a", "108", "Discarnate Robe", 19, 45, 5),
 
     Equipment("armor", "e", "101", "Witchling Robe", 4, 20, 2),
     Equipment("armor", "e", "105", "Witch Robe", 0, 0, 2),
@@ -198,6 +218,9 @@ boots = [
     Equipment("boots", "a", "80", "Council Boots", 5, 15, 4),
     Equipment("boots", "a", "89", "Celestial Boots", 5, 13, 4),
     Equipment("boots", "a", "85", "Griffin Boots", 7, 12, 4),
+    Equipment("head", "a", "106", "Manticore Boots", 12, 15, 5),
+    Equipment("head", "a", "107", "Overseer Boots", 6, 20, 5),
+    Equipment("head", "a", "108", "Discarnate Shoes", 7, 14, 5),
 
     Equipment("boots", "e", "103", "Witchling Shoes", 1, 9, 2),
     Equipment("boots", "e", "107", "Witch Shoes", 0, 0, 2),
