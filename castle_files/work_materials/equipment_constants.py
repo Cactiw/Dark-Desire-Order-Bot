@@ -2,6 +2,8 @@ from castle_files.libs.equipment import Equipment
 
 import copy
 
+# ВНИМАНИЕ! Айтемы из одного слова, которое повторяется в более продвинутых айтемах (например, gloves),
+# помещать в самый конец!!!
 main_hand = [
     Equipment("main_hand", "w", "01", "Wooden sword", 1, 0, 0),
     Equipment("main_hand", "w", "02", "Short sword", 3, 0, 0),
@@ -12,7 +14,6 @@ main_hand = [
     Equipment("main_hand", "w", "07", "Rapier", 27, 0, 1),
     Equipment("main_hand", "w", "08", "Short spear", 3, 1, 0),
     Equipment("main_hand", "w", "09", "Long spear", 3, 1, 0),
-    Equipment("main_hand", "w", "10", "Lance", 11, 5, 0),
     Equipment("main_hand", "w", "11", "Elven spear", 12, 7, 1),
     Equipment("main_hand", "w", "12", "Halberd", 14, 10, 1),
     Equipment("main_hand", "w", "18", "Elven Bow", 4, 1, 0),
@@ -64,6 +65,7 @@ main_hand = [
     Equipment("main_hand", "e", "151", "Demon Bow", 26, 12, 2),
     Equipment("main_hand", "e", "154", "Nosferatu Rapier", 0, 0, 2),
 
+    Equipment("main_hand", "w", "10", "Lance", 11, 5, 0),
 ]
 
 second_hand = [
@@ -133,7 +135,6 @@ head = [
 ]
 
 gloves = [
-    Equipment("gloves", "a", "16", "Gloves", 0, 1, 0),
     Equipment("gloves", "a", "17", "Leather gloves", 0, 2, 0),
     Equipment("gloves", "a", "18", "Steel gauntlets", 0, 3, 0),
     Equipment("gloves", "a", "19", "Silver gauntlets", 0, 5, 1),
@@ -164,6 +165,8 @@ gloves = [
     Equipment("gloves", "e", "134", "Werewolf Gloves", 0, 0, 2),
     Equipment("gloves", "e", "138", "Fleder Gloves", 6, 6, 2),
     Equipment("gloves", "e", "142", "Nosferatu Gloves", 0, 0, 2),
+
+    Equipment("gloves", "a", "16", "Gloves", 0, 1, 0),
 ]
 
 armor = [
