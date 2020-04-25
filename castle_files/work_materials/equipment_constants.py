@@ -76,7 +76,7 @@ second_hand = [
     Equipment("second_hand", "w", "45", "Ghost dagger", 12, 1, 3),
     Equipment("second_hand", "w", "46", "Lion Knife", 13, 0, 3),
     Equipment("second_hand", "w", "91", "Griffin Knife", 15, 0, 4),
-    Equipment("main_hand", "w", "100", "Poniard", 19, 0, 5),
+    Equipment("second_hand", "w", "100", "Poniard", 19, 0, 5),
 
 
     Equipment("second_hand", "e", "152", "Demon Whip", 15, 1, 2),
