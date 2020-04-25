@@ -2,6 +2,8 @@ from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list
     local_tz, job, utc, dispatcher
 from mwt import MWT
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 import datetime
 import re
 
@@ -13,6 +15,20 @@ def cancel(bot, update, user_data):
         user_data.pop("edit_guild_id")
     bot.send_message(chat_id=update.message.chat_id, text="Операция отменена.")
     return
+
+
+def pop_from_user_data_if_presented(user_data, key):
+    if isinstance(key, list):
+        for k in key:
+            try:
+                user_data.pop(k)
+            except KeyError:
+                pass
+    else:
+        try:
+            user_data.pop(key)
+        except KeyError:
+            pass
 
 
 def pop_from_user_data(bot, update):
@@ -130,6 +146,19 @@ def count_battle_id(message=None):
 
 def dict_invert(d):
     return dict(zip(d.values(), d.keys()))
+
+
+def build_inline_buttons_menu(texts: [str], callback_data_prefix: str, n_cols: int, enabled_func=None):
+    cur_list = []
+    buttons = [cur_list]
+    for i, text in enumerate(texts):
+        if len(cur_list) == n_cols:
+            cur_list = []
+            buttons.append(cur_list)
+        cur_list.append(InlineKeyboardButton("{}{}".format(
+            "✅" if enabled_func is not None and enabled_func(text, i) else "", text),
+            callback_data="{}{}".format(callback_data_prefix, i)))
+    return buttons
 
 
 @MWT(timeout=15*60)
