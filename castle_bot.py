@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api, SUPER_ADMIN_ID
+    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -640,7 +640,7 @@ def castle_bot_processing():
     mobs_messages_updating.start()
     processes.append(mobs_messages_updating)
 
-    if enable_api:
+    if enable_telethon:
         telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
         telethon_script.start()
         processes.append(telethon_script)
@@ -649,6 +649,7 @@ def castle_bot_processing():
         parse_stats_pr.start()
         processes.append(parse_stats_pr)
 
+    if enable_api:
         api = threading.Thread(target=start_api, args=[])
         api.start()
         processes.append(api)

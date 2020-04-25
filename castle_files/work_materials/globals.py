@@ -10,9 +10,10 @@ from castle_files.libs.bot_async_messaging import AsyncBot
 from libs.database import Conn
 
 try:
-    from config import enable_api
+    from config import enable_api, enable_telethon
 except ImportError:
     enable_api = True
+    enable_telethon = True
 
 castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
 emodji_to_castle_names = {'🍆': 'ferma', '🍁': 'amber', '☘': 'oplot', '🌹': 'rassvet', '🐢': 'tortuga', '🦇': 'night',
