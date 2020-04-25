@@ -31,6 +31,9 @@ class Equipment:
         if quality is not None:
             self.quality = quality.group(0).upper()
 
+    def format_code(self) -> str:
+        return self.type + self.code
+
     def to_json(self):
         dictionary = {
             "code": self.type + self.code,
@@ -63,12 +66,13 @@ class Equipment:
     def format(self, mode=None) -> str:
         if mode == "guild":
             attack, defense = self.get_expected_stats()
-            res = "<a href=\"t.me/share/url?url=/g_deposit {} 1\">{}{}{}{}{}</a>" \
+            res = "<a href=\"t.me/share/url?url=/g_deposit {} 1\">{}{}{}{}</a>" \
                   "\n".format(self.type + self.code,
                               "✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
                               else "", self.name, " {} ".format(self.quality) if self.quality else "",
-                              " +{}⚔️ ".format(attack) if attack != 0 else "",
-                              "+{}🛡 ".format(defense) if defense != 0 else "")
+                              "{}{}".format(" +{}⚔️ ".format(attack) if attack != 0 else "",
+                                            "+{}🛡 ".format(defense) if defense != 0 else "") if attack and defense else
+                              "</a> || <a href=\"t.me/share/url?url=/g_i {}\">(⚔️🛡Inspect)".format(self.format_code()))
         else:
             res = "{}<b>{}</b>{}<code>{}{}</code>" \
                   "\n".format("✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
