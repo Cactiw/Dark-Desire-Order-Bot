@@ -582,7 +582,8 @@ def update_stock_for_fails(bot, job):
         if not api_players:
             guild.api_info.clear()
             bot.send_message(chat_id=SUPER_ADMIN_ID, parse_mode='HTML',
-                             text="Гильдию <b>{}</b> невозможно обновить - нет игроков с доступом к АПИ.")
+                             text="Гильдию <b>{}</b> невозможно обновить - нет игроков с доступом к АПИ."
+                                  "".format(guild.tag))
             continue
         player_id = api_players[0]
         cwapi.update_guild_info(player_id)
@@ -590,7 +591,11 @@ def update_stock_for_fails(bot, job):
         count_all += 1
     if count_all > 0:
         bot.send_message(chat_id=SUPER_ADMIN_ID, parse_mode='HTML',
-                         text="Повторно запрошено обновление <b>{}</b> гильдий, игроки с доступом к АПИ подвинуты")
+                         text="Повторно запрошено обновление <b>{}</b> гильдий, игроки с доступом к АПИ подвинуты"
+                              "".format(count_all))
+    if len(rows) > 0:
+        bot.send_message(chat_id=SUPER_ADMIN_ID, text="Начата проверка доступа к АПИ у гильдий")
+        check_guilds_api_access(bot, None)
 
 
 def send_potion_stats(bot, job):
