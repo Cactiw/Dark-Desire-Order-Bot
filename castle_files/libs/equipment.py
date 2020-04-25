@@ -45,6 +45,13 @@ class Equipment:
         self.quality = equipment_list.get("quality")
         self.condition = equipment_list.get("condition")
 
+    def format(self) -> str:
+        return "{}<b>{}</b>{}<code>{}</code><code>{}</code>" \
+                    "\n".format("✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
+                                else "", self.name, " {} ".format(self.quality) if self.quality else "",
+                                " +{}⚔️ ".format(self.attack) if self.attack != 0 else "",
+                                "+{}🛡 ".format(self.defense) if self.defense != 0 else "")
+
     def __eq__(self, other):
         # Шмотка равна другой при совпадении типа и кода (нужно ещё подумать потом)
         return self.type == other and self.code == other.code

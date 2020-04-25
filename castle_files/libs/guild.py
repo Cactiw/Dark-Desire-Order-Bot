@@ -256,6 +256,7 @@ class Guild:
             return eq
         equipment = []
         for eq_dict in eq:
+            eq_dict = json.loads(eq_dict)
             cur_eq = get_equipment_by_name(eq_dict.get("name"))
             cur_eq.set_from_json(eq_dict)
             equipment.append(cur_eq)
