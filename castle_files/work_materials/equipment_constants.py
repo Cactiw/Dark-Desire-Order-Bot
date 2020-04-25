@@ -291,4 +291,6 @@ def get_equipment_by_name(eq_name):
             code = item_code
             break
     eq = get_equipment_by_code(code)
+    if eq is not None:
+        eq.name = eq_name
     return eq
