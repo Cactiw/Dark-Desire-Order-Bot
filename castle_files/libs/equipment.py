@@ -4,10 +4,12 @@
 имя и статы вещи.
 """
 import json
+import re
 
 
 class Equipment:
     quality = {"Fine": "E", "High": "D", "Great": "C", "Excellent": "B", "Masterpiece": "A"}
+    all_quality = ["E", "D", "C", "B", "A", "CE", "CD", "CC", "CB", "CA"]
 
     def __init__(self, place, item_type, code, name, attack, defense, tier, condition=None, quality=None):
         self.place = place
@@ -25,6 +27,9 @@ class Equipment:
     def set_code(self, code):
         self.type = code[0]
         self.code = code[1:]
+        quality = re.search("[a-z]+$", code)
+        if quality is not None:
+            self.quality = quality.group(0).upper()
 
     def to_json(self):
         dictionary = {
@@ -45,12 +50,32 @@ class Equipment:
         self.quality = equipment_list.get("quality")
         self.condition = equipment_list.get("condition")
 
-    def format(self) -> str:
-        return "{}<b>{}</b>{}<code>{}</code><code>{}</code>" \
-                    "\n".format("✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
-                                else "", self.name, " {} ".format(self.quality) if self.quality else "",
-                                " +{}⚔️ ".format(self.attack) if self.attack != 0 else "",
-                                "+{}🛡 ".format(self.defense) if self.defense != 0 else "")
+    def get_expected_stats(self):
+        if self.type == "u":
+            # Пока статы таких предметов считать не умеем (заточки, не известно качество и тп)
+            return 0, 0
+        try:
+            quality_bonus = self.all_quality.index(self.quality)
+        except ValueError:
+            quality_bonus = 0
+        return self.attack + quality_bonus, self.defense + quality_bonus
+
+    def format(self, mode=None) -> str:
+        if mode == "guild":
+            attack, defense = self.get_expected_stats()
+            res = "<a href=\"t.me/share/url?url=/g_deposit {} 1\">{}{}{}{}{}</a>" \
+                  "\n".format(self.type + self.code,
+                              "✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
+                              else "", self.name, " {} ".format(self.quality) if self.quality else "",
+                              " +{}⚔️ ".format(attack) if attack != 0 else "",
+                              "+{}🛡 ".format(defense) if defense != 0 else "")
+        else:
+            res = "{}<b>{}</b>{}<code>{}{}</code>" \
+                  "\n".format("✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
+                              else "", self.name, " {} ".format(self.quality) if self.quality else "",
+                              " +{}⚔️ ".format(self.attack) if self.attack != 0 else "",
+                              "+{}🛡 ".format(self.defense) if self.defense != 0 else "")
+        return res
 
     def __eq__(self, other):
         # Шмотка равна другой при совпадении типа и кода (нужно ещё подумать потом)

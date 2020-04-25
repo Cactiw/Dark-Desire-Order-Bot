@@ -62,7 +62,7 @@ def change_guild_equipment_param(bot, update, user_data):
     # except Exception:
         # logging.error(traceback.format_exc())
     except BadRequest:
-        pass
+        logging.error(traceback.format_exc())
     except TelegramError:
         pass
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
@@ -85,6 +85,6 @@ def get_guild_equipment_text(guild: Guild, selected_place: int, selected_tier: i
     tier = int(TIERS[selected_tier][1:]) if selected_tier is not None else None
     for eq in equipment:
         if (place is None or place == eq.place) and (tier is None or tier == eq.tier):
-            res += eq.format()
+            res += eq.format(mode="guild")
     return res
 
