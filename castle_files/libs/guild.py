@@ -5,6 +5,7 @@ from castle_files.work_materials.globals import conn, moscow_tz
 
 from castle_files.libs.player import Player
 from castle_files.bin.service_functions import count_battle_id
+from castle_files.bin.stock_service import get_equipment_by_name
 from globals import update_request_queue
 
 import logging
@@ -248,6 +249,17 @@ class Guild:
         guild.last_access_time = time.time()
         cur_cursor.close()
         return guild
+
+    def get_equipment(self):
+        eq = self.api_info.get("equipment")
+        if not eq:
+            return eq
+        equipment = []
+        for eq_dict in eq:
+            cur_eq = get_equipment_by_name(eq_dict.get("name"))
+            cur_eq.set_from_json(eq_dict)
+            equipment.append(cur_eq)
+        return equipment
 
     @staticmethod
     def get_academy():
