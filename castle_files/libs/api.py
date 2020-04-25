@@ -537,7 +537,8 @@ class CW3API:
                 continue
             eq: Equipment = lst.pop()
             eq.set_code(code)
-            equipment.append(eq.to_json())
+            if eq.type not in ["k", "r"]:
+                equipment.append(eq.to_json())
 
 
     #
