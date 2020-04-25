@@ -20,6 +20,12 @@ class Equipment:
         self.condition = condition
         self.quality = quality
 
+        self.source_name = self.name
+
+    def set_code(self, code):
+        self.type = code[0]
+        self.code = code[1:]
+
     def to_json(self):
         dictionary = {
             "code": self.type + self.code,
