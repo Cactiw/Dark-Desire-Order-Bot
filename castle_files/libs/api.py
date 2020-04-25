@@ -474,11 +474,20 @@ class CW3API:
                 payload.get("members"),  payload.get("stockSize"), payload.get("stockLimit"), payload.get("userId"), \
                 payload.get("tag"), payload.get("castle")
             got_stock = payload.get("stock")
-            stock = {}
+            codes = payload.get("itemCodes")
+            stock, equipment_temp, equipment = {}, {}, []
             for i_name, count in list(got_stock.items()):
                 code = get_item_code_by_name(i_name)
+                eq = get_equipment_by_name(i_name)
+                if eq is not None:
+                    lst = equipment_temp.get(eq.name)
+                    if lst is None:
+                        lst = []
+                        equipment_temp.update({eq.name: lst})
+                    lst.append(eq)
                 stock.update({code or i_name: count})
             stock = {k: stock[k] for k in sorted(stock, key=stock_sort_comparator)}
+            self.__set_guild_equipment_codes(codes, equipment_temp, equipment)
             player = Player.get_player(player_id, notify_on_error=False)
             if player is None or player.guild is None:
                 logging.warning("Received guild info, but player is None (or guild) for id {}".format(player_id))
@@ -513,12 +522,23 @@ class CW3API:
             if player_id not in api_players:
                 api_players.append(player_id)
             guild.api_info.update({"stock": stock, "glory": glory, "lvl": lvl, "members": members,
-                                   "stock_size": stock_size, "stock_limit": stock_limit})
+                                   "stock_size": stock_size, "stock_limit": stock_limit, "equipment": equipment})
             guild.castle = castle
             guild.last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
             guild.update_to_database(need_order_recashe=False)
         except Exception:
             logging.error(traceback.format_exc())
+
+    @staticmethod
+    def __set_guild_equipment_codes(codes: dict, equipment_temp: dict, equipment: list):
+        for code, name in list(codes.items()):
+            lst: list = equipment_temp.get(name)
+            if not lst:
+                continue
+            eq: Equipment = lst.pop()
+            eq.set_code(code)
+            equipment.append(eq.to_json())
+
 
     #
 
