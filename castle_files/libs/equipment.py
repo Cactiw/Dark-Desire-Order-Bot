@@ -37,6 +37,14 @@ class Equipment:
         }
         return json.dumps(dictionary)
 
+    def set_from_json(self, equipment_list: dict):
+        self.set_code(equipment_list.get("code"))
+        self.name = equipment_list.get("name")
+        self.attack = equipment_list.get("attack")
+        self.defense = equipment_list.get("defense")
+        self.quality = equipment_list.get("quality")
+        self.condition = equipment_list.get("condition")
+
     def __eq__(self, other):
         # Шмотка равна другой при совпадении типа и кода (нужно ещё подумать потом)
         return self.type == other and self.code == other.code
