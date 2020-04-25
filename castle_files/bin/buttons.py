@@ -121,6 +121,7 @@ def get_view_guild_buttons(guild, user_id=None):
     buttons = [
         [
             InlineKeyboardButton("Список игроков", callback_data="gipl_{}".format(guild.id)),
+            InlineKeyboardButton("🏷Снаряжение", callback_data="gieq_{}".format(guild.id)),
             InlineKeyboardButton("Покинуть гильдию", callback_data="gilv_{}".format(guild.id)),
         ],
     ]
