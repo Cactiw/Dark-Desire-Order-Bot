@@ -8,6 +8,7 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 import datetime
 import logging
 import re
+import json
 
 triggers_in = {}
 global_triggers_in = []
@@ -157,6 +158,8 @@ def get_triggers_list(trigger_chat_id):
 
 
 def fill_triggers_lists():
+    global_triggers_in.clear()
+    triggers_in.clear()
     request = "select text_in, chat_id from triggers"
     cursor.execute(request)
     row = cursor.fetchone()
@@ -217,3 +220,35 @@ def replace_trigger(bot, update):
                              datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None), mes.chat_id, text))
     bot.send_message(chat_id=mes.chat_id, text="Триггер успешно заменён!", reply_to_message_id=mes.message_id)
     return
+
+
+def import_triggers(bot, update, args):
+    mes = update.message
+    if mes.from_user.id != SUPER_ADMIN_ID:
+        return
+    try:
+        file_name = args[0]
+        chat_id = int(args[1])
+    except (IndexError, TypeError, ValueError, AttributeError):
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Неверный синтаксис. Пример:\n/import_triggers triggers.json -123456789")
+        return
+    triggers_imported = 0
+    try:
+        with open(file_name, "r") as f:
+            j = json.load(f)
+            for key, value in list(j.items()):
+                if value[0] == "text":
+                    request = "insert into triggers(text_in, chat_id, type, data_out, creator, date_created) values " \
+                              "(%s, %s, %s, %s, %s, %s)"
+                    cursor.execute(request, (key, chat_id, 0, value[1], "Triggers importer",
+                                             datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)))
+                    triggers_imported += 1
+    except FileNotFoundError:
+        bot.send_message(chat_id=mes.chat_id, text="Файл не найден.")
+        return
+    fill_triggers_lists()
+    bot.send_message(chat_id=mes.chat_id, text="Импортировано {} триггеров. "
+                                               "Триггеры перекешированы".format(triggers_imported))
+
+

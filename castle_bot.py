@@ -58,7 +58,7 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
 from castle_files.bin.class_functions import add_trap, trap_stats
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_reputation, change_guilds_reputation
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
-    info_trigger, replace_trigger
+    info_trigger, replace_trigger, import_triggers
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
     deposit, alch_possible_craft
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
@@ -571,6 +571,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('triggers', triggers))
     dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
     dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
+    dispatcher.add_handler(CommandHandler('import_triggers', import_triggers, pass_args=True))
 
     # Хендлеры далее специально ниже всех остальных, ибо невозможно проверять статус на эту исполнение этих команд
     dispatcher.add_handler(MessageHandler(Filters.text & filter_castle_gates, castle_gates, pass_user_data=True))
