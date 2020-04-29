@@ -62,7 +62,7 @@ def get_battle_emoji(result, attack, defense) -> str:
     }
     if result == "easily defended":
         if attack is None:
-            emoji = "😴"
+            emoji = "🛡😴"
         else:
             emoji = "🛡👌"
     else:
@@ -75,7 +75,7 @@ def parse_alliance_battle_results(results: str):
     total_results = "🤝Headquarters news:\n"
     if results.startswith("🤝Headquarters news:"):
         for result in results.partition("\n")[2].split("\n\n\n"):
-            parse = re.search("(\\w+) was (\\w+)[.:]", result)
+            parse = re.search("(.+) was (.+)[.:]", result)
             if parse is None:
                 logging.error("Error in parse headquarters news: {}".format(traceback.format_exc()))
                 continue
@@ -91,8 +91,8 @@ def parse_alliance_battle_results(results: str):
             total_results += "{}<b>{}</b>{}{}\n".format(emoji, name, " -{}📦".format(stock) if stock > 0 else "",
                                                         " -{}🎖".format(glory) if glory > 0 else "")
     for alliance in Alliance.get_all_alliances():
-
-        dispatcher.bot.send_message(chat_id=alliance.hq_chat_id)
+        if alliance.hq_chat_id is not None:
+            dispatcher.bot.send_message(chat_id=alliance.hq_chat_id, text=total_results, parse_mode='HTML')
     # else:
 
 
