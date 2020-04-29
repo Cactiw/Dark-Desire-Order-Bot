@@ -2,6 +2,7 @@ from castle_files.libs.equipment import Equipment
 
 import copy
 
+# Товарищ! При добавлении экипировки не забывай добавить данные о её крафте в item_consts.py!
 main_hand = [
     Equipment("main_hand", "w", "01", "Wooden sword", 1, 0, 0),
     Equipment("main_hand", "w", "02", "Short sword", 3, 0, 0),
