@@ -55,7 +55,7 @@ def add_location(bot, update):
 def get_hq_battle_emoji(result, attack, defense) -> str:
     emojis = {
         "defended successfully": "🛡",
-        "closely defended": "🛡⚡️",
+        "closely defended": "🔱🛡⚡️",
         "easily breached": "⚔️😎",
         "breached": "⚔️",
         "closely breached": "⚔️⚡️",
@@ -73,7 +73,7 @@ def get_hq_battle_emoji(result, attack, defense) -> str:
 def get_map_battle_emoji(result, attack, defense) -> str:
     emojis = {
         "protected": "🛡",
-        "closely protected": "🛡⚡️",
+        "closely protected": "🔱🛡⚡️",
         "Easy win": "⚔️😎",
         "win": "⚔️",
         "Massacre": "⚔️⚡️",
@@ -113,10 +113,12 @@ def parse_alliance_battle_results(results: str):
             emoji = get_hq_battle_emoji(battle_result, attack, defense)
             total_results += "{}<b>{}</b>{}{}\n".format(emoji, name, " -{}📦".format(stock) if stock > 0 else "",
                                                         " -{}🎖".format(glory) if glory > 0 else "")
-        alliance_results = total_results + "\n\n"
+        alliance_results = total_results
     elif results.startswith("🗺State of map:"):
         # Сводки с локаций
+        locations_to_results = []
         for result in results.partition("\n")[2].split("\n\n"):
+            location_result = ""
             parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)
             attack = re.search("🎖Attack: (.+)\n", result)
             defense = re.search("🎖Defense: (.+)\n", result)
@@ -130,14 +132,24 @@ def parse_alliance_battle_results(results: str):
 
             location = AllianceLocation.get_or_create_location_by_name_and_lvl(name, lvl)
             emoji = get_map_battle_emoji(battle_result, attack, defense)
-            alliance_results += "{}<b>{}</b>🏅{}\n".format(emoji, name, lvl)
+            location_result += "{}<b>{}</b>🏅{}\n".format(emoji, name, lvl)
 
             if new_owner is not None:
                 alliance = Alliance.get_or_create_alliance_by_name(new_owner)
                 location.owner_id = alliance.id
                 location.turns_owned = 0
                 location.update()
-                alliance_results += "    🔸️{}\n".format(alliance.name)
+                location_result += "    🔸️{}\n".format(alliance.name)
+
+            locations_to_results.append([location, location_result])
+
+        locations_to_results.sort(key=lambda x: (x[0].type, x[0].lvl))
+        current_type = None
+        for location, text in locations_to_results:
+            if location.type != current_type:
+                alliance_results += "\n<b>{}</b>\n".format(location.type)
+                current_type = location.type
+            alliance_results += text
 
         for alliance in Alliance.get_all_alliances():
             if alliance.hq_chat_id is not None:
