@@ -133,9 +133,9 @@ def parse_stats():
             save_worldtop(worldtop)
             send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
-        elif data.startswith("🤝Headquarters news:"):
+        elif data.startswith("🤝Headquarters news:") or data.startswith("🗺State of map:"):
             # Итоги штабов альянсов
-            logging.info("Got headquarters news")
+            logging.info("Got alliance news")
             parse_alliance_battle_results(data)
         else:
             #  Сообщение о пиратстве

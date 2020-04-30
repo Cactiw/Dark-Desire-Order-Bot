@@ -52,7 +52,7 @@ def add_location(bot, update):
                          text="Новая локация: <b>{} Lvl.{}</b>\n{}".format(name, lvl, link))
 
 
-def get_battle_emoji(result, attack, defense) -> str:
+def get_hq_battle_emoji(result, attack, defense) -> str:
     emojis = {
         "defended successfully": "🛡",
         "closely defended": "🛡⚡️",
@@ -70,10 +70,33 @@ def get_battle_emoji(result, attack, defense) -> str:
     return emoji
 
 
+def get_map_battle_emoji(result, attack, defense) -> str:
+    emojis = {
+        "protected": "🛡",
+        "closely protected": "🛡⚡️",
+        "Easy win": "⚔️😎",
+        "win": "⚔️",
+        "Massacre": "⚔️⚡️",
+    }
+    if result == "easily protected":
+        if attack is None:
+            emoji = "🛡😴"
+        else:
+            emoji = "🛡👌"
+    else:
+        emoji = emojis.get(result)
+    return emoji
+
+
+alliance_results = ""
+
 
 def parse_alliance_battle_results(results: str):
+    global alliance_results
     total_results = "🤝Headquarters news:\n"
     if results.startswith("🤝Headquarters news:"):
+        # Сводки с самих альянсов
+        alliance_results = ""
         for result in results.partition("\n")[2].split("\n\n\n"):
             parse = re.search("(.+) was (.+)[.:]", result)
             if parse is None:
@@ -87,12 +110,39 @@ def parse_alliance_battle_results(results: str):
             if gained is not None:
                 stock, glory = int(gained.group(1)) if gained.group(1) is not None else 0, \
                                int(gained.group(2)) if gained.group(2) is not None else 0
-            emoji = get_battle_emoji(battle_result, attack, defense)
+            emoji = get_hq_battle_emoji(battle_result, attack, defense)
             total_results += "{}<b>{}</b>{}{}\n".format(emoji, name, " -{}📦".format(stock) if stock > 0 else "",
                                                         " -{}🎖".format(glory) if glory > 0 else "")
-    for alliance in Alliance.get_all_alliances():
-        if alliance.hq_chat_id is not None:
-            dispatcher.bot.send_message(chat_id=alliance.hq_chat_id, text=total_results, parse_mode='HTML')
-    # else:
+        alliance_results = total_results + "\n\n"
+    elif results.startswith("🗺State of map:"):
+        # Сводки с локаций
+        for result in results.partition("\n")[2].split("\n\n"):
+            parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)
+            attack = re.search("🎖Attack: (.+)\n", result)
+            defense = re.search("🎖Defense: (.+)\n", result)
+            if parse is None:
+                logging.error("Error in parse map news: {}".format(traceback.format_exc()))
+                continue
+            name, lvl = parse.group(1), int(parse.group(2))
+            battle_result = parse.group(5) if parse.group(5) is not None else parse.group(9) if \
+                parse.group(9) is not None else "win"
+            new_owner = parse.group(7)
+
+            location = AllianceLocation.get_or_create_location_by_name_and_lvl(name, lvl)
+            emoji = get_map_battle_emoji(battle_result, attack, defense)
+            alliance_results += "{}<b>{}</b>🏅{}\n".format(emoji, name, lvl)
+
+            if new_owner is not None:
+                alliance = Alliance.get_or_create_alliance_by_name(new_owner)
+                location.owner_id = alliance.id
+                location.turns_owned = 0
+                location.update()
+                alliance_results += "    🔸️{}\n".format(alliance.name)
+
+        for alliance in Alliance.get_all_alliances():
+            if alliance.hq_chat_id is not None:
+                dispatcher.bot.send_message(
+                    chat_id=alliance.hq_chat_id, parse_mode='HTML',
+                    text=alliance_results.replace(alliance.name, "{}{}".format(alliance.name, "🔻")))
 
 
