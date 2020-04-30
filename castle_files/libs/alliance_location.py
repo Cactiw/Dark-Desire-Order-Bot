@@ -40,7 +40,7 @@ class AllianceLocation:
                                  self.id))
 
     @staticmethod
-    def get_location(location_id: int):
+    def get_location(location_id: int) -> 'AllianceLocation':
         request = "select link, name, type, lvl, owner_id, turns_owned, expired from alliance_locations where id = %s " \
                   "limit 1"
         cursor.execute(request, (location_id,))
@@ -50,5 +50,14 @@ class AllianceLocation:
         link, name, location_type, lvl, owner_id, turns_owned, expired = row
         return AllianceLocation(location_id, link, name, location_type, lvl, owner_id, turns_owned, expired)
 
-
-
+    @staticmethod
+    def get_or_create_location_by_name_and_lvl(name: str, lvl: int) -> 'AllianceLocation':
+        request = "select id from alliance_locations where expired is false and lower(name) = lower(%s) and lvl = %s " \
+                  "limit 1"
+        cursor.execute(request, (name, lvl))
+        row = cursor.fetchone()
+        if row is None:
+            location = AllianceLocation(None, None, name, None, lvl, None, 0, False)
+            location.insert_to_database()
+            return location
+        return AllianceLocation.get_location(row[0])

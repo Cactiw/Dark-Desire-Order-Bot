@@ -16,7 +16,7 @@ class Alliance:
     def insert_to_database(self):
         request = "insert into alliances(link, name, creator_id, assistants, hq_chat_id) VALUES " \
                   "(%s, %s, %s, %s, %s) returning id"
-        cursor.execute(request, (self.name, self.creator_id, self.assistants, self.hq_chat_id))
+        cursor.execute(request, (self.link, self.name, self.creator_id, self.assistants, self.hq_chat_id))
         self.id = cursor.fetchone()[0]
 
     def update(self):
