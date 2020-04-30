@@ -14,14 +14,16 @@ class AllianceLocation:
         self.turns_owned = turns_owned
         self.expired = expired
 
+        self.figure_type()
+
     def figure_type(self):
         lower_name = self.name.lower()
         if "ruins" in lower_name:
-            self.type = "ruins"
+            self.type = "🏷Ruins"
         elif "mine" in lower_name:
-            self.type = "mine"
-        elif "fort" in lower_name or "outpost" in lower_name:
-            self.type = "glory"
+            self.type = "📦Mine"
+        elif "fort" in lower_name or "outpost" in lower_name or "tower" in lower_name:
+            self.type = "🎖Glory"
         return self.type
 
 
