@@ -46,7 +46,7 @@ def add_report(bot, update, user_data):
         except AttributeError:
             forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
 
-    line = re.search("[🍆🍁☘🌹🐢🦇🖤️]*(.*)\\s⚔:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
+    line = re.search("[🍆🍁☘️🌹🐢🦇🖤️]*(.*)\\s⚔:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
     """ 
     . - замок, (.*)\\s - никнейм в игре - от замка до эмодзи атаки. ⚔:(\\d+) - Парсинг атаки в конкретной битве
     \\(? - Возможно атака подверглась модификациям, тогда сразу после числа атаки будет открывающая скобка. 
@@ -56,7 +56,8 @@ def add_report(bot, update, user_data):
     .*Lvl: (\\d+)\\s - лишнее до уровня и парсинг уровня, в комментариях не нуждается
     """
     nickname = line.group(1)
-    if nickname != player.nickname:
+    nickname_oplot_fixed = player.nickname.replace('️', '')
+    if nickname != nickname_oplot_fixed:
         bot.send_message(chat_id=mes.chat_id, text="Это не ваш репорт. В случае ошибок обновите профиль.",
                          reply_to_message_id=mes.message_id)
         return
