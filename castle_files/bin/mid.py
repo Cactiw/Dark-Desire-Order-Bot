@@ -6,6 +6,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location
 
 from castle_files.bin.guild_chats import rangers_notify_start
+from castle_files.bin.alliances import plan_clear_alliance_results
 from castle_files.bin.api import grassroots_update_players, grassroots_update_stock, send_potion_stats, \
     update_stock_for_fails
 from castle_files.bin.service_functions import check_access
@@ -181,6 +182,7 @@ def plan_battle_jobs():
         job.run_once(send_potion_stats, time_to_send, context=[True])
 
     rangers_notify_start(bot=dispatcher.bot, update=SUPER_ADMIN_ID)
+    plan_clear_alliance_results()
 
 
 def after_battle(bot, job):
