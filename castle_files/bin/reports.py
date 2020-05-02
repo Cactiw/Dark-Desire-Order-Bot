@@ -56,8 +56,7 @@ def add_report(bot, update, user_data):
     .*Lvl: (\\d+)\\s - лишнее до уровня и парсинг уровня, в комментариях не нуждается
     """
     nickname = line.group(1)
-    nickname_oplot_fixed = player.nickname.replace('️', '')
-    if nickname != nickname_oplot_fixed:
+    if nickname != player.nickname:
         bot.send_message(chat_id=mes.chat_id, text="Это не ваш репорт. В случае ошибок обновите профиль.",
                          reply_to_message_id=mes.message_id)
         return
