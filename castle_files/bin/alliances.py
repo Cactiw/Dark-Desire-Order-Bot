@@ -142,6 +142,7 @@ def parse_alliance_battle_results(results: str):
         AllianceResults.set_hq_text(total_results)
     elif results.startswith("🗺State of map:"):
         # Сводки с локаций
+        AllianceLocation.increase_turns_owned()
         locations_to_results = []
         for result in results.partition("\n")[2].split("\n\n"):
             location_result = ""
@@ -172,10 +173,21 @@ def parse_alliance_battle_results(results: str):
         AllianceResults.set_location_text(sort_and_add_types_to_location_list(locations_to_results))
 
 
-        for alliance in Alliance.get_all_alliances():
-            if alliance.hq_chat_id is not None:
-                dispatcher.bot.send_message(
-                    chat_id=alliance.hq_chat_id, parse_mode='HTML',
-                    text=alliance_results.replace(alliance.name, "{}{}".format(alliance.name, "🔻")))
+def ga_map(bot, update):
+    mes = update.message
+    locations = AllianceLocation.get_active_locations()
+    res = "🗺 Карта альянсов:\n"
+    location_to_text: {AllianceLocation: str} = []
+    for location in locations:
+        text = "{}{}{} Lvl.{}\n".format(location.emoji, '❇️' if location.is_active() else '', location.name, location.lvl)
+        alli_name = Alliance.get_alliance(location.owner_id).name if location.owner_id is not None else "Пустует!"
+        text += "      🎪{} {}\n".format(alli_name, location.turns_owned)
+        location_to_text.append([location, text])
 
+    res += sort_and_add_types_to_location_list(location_to_text)
+
+    alliance = Alliance.get_player_alliance(Player.get_player(mes.from_user.id))
+    if alliance is not None:
+        res = alliance.add_flag_to_name(res)
+    bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 

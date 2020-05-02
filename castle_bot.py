@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api, SUPER_ADMIN_ID
+    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -94,6 +94,7 @@ from castle_files.bin.statuses import status_shop, buy_status, statuses, status_
     request_set_own_status, set_own_status, moderate_status
 from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
     delete_message
+from castle_files.bin.alliances import add_alliance_location, ga_map
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -280,6 +281,9 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
+
+    # Альянсы
+    dispatcher.add_handler(CommandHandler('ga_map', ga_map))
 
     # Профсоюзы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
@@ -641,7 +645,7 @@ def castle_bot_processing():
     mobs_messages_updating.start()
     processes.append(mobs_messages_updating)
 
-    if enable_api:
+    if enable_telethon:
         telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
         telethon_script.start()
         processes.append(telethon_script)
@@ -650,6 +654,7 @@ def castle_bot_processing():
         parse_stats_pr.start()
         processes.append(parse_stats_pr)
 
+    if enable_api:
         api = threading.Thread(target=start_api, args=[])
         api.start()
         processes.append(api)
