@@ -25,6 +25,14 @@ class FilterAllianceInfo(BaseFilter):
 filter_alliance_info = FilterAllianceInfo()
 
 
+class FilterAllianceRoster(BaseFilter):
+    def filter(self, message):
+        return message.text.startswith("📋Roster:") and filter_is_chat_wars_forward(message)
+
+
+filter_alliance_roster = FilterAllianceRoster()
+
+
 class FilterViewAlliance(BaseFilter):
     def filter(self, message):
         user_data = dispatcher.user_data.get(message.from_user.id)
