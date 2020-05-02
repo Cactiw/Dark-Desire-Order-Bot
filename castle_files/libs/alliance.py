@@ -23,6 +23,11 @@ class Alliance:
         return text.replace(self.name, "{}{}".format(self.name, '🔻'))
 
 
+    def get_alliance_guilds(self):
+        request = "select guild_id from guilds where alliance_id = %s"
+        cursor.execute(request, (self.id,))
+        return list(map(lambda guild_id: Guild.get_guild(guild_id), cursor.fetchall()))
+
     def insert_to_database(self):
         request = "insert into alliances(link, name, creator_id, assistants, hq_chat_id) VALUES " \
                   "(%s, %s, %s, %s, %s) returning id"
@@ -36,7 +41,7 @@ class Alliance:
         cursor.execute(request, (self.link, self.name, self.creator_id, self.assistants, self.hq_chat_id, self.id))
 
     @staticmethod
-    def get_alliance(alliance_id: int):
+    def get_alliance(alliance_id: int) -> 'Alliance':
         request = "select link, name, creator_id, assistants, hq_chat_id from alliances where id = %s " \
                   "limit 1"
         cursor.execute(request, (alliance_id,))
@@ -47,7 +52,7 @@ class Alliance:
         return Alliance(alliance_id, link, name, creator_id, assistants, hq_chat_id)
 
     @staticmethod
-    def get_or_create_alliance_by_name(name: str):
+    def get_or_create_alliance_by_name(name: str) -> 'Alliance':
         request = "select id from alliances where lower(name) = lower(%s)"
         cursor.execute(request, (name,))
         row = cursor.fetchone()

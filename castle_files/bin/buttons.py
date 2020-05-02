@@ -274,6 +274,8 @@ def get_general_buttons(user_data, player=None, only_buttons=False):
             if player.guild is not None:
                 guild = Guild.get_guild(player.guild)
                 if guild is not None:
+                    if guild.alliance_id is not None:
+                        buttons.insert(1, [KeyboardButton(" 🤝Альянс")])
                     if guild.check_high_access(player.id):
                         pass
                         # buttons.insert(1, [KeyboardButton("📜Изучить список гильдий")])

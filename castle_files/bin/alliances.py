@@ -4,7 +4,7 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.alliance import Alliance, AllianceResults
 from castle_files.libs.alliance_location import AllianceLocation
 
-from castle_files.bin.service_functions import get_time_remaining_to_battle
+from castle_files.bin.service_functions import get_time_remaining_to_battle, get_message_forward_time
 
 from castle_files.work_materials.globals import dispatcher, cursor, job
 
@@ -12,6 +12,43 @@ import logging
 import traceback
 import re
 import time
+import datetime
+
+ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury']
+
+
+def update_alliance(bot, update):
+    mes = update.message
+    forward_message_date = get_message_forward_time(mes)
+    if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30):
+        bot.send_message(chat_id=mes.chat_id, text="Это устаревший альянс.", reply_to_message_id=mes.message_id)
+        return
+    name = re.search("🤝(.+?) ?\n", mes.text).group(1)
+    if name not in ALLOWED_LIST:
+        return
+    alliance = Alliance.get_or_create_alliance_by_name(name)
+    owner = re.search("Owner:.*\\[(.+)\\](.*)", mes.text)
+    owner_tag = owner.group(1)
+    guild = Guild.get_guild(guild_tag=owner_tag)
+    if guild is not None:
+        guild.alliance_id = alliance.id
+        guild.update_to_database()
+        alliance.creator_id = guild.commander_id
+        alliance.update()
+        bot.send_message(chat_id=mes.chat_id, text="Информация об альянсе и гильдии обновлена")
+
+
+def view_alliance(bot, update):
+    mes = update.message
+    player = Player.get_player(mes.from_user.id)
+    alliance = Alliance.get_player_alliance(player)
+    guilds = alliance.get_alliance_guilds()
+    res = "🤝<b>{}</b>\n".format(alliance.name)
+    res += "Владелец: {}\n".format(Player.get_player(alliance.creator_id).nickname)
+    res += "Гильдии альянса: {}".format(" ".join(map(lambda guild: "{}[{}]".format(guild.castle, guild.tag), guilds)))
+    bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
+
+
 
 
 def get_player_and_guild_and_alliance(player_id: int):

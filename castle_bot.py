@@ -44,7 +44,8 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
 from castle_files.work_materials.filters.vote_filters import filter_add_vote_text, filter_add_vote_variant, \
     filter_edit_vote_duration, filter_request_edit_vote_duration, filter_start_vote, filter_view_vote, filter_vote, \
     filter_vote_results, filter_edit_vote_classes
-from castle_files.work_materials.filters.alliance_filters import filter_alliance_location
+from castle_files.work_materials.filters.alliance_filters import filter_alliance_location, filter_alliance_info, \
+    filter_view_alliance
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
@@ -95,7 +96,7 @@ from castle_files.bin.statuses import status_shop, buy_status, statuses, status_
     request_set_own_status, set_own_status, moderate_status
 from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
     delete_message
-from castle_files.bin.alliances import add_alliance_location, ga_map
+from castle_files.bin.alliances import update_alliance, add_alliance_location, ga_map, view_alliance
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -284,6 +285,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
     # Альянсы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_alliance, view_alliance))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_info, update_alliance))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_location, add_alliance_location))
     dispatcher.add_handler(CommandHandler('ga_map', ga_map))
 
