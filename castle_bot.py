@@ -44,6 +44,7 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
 from castle_files.work_materials.filters.vote_filters import filter_add_vote_text, filter_add_vote_variant, \
     filter_edit_vote_duration, filter_request_edit_vote_duration, filter_start_vote, filter_view_vote, filter_vote, \
     filter_vote_results, filter_edit_vote_classes
+from castle_files.work_materials.filters.alliance_filters import filter_alliance_location
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
@@ -283,6 +284,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
     # Альянсы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_location, add_alliance_location))
     dispatcher.add_handler(CommandHandler('ga_map', ga_map))
 
     # Профсоюзы

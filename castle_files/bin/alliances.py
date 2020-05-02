@@ -39,7 +39,7 @@ def add_alliance_location(bot, update):
     if row is not None:
         return
     request = "select id from alliance_locations where name = %s and lvl = %s and link is null " \
-              "and expired is not false limit 1"
+              "and expired is false limit 1"
     cursor.execute(request, (name, lvl))
     row = cursor.fetchone()
     if row is not None:
@@ -47,7 +47,7 @@ def add_alliance_location(bot, update):
         location.link = link
         location.update()
     else:
-        location = AllianceLocation(None, link, name, None, lvl, None, 0, False)
+        location = AllianceLocation(None, link, name, None, lvl, None, 0, False, False)
         location.figure_type()
         location.insert_to_database()
     if alliance is not None and alliance.hq_chat_id is not None:
@@ -177,9 +177,16 @@ def ga_map(bot, update):
     mes = update.message
     locations = AllianceLocation.get_active_locations()
     res = "🗺 Карта альянсов:\n"
+    alliance = Alliance.get_player_alliance(Player.get_player(mes.from_user.id))
     location_to_text: {AllianceLocation: str} = []
     for location in locations:
-        text = "{}{}{} Lvl.{}\n".format(location.emoji, '❇️' if location.is_active() else '', location.name, location.lvl)
+        text = "{}{}{}" \
+               "\n".format(
+                location.emoji, '❇️' if location.is_active() else '',
+                "<a href=\"t.me/share/url?url={}\">{} Lvl.{}</a>".format(
+                    "/ga_atk_{}".format(location.link) if alliance is None or location.owner_id != alliance.id else
+                    "/ga_def_{}".format(location.link), location.name,
+                    location.lvl) if location.link is not None else "{} Lvl.{}".format(location.name, location.lvl))
         alli_name = Alliance.get_alliance(location.owner_id).name if location.owner_id is not None else "Пустует!"
         text += "      🎪{} {}\n".format(alli_name, location.turns_owned)
         location_to_text.append([location, text])
