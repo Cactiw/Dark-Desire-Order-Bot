@@ -96,7 +96,8 @@ from castle_files.bin.statuses import status_shop, buy_status, statuses, status_
     request_set_own_status, set_own_status, moderate_status
 from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
     delete_message
-from castle_files.bin.alliances import update_alliance, add_alliance_location, ga_map, view_alliance, alliance_roster
+from castle_files.bin.alliances import update_alliance, add_alliance_location, ga_map, view_alliance, alliance_roster, \
+    alliance_stats
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -224,6 +225,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_inline, pattern="guilds_divisions_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(inline_edit_guild_division, pattern="guild_change_division_\\d+.*"))
     dispatcher.add_handler(CallbackQueryHandler(guilds_division_change_page, pattern="guilds_divisions_page_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(alliance_stats, pattern="ga_stats_\\d+"))
 
     dispatcher.add_handler(CallbackQueryHandler(skip))
 

@@ -4,9 +4,12 @@
 from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from castle_files.bin.service_functions import check_access
+
 from castle_files.libs.castle.location import Location, status_to_location
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
+from castle_files.libs.alliance import Alliance
+
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 
@@ -104,6 +107,15 @@ def get_guild_inline_buttons(guild: Guild, page):
         ]
     ]
     return InlineKeyboardMarkup(buttons)
+
+
+def get_alliance_inline_buttons(alliance: Alliance):
+    buttons = [
+        [
+            InlineKeyboardButton("📊Статистика по уровням", callback_data="ga_stats_{}".format(alliance.id)),
+        ],
+    ]
+    return buttons
 
 
 

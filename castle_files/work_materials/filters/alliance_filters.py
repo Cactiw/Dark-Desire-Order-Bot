@@ -19,7 +19,7 @@ filter_alliance_location = FilterAllianceLocation()
 class FilterAllianceInfo(BaseFilter):
     def filter(self, message):
         return all(i in message.text for i in frozenset(["Guilds:", "Owner:", "State:", "Balance:"])) and \
-               message.text.startswith("🤝") and filter_is_chat_wars_forward(message)
+               message.text.startswith("🤝") and filter_is_chat_wars_forward(message) and filter_is_pm(message)
 
 
 filter_alliance_info = FilterAllianceInfo()
@@ -27,7 +27,7 @@ filter_alliance_info = FilterAllianceInfo()
 
 class FilterAllianceRoster(BaseFilter):
     def filter(self, message):
-        return message.text.startswith("📋Roster:") and filter_is_chat_wars_forward(message)
+        return message.text.startswith("📋Roster:") and filter_is_chat_wars_forward(message) and filter_is_pm(message)
 
 
 filter_alliance_roster = FilterAllianceRoster()
@@ -39,7 +39,7 @@ class FilterViewAlliance(BaseFilter):
         if user_data is None:
             return False
         return (message.text.startswith("🤝Альянс") or message.text.startswith("🤝Alliance")) and \
-            user_data.get("status") == "barracks"
+            user_data.get("status") == "barracks" and filter_is_pm(message)
 
 
 filter_view_alliance = FilterViewAlliance()

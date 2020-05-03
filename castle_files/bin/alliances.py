@@ -5,14 +5,19 @@ from castle_files.libs.alliance import Alliance, AllianceResults
 from castle_files.libs.alliance_location import AllianceLocation
 
 from castle_files.bin.service_functions import get_time_remaining_to_battle, get_message_forward_time
+from castle_files.bin.buttons import get_alliance_inline_buttons
 
 from castle_files.work_materials.globals import dispatcher, cursor, job
+
 
 import logging
 import traceback
 import re
 import time
 import datetime
+
+from telegram import InlineKeyboardMarkup
+from functools import reduce
 
 ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury']
 
@@ -35,18 +40,77 @@ def update_alliance(bot, update):
         guild.update_to_database()
         alliance.creator_id = guild.commander_id
         alliance.update()
-        bot.send_message(chat_id=mes.chat_id, text="Информация об альянсе и гильдии обновлена")
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Информация об альянсе и гильдии обновлена. Теперь пришли мне 📋 Roster!")
 
 
 def view_alliance(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
+    player_guild = Guild.get_guild(player.guild)
     alliance = Alliance.get_player_alliance(player)
     guilds = alliance.get_alliance_guilds()
     res = "🤝<b>{}</b>\n".format(alliance.name)
     res += "Владелец: {}\n".format(Player.get_player(alliance.creator_id).nickname)
     res += "Гильдии альянса: {}".format(" ".join(map(lambda guild: "{}[{}]".format(guild.castle, guild.tag), guilds)))
-    bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
+    buttons = None
+    if player_guild.check_high_access(player.id):
+        buttons = InlineKeyboardMarkup(get_alliance_inline_buttons(alliance))
+    bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
+
+
+def alliance_stats(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    alliance_id = int(re.search("_(\\d+)", data).group(1))
+    player = Player.get_player(update.callback_query.from_user.id)
+    player_guild = Guild.get_guild(player.guild)
+    if not player_guild.check_high_access(player.id):
+        bot.answerCallbackQuery(update.callback_query.id,
+                                text="Данная функция доступна только командирам гильдий и их заместителям.",
+                                show_alert=True)
+        return
+    alliance = Alliance.get_player_alliance(player)
+    if alliance.id != alliance_id:
+        bot.answerCallbackQuery(update.callback_query.id, text="Альянс не соответствует Вашему. Начните сначала.",
+                                show_alert=True)
+        return
+    guilds = alliance.get_alliance_guilds()
+    response = "📊Статистика <b>{}</b>:\n".format(alliance.name)
+    total_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    for guild in guilds:
+        stats = reduce(
+            add_player_stats,
+            map(lambda player_id: Player.get_player(player_id), guild.members),
+            [[0, 0], [0, 0], [0, 0]]
+        )
+        response += "<b>{}</b>\n{}\n".format(guild.tag, format_leagues_stats(stats))
+        total_stats = add_stats_to_total(total_stats, stats)
+    response += "\n<b>Всего:</b>\n{}\n".format(format_leagues_stats(total_stats))
+    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def add_player_stats(value: [[int, int], [int, int], [int, int]], player: Player):
+    if player.lvl < 20:
+        return value
+    lst = value[player.lvl > 40 + player.lvl > 60]
+    lst[0] += 1
+    lst[1] += player.attack
+    lst[2] += player.defense
+    return value
+
+
+def add_stats_to_total(total, new_stats):
+    for i in range(len(total)):
+        total[i][0] += new_stats[i][0]
+        total[i][1] += new_stats[i][1]
+        total[i][2] += new_stats[i][2]
+    return total
+
+
+def format_leagues_stats(stats: [[int, int, int], [int, int, int], [int, int, int]]) -> str:
+    return "<code>20-40 {:>6}⚔️{:>6}🛡\n40-60 {:>6}⚔️{:>6}🛡\n60+  {:>7}⚔️{:>6}🛡</code>" \
+           "\n".format(*reduce(lambda res, l: res + l, stats, []))
 
 
 def alliance_roster(bot, update):
