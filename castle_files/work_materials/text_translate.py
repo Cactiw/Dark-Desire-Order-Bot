@@ -335,6 +335,8 @@ texts_translate = {
     "Альянс не найден. Обратитесь к создателю альянса, или командиру (его заместителю).":
         "Alliance not found. Contact alliance owner, or your commander (his assistant).",
     "Альянс обновлён.": "Alliance updated.",
+    "Локация не найдена, или уже истекла.": "Location not found, or already expired.",
+    "помечена как истёкшая": "marked as expired",
 
     "Произошла ошибка": "An error occurred",
 

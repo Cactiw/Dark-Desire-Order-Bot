@@ -4,7 +4,8 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.alliance import Alliance, AllianceResults
 from castle_files.libs.alliance_location import AllianceLocation
 
-from castle_files.bin.service_functions import get_time_remaining_to_battle, get_message_forward_time
+from castle_files.bin.service_functions import get_time_remaining_to_battle, get_message_forward_time, \
+    get_message_and_player_id
 from castle_files.bin.buttons import get_alliance_inline_buttons
 
 from castle_files.work_materials.globals import dispatcher, cursor, job
@@ -26,7 +27,22 @@ ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury']
 def alliance_access(func):
     @wraps(func)
     def wrapper(bot, update, *args, **kwargs):
-        if Alliance.get_player_alliance(Player.get_player(update.message.from_user.id, notify_on_error=False)) is None:
+        message, player_id = get_message_and_player_id(update)
+        if Alliance.get_player_alliance(Player.get_player(player_id, notify_on_error=False)) is None:
+            return
+        return func(bot, update, *args, **kwargs)
+    return wrapper
+
+
+def high_access(func):
+    @wraps(func)
+    def wrapper(bot, update, *args, **kwargs):
+        message, player_id = get_message_and_player_id(update)
+        player = Player.get_player(player_id)
+        guild = Guild.get_guild(player.guild)
+        if guild is None or not guild.check_high_access(player.id):
+            bot.send_message(chat_id=message.chat_id,
+                             text="Данная функция доступна только командирам гильдий и их заместителям.")
             return
         return func(bot, update, *args, **kwargs)
     return wrapper
@@ -71,6 +87,8 @@ def view_alliance(bot, update):
     bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
 
 
+@alliance_access
+@high_access
 def alliance_stats(bot, update):
     mes = update.callback_query.message
     data = update.callback_query.data
@@ -100,6 +118,7 @@ def alliance_stats(bot, update):
         total_stats = add_stats_to_total(total_stats, stats)
     response += "\n<b>Всего:</b>\n{}\n".format(format_leagues_stats(total_stats))
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.answerCallbackQuery(update.callback_query.id)
 
 
 def add_player_stats(value: [[int, int, int], [int, int, int], [int, int, int]], player: Player):
@@ -351,19 +370,17 @@ def ga_map(bot, update):
     player = Player.get_player(mes.from_user.id)
     guild = Guild.get_guild(player.guild)
     alliance = Alliance.get_alliance(guild.alliance_id) if guild is not None else None
-    if not guild.check_high_access(player.id):
-        bot.send_message(chat_id=mes.chat_id,
-                         text="Данная функция доступна только командирам гильдий и их заместителям.")
-        return
     location_to_text: {AllianceLocation: str} = []
     for location in locations:
-        text = "{}{}{}" \
+        text = "{}{}{}{}" \
                "\n".format(
                 location.emoji, '❇️' if location.is_active() else '',
                 "<a href=\"t.me/share/url?url={}\">{} Lvl.{}</a>".format(
                     "/ga_atk_{}".format(location.link) if alliance is None or location.owner_id != alliance.id else
                     "/ga_def_{}".format(location.link), location.name,
-                    location.lvl) if location.link is not None else "{} Lvl.{}".format(location.name, location.lvl))
+                    location.lvl) if location.link is not None else "{} Lvl.{}".format(location.name, location.lvl),
+                "<a href=\"t.me/share/url?url=/ga_expire {}\">⚠</a>️".format(location.link) if
+                location.can_expired else "")
         alli_name = Alliance.get_alliance(location.owner_id).name if location.owner_id is not None else "Пустует!"
         text += "      🎪{} {}\n".format(alli_name, location.turns_owned)
         location_to_text.append([location, text])
@@ -374,6 +391,25 @@ def ga_map(bot, update):
     if alliance is not None:
         res = alliance.add_flag_to_name(res)
     bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
+
+
+@alliance_access
+@high_access
+def ga_expire(bot, update):
+    try:
+        link = re.match("/ga_expire (.+)", update.message.text).group(1)
+    except Exception:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис",
+                         reply_to_message_id=update.message.message_id)
+        return
+    location = AllianceLocation.get_location_by_link(link)
+    if location is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Локация не найдена, или уже истекла.",
+                         reply_to_message_id=update.message.message_id)
+        return
+    location.expired = True
+    location.update()
+    bot.send_message(chat_id=update.message.chat_id, text="{} помечена как истёкшая".format(location.format_name()))
 
 
 @alliance_access

@@ -79,6 +79,12 @@ def get_forward_message_time(mes):
     return utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
 
 
+def get_message_and_player_id(update):
+    message = update.message if update.message is not None else update.callback_query.message
+    player_id = update.message.from_user.id if update.message is not None else update.callback_query.from_user.id
+    return message, player_id
+
+
 def get_time_remaining_to_battle():
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - datetime.datetime.combine(
         datetime.datetime.now().date(), datetime.time(hour=0))

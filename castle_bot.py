@@ -97,7 +97,7 @@ from castle_files.bin.statuses import status_shop, buy_status, statuses, status_
 from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
     delete_message
 from castle_files.bin.alliances import update_alliance, add_alliance_location, ga_map, view_alliance, alliance_roster, \
-    alliance_stats, alliance_pin, set_alliance_hq_chat
+    alliance_stats, alliance_pin, set_alliance_hq_chat, ga_expire
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -294,6 +294,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_location, add_alliance_location))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_pin, alliance_pin))
     dispatcher.add_handler(CommandHandler('ga_map', ga_map))
+    dispatcher.add_handler(CommandHandler('ga_expire', ga_expire))
     dispatcher.add_handler(CommandHandler('set_alliance_hq_chat', set_alliance_hq_chat, pass_args=True))
 
     # Профсоюзы
