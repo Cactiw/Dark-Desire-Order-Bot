@@ -32,6 +32,9 @@ class AllianceLocation:
     def is_active(self) -> bool:
         return self.owner_id is not None and self.turns_owned > 0
 
+    def format_name(self) -> str:
+        return "{} Lvl.{}".format(self.name, self.lvl)
+
     def insert_to_database(self):
         request = "insert into alliance_locations(link, name, type, lvl, owner_id, can_expired, expired) VALUES " \
                   "(%s, %s, %s, %s, %s, %s, %s) returning id"
@@ -60,6 +63,17 @@ class AllianceLocation:
                                 expired)
 
     @staticmethod
+    def get_location_by_link(link: str) -> 'AllianceLocation':
+        if link is None:
+            return None
+        request = "select id from alliance_locations where lower(link) = lower(%s) and expired is false limit 1"
+        cursor.execute(request, (link,))
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return AllianceLocation.get_location(row[0])
+
+    @staticmethod
     def get_or_create_location_by_name_and_lvl(name: str, lvl: int) -> 'AllianceLocation':
         request = "select id from alliance_locations where expired is false and lower(name) = lower(%s) and lvl = %s " \
                   "limit 1"
@@ -82,4 +96,7 @@ class AllianceLocation:
     def increase_turns_owned():
         request = "update alliance_locations set turns_owned = turns_owned + 1 where expired is false"
         cursor.execute(request)
+
+    def __eq__(self, other):
+        return self.id == other.id or self.link == other.link
 

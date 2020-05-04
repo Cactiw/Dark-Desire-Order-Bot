@@ -7,6 +7,8 @@ from castle_files.work_materials.globals import dispatcher
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
 
+import re
+
 
 class FilterAllianceLocation(BaseFilter):
     def filter(self, message):
@@ -44,4 +46,11 @@ class FilterViewAlliance(BaseFilter):
 
 filter_view_alliance = FilterViewAlliance()
 
+
+class FilterAlliancePin(BaseFilter):
+    def filter(self, message):
+        return re.search('/ga_(atk|def)_\\w+', message.text) is not None
+
+
+filter_alliance_pin = FilterAlliancePin()
 

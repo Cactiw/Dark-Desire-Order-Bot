@@ -319,3 +319,32 @@ def ga_map(bot, update):
         res = alliance.add_flag_to_name(res)
     bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 
+
+def alliance_pin(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    alliance = Alliance.get_player_alliance(player)
+    new_text: str = update.message.text
+    changed = False
+    parse = re.findall("/ga_(atk|def)_(\\w+)", update.message.text)
+    for cmd, link in parse:
+        location = AllianceLocation.get_location_by_link(link)
+        if location is None:
+            cur_alliance = Alliance.get_alliance_by_link(link)
+            if cur_alliance is None:
+                continue
+            new_text = re.sub("/ga_{}_{}".format(cmd, link),
+                              "<a href=\"t.me/share/url?url=/ga_{}_{}\">{}{}</a>".format(
+                                  cmd, link, "⚔️" if cmd == "atk" else "🛡", cur_alliance.name), new_text)
+            changed = True
+        else:
+            new_text = re.sub("/ga_{}_{}".format(cmd, link),
+                              "<a href=\"t.me/share/url?url=/ga_{}_{}\">{}{}</a>".format(
+                                  cmd, link, "⚔️" if cmd == "atk" else "🛡", location.format_name()), new_text)
+            changed = True
+            # if cur_alliance == alliance:
+    if changed:
+        bot.send_message(chat_id=update.message.chat_id, text=new_text, parse_mode='HTML',
+                         reply_to_message_id=update.message.message_id)
+
+
+

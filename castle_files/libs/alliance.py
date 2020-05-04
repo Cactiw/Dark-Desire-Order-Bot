@@ -52,6 +52,15 @@ class Alliance:
         return Alliance(alliance_id, link, name, creator_id, assistants, hq_chat_id)
 
     @staticmethod
+    def get_alliance_by_link(link: str) -> 'Alliance':
+        request = "select id from alliances where lower(link) = lower(%s) limit 1"
+        cursor.execute(request, (link,))
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return Alliance.get_alliance(row[0])
+
+    @staticmethod
     def get_or_create_alliance_by_name(name: str) -> 'Alliance':
         request = "select id from alliances where lower(name) = lower(%s)"
         cursor.execute(request, (name,))
@@ -76,6 +85,9 @@ class Alliance:
         if guild is None or guild.alliance_id is None:
             return None
         return Alliance.get_alliance(guild.alliance_id)
+
+    def __eq__(self, other):
+        return self.id == other.id or self.link == other.link
 
 
 class AllianceResults:
