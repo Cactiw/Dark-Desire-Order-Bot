@@ -8,6 +8,7 @@ from castle_files.bin.service_functions import get_time_remaining_to_battle, get
 from castle_files.bin.buttons import get_alliance_inline_buttons
 
 from castle_files.work_materials.globals import dispatcher, cursor, job
+from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 
 import logging
@@ -180,13 +181,18 @@ def add_alliance_location(bot, update):
     mes = update.message
     player, guild, alliance = get_player_and_guild_and_alliance(mes.from_user.id)
     try:
-        parse = re.search("You found hidden location (\\w+) lvl.(\\d+)", mes.text)
-        name, lvl = parse.group(1), int(parse.group(2))
         parse = re.search("simple combination: (\\w+)", mes.text)
         link = parse.group(1)
+
+        parse = re.search("You found hidden (location (.+) lvl.(\\d+)|headquarter (.+))", mes.text)
+        if parse.group(4) is not None:
+            return add_alliance_link(parse.group(4), link)
+        name, lvl = parse.group(2), int(parse.group(3))
+
     except Exception:
         logging.error(traceback.format_exc())
-        bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка")
+        if filter_is_pm(mes):
+            bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка")
         return
     request = "select id from alliance_locations where link = %s"
     cursor.execute(request, (link,))
@@ -208,6 +214,13 @@ def add_alliance_location(bot, update):
     if alliance is not None and alliance.hq_chat_id is not None:
         bot.send_message(chat_id=alliance.hq_chat_id, parse_mode='HTML',
                          text="Новая локация: <b>{} Lvl.{}</b>\n{}".format(name, lvl, link))
+
+
+def add_alliance_link(name, link):
+    alliance = Alliance.get_or_create_alliance_by_name(name)
+    if alliance.link is None:
+        alliance.link = link
+        alliance.update()
 
 
 def plan_clear_alliance_results(*args):

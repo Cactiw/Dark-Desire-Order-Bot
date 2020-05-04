@@ -12,7 +12,8 @@ import re
 
 class FilterAllianceLocation(BaseFilter):
     def filter(self, message):
-        return message.text.startswith("You found hidden location") and filter_is_chat_wars_forward(message)
+        return re.match("You found hidden (location|headquarter)", message.text) is not None \
+               and filter_is_chat_wars_forward(message)
 
 
 filter_alliance_location = FilterAllianceLocation()
