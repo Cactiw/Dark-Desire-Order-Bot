@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api, SUPER_ADMIN_ID
+    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -44,6 +44,8 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
 from castle_files.work_materials.filters.vote_filters import filter_add_vote_text, filter_add_vote_variant, \
     filter_edit_vote_duration, filter_request_edit_vote_duration, filter_start_vote, filter_view_vote, filter_vote, \
     filter_vote_results, filter_edit_vote_classes
+from castle_files.work_materials.filters.alliance_filters import filter_alliance_location, filter_alliance_info, \
+    filter_view_alliance, filter_alliance_roster, filter_alliance_pin
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
@@ -94,6 +96,8 @@ from castle_files.bin.statuses import status_shop, buy_status, statuses, status_
     request_set_own_status, set_own_status, moderate_status
 from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
     delete_message
+from castle_files.bin.alliances import update_alliance, add_alliance_location, ga_map, view_alliance, alliance_roster, \
+    alliance_stats, alliance_pin, set_alliance_hq_chat
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -222,6 +226,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(inline_edit_guild_division, pattern="guild_change_division_\\d+.*"))
     dispatcher.add_handler(CallbackQueryHandler(guilds_division_change_page, pattern="guilds_divisions_page_\\d+"))
 
+    dispatcher.add_handler(CallbackQueryHandler(alliance_stats, pattern="ga_stats_\\d+"))
+
     dispatcher.add_handler(CallbackQueryHandler(skip))
 
     #
@@ -280,6 +286,15 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
+
+    # Альянсы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_alliance, view_alliance))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_roster, alliance_roster))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_info, update_alliance))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_location, add_alliance_location))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_pin, alliance_pin))
+    dispatcher.add_handler(CommandHandler('ga_map', ga_map))
+    dispatcher.add_handler(CommandHandler('set_alliance_hq_chat', set_alliance_hq_chat, pass_args=True))
 
     # Профсоюзы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
@@ -641,7 +656,7 @@ def castle_bot_processing():
     mobs_messages_updating.start()
     processes.append(mobs_messages_updating)
 
-    if enable_api:
+    if enable_telethon:
         telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
         telethon_script.start()
         processes.append(telethon_script)
@@ -650,6 +665,7 @@ def castle_bot_processing():
         parse_stats_pr.start()
         processes.append(parse_stats_pr)
 
+    if enable_api:
         api = threading.Thread(target=start_api, args=[])
         api.start()
         processes.append(api)

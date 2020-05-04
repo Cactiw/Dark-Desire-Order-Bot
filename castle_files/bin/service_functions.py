@@ -75,6 +75,10 @@ def fill_allowed_list():
         row = cursor.fetchone()
 
 
+def get_forward_message_time(mes):
+    return utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+
+
 def get_time_remaining_to_battle():
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - datetime.datetime.combine(
         datetime.datetime.now().date(), datetime.time(hour=0))
