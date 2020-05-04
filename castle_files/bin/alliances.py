@@ -132,7 +132,28 @@ def alliance_roster(bot, update):
             continue
         guild.alliance_id = alliance.id
         guild.update_to_database()
-    bot.send_message(chat_id=update.message.chat_id, text="Состав альянса обновлён")
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Состав альянса обновлён.\n"
+                          "Установите чат МИДа альянса командой /set_alliance_hq_chat {chat_id}\n"
+                          "<em>chat_id можно получить при помощи команды /chat_info в нужном чате.",
+                     parse_mode='HTML')
+
+
+def set_alliance_hq_chat(bot, update, args):
+    try:
+        chat_id = int(args[0])
+    except Exception:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Неверный синтаксис.\nПример: /set_alliance_hq_chat -1234567890")
+        return
+    alliance = Alliance.get_player_alliance(Player.get_player(update.message.from_user.id))
+    if alliance is None:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Альянс не найден. Обратитесь к создателю альянса, или командиру (его заместителю).")
+        return
+    alliance.hq_chat_id = chat_id
+    alliance.update()
+    bot.send_message(chat_id=update.message.chat_id, text="Альянс обновлён.")
 
 
 def get_player_and_guild_and_alliance(player_id: int):
