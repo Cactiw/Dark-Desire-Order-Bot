@@ -17,9 +17,18 @@ import time
 import datetime
 
 from telegram import InlineKeyboardMarkup
-from functools import reduce
+from functools import reduce, wraps
 
 ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury']
+
+
+def alliance_access(func):
+    @wraps(func)
+    def wrapper(bot, update, *args, **kwargs):
+        if Alliance.get_player_alliance(Player.get_player(update.message.from_user.id, notify_on_error=False)) is None:
+            return
+        return func(bot, update, *args, **kwargs)
+    return wrapper
 
 
 def update_alliance(bot, update):
@@ -35,7 +44,8 @@ def update_alliance(bot, update):
     owner = re.search("Owner:.*\\[(.+)\\](.*)", mes.text)
     owner_tag = owner.group(1)
     guild = Guild.get_guild(guild_tag=owner_tag)
-    if guild is not None:
+    player = Player.get_player(mes.from_user.id)
+    if guild is not None and guild.id == player.guild:
         guild.alliance_id = alliance.id
         guild.update_to_database()
         alliance.creator_id = guild.commander_id
@@ -44,6 +54,7 @@ def update_alliance(bot, update):
                          text="Информация об альянсе и гильдии обновлена. Теперь пришли мне 📋 Roster!")
 
 
+@alliance_access
 def view_alliance(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
@@ -71,7 +82,7 @@ def alliance_stats(bot, update):
                                 show_alert=True)
         return
     alliance = Alliance.get_player_alliance(player)
-    if alliance.id != alliance_id:
+    if alliance is None or alliance.id != alliance_id:
         bot.answerCallbackQuery(update.callback_query.id, text="Альянс не соответствует Вашему. Начните сначала.",
                                 show_alert=True)
         return
@@ -113,6 +124,7 @@ def format_leagues_stats(stats: [[int, int, int], [int, int, int], [int, int, in
            "\n".format(*reduce(lambda res, l: res + l, stats, []))
 
 
+@alliance_access
 def alliance_roster(bot, update):
     alliance = Alliance.get_player_alliance(Player.get_player(update.message.from_user.id))
     if alliance is None:
@@ -139,6 +151,7 @@ def alliance_roster(bot, update):
                      parse_mode='HTML')
 
 
+@alliance_access
 def set_alliance_hq_chat(bot, update, args):
     try:
         chat_id = int(args[0])
@@ -315,11 +328,18 @@ def parse_alliance_battle_results(results: str):
         AllianceResults.set_location_text(sort_and_add_types_to_location_list(locations_to_results))
 
 
+@alliance_access
 def ga_map(bot, update):
     mes = update.message
     locations = AllianceLocation.get_active_locations()
     res = "🗺 Карта альянсов:\n"
-    alliance = Alliance.get_player_alliance(Player.get_player(mes.from_user.id))
+    player = Player.get_player(mes.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    alliance = Alliance.get_alliance(guild.alliance_id) if guild is not None else None
+    if not guild.check_high_access(player.id):
+        bot.send_message(chat_id=mes.chat_id,
+                         text="Команда доступна только для командиров гильдий альянса и их заместителей")
+        return
     location_to_text: {AllianceLocation: str} = []
     for location in locations:
         text = "{}{}{}" \
@@ -341,6 +361,7 @@ def ga_map(bot, update):
     bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 
 
+@alliance_access
 def alliance_pin(bot, update):
     player = Player.get_player(update.message.from_user.id)
     alliance = Alliance.get_player_alliance(player)

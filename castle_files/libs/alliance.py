@@ -42,6 +42,8 @@ class Alliance:
 
     @staticmethod
     def get_alliance(alliance_id: int) -> 'Alliance':
+        if alliance_id is None:
+            return None
         request = "select link, name, creator_id, assistants, hq_chat_id from alliances where id = %s " \
                   "limit 1"
         cursor.execute(request, (alliance_id,))
