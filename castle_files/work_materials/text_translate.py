@@ -292,7 +292,7 @@ texts_translate = {
     "Состав альянса обновлён.\n"
       "Установите чат МИДа альянса командой /set_alliance_hq_chat {chat_id}\n"
       "<em>chat_id можно получить при помощи команды /chat_info в нужном чате.</em>":
-        "The Alliance has been updated.\n Set the Alliance HQ chat with the command /set_alliance_hq_chat {chat_id}\n"
+        "The Alliance has been updated.\n Set the Alliance HQ chat with the command /set_alliance_hq_chat [chat_id]\n"
         "<em>chat_id can be obtained using the command /chat_info in the desired chat.</em>",
 
 
