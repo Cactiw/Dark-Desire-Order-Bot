@@ -147,7 +147,7 @@ def alliance_roster(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text="Состав альянса обновлён.\n"
                           "Установите чат МИДа альянса командой /set_alliance_hq_chat {chat_id}\n"
-                          "<em>chat_id можно получить при помощи команды /chat_info в нужном чате.",
+                          "<em>chat_id можно получить при помощи команды /chat_info в нужном чате.</em>",
                      parse_mode='HTML')
 
 
@@ -338,7 +338,7 @@ def ga_map(bot, update):
     alliance = Alliance.get_alliance(guild.alliance_id) if guild is not None else None
     if not guild.check_high_access(player.id):
         bot.send_message(chat_id=mes.chat_id,
-                         text="Команда доступна только для командиров гильдий альянса и их заместителей")
+                         text="Данная функция доступна только командирам гильдий и их заместителям.")
         return
     location_to_text: {AllianceLocation: str} = []
     for location in locations:
