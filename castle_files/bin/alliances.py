@@ -311,6 +311,7 @@ def parse_alliance_battle_results(results: str):
     elif results.startswith("🗺State of map:"):
         # Сводки с локаций
         AllianceLocation.increase_turns_owned()
+        AllianceLocation.set_possible_expired()
         locations_to_results = []
         for result in results.partition("\n")[2].split("\n\n"):
             location_result = ""
@@ -326,6 +327,7 @@ def parse_alliance_battle_results(results: str):
             new_owner = parse.group(7)
 
             location = AllianceLocation.get_or_create_location_by_name_and_lvl(name, lvl)
+            location.can_expired = False
             emoji = get_map_battle_emoji(battle_result, attack, defense)
             location_result += "{}{}🏅{}\n".format(emoji, name, lvl)
 
@@ -333,8 +335,8 @@ def parse_alliance_battle_results(results: str):
                 alliance = Alliance.get_or_create_alliance_by_name(new_owner)
                 location.owner_id = alliance.id
                 location.turns_owned = 0
-                location.update()
                 location_result += "   ╰🎪 {}\n".format(alliance.name)
+            location.update()
 
             locations_to_results.append([location, location_result])
 

@@ -97,6 +97,11 @@ class AllianceLocation:
         request = "update alliance_locations set turns_owned = turns_owned + 1 where expired is false"
         cursor.execute(request)
 
+    @staticmethod
+    def set_possible_expired():
+        request = "update alliance_locations set can_expired = true where expired is false"
+        cursor.execute(request)
+
     def __eq__(self, other):
         return self.id == other.id or self.link == other.link
 
