@@ -322,7 +322,7 @@ texts_translate = {
     "Потеряно:": "Lost",
     "В сумме:": "In the sum:",
     "Всего:": "Total:",
-    "Статистика": "Statistics:",
+    "Статистика": "Statistics",
 
     "Отправлено на канал. Спасибо!": "Sent to the channel. Thank you!",
 
