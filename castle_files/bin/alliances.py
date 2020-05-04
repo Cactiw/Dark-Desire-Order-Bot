@@ -137,7 +137,7 @@ def alliance_roster(bot, update):
         bot.send_message(chat_id=update.message.chat_id, text="Это устаревший состав.",
                          reply_to_message_id=update.message.message_id)
         return
-    tags = re.findall("\\[\\w+\\]", update.message.text)
+    tags = re.findall("\\[(\\w+)\\]", update.message.text)
     for guild_tag in tags:
         guild = Guild.get_guild(guild_tag=guild_tag)
         if guild is None:
