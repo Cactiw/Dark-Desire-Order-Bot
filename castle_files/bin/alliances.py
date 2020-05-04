@@ -82,7 +82,7 @@ def alliance_stats(bot, update):
         stats = reduce(
             add_player_stats,
             map(lambda player_id: Player.get_player(player_id), guild.members),
-            [[0, 0], [0, 0], [0, 0]]
+            [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         )
         response += "<b>{}</b>\n{}\n".format(guild.tag, format_leagues_stats(stats))
         total_stats = add_stats_to_total(total_stats, stats)
@@ -90,13 +90,13 @@ def alliance_stats(bot, update):
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
-def add_player_stats(value: [[int, int], [int, int], [int, int]], player: Player):
+def add_player_stats(value: [[int, int, int], [int, int, int], [int, int, int]], player: Player):
     if player.lvl < 20:
         return value
-    lst = value[player.lvl > 40 + player.lvl > 60]
-    lst[0] += 1
-    lst[1] += player.attack
-    lst[2] += player.defense
+    lst = value[(player.lvl >= 40) + (player.lvl >= 60)]
+    lst[0] += player.attack
+    lst[1] += player.defense
+    lst[2] += 1
     return value
 
 
@@ -109,7 +109,7 @@ def add_stats_to_total(total, new_stats):
 
 
 def format_leagues_stats(stats: [[int, int, int], [int, int, int], [int, int, int]]) -> str:
-    return "<code>20-40 {:>6}⚔️{:>6}🛡\n40-60 {:>6}⚔️{:>6}🛡\n60+  {:>7}⚔️{:>6}🛡</code>" \
+    return "<code>20-39 {:>5}⚔️{:>5}🛡 {:>2}👥\n40-59 {:>5}⚔️{:>5}🛡 {:>2}👥\n60+  {:>6}⚔️{:>6}🛡 {:>2}👥</code>" \
            "\n".format(*reduce(lambda res, l: res + l, stats, []))
 
 
