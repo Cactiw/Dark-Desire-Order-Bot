@@ -292,7 +292,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_roster, alliance_roster))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_info, update_alliance))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_location, add_alliance_location))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_pin, alliance_pin))
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_alliance_pin, alliance_pin))
     dispatcher.add_handler(CommandHandler('ga_map', ga_map))
     dispatcher.add_handler(CommandHandler('ga_expire', ga_expire))
     dispatcher.add_handler(CommandHandler('set_alliance_hq_chat', set_alliance_hq_chat, pass_args=True))
