@@ -50,7 +50,7 @@ filter_view_alliance = FilterViewAlliance()
 
 class FilterAlliancePin(BaseFilter):
     def filter(self, message):
-        return re.search('/ga_(atk|def)_\\w+', message.text) is not None
+        return re.search('/ga_((atk|def)_\\w+|def)', message.text) is not None
 
 
 filter_alliance_pin = FilterAlliancePin()

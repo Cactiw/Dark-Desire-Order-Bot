@@ -418,16 +418,22 @@ def alliance_pin(bot, update):
     alliance = Alliance.get_player_alliance(player)
     new_text: str = update.message.text
     changed = False
-    parse = re.findall("/ga_(atk|def)_(\\w+)", update.message.text)
-    for cmd, link in parse:
+    parse = re.findall("/ga_((atk|def)_(\\w+)|def)", update.message.text)
+    for full, cmd, link in parse:
         location = AllianceLocation.get_location_by_link(link)
         if location is None:
-            cur_alliance = Alliance.get_alliance_by_link(link)
+            self = False
+            if full == "def" and link == '':
+                cur_alliance = alliance
+                cmd = "def"
+                self = True
+            else:
+                cur_alliance = Alliance.get_alliance_by_link(link)
             if cur_alliance is None:
                 continue
-            new_text = re.sub("/ga_{}_{}".format(cmd, link),
-                              "<a href=\"t.me/share/url?url=/ga_{}_{}\">{}{}</a>".format(
-                                  cmd, link, "⚔️" if cmd == "atk" else "🛡", cur_alliance.name), new_text)
+            new_text = re.sub("/ga_{}_{}()".format(cmd, link) if not self else "/ga_def([^\\_]|$)",
+                              "<a href=\"t.me/share/url?url=/ga_{}_{}\">{}{}</a>\\g<1>".format(
+                                  cmd, cur_alliance.link, "⚔️" if cmd == "atk" else "🛡", cur_alliance.name), new_text)
             changed = True
         else:
             new_text = re.sub("/ga_{}_{}".format(cmd, link),
