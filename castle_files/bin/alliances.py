@@ -382,7 +382,7 @@ def ga_map(bot, update):
                 "<a href=\"t.me/share/url?url=/ga_expire {}\">⚠</a>️".format(location.link) if
                 location.can_expired else "")
         alli_name = Alliance.get_alliance(location.owner_id).name if location.owner_id is not None else "Пустует!"
-        text += "      🎪{} {}\n".format(alli_name, location.turns_owned)
+        text += "   ╰🎪{} {}\n".format(alli_name, location.turns_owned)
         location_to_text.append([location, text])
 
     res += sort_and_add_types_to_location_list(location_to_text)
