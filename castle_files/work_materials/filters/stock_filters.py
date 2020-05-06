@@ -7,6 +7,8 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 from castle_files.work_materials.resource_constants import resources_reverted, resources
 
 import re
+import logging
+import traceback
 
 
 # Сообщение - форвард /g_stock_rec из чв3 и в личке
@@ -55,7 +57,7 @@ filter_guild_stock_resources = FilterGuildStockResources()
 # Сообщение - форвард /stock из чв3 и в личке
 class FilterPlayerStockResources(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and filter_is_pm(message) and message.text.startswith("📦Склад")
+        return filter_is_chat_wars_forward(message) and message.text.startswith("📦Склад")
 
 
 filter_player_stock_resources = FilterPlayerStockResources()
@@ -64,7 +66,7 @@ filter_player_stock_resources = FilterPlayerStockResources()
 # Сообщение - форвард доступных вещей для продажи с аука из чв3 и в личке
 class FilterPlayerAuction(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+        return filter_is_chat_wars_forward(message) and \
                "🛎Welcome to auction!" in message.text and "You have for sale:" in message.text
 
 
@@ -74,7 +76,7 @@ filter_player_auction = FilterPlayerAuction()
 # Сообщение - форвард /misc из чв3 и в личке
 class FilterPlayerMisc(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+        return filter_is_chat_wars_forward(message) and \
                re.search("(.*) \\((\\d+)\\) /(use)|(view)_(.+)]", message.text) is not None
 
 
@@ -85,7 +87,7 @@ filter_player_misc = FilterPlayerMisc()
 class FilterPlayerAlch(BaseFilter):
     def filter(self, message):
         try:
-            return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+            return filter_is_chat_wars_forward(message) and \
                    message.text.splitlines()[0].partition(" (")[0] in list(resources)
         except Exception:
             return False
@@ -98,13 +100,39 @@ filter_player_alch = FilterPlayerAlch()
 class FilterPlayerAlchCraft(BaseFilter):
     def filter(self, message):
         try:
-            return filter_is_chat_wars_forward(message) and filter_is_pm(message) and \
+            return filter_is_chat_wars_forward(message) and \
                    message.text.startswith("📦Склад:") and message.text.splitlines()[1].startswith("/aa_")
         except Exception:
             return False
 
 
 filter_player_alch_craft = FilterPlayerAlchCraft()
+
+filter_player_alch.update_filter = True
+filter_player_alch_craft.update_filter = True
+filter_player_misc.update_filter = True
+filter_player_auction.update_filter = True
+filter_player_stock_resources.update_filter = True
+
+
+# Сообщение - ответ на форвард любого стока в групповом чате
+class FilterReplyDeposit(BaseFilter):
+    def filter(self, message):
+        if message.text != "/deposit":
+            return False
+        message = message.reply_to_message
+        if message is None:
+            return False
+        try:
+            return filter_is_chat_wars_forward(message) and \
+                   (filter_player_alch(message) or filter_player_alch_craft(message) or filter_player_misc(message)
+                    or filter_player_auction(message) or filter_player_stock_resources(message))
+        except Exception:
+            logging.error(traceback.format_exc())
+            return False
+
+
+filter_reply_deposit = FilterReplyDeposit()
 
 
 # Дай x y

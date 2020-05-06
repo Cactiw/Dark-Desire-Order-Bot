@@ -270,6 +270,10 @@ def alch_possible_craft(bot, update):
 
 def deposit(bot, update):
     mes = update.message
+    if mes.text == "/deposit":
+        if mes.reply_to_message is None:
+            return
+        mes = mes.reply_to_message
     response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
     num = 0
     for string in mes.text.splitlines():
