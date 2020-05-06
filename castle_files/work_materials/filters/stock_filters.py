@@ -2,7 +2,7 @@
 Здесь назодятся фильтры для работы со стоком
 """
 from telegram.ext import BaseFilter
-from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_is_chat_wars_forward
+from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_is_chat_wars_forward, update_filter
 
 from castle_files.work_materials.resource_constants import resources_reverted, resources
 
@@ -56,6 +56,7 @@ filter_guild_stock_resources = FilterGuildStockResources()
 
 # Сообщение - форвард /stock из чв3 и в личке
 class FilterPlayerStockResources(BaseFilter):
+    @update_filter
     def filter(self, message):
         return filter_is_chat_wars_forward(message) and message.text.startswith("📦Склад")
 
@@ -65,6 +66,7 @@ filter_player_stock_resources = FilterPlayerStockResources()
 
 # Сообщение - форвард доступных вещей для продажи с аука из чв3 и в личке
 class FilterPlayerAuction(BaseFilter):
+    @update_filter
     def filter(self, message):
         return filter_is_chat_wars_forward(message) and \
                "🛎Welcome to auction!" in message.text and "You have for sale:" in message.text
@@ -75,6 +77,7 @@ filter_player_auction = FilterPlayerAuction()
 
 # Сообщение - форвард /misc из чв3 и в личке
 class FilterPlayerMisc(BaseFilter):
+    @update_filter
     def filter(self, message):
         return filter_is_chat_wars_forward(message) and \
                re.search("(.*) \\((\\d+)\\) /(use)|(view)_(.+)]", message.text) is not None
@@ -85,6 +88,7 @@ filter_player_misc = FilterPlayerMisc()
 
 # Сообщение - форвард алхимии из чв3 и в личке
 class FilterPlayerAlch(BaseFilter):
+    @update_filter
     def filter(self, message):
         try:
             return filter_is_chat_wars_forward(message) and \
@@ -98,6 +102,7 @@ filter_player_alch = FilterPlayerAlch()
 
 # Сообщение - форвард /alch из чв3 и в личке
 class FilterPlayerAlchCraft(BaseFilter):
+    @update_filter
     def filter(self, message):
         try:
             return filter_is_chat_wars_forward(message) and \
