@@ -16,6 +16,8 @@ from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_
 
 import re
 
+WITHDRAW_MESSAGE_LIMIT = 9
+
 
 def stock_sort_comparator(item_code):
     # --> item_code: str || int
@@ -229,7 +231,7 @@ def withdraw_resources(bot, update, user_data):
         res_count = int(res_count.group(1))
         response += "{} {} ".format(code, res_count)
         res_already_counted += 1
-        if res_already_counted >= 8:
+        if res_already_counted >= WITHDRAW_MESSAGE_LIMIT:
             response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = "/g_withdraw "
