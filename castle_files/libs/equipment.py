@@ -66,7 +66,7 @@ class Equipment:
     def format(self, mode=None) -> str:
         if mode == "guild":
             attack, defense = self.get_expected_stats()
-            res = "<a href=\"t.me/share/url?url=/g_deposit {} 1\">{}{}{}{}</a>" \
+            res = "<a href=\"t.me/share/url?url=/g_withdraw {} 1\">{}{}{}{}</a>" \
                   "\n".format(self.type + self.code,
                               "✨" if self.condition == 'reinforced' else "🔩" if self.condition == "broken"
                               else "", self.name, " {} ".format(self.quality) if self.quality else "",
