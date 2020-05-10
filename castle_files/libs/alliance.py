@@ -14,13 +14,19 @@ class Alliance:
         self.assistants = assistants
         self.hq_chat_id = hq_chat_id
 
-    def add_flag_to_name(self, text: str) -> str:
+    def add_flag_to_name(self, text: str, locations: bool = False) -> str:
         """
         Добавляет значок после каждого вхождения имени данного альянса в тексте
         :param text: str - Тест, в котором требуется произвести замену
+        :param locations: bool - Следует ли добавлять эмодзи и к локации
         :return: str - Измененённый тест
         """
-        return text.replace(self.name, "{}{}".format(self.name, '🔻'))
+        s = text.replace(self.name, "{}{}".format(self.name, '🔻'))
+        if locations:
+            locations = self.get_alliance_locations()
+            for location in locations:
+                s = s.replace(location.format_name(), "🔻{}".format(location.format_name()))
+        return s
 
     def format(self) -> str:
         return "<a href=\"t.me/share/url?url=/ga_atk_{}\">🎪{}</a>\n".format(self.link, self.name) if \
@@ -29,12 +35,12 @@ class Alliance:
     def get_alliance_guilds(self):
         request = "select guild_id from guilds where alliance_id = %s"
         cursor.execute(request, (self.id,))
-        return list(map(lambda guild_id: Guild.get_guild(guild_id), cursor.fetchall()))
+        return list(map(lambda guild_id: Guild.get_guild(guild_id[0]), cursor.fetchall()))
 
     def get_alliance_locations(self) -> ['AllianceLocation']:
         request = "select id from alliance_locations where owner_id = %s and expired is false"
         cursor.execute(request, (self.id,))
-        return list(map(AllianceLocation.get_location, cursor.fetchall()))
+        return list(map(lambda loc_id: AllianceLocation.get_location(loc_id[0]), cursor.fetchall()))
 
     def insert_to_database(self):
         request = "insert into alliances(link, name, creator_id, assistants, hq_chat_id) VALUES " \
@@ -85,7 +91,7 @@ class Alliance:
     def get_all_alliances() -> ['Alliance']:
         request = "select id from alliances order by id asc"
         cursor.execute(request)
-        return list(map(lambda alliance_id: Alliance.get_alliance(alliance_id), cursor.fetchall()))
+        return list(map(lambda alliance_id: Alliance.get_alliance(alliance_id[0]), cursor.fetchall()))
 
     @staticmethod
     def get_player_alliance(player) -> 'Alliance':
@@ -104,6 +110,7 @@ class AllianceResults:
     text: str = ""
     has_hq: bool = False
     has_locations: bool = False
+    old_owned: {str: int} = {}
 
     @classmethod
     def get_text(cls):
@@ -128,12 +135,25 @@ class AllianceResults:
                 if alliance.hq_chat_id is not None:
                     dispatcher.bot.send_message(
                         chat_id=alliance.hq_chat_id, parse_mode='HTML',
-                        text=alliance.add_flag_to_name(cls.get_text()))
+                        text=AllianceResults.add_flag_to_old_alliance_locations(
+                            alliance.add_flag_to_name(cls.get_text()), alliance.id))
+
+    @classmethod
+    def add_flag_to_old_alliance_locations(cls, s, alliance_id):
+        print(cls.old_owned)
+        for name, owner_id in list(cls.old_owned.items()):
+            if owner_id == alliance_id:
+                s = s.replace(name, "{}🔻".format(name))
+        return s
 
     @classmethod
     def clear(cls):
         cls.text = ""
         cls.has_hq = False
         cls.has_locations = False
+        cls.old_owned.clear()
 
-
+    @classmethod
+    def fill_old_owned_info(cls):
+        for location in AllianceLocation.get_active_locations():
+            cls.old_owned.update({location.format_name(): location.owner_id})
