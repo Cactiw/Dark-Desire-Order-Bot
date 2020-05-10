@@ -367,16 +367,21 @@ def parse_alliance_battle_results(results: str):
 def ga(bot, update):
     alliances = Alliance.get_all_alliances()
     res = "🎪Альянс:\n  |—🗺Локация | битв удерживается\n----------------------------------------------------\n\n"
+    res_end = ""
     player = Player.get_player(update.message.from_user.id)
     alliance = Alliance.get_player_alliance(player)
     for cur_alliance in alliances:
-        res += cur_alliance.format()
         locations = cur_alliance.get_alliance_locations()
-        for location in locations:
-            res += "  |—{} | {}\n".format(location.format_link_view(alliance, new_line=False),
-                                               location.turns_owned)
-        res += "\n"
-    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
+        if locations:
+            res += cur_alliance.format()
+            for location in locations:
+                res += "  |—{} | {}\n".format(location.format_link_view(alliance, new_line=False),
+                                              location.turns_owned)
+            res += "\n"
+        else:
+            res_end += cur_alliance.format()
+    res += res_end
+    bot.send_message(chat_id=update.message.chat_id, text=alliance.add_flag_to_name(res), parse_mode='HTML')
 
 
 @alliance_access
