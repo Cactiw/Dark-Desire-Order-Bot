@@ -16,7 +16,7 @@ import traceback
 import re
 
 
-TIERS = ['Т0', 'T1', 'T2', 'T3', 'T4', 'T5']
+TIERS = ['➖Т0', '📕T1', '📗T2', '📘T3', '📙T4', '📒T5']
 PLACES = ['main_hand', 'second_hand', 'head', 'gloves', 'armor', 'boots', 'cloaks']
 
 
