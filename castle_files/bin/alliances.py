@@ -363,6 +363,22 @@ def parse_alliance_battle_results(results: str):
 
 
 @alliance_access
+def ga(bot, update):
+    alliances = Alliance.get_all_alliances()
+    res = "🎪Альянс:\n  |—🗺Локация | битв удерживается\n----------------------------------------------------\n\n"
+    player = Player.get_player(update.message.from_user.id)
+    alliance = Alliance.get_player_alliance(player)
+    for cur_alliance in alliances:
+        res += cur_alliance.format()
+        locations = cur_alliance.get_alliance_locations()
+        for location in locations:
+            res += "  |—{} | {}\n".format(location.format_link_view(alliance, new_line=False),
+                                               location.turns_owned)
+        res += "\n"
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
+
+
+@alliance_access
 def ga_map(bot, update):
     mes = update.message
     locations = AllianceLocation.get_active_locations()
@@ -372,15 +388,7 @@ def ga_map(bot, update):
     alliance = Alliance.get_alliance(guild.alliance_id) if guild is not None else None
     location_to_text: {AllianceLocation: str} = []
     for location in locations:
-        text = "{}{}{}{}" \
-               "\n".format(
-                location.emoji, '❇️' if location.is_active() else '',
-                "<a href=\"t.me/share/url?url={}\">{} Lvl.{}</a>".format(
-                    "/ga_atk_{}".format(location.link) if alliance is None or location.owner_id != alliance.id else
-                    "/ga_def_{}".format(location.link), location.name,
-                    location.lvl) if location.link is not None else "{} Lvl.{}".format(location.name, location.lvl),
-                "<a href=\"t.me/share/url?url=/ga_expire {}\">⚠</a>️".format(location.link) if
-                location.can_expired else "")
+        text = location.format_link_view(alliance)
         alli_name = Alliance.get_alliance(location.owner_id).name if location.owner_id is not None else "Пустует!"
         text += "   ╰🎪{} {}\n".format(alli_name, location.turns_owned)
         location_to_text.append([location, text])

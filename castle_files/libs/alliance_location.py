@@ -35,6 +35,18 @@ class AllianceLocation:
     def format_name(self) -> str:
         return "{} Lvl.{}".format(self.name, self.lvl)
 
+    def format_link_view(self, alliance, new_line=True) -> str:
+        s = "{}{}{}{}" \
+               "".format(
+                self.emoji, '❇️' if self.is_active() else '',
+                "<a href=\"t.me/share/url?url={}\">{} Lvl.{}</a>".format(
+                    "/ga_atk_{}".format(self.link) if alliance is None or self.owner_id != alliance.id else
+                    "/ga_def_{}".format(self.link), self.name,
+                    self.lvl) if self.link is not None else "{} Lvl.{}".format(self.name, self.lvl),
+                "<a href=\"t.me/share/url?url=/ga_expire {}\">⚠</a>️".format(self.link) if
+                self.can_expired else "")
+        return s + ("\n" if new_line else "")
+
     def insert_to_database(self):
         request = "insert into alliance_locations(link, name, type, lvl, owner_id, can_expired, expired) VALUES " \
                   "(%s, %s, %s, %s, %s, %s, %s) returning id"

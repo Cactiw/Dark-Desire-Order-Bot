@@ -1,7 +1,7 @@
-
 from castle_files.work_materials.globals import cursor, dispatcher
 
 from castle_files.libs.guild import Guild
+from castle_files.libs.alliance_location import AllianceLocation
 
 
 class Alliance:
@@ -22,11 +22,19 @@ class Alliance:
         """
         return text.replace(self.name, "{}{}".format(self.name, '🔻'))
 
+    def format(self) -> str:
+        return "<a href=\"t.me/share/url?url=/ga_atk_{}\">🎪{}</a>\n".format(self.link, self.name) if \
+            self.link is not None else "🎪{}\n".format(self.name)
 
     def get_alliance_guilds(self):
         request = "select guild_id from guilds where alliance_id = %s"
         cursor.execute(request, (self.id,))
         return list(map(lambda guild_id: Guild.get_guild(guild_id), cursor.fetchall()))
+
+    def get_alliance_locations(self) -> ['AllianceLocation']:
+        request = "select id from alliance_locations where owner_id = %s and expired is false"
+        cursor.execute(request, (self.id,))
+        return list(map(AllianceLocation.get_location, cursor.fetchall()))
 
     def insert_to_database(self):
         request = "insert into alliances(link, name, creator_id, assistants, hq_chat_id) VALUES " \
