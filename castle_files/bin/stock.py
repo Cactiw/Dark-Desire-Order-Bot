@@ -6,6 +6,7 @@ from castle_files.work_materials.resource_constants import resources, resources_
 from castle_files.work_materials.equipment_constants import equipment_names, get_equipment_by_name, \
     get_equipment_by_code
 from castle_files.work_materials.alch_constants import alch_recipes
+from castle_files.work_materials.recipes import craft as craft_dict
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -310,3 +311,30 @@ def deposit(bot, update):
         response += "<a href=\"https://t.me/share/url?url=/g_deposit {} {}\">{} x {}</a>\n".format(code, count,
                                                                                                    res_name, count)
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def get_craft_by_code(code: str) -> dict:
+    eq = get_equipment_by_code(code)
+    if eq is None:
+        return None
+    return craft_dict.get(eq.name)
+
+
+def get_craft_by_name(name: str) -> dict:
+    return craft_dict.get(name)
+
+
+def craft(bot, update, args):
+    if args:
+        code = args[0]  # TODO чёт сделать
+        pass
+    else:
+        try:
+            code = re.search("craft_(\\w+)", update.message.text).group(1)
+        except Exception:
+            bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
+            return
+        craft_eq = get_craft_by_code(code)
+
+
+
