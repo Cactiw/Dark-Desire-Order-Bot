@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID
+    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID, job
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -155,14 +155,21 @@ def castle_hello(bot, update):
         notified = []
         cp.special_info.update({"notified_on_join": notified})
     if mes.from_user.id not in notified:
+        notified.append(mes.from_user.id)
+        cp.update_location_to_database()
+        job.run_once(hello_check, 2, context={"mes": mes})
+
+
+def hello_check(bot, job):
+    mes = job.context.get("mes")
+    user = bot.getChatMember(chat_id=mes.chat_id, user_id=mes.from_user.id)
+    if user.status not in frozenset(['kicked', 'restricted', 'left']):
         bot.send_message(chat_id=mes.chat_id,
                          text="Привет, новичок!\n\nДоложи капитану стражи о прибытии, "
                               "прислав в чат пароль в формате XXX XXX латинскими буквами.\n\n"
                               "<a href=\"https://t.me/joinchat/F4YvQUUfsDhK1bYfU_S1Fw\">Вступай в "
                               "академию</a>, где ты получишь необходимые знания и навыки!",
                          reply_to_message_id=mes.message_id, parse_mode='HTML', disable_web_page_preview=True)
-        notified.append(mes.from_user.id)
-        cp.update_location_to_database()
 
 
 def show_data(bot, update, user_data, args):
