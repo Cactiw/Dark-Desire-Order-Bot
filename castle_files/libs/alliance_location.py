@@ -102,7 +102,7 @@ class AllianceLocation:
         request = "select id from alliance_locations where expired is false"
         cursor.execute(request)
         rows = cursor.fetchall()
-        return list(map(lambda loc_id: AllianceLocation.get_location(loc_id), rows))
+        return list(map(lambda loc_id: AllianceLocation.get_location(loc_id[0]), rows))
 
     @staticmethod
     def increase_turns_owned():
