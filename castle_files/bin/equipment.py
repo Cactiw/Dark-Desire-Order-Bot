@@ -82,7 +82,7 @@ def get_guild_equipment_text(guild: Guild, selected_place: int, selected_tier: i
     res = "🏷Гильдейская экипировка:\n"
     equipment: [Equipment] = guild.get_equipment()
     place = PLACES[selected_place] if selected_place is not None else None
-    tier = int(TIERS[selected_tier][1:]) if selected_tier is not None else None
+    tier = int(TIERS[selected_tier][2:]) if selected_tier is not None else None
     for eq in equipment:
         if (place is None or place == eq.place) and (tier is None or tier == eq.tier):
             res += eq.format(mode="guild")
