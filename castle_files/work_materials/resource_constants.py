@@ -77,3 +77,12 @@ resources = {
 }
 
 resources_reverted = dict_invert(resources)
+
+
+def get_resource_name_by_code(code: str) -> str:
+    return resources_reverted.get(code)
+
+
+def get_resource_code_by_name(name: str) -> str:
+    return resources.get(name)
+
