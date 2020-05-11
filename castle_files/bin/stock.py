@@ -2,7 +2,8 @@
 Здесь находятся всякие функции для непосредственной работы со стоком
 """
 from castle_files.work_materials.item_consts import items
-from castle_files.work_materials.resource_constants import resources, resources_reverted
+from castle_files.work_materials.resource_constants import resources, resources_reverted, get_resource_code_by_name, \
+    get_resource_name_by_code
 from castle_files.work_materials.equipment_constants import equipment_names, get_equipment_by_name, \
     get_equipment_by_code
 from castle_files.work_materials.alch_constants import alch_recipes
@@ -317,14 +318,62 @@ def get_craft_by_code(code: str) -> dict:
     eq = get_equipment_by_code(code)
     if eq is None:
         return None
-    return craft_dict.get(eq.name)
+    return craft_dict.get(eq.name.lower())
+
+
+def get_craft_name_by_code(code: str) -> str:
+    eq = get_equipment_by_code(code)
+    if eq is None:
+        return None
+    return eq.name.lower()
+
+
+LEVEL_OFFSET = "    "
+LEVEL_SEPARATOR = "|—"
 
 
 def get_craft_by_name(name: str) -> dict:
     return craft_dict.get(name)
 
 
-def craft(bot, update, args):
+def format_resource_string(name, player_count, guild_count, total_count, need_count, need_separator: bool = True) -> str:
+    return "{} {} x {} | {} ({}) {}".format(
+        LEVEL_SEPARATOR if need_separator else "", name, need_count,
+        min(total_count, need_count), min(player_count, need_count), "✅" if total_count >= need_count else "❌")
+
+
+def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, current_offset:str,
+                force_deep: bool = False):
+    if craft_item is None:
+        craft_type = "simple"
+        craft_code = get_resource_code_by_name(craft_name[0].capitalize() + craft_name[1:])
+    else:
+        craft_type = craft_item.get("type")
+        craft_code = str(craft_item.get("code"))
+    player_count, guild_count = stock.get(craft_code, 0), guild_stock.get(craft_code, 0)
+    total_count = player_count + guild_count
+    if craft_type == "simple" or (not force_deep and total_count >= need_count):
+        return "{}{}".format(
+            current_offset, format_resource_string(craft_name, player_count, guild_count, total_count, need_count,
+                                                   need_separator=current_offset != ""))
+    res = ""
+    if not force_deep:
+        res += "{}{}\n".format(current_offset,
+                               format_resource_string(craft_name, player_count, guild_count, total_count, need_count,
+                                                      need_separator=current_offset != ""))
+    for resource_name, count in list(craft_item.get("recipe").items()):
+        # stock.update()  TODO сделать обновление стока в процессе
+        res += "{}\n".format(count_craft(
+            get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock,
+            current_offset + (LEVEL_OFFSET if not force_deep else "")))
+    return res[:-1]
+
+
+
+
+
+def craft(bot, update):
+    args = update.message.text.split()[1:]
     if args:
         code = args[0]  # TODO чёт сделать
         pass
@@ -334,7 +383,14 @@ def craft(bot, update, args):
         except Exception:
             bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
             return
-        craft_eq = get_craft_by_code(code)
+    name = get_craft_name_by_code(code)
+    craft_eq = get_craft_by_name(name)
+    player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock({})
+    res = "⚒Крафт <b>{}</b>:\n{}".format(name, count_craft(craft_eq, name, 1, player.stock, guild_stock, "",
+                                                           force_deep=True))
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
 
 
 
