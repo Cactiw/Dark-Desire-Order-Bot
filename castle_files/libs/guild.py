@@ -134,6 +134,11 @@ class Guild:
 
         return total_attack, total_defense, total_exp, total_gold, total_stock
 
+    def get_stock(self, default=None) -> dict:
+        if self.api_info is None:
+            return default
+        return self.api_info.get("stock", default)
+
 
     # Метод для добавления игрока в гильдию
     def add_player(self, player_to_add):
