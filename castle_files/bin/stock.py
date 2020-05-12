@@ -329,16 +329,18 @@ def get_craft_name_by_code(code: str) -> str:
 
 
 LEVEL_OFFSET = "    "
-LEVEL_SEPARATOR = "|—"
+LEVEL_SEPARATOR = "|"
 
 
 def get_craft_by_name(name: str) -> dict:
     return craft_dict.get(name)
 
 
-def format_resource_string(name, player_count, guild_count, total_count, need_count, need_separator: bool = True) -> str:
-    return "{} {} x {} | {} ({}) {}".format(
-        LEVEL_SEPARATOR if need_separator else "", name, need_count,
+def format_resource_string(name, code, player_count, guild_count, total_count, need_count,
+                           need_separator: bool = True) -> str:
+    return "{} {} {} x {} | {} ({})📦 {}".format(
+        LEVEL_SEPARATOR if need_separator else "", "<code>{}</code>".format(code) if code is not None else "",
+        name, need_count,
         min(total_count, need_count), min(player_count, need_count), "✅" if total_count >= need_count else "❌")
 
 
@@ -354,12 +356,14 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
     total_count = player_count + guild_count
     if craft_type == "simple" or (not force_deep and total_count >= need_count):
         return "{}{}".format(
-            current_offset, format_resource_string(craft_name, player_count, guild_count, total_count, need_count,
+            current_offset, format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
+                                                   need_count,
                                                    need_separator=current_offset != ""))
     res = ""
     if not force_deep:
         res += "{}{}\n".format(current_offset,
-                               format_resource_string(craft_name, player_count, guild_count, total_count, need_count,
+                               format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
+                                                      need_count,
                                                       need_separator=current_offset != ""))
     for resource_name, count in list(craft_item.get("recipe").items()):
         # stock.update()  TODO сделать обновление стока в процессе
@@ -388,8 +392,9 @@ def craft(bot, update):
     player = Player.get_player(update.message.from_user.id)
     guild = Guild.get_guild(player.guild)
     guild_stock = guild.get_stock({})
-    res = "⚒Крафт <b>{}</b>:\n{}".format(name, count_craft(craft_eq, name, 1, player.stock, guild_stock, "",
-                                                           force_deep=True))
+    res = "⚒Крафт <b>{}</b>:\n{}\n\n" \
+          "<em>📦 - весь сток, (👤) - уже у Вас (разница в гильдии)</em>".format(
+        name, count_craft(craft_eq, name, 1, player.stock, guild_stock, "", force_deep=True))
     bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
 
 
