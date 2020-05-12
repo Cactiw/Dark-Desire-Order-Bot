@@ -340,10 +340,10 @@ def get_craft_by_name(name: str) -> dict:
 
 def format_resource_string(name, code, player_count, guild_count, total_count, need_count,
                            need_separator: bool = True) -> str:
-    return "{} {} {} x {} | {} ({})📦 {}".format(
+    return "{} {} {} x {} | {}{}".format(
         LEVEL_SEPARATOR if need_separator else "", "<code>{}</code>".format(code) if code is not None else "",
-        name, need_count,
-        min(total_count, need_count), min(player_count, need_count), "✅" if total_count >= need_count else "❌")
+        name, need_count, ("" if player_count >= need_count else "{}📤 ".format(need_count - player_count))
+        if total_count >= need_count else "{} ".format(total_count), "✅" if total_count >= need_count else "❌")
 
 
 def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, withdraw: dict,
@@ -403,7 +403,7 @@ def format_buy_resources(buy: dict) -> str:
         price = prices.get(code, "❔")
         full_price = price * count if isinstance(price, int) else 0
         total_price += full_price
-        res += "{} {} x {} {}\n".format(
+        res += "{} {} x {} ≈ {}\n".format(
             code, get_item_name_by_code(code), count,
             "{}💰 ({}💰x{})".format(full_price, price, count) if isinstance(price, int) else price)
     res += "\nВсего: {}💰\n".format(total_price)
@@ -428,7 +428,7 @@ def craft(bot, update):
     guild_stock = guild.get_stock({}).copy()
     withdraw, buy = {}, {}
     res = "⚒Крафт <b>{}</b>:\n{}\n\n{}\n\n" \
-          "<em>📦 - весь сток, (👤) - уже у Вас (разница в гильдии)\n" \
+          "<em>📦📤 - нужно достать из гильдии\n" \
           "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
           "/update_stock\n/update_guild".format(
                 name, count_craft(craft_eq, name, 1, player.stock.copy(), guild_stock, withdraw, buy, "",
