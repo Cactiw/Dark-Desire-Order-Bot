@@ -76,6 +76,7 @@ resources = {
     "Cheese": "621",
 }
 
+resources_lower = {k: v for k, v in list(map(lambda x: (x[0].lower(), x[1]), list(resources.items())))}
 resources_reverted = dict_invert(resources)
 
 
@@ -84,5 +85,6 @@ def get_resource_name_by_code(code: str) -> str:
 
 
 def get_resource_code_by_name(name: str) -> str:
-    return resources.get(name)
+    name = name.lower()
+    return resources_lower.get(name)
 

@@ -2,17 +2,18 @@ from castle_files.work_materials.equipment_constants import equipment_names, get
     get_equipment_by_code
 
 from castle_files.work_materials.item_consts import items
-from castle_files.work_materials.resource_constants import resources, resources_reverted
+from castle_files.work_materials.resource_constants import resources, resources_reverted, get_resource_code_by_name
 from castle_files.work_materials.alch_constants import alch_recipes
 
 
 
 def get_item_code_by_name(name):
+    name = name.lower()
     for num, elem in list(items.items()):
-        if name == elem[1]:
+        if name == elem[1].lower():
             code = "k" + num
             return code
-        elif elem[0] in name and "recipe" in name.lower():
+        elif elem[0].lower() in name and "recipe" in name:
             code = "r" + num
             return code
         else:
@@ -23,7 +24,7 @@ def get_item_code_by_name(name):
     item = alch_recipes.get(name.lower())
     if item is not None:
         return item.get("code")
-    item = resources.get(name)
+    item = get_resource_code_by_name(name)
     # print(name, item)
     return item
 

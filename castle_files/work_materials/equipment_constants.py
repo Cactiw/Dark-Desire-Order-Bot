@@ -258,8 +258,8 @@ equipment = {
     "cloaks": cloaks
 }
 
-# Хранит имя предмета как ключ и код (с типом) как значение. Заполняется функцией fill_names
-# Пример: { "Knight's sword": "w05" }
+# Хранит имя предмета как ключ (В lower!!) и код (с типом) как значение. Заполняется функцией fill_names
+# Пример: { "knight's sword": "w05" }
 equipment_names = {}
 
 
@@ -267,7 +267,7 @@ def fill_names():
     eq_list = list(equipment.values())
     for lst in eq_list:
         for eq in lst:
-            equipment_names.update({eq.name: "{}{}".format(eq.type, eq.code)})
+            equipment_names.update({eq.name.lower(): "{}{}".format(eq.type, eq.code)})
 
 
 fill_names()
