@@ -421,7 +421,11 @@ def craft(bot, update):
         except Exception:
             bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
             return
-    name = get_craft_name_by_code(code)
+    try:
+        name = get_craft_name_by_code(code)
+    except Exception:
+        bot.send_message(chat_id=update.message.chat_id, text="Предмет не найден.")
+        return
     craft_eq = get_craft_by_name(name)
     player = Player.get_player(update.message.from_user.id)
     guild = Guild.get_guild(player.guild)
