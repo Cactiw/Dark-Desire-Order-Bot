@@ -15,6 +15,8 @@ from castle_files.libs.player import Player
 
 from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_by_name, get_equipment_by_code, \
     get_equipment_by_name
+from castle_files.bin.service_functions import increase_or_add_value_to_dict, decrease_or_pop_value_from_dict, \
+    pop_from_user_data_if_presented
 
 import re
 
@@ -344,17 +346,32 @@ def format_resource_string(name, code, player_count, guild_count, total_count, n
         min(total_count, need_count), min(player_count, need_count), "✅" if total_count >= need_count else "❌")
 
 
-def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, current_offset:str,
-                force_deep: bool = False):
+def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, withdraw: dict,
+                buy: dict, current_offset: str, force_deep: bool = False):
     if craft_item is None:
         craft_type = "simple"
-        craft_code = get_resource_code_by_name(craft_name[0].capitalize() + craft_name[1:])
+        search_name = craft_name[0].capitalize() + craft_name[1:]
+        craft_code = get_resource_code_by_name(search_name)
+        if craft_code is None:
+            craft_code = get_item_code_by_name(search_name)
     else:
         craft_type = craft_item.get("type")
         craft_code = str(craft_item.get("code"))
     player_count, guild_count = stock.get(craft_code, 0), guild_stock.get(craft_code, 0)
     total_count = player_count + guild_count
     if craft_type == "simple" or (not force_deep and total_count >= need_count):
+        # Добавляем ресурс в список на выдачу, и вычитаем из стока, чтобы не посчитать далее дважды
+        if player_count < need_count:
+            withdraw_count = min(guild_count, need_count - player_count)
+            increase_or_add_value_to_dict(withdraw, craft_code, withdraw_count)
+            pop_from_user_data_if_presented(stock, craft_code)
+            decrease_or_pop_value_from_dict(guild_stock, craft_code, withdraw_count)
+
+            buy_count = need_count - total_count
+            if buy_count > 0:
+                increase_or_add_value_to_dict(buy, craft_code, buy_count)
+        else:
+            decrease_or_pop_value_from_dict(stock, craft_code, need_count)
         return "{}{}".format(
             current_offset, format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
                                                    need_count,
@@ -366,14 +383,31 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
                                                       need_count,
                                                       need_separator=current_offset != ""))
     for resource_name, count in list(craft_item.get("recipe").items()):
-        # stock.update()  TODO сделать обновление стока в процессе
+        if not force_deep and craft_code is not None:
+            pop_from_user_data_if_presented(stock, craft_code)
+            increase_or_add_value_to_dict(withdraw, craft_code, guild_count)
+            pop_from_user_data_if_presented(guild_stock, craft_code)
+
         res += "{}\n".format(count_craft(
-            get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock,
+            get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock, withdraw, buy,
             current_offset + (LEVEL_OFFSET if not force_deep else "")))
     return res[:-1]
 
 
-
+def format_buy_resources(buy: dict) -> str:
+    from castle_files.bin.api import cwapi
+    res = ""
+    prices = cwapi.api_info.get("prices") or {}
+    total_price = 0
+    for code, count in list(buy.items()):
+        price = prices.get(code, "❔")
+        full_price = price * count if isinstance(price, int) else 0
+        total_price += full_price
+        res += "{} {} x {} {}\n".format(
+            code, get_item_name_by_code(code), count,
+            "{}💰 ({}💰x{})".format(full_price, price, count) if isinstance(price, int) else price)
+    res += "\nВсего: {}💰\n".format(total_price)
+    return res
 
 
 def craft(bot, update):
@@ -391,10 +425,19 @@ def craft(bot, update):
     craft_eq = get_craft_by_name(name)
     player = Player.get_player(update.message.from_user.id)
     guild = Guild.get_guild(player.guild)
-    guild_stock = guild.get_stock({})
-    res = "⚒Крафт <b>{}</b>:\n{}\n\n" \
-          "<em>📦 - весь сток, (👤) - уже у Вас (разница в гильдии)</em>".format(
-        name, count_craft(craft_eq, name, 1, player.stock, guild_stock, "", force_deep=True))
+    guild_stock = guild.get_stock({}).copy()
+    withdraw, buy = {}, {}
+    res = "⚒Крафт <b>{}</b>:\n{}\n\n{}\n\n" \
+          "<em>📦 - весь сток, (👤) - уже у Вас (разница в гильдии)\n" \
+          "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
+          "/update_stock\n/update_guild".format(
+                name, count_craft(craft_eq, name, 1, player.stock.copy(), guild_stock, withdraw, buy, "",
+                                  force_deep=True),
+                "Не хватает базовых ресурсов (необходимо докупить):\n{}".format(format_buy_resources(buy)) if buy else
+                "<b>Все ресурсы присутствуют! Можно крафтить!</b>\n"
+                "(Не забудьте достать из гильдии при помощи кнопки ниже)")
+    print(withdraw)
+    print(buy)
     bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
 
 
