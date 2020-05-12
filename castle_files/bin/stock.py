@@ -326,7 +326,7 @@ def get_craft_by_code(code: str) -> dict:
 def get_craft_name_by_code(code: str) -> str:
     eq = get_equipment_by_code(code)
     if eq is None:
-        return None
+        return get_item_name_by_code(code).lower()
     return eq.name.lower()
 
 
