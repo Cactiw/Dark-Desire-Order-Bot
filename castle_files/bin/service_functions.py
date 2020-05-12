@@ -48,6 +48,22 @@ def pop_from_user_data(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Успешно")
 
 
+def increase_or_add_value_to_dict(d: dict, key, value) -> dict:
+    if value <= 0:
+        return d
+    d.update({key: d.get(key, 0) + value})
+    return d
+
+
+def decrease_or_pop_value_from_dict(d: dict, key, value) -> dict:
+    new_value = d.get(key, 0) - value
+    if new_value <= 0:
+        pop_from_user_data_if_presented(d, key)
+    else:
+        d.update({key: new_value})
+    return d
+
+
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
 def plan_work(callback, hour, minute, second, context={}):
     time_to_send = datetime.time(hour=hour, minute=minute, second=second)
