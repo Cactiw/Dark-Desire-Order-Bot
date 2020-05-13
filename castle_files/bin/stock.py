@@ -5,7 +5,7 @@ from castle_files.work_materials.item_consts import items
 from castle_files.work_materials.resource_constants import resources, resources_reverted, get_resource_code_by_name, \
     get_resource_name_by_code
 from castle_files.work_materials.equipment_constants import equipment_names, get_equipment_by_name, \
-    get_equipment_by_code
+    get_equipment_by_code, search_equipment_by_name
 from castle_files.work_materials.alch_constants import alch_recipes
 from castle_files.work_materials.recipes import craft as craft_dict
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
@@ -455,17 +455,17 @@ def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explici
 
 
 def craft(bot, update):
-    args = update.message.text.split()[1:]
-    if args:
-        code = args[0]  # TODO чёт сделать
-        pass
-    else:
-        try:
-            parse = re.search("craft_(\\w+)(_(\\d+))?", update.message.text)
-            code = parse.group(1)
-        except Exception:
-            bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
-            return
+    search = update.message.text.partition(" ")[2]
+    if search != "":
+        # Ищем экипировку для крафта
+        return search_craft(bot, update)
+
+    try:
+        parse = re.search("craft_(\\w+)(_(\\d+))?", update.message.text)
+        code = parse.group(1)
+    except Exception:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
+        return
     try:
         name = get_craft_name_by_code(code)
     except Exception:
@@ -473,8 +473,6 @@ def craft(bot, update):
         return
     count = int(parse.group(3)) if parse.group(3) is not None else 1
     res, withdraw, buy = get_craft_text_withdraw_and_buy_by_code(code, count, update.message.from_user.id)
-    print(withdraw)
-    print(buy)
     buttons = get_craft_buttons(code, count)
     bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
 
@@ -509,4 +507,16 @@ def craft_action(bot, update):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")
 
 
-
+def search_craft(bot, update):
+    search = update.message.text.partition(" ")[2]
+    if len(search) < 4:
+        bot.send_message(chat_id=update.message.chat_id, text="Слишком короткий поисковый запрос (менее 4 символов)")
+        return
+    response = "Найденная экипировка:\n"
+    suitable_equipment = search_equipment_by_name(search)
+    if not suitable_equipment:
+        bot.send_message(chat_id=update.message.chat_id, text="Экипировка не найдена.")
+        return
+    for eq in suitable_equipment:
+        response += "{} /craft_{}\n".format(eq.name, eq.format_code())
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')

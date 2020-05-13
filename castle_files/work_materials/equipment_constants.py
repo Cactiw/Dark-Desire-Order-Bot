@@ -297,3 +297,13 @@ def get_equipment_by_name(eq_name):
     if eq is not None:
         eq.name = eq_name
     return eq
+
+
+def search_equipment_by_name(eq_name):
+    eq_name = eq_name.lower()
+    found = []
+    names_list = list(equipment_names.items())
+    for name, item_code in names_list:
+        if eq_name in name:
+            found.append(get_equipment_by_code(item_code))
+    return found
