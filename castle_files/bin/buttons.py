@@ -196,6 +196,20 @@ def get_roulette_tops_buttons(curr=""):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_craft_buttons(code, count, explicit=True):
+    buttons = [
+        [
+            InlineKeyboardButton("📦Выдать всё", callback_data="craft_withdraw_{}_{}".format(code, count)),
+            InlineKeyboardButton("💰Купить всё", callback_data="craft_buy_{}_{}".format(code, count)),
+        ],
+        [
+            InlineKeyboardButton("{} ресурсы в наличии".format("Скрыть" if explicit else "Показать"),
+                                 callback_data="craft_{}_{}_{}".format("fewer" if explicit else "more", code, count))
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 def get_vote_buttons(vote, choice=None):
     buttons = []
     for i, var in enumerate(vote.variants):

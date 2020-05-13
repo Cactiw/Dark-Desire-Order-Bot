@@ -17,6 +17,7 @@ from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_
     get_equipment_by_name
 from castle_files.bin.service_functions import increase_or_add_value_to_dict, decrease_or_pop_value_from_dict, \
     pop_from_user_data_if_presented
+from castle_files.bin.buttons import get_craft_buttons
 
 import re
 
@@ -47,12 +48,20 @@ def format_all_withdraws(response: str, response_full: str, not_enough: str) -> 
     return response
 
 
-def send_withdraw(bot, update):
-    mes = update.message
+def send_withdraw(bot, update, *args):
+    manual = False
+    if args and args[0] == "custom_request":
+        manual = True
+        give = args[1]
+        chat_id = update
+        player = Player.get_player(chat_id)
+    else:
+        chat_id = update.message.chat_id
+        player = Player.get_player(update.message.from_user.id)
+        give = {}
+    mes = update.message if not isinstance(update, int) else None
     response, response_full = "/g_withdraw ", "/g_withdraw "
-    give = {}
     res_count = 0
-    player = Player.get_player(update.message.from_user.id)
     if player is None:
         return
     guild_stock = None
@@ -63,7 +72,9 @@ def send_withdraw(bot, update):
                 if guild.chat_id == mes.chat_id:
                     return
         guild_stock = guild.api_info.get("stock")
-    if "дай" in mes.text.lower():
+    if manual:
+        pass
+    elif "дай" in mes.text.lower():
         # Выдача ресурсов по Дай x y
         potions_dict = {
             "фр": ["p01", "p02", "p03"], "фд": ["p04", "p05", "p06"], "грид": ["p07", "p08", "p09"],
@@ -140,12 +151,12 @@ def send_withdraw(bot, update):
         res_count += 1
         if res_count >= 8:
             response = format_all_withdraws(response, response_full, not_enough)
-            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            bot.send_message(chat_id=chat_id, text=response, parse_mode='HTML')
             response, response_full, not_enough = "/g_withdraw ", "/g_withdraw ", ""
             res_count = 0
     if res_count > 0:
         response = format_all_withdraws(response, response_full, not_enough)
-        bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+        bot.send_message(chat_id=chat_id, text=response, parse_mode='HTML')
 
 
 # Получает и сохраняет в user_data список шмоток, на которые есть рецепты для дальнейшего использования
@@ -410,6 +421,31 @@ def format_buy_resources(buy: dict) -> str:
     return res
 
 
+def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_stock, withdraw, buy,
+                   explicit: bool) -> str:
+
+    return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\n\n" \
+          "<em>📦📤 - нужно достать из гильдии\n" \
+          "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
+          "/update_stock\n/update_guild".format(
+                name, count, count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, "",
+                                         force_deep=True),
+                "Не хватает базовых ресурсов (необходимо докупить):\n{}".format(format_buy_resources(buy)) if buy else
+                "<b>Все ресурсы присутствуют! Можно крафтить!</b>\n"
+                "(Не забудьте достать из гильдии при помощи кнопки ниже)")
+
+
+def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id) -> tuple:
+    name = get_craft_name_by_code(code)
+    craft_eq = get_craft_by_name(name)
+    player = Player.get_player(player_id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock({}).copy()
+    withdraw, buy = {}, {}
+    res = get_craft_text(craft_eq, name, code, count, player.stock.copy(), guild_stock, withdraw, buy, True)
+    return res, withdraw, buy
+
+
 def craft(bot, update):
     args = update.message.text.split()[1:]
     if args:
@@ -417,7 +453,8 @@ def craft(bot, update):
         pass
     else:
         try:
-            code = re.search("craft_(\\w+)", update.message.text).group(1)
+            parse = re.search("craft_(\\w+)(_(\\d+))?", update.message.text)
+            code = parse.group(1)
         except Exception:
             bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
             return
@@ -426,23 +463,31 @@ def craft(bot, update):
     except Exception:
         bot.send_message(chat_id=update.message.chat_id, text="Предмет не найден.")
         return
-    craft_eq = get_craft_by_name(name)
-    player = Player.get_player(update.message.from_user.id)
-    guild = Guild.get_guild(player.guild)
-    guild_stock = guild.get_stock({}).copy()
-    withdraw, buy = {}, {}
-    res = "⚒Крафт <b>{}</b>:\n{}\n\n{}\n\n" \
-          "<em>📦📤 - нужно достать из гильдии\n" \
-          "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
-          "/update_stock\n/update_guild".format(
-                name, count_craft(craft_eq, name, 1, player.stock.copy(), guild_stock, withdraw, buy, "",
-                                  force_deep=True),
-                "Не хватает базовых ресурсов (необходимо докупить):\n{}".format(format_buy_resources(buy)) if buy else
-                "<b>Все ресурсы присутствуют! Можно крафтить!</b>\n"
-                "(Не забудьте достать из гильдии при помощи кнопки ниже)")
+    count = int(parse.group(3)) if parse.group(3) is not None else 1
+    res, withdraw, buy = get_craft_text_withdraw_and_buy_by_code(code, count, update.message.from_user.id)
     print(withdraw)
     print(buy)
-    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
+    buttons = get_craft_buttons(code, count)
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
+
+
+def craft_withdraw_or_buy(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    parse = re.search("craft_(withdraw|buy)_(\\w+)_(\\w+)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Произошла ошибка. Попробуйте начать сначала.")
+        return
+    action, code, count = parse.groups()
+    count = int(count)
+    res, withdraw, buy = get_craft_text_withdraw_and_buy_by_code(code, count, update.callback_query.from_user.id)
+    if action == "withdraw":
+        send_withdraw(bot, mes.chat_id, "custom_request", withdraw)
+    elif action == "buy":
+        for code, count in list(buy.items()):
+            bot.send_message(chat_id=mes.chat_id, text="/wtb_{}_{}".format(code, count))
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")
 
 
 
