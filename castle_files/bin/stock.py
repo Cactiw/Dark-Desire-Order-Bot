@@ -361,7 +361,9 @@ def format_resource_string(name, code, player_count, guild_count, total_count, n
 
 
 def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, withdraw: dict,
-                buy: dict, current_offset: str, force_deep: bool = False, explicit: bool = True):
+                buy: dict, to_craft: dict, current_offset: str, depth: int = 0,
+                force_deep: bool = False, explicit: bool = True):
+    depth += 1
     if craft_item is None:
         craft_type = "simple"
         search_name = craft_name[0].capitalize() + craft_name[1:]
@@ -400,14 +402,26 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
                                format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
                                                       need_count,
                                                       need_separator=current_offset != ""))
+
+        lvl_name = "level_{}".format(depth)
+        cur_lvl = to_craft.get(lvl_name)
+        if cur_lvl is None:
+            cur_lvl = {}
+            to_craft.update({lvl_name: cur_lvl})
+        increase_or_add_value_to_dict(cur_lvl, craft_code, need_count - total_count)
+
     for resource_name, count in list(craft_item.get("recipe").items()):
         if not force_deep and craft_code is not None:
             pop_from_user_data_if_presented(stock, craft_code)
             increase_or_add_value_to_dict(withdraw, craft_code, guild_count)
             pop_from_user_data_if_presented(guild_stock, craft_code)
-        res += "{}\n".format(count_craft(
+
+        new_res = count_craft(
             get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock, withdraw, buy,
-            current_offset + (LEVEL_OFFSET if not force_deep else ""), explicit=explicit))
+            to_craft, current_offset + (LEVEL_OFFSET if not force_deep else ""),
+            depth=depth, explicit=explicit)
+
+        res += "{}\n".format(new_res)
         if res[-2:] == "\n\n":
             res = res[:-1]
     return res[:-1]
@@ -429,18 +443,53 @@ def format_buy_resources(buy: dict) -> str:
     return res
 
 
-def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_stock, withdraw, buy,
+def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_stock, withdraw, buy, to_craft,
                    explicit: bool) -> str:
-
+    craft_text = count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, to_craft, "",
+                             force_deep=True, explicit=explicit)
+    collect_craft(to_craft)
     return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\n\n" \
           "<em>📦📤 - нужно достать из гильдии\n" \
           "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
           "/update_stock\n/update_guild".format(
-                name, count, count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, "",
-                                         force_deep=True, explicit=explicit),
+                name, count, craft_text,
                 "Не хватает базовых ресурсов (необходимо докупить):\n{}".format(format_buy_resources(buy)) if buy else
                 "<b>Все ресурсы присутствуют! Можно крафтить!</b>\n"
                 "(Не забудьте достать из гильдии при помощи кнопки ниже)")
+
+
+def collect_craft(to_craft: dict):
+    craft = to_craft.copy()
+    to_craft.clear()
+    max_lvl = 0
+    i = 2
+    while True:
+        lvl_name = "level_{}".format(i)
+        cur_lvl = craft.get(lvl_name)
+        if cur_lvl is None:
+            i -= 1
+            break
+        i += 1
+    j = 0
+    used_codes = []
+    while True:
+        lvl_name = "level_{}".format(i)
+        cur_lvl = craft.get(lvl_name)
+        if cur_lvl is None:
+            break
+        for code, count in list(cur_lvl.items()):
+            total_count = count
+            if code in used_codes:
+                continue
+            for z in range(i - 1, 2, -1):
+                lvl_name = "level_{}".format(z)
+                cur_lvl = craft.get(lvl_name)
+                total_count += cur_lvl.get(code, 0)
+            to_craft.update({j: [code, total_count]})
+            j += 1
+            used_codes.append(code)
+        i -= 1
+
 
 
 def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True) -> tuple:
@@ -449,10 +498,10 @@ def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explici
     player = Player.get_player(player_id)
     guild = Guild.get_guild(player.guild)
     guild_stock = guild.get_stock({}).copy()
-    withdraw, buy = {}, {}
-    res = get_craft_text(craft_eq, name, code, count, player.stock.copy(), guild_stock, withdraw, buy,
+    withdraw, buy, to_craft = {}, {}, {}
+    res = get_craft_text(craft_eq, name, code, count, player.stock.copy(), guild_stock, withdraw, buy, to_craft,
                          explicit=explicit)
-    return res, withdraw, buy
+    return res, withdraw, buy, to_craft
 
 
 def craft(bot, update):
@@ -475,7 +524,7 @@ def craft(bot, update):
         bot.send_message(chat_id=update.message.chat_id, text="Предмет не найден.")
         return
     count = int(parse.group(3)) if parse.group(3) is not None else 1
-    res, withdraw, buy = get_craft_text_withdraw_and_buy_by_code(code, count, update.message.from_user.id)
+    res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(code, count, update.message.from_user.id)
     buttons = get_craft_buttons(code, count)
     bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
 
@@ -483,7 +532,7 @@ def craft(bot, update):
 def craft_action(bot, update):
     mes = update.callback_query.message
     data = update.callback_query.data
-    parse = re.search("craft_(withdraw|buy|fewer|more)_(\\w+)_(\\w+)", data)
+    parse = re.search("craft_(withdraw|buy|fewer|more|go)_(\\w+)_(\\w+)", data)
     if parse is None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                 text="Произошла ошибка. Попробуйте начать сначала.", show_alert=True)
@@ -493,13 +542,29 @@ def craft_action(bot, update):
     explicit = True
     if action in frozenset(["fewer", "more"]):
         explicit = action == "more"
-    res, withdraw, buy = get_craft_text_withdraw_and_buy_by_code(code, count, update.callback_query.from_user.id,
-                                                                 explicit=explicit)
+    res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(
+        code, count, update.callback_query.from_user.id, explicit=explicit)
     if action == "withdraw":
         send_withdraw(bot, mes.chat_id, "custom_request", withdraw)
     elif action == "buy":
         for code, count in list(buy.items()):
             bot.send_message(chat_id=mes.chat_id, text="/wtb_{}_{}".format(code, count))
+    elif action == "go":
+        name = get_craft_name_by_code(code)
+        res = "Действия для крафта:\n💰Купить недостающие ресурсы (достать с биржи)\n" \
+              "📦Достать из гильдии всё необходимое\n\n"
+        i = 0
+        while True:
+            l = to_craft.get(i)
+            if l is None:
+                break
+            code, count = l
+            res += "⚒Изготовить <code>{}</code> {} x {}: /craft_{}_{}\n".format(
+                code, get_resource_name_by_code(code), count, code, count)
+            i += 1
+        res += "\n⚒Изготовить {}!".format(name)
+        bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
+
     elif action in frozenset(["fewer", "more"]):
         buttons = get_craft_buttons(code, count, explicit=explicit)
         try:

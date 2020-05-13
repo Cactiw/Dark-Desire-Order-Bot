@@ -205,7 +205,9 @@ def get_craft_buttons(code, count, explicit=True):
         [
             InlineKeyboardButton("{} ресурсы в наличии".format("⬆Скрыть" if explicit else "⬇Показать"),
                                  callback_data="craft_{}_{}_{}".format("fewer" if explicit else "more", code, count))
-        ]
+        ],[
+            InlineKeyboardButton("⚒Крафт!", callback_data="craft_go_{}_{}".format(code, count))
+        ],
     ]
     return InlineKeyboardMarkup(buttons)
 

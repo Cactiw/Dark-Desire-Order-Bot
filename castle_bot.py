@@ -207,7 +207,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(change_guild_equipment_param, pattern="guild_equipment_\\w+_\\d+_\\d+",
                                                 pass_user_data=True))
 
-    dispatcher.add_handler(CallbackQueryHandler(craft_action, pattern="craft_(withdraw|buy|fewer|more)_(\\w+)_(\\w+)"))
+    dispatcher.add_handler(CallbackQueryHandler(craft_action,
+                                                pattern="craft_(withdraw|buy|fewer|more|go)_(\\w+)_(\\w+)"))
     dispatcher.add_handler(CallbackQueryHandler(set_craft_possible_tier, pattern="craft_possible_tier_\\d+",
                                                 pass_user_data=True))
 
