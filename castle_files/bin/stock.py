@@ -595,7 +595,8 @@ def search_craft(bot, update):
 
 def get_possible_buttons(selected_tier: int):
     return build_inline_buttons_menu(
-        TIERS, "craft_possible_tier_", 3, None if selected_tier is None else lambda data, num: num == selected_tier)
+        TIERS, "craft_possible_tier_", 2, None if selected_tier is None else lambda data, num: num == selected_tier,
+        skip_first=2)
 
 
 POSSIBLE_LIMIT = 20
@@ -663,7 +664,7 @@ def set_craft_possible_tier(bot, update, user_data):
     else:
         user_data.update({"craft_possible_tier": new_tier})
     res = get_possible_text(stock, tier=new_tier)
-    buttons = InlineKeyboardMarkup(get_possible_buttons(None))
+    buttons = InlineKeyboardMarkup(get_possible_buttons(new_tier))
     try:
         bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=res,
                             reply_markup=buttons, parse_mode='HTML')

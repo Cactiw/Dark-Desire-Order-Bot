@@ -170,10 +170,13 @@ def dict_invert(d):
     return dict(zip(d.values(), d.keys()))
 
 
-def build_inline_buttons_menu(texts: [str], callback_data_prefix: str, n_cols: int, enabled_func=None):
+def build_inline_buttons_menu(texts: [str], callback_data_prefix: str, n_cols: int, enabled_func=None,
+                              skip_first: int = None):
     cur_list = []
     buttons = [cur_list]
     for i, text in enumerate(texts):
+        if skip_first is not None and i < skip_first:
+            continue
         if len(cur_list) == n_cols:
             cur_list = []
             buttons.append(cur_list)
