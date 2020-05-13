@@ -287,10 +287,11 @@ def get_equipment_by_code(code):
 
 
 def get_equipment_by_name(eq_name):
+    search_name = eq_name.lower()
     names_list = list(equipment_names.items())
     code = None
     for name, item_code in names_list:
-        if name in eq_name:
+        if name in search_name:
             code = item_code
             break
     eq = get_equipment_by_code(code)
