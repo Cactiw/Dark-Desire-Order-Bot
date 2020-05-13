@@ -16,7 +16,7 @@ from castle_files.libs.player import Player
 from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_by_name, get_equipment_by_code, \
     get_equipment_by_name
 from castle_files.bin.service_functions import increase_or_add_value_to_dict, decrease_or_pop_value_from_dict, \
-    pop_from_user_data_if_presented
+    pop_from_user_data_if_presented, merge_int_dictionaries
 from castle_files.bin.buttons import get_craft_buttons
 
 import logging
@@ -459,7 +459,9 @@ def craft(bot, update):
     if search != "":
         # Ищем экипировку для крафта
         return search_craft(bot, update)
-
+    elif update.message.text == "/craft":
+        # Пустая команда /craft - показываем возможный крафт
+        return craft_possible(bot, update)
     try:
         parse = re.search("craft_(\\w+)(_(\\d+))?", update.message.text)
         code = parse.group(1)
@@ -520,3 +522,42 @@ def search_craft(bot, update):
     for eq in suitable_equipment:
         response += "{} /craft_{}\n".format(eq.name, eq.format_code())
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+
+
+POSSIBLE_LIMIT = 20
+
+
+def craft_possible(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock() if guild is not None else {}
+    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
+
+    can_craft, possible_craft = [], []
+    for code in list(equipment_names.values()):
+        short_code = code[1:]
+        item = items.get(short_code)
+        if item is None:
+            continue
+        parts_count = stock.get("k" + short_code, 0)
+        recipes_count = stock.get("r" + short_code, 0)
+        need_parts = max(0, item[2] - parts_count) + 1 - min(1, recipes_count)
+        craft_count = min(recipes_count, parts_count // item[2])
+        eq = get_equipment_by_name(item[0])
+        if eq is None:
+            logging.warning("Equipment is None for {}".format(item[0]))
+            continue
+        if need_parts == 0:
+            can_craft.append([need_parts, eq, craft_count])
+        else:
+            possible_craft.append([need_parts, eq, recipes_count, parts_count])
+    can_craft.sort(key=lambda x: (-x[1].tier, x[1].name))
+    possible_craft.sort(key=lambda x: (x[0], (-x[1].tier, x[1].name)))
+    res = "Экипировка, которую можно скрафтить:\n"
+    for item in can_craft:
+        res += "{}{} x {}: /craft_{}\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[1].format_code())
+    res += "\nНемного не хватает:\n"
+    for item in possible_craft[:POSSIBLE_LIMIT]:
+        res += "{}{} - {}📄 {}/{}🔩\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[3], item[0])
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
+
