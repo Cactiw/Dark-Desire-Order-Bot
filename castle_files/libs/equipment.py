@@ -10,6 +10,7 @@ import re
 class Equipment:
     quality = {"Fine": "E", "High": "D", "Great": "C", "Excellent": "B", "Masterpiece": "A"}
     all_quality = ["E", "D", "C", "B", "A", "CE", "CD", "CC", "CB", "CA"]
+    emoji = {0: '', 1: '📕', 2: '📗', 3: '📘', 4: '📙', 5: '📒'}
 
     def __init__(self, place, item_type, code, name, attack, defense, tier, condition=None, quality=None):
         self.place = place
@@ -33,6 +34,9 @@ class Equipment:
 
     def format_code(self) -> str:
         return self.type + self.code
+
+    def get_tier_emoji(self) -> str:
+        return self.emoji.get(self.tier)
 
     def to_json(self):
         dictionary = {
