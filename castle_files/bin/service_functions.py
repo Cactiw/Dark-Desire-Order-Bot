@@ -64,6 +64,12 @@ def decrease_or_pop_value_from_dict(d: dict, key, value) -> dict:
     return d
 
 
+def merge_int_dictionaries(d1: dict, d2: dict) -> dict:
+    for k, v in list(d2.items()):
+        d1.update({k: d1.get(k, 0) + v})
+    return d1
+
+
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
 def plan_work(callback, hour, minute, second, context={}):
     time_to_send = datetime.time(hour=hour, minute=minute, second=second)
