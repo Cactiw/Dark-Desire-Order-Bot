@@ -16,8 +16,9 @@ from castle_files.libs.player import Player
 from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_by_name, get_equipment_by_code, \
     get_equipment_by_name
 from castle_files.bin.service_functions import increase_or_add_value_to_dict, decrease_or_pop_value_from_dict, \
-    pop_from_user_data_if_presented, merge_int_dictionaries
+    pop_from_user_data_if_presented, merge_int_dictionaries, build_inline_buttons_menu
 from castle_files.bin.buttons import get_craft_buttons
+from castle_files.bin.equipment import TIERS, InlineKeyboardMarkup
 
 import logging
 import traceback
@@ -485,7 +486,7 @@ def craft_action(bot, update):
     parse = re.search("craft_(withdraw|buy|fewer|more)_(\\w+)_(\\w+)", data)
     if parse is None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
-                                text="Произошла ошибка. Попробуйте начать сначала.")
+                                text="Произошла ошибка. Попробуйте начать сначала.", show_alert=True)
         return
     action, code, count = parse.groups()
     count = int(count)
@@ -524,15 +525,15 @@ def search_craft(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
 
+def get_possible_buttons(selected_tier: int):
+    return build_inline_buttons_menu(
+        TIERS, "craft_possible_tier_", 3, None if selected_tier is None else lambda data, num: num == selected_tier)
+
+
 POSSIBLE_LIMIT = 20
 
 
-def craft_possible(bot, update):
-    player = Player.get_player(update.message.from_user.id)
-    guild = Guild.get_guild(player.guild)
-    guild_stock = guild.get_stock() if guild is not None else {}
-    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
-
+def get_possible_text(stock, tier: int = None) -> str:
     can_craft, possible_craft = [], []
     for code in list(equipment_names.values()):
         short_code = code[1:]
@@ -547,10 +548,12 @@ def craft_possible(bot, update):
         if eq is None:
             logging.warning("Equipment is None for {}".format(item[0]))
             continue
+        if tier is not None and eq.tier != tier:
+            continue
         if need_parts == 0:
             can_craft.append([need_parts, eq, craft_count])
         else:
-            possible_craft.append([need_parts, eq, recipes_count, parts_count])
+            possible_craft.append([need_parts, eq, recipes_count, parts_count, item[2]])
     can_craft.sort(key=lambda x: (-x[1].tier, x[1].name))
     possible_craft.sort(key=lambda x: (x[0], (-x[1].tier, x[1].name)))
     res = "Экипировка, которую можно скрафтить:\n"
@@ -558,6 +561,44 @@ def craft_possible(bot, update):
         res += "{}{} x {}: /craft_{}\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[1].format_code())
     res += "\nНемного не хватает:\n"
     for item in possible_craft[:POSSIBLE_LIMIT]:
-        res += "{}{} - {}📄 {}/{}🔩\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[3], item[0])
-    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML')
+        res += "{}{} - {}📄 {}/{}🔩\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[3], item[4])
+    return res
 
+
+def craft_possible(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock() if guild is not None else {}
+    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
+    res = get_possible_text(stock)
+    buttons = InlineKeyboardMarkup(get_possible_buttons(None))
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
+
+
+def set_craft_possible_tier(bot, update, user_data):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    player = Player.get_player(update.callback_query.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock() if guild is not None else {}
+    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
+    parse = re.search("craft_possible_tier_(\\d+)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, show_alert=True,
+                                text="Произошла ошибка. Попробуйте начать сначала.")
+        return
+    tier = user_data.get("craft_possible_tier")
+    new_tier = int(parse.group(1))
+    if tier == new_tier:
+        new_tier = None
+        pop_from_user_data_if_presented(user_data, "craft_possible_tier")
+    else:
+        user_data.update({"craft_possible_tier": new_tier})
+    res = get_possible_text(stock, tier=new_tier)
+    buttons = InlineKeyboardMarkup(get_possible_buttons(None))
+    try:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=res,
+                            reply_markup=buttons, parse_mode='HTML')
+    except Exception:
+        logging.error(traceback.format_exc())
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")
