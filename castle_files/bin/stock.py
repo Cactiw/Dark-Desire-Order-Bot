@@ -558,11 +558,14 @@ def craft_action(bot, update):
             l = to_craft.get(i)
             if l is None:
                 break
-            code, count = l
-            res += "⚒Изготовить <code>{}</code> {} x {}: /craft_{}_{}\n".format(
-                code, get_resource_name_by_code(code), count, code, count)
+            item_code, item_count = l
+            res += "⚒Изготовить <code>{}</code> {} x {}: <a href=\"t.me/share/url?url=/craft_{} {}\">" \
+                   "/craft_{} {}</a>\n".format(
+                        item_code, get_resource_name_by_code(item_code), item_count, item_code, item_count,
+                        item_code, item_count)
             i += 1
-        res += "\n⚒Изготовить {}!".format(name)
+        res += "\n<a href=\"t.me/share/url?url=/craft_{}{}\">Изготовить {}!</a>".format(
+            code, " {}".format(count) if count > 1 else "", name)
         bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 
     elif action in frozenset(["fewer", "more"]):
