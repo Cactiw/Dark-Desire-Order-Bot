@@ -505,15 +505,15 @@ def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explici
 
 
 def craft(bot, update):
-    search = update.message.text.partition(" ")[2]
-    if search != "":
+    first, space, search = update.message.text.partition(" ")
+    if search != "" and first == "/craft":
         # Ищем экипировку для крафта
         return search_craft(bot, update)
     elif update.message.text == "/craft":
         # Пустая команда /craft - показываем возможный крафт
         return craft_possible(bot, update)
     try:
-        parse = re.search("craft_(\\w+)(_(\\d+))?", update.message.text)
+        parse = re.search("craft_([^_ ]+)([_ ](\\d+))?", update.message.text)
         code = parse.group(1)
     except Exception:
         bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
