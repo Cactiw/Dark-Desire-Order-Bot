@@ -83,8 +83,12 @@ def get_guild_equipment_text(guild: Guild, selected_place: int, selected_tier: i
     equipment: [Equipment] = guild.get_equipment()
     place = PLACES[selected_place] if selected_place is not None else None
     tier = int(TIERS[selected_tier][2:]) if selected_tier is not None else None
+    suitable_eq = []
     for eq in equipment:
         if (place is None or place == eq.place) and (tier is None or tier == eq.tier):
-            res += eq.format(mode="guild")
+            suitable_eq.append(eq)
+    suitable_eq.sort(key=lambda x: (x.get_clear_name(), x.tier))
+    for eq in suitable_eq:
+        res += eq.format(mode="guild")
     return res
 
