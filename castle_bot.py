@@ -60,7 +60,7 @@ from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
-    deposit, alch_possible_craft, craft, craft_withdraw_or_buy
+    deposit, alch_possible_craft, craft, craft_action
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -207,7 +207,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(change_guild_equipment_param, pattern="guild_equipment_\\w+_\\d+_\\d+",
                                                 pass_user_data=True))
 
-    dispatcher.add_handler(CallbackQueryHandler(craft_withdraw_or_buy, pattern="craft_(withdraw|buy)_(\\w+)_(\\w+)"))
+    dispatcher.add_handler(CallbackQueryHandler(craft_action, pattern="craft_(withdraw|buy|fewer|more)_(\\w+)_(\\w+)"))
 
 
     dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
