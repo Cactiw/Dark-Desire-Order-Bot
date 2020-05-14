@@ -373,7 +373,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_alch, deposit))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_reply_deposit, deposit))
 
-    dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_craft, craft))
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_craft & filter_is_pm, craft))
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
