@@ -2,10 +2,12 @@
 Здесь находятся всякие функции для непосредственной работы со стоком
 """
 from castle_files.work_materials.item_consts import items
-from castle_files.work_materials.resource_constants import resources, resources_reverted
+from castle_files.work_materials.resource_constants import resources, resources_reverted, get_resource_code_by_name, \
+    get_resource_name_by_code
 from castle_files.work_materials.equipment_constants import equipment_names, get_equipment_by_name, \
-    get_equipment_by_code
+    get_equipment_by_code, search_equipment_by_name
 from castle_files.work_materials.alch_constants import alch_recipes
+from castle_files.work_materials.recipes import craft as craft_dict
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -13,7 +15,13 @@ from castle_files.libs.player import Player
 
 from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_by_name, get_equipment_by_code, \
     get_equipment_by_name
+from castle_files.bin.service_functions import increase_or_add_value_to_dict, decrease_or_pop_value_from_dict, \
+    pop_from_user_data_if_presented, merge_int_dictionaries, build_inline_buttons_menu
+from castle_files.bin.buttons import get_craft_buttons
+from castle_files.bin.equipment import TIERS, InlineKeyboardMarkup
 
+import logging
+import traceback
 import re
 
 WITHDRAW_MESSAGE_LIMIT = 9
@@ -45,12 +53,20 @@ def format_all_withdraws(response: str, response_full: str, not_enough: str) -> 
     return response
 
 
-def send_withdraw(bot, update):
-    mes = update.message
+def send_withdraw(bot, update, *args):
+    manual = False
+    if args and args[0] == "custom_request":
+        manual = True
+        give = args[1]
+        chat_id = update
+        player = Player.get_player(chat_id)
+    else:
+        chat_id = update.message.chat_id
+        player = Player.get_player(update.message.from_user.id)
+        give = {}
+    mes = update.message if not isinstance(update, int) else None
     response, response_full = "/g_withdraw ", "/g_withdraw "
-    give = {}
     res_count = 0
-    player = Player.get_player(update.message.from_user.id)
     if player is None:
         return
     guild_stock = None
@@ -61,7 +77,9 @@ def send_withdraw(bot, update):
                 if guild.chat_id == mes.chat_id:
                     return
         guild_stock = guild.api_info.get("stock")
-    if "дай" in mes.text.lower():
+    if manual:
+        pass
+    elif "дай" in mes.text.lower():
         # Выдача ресурсов по Дай x y
         potions_dict = {
             "фр": ["p01", "p02", "p03"], "фд": ["p04", "p05", "p06"], "грид": ["p07", "p08", "p09"],
@@ -138,12 +156,12 @@ def send_withdraw(bot, update):
         res_count += 1
         if res_count >= 8:
             response = format_all_withdraws(response, response_full, not_enough)
-            bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+            bot.send_message(chat_id=chat_id, text=response, parse_mode='HTML')
             response, response_full, not_enough = "/g_withdraw ", "/g_withdraw ", ""
             res_count = 0
     if res_count > 0:
         response = format_all_withdraws(response, response_full, not_enough)
-        bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+        bot.send_message(chat_id=chat_id, text=response, parse_mode='HTML')
 
 
 # Получает и сохраняет в user_data список шмоток, на которые есть рецепты для дальнейшего использования
@@ -320,3 +338,346 @@ def deposit(bot, update):
         if num % 5 == 0:
             response += "\n"
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+
+
+def get_craft_by_code(code: str) -> dict:
+    eq = get_equipment_by_code(code)
+    if eq is None:
+        return None
+    return craft_dict.get(eq.name.lower())
+
+
+def get_craft_name_by_code(code: str) -> str:
+    eq = get_equipment_by_code(code)
+    if eq is None:
+        return get_item_name_by_code(code).lower()
+    return eq.name.lower()
+
+
+LEVEL_OFFSET = "    "
+LEVEL_SEPARATOR = "|"
+
+
+def get_craft_by_name(name: str) -> dict:
+    return craft_dict.get(name)
+
+
+def format_resource_string(name, code, player_count, guild_count, total_count, need_count,
+                           need_separator: bool = True) -> str:
+    return "{} {} {} x {} | {}{}".format(
+        LEVEL_SEPARATOR if need_separator else "", "<code>{}</code>".format(code) if code is not None else "",
+        name, need_count, ("" if player_count >= need_count else "{}📤 ".format(need_count - player_count))
+        if total_count >= need_count else "{} ".format(total_count), "✅" if total_count >= need_count else "❌")
+
+
+def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, withdraw: dict,
+                buy: dict, to_craft: dict, current_offset: str, depth: int = 0,
+                force_deep: bool = False, explicit: bool = True):
+    depth += 1
+    if craft_item is None:
+        craft_type = "simple"
+        search_name = craft_name[0].capitalize() + craft_name[1:]
+        craft_code = get_resource_code_by_name(search_name)
+        if craft_code is None:
+            craft_code = get_item_code_by_name(search_name)
+    else:
+        craft_type = craft_item.get("type")
+        craft_code = str(craft_item.get("code"))
+    player_count, guild_count = stock.get(craft_code, 0), guild_stock.get(craft_code, 0)
+    total_count = player_count + guild_count
+    if craft_type == "simple" or (not force_deep and total_count >= need_count):
+        # Добавляем ресурс в список на выдачу, и вычитаем из стока, чтобы не посчитать далее дважды
+        enough = True
+        if player_count < need_count:
+            withdraw_count = min(guild_count, need_count - player_count)
+            increase_or_add_value_to_dict(withdraw, craft_code, withdraw_count)
+            pop_from_user_data_if_presented(stock, craft_code)
+            decrease_or_pop_value_from_dict(guild_stock, craft_code, withdraw_count)
+
+            buy_count = need_count - total_count
+            if buy_count > 0:
+                enough = False
+                increase_or_add_value_to_dict(buy, craft_code, buy_count)
+        else:
+            decrease_or_pop_value_from_dict(stock, craft_code, need_count)
+        if enough and not explicit:
+            return ""
+        return "{}{}".format(
+            current_offset, format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
+                                                   need_count,
+                                                   need_separator=current_offset != ""))
+    res = ""
+    if not force_deep:
+        res += "{}{}\n".format(current_offset,
+                               format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
+                                                      need_count,
+                                                      need_separator=current_offset != ""))
+
+        lvl_name = "level_{}".format(depth)
+        cur_lvl = to_craft.get(lvl_name)
+        if cur_lvl is None:
+            cur_lvl = {}
+            to_craft.update({lvl_name: cur_lvl})
+        increase_or_add_value_to_dict(cur_lvl, craft_code, need_count - total_count)
+
+    for resource_name, count in list(craft_item.get("recipe").items()):
+        if not force_deep and craft_code is not None:
+            pop_from_user_data_if_presented(stock, craft_code)
+            increase_or_add_value_to_dict(withdraw, craft_code, guild_count)
+            pop_from_user_data_if_presented(guild_stock, craft_code)
+
+        new_res = count_craft(
+            get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock, withdraw, buy,
+            to_craft, current_offset + (LEVEL_OFFSET if not force_deep else ""),
+            depth=depth, explicit=explicit)
+
+        res += "{}\n".format(new_res)
+        if res[-2:] == "\n\n":
+            res = res[:-1]
+    return res[:-1]
+
+
+def format_buy_resources(buy: dict) -> str:
+    from castle_files.bin.api import cwapi
+    res = ""
+    prices = cwapi.api_info.get("prices") or {}
+    total_price = 0
+    for code, count in list(buy.items()):
+        price = prices.get(code, "❔")
+        full_price = price * count if isinstance(price, int) else 0
+        total_price += full_price
+        res += "{} {} x {} ≈ {}\n".format(
+            code, get_item_name_by_code(code), count,
+            "{}💰 ({}💰x{})".format(full_price, price, count) if isinstance(price, int) else price)
+    res += "\nВсего: {}💰\n".format(total_price)
+    return res
+
+
+def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_stock, withdraw, buy, to_craft,
+                   explicit: bool) -> str:
+    craft_text = count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, to_craft, "",
+                             force_deep=True, explicit=explicit)
+    collect_craft(to_craft)
+    return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\n\n" \
+          "<em>📦📤 - нужно достать из гильдии\n" \
+          "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
+          "/update_stock\n/update_guild".format(
+                name, count, craft_text,
+                "Не хватает базовых ресурсов (необходимо докупить):\n{}".format(format_buy_resources(buy)) if buy else
+                "<b>Все ресурсы присутствуют! Можно крафтить!</b>\n"
+                "(Не забудьте достать из гильдии при помощи кнопки ниже)")
+
+
+def collect_craft(to_craft: dict):
+    craft = to_craft.copy()
+    to_craft.clear()
+    max_lvl = 0
+    i = 2
+    while True:
+        lvl_name = "level_{}".format(i)
+        cur_lvl = craft.get(lvl_name)
+        if cur_lvl is None:
+            i -= 1
+            break
+        i += 1
+    j = 0
+    used_codes = []
+    while True:
+        lvl_name = "level_{}".format(i)
+        cur_lvl = craft.get(lvl_name)
+        if cur_lvl is None:
+            break
+        for code, count in list(cur_lvl.items()):
+            total_count = count
+            if code in used_codes:
+                continue
+            for z in range(i - 1, 2, -1):
+                lvl_name = "level_{}".format(z)
+                cur_lvl = craft.get(lvl_name)
+                total_count += cur_lvl.get(code, 0)
+            to_craft.update({j: [code, total_count]})
+            j += 1
+            used_codes.append(code)
+        i -= 1
+
+
+
+def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True) -> tuple:
+    name = get_craft_name_by_code(code)
+    craft_eq = get_craft_by_name(name)
+    player = Player.get_player(player_id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock({}).copy()
+    withdraw, buy, to_craft = {}, {}, {}
+    res = get_craft_text(craft_eq, name, code, count, player.stock.copy(), guild_stock, withdraw, buy, to_craft,
+                         explicit=explicit)
+    return res, withdraw, buy, to_craft
+
+
+def craft(bot, update):
+    first, space, search = update.message.text.partition(" ")
+    if search != "" and first == "/craft":
+        # Ищем экипировку для крафта
+        return search_craft(bot, update)
+    elif update.message.text == "/craft":
+        # Пустая команда /craft - показываем возможный крафт
+        return craft_possible(bot, update)
+    try:
+        parse = re.search("craft_([^_ ]+)([_ ](\\d+))?", update.message.text)
+        code = parse.group(1)
+    except Exception:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
+        return
+    try:
+        name = get_craft_name_by_code(code)
+    except Exception:
+        bot.send_message(chat_id=update.message.chat_id, text="Предмет не найден.")
+        return
+    count = int(parse.group(3)) if parse.group(3) is not None else 1
+    res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(code, count, update.message.from_user.id)
+    buttons = get_craft_buttons(code, count)
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
+
+
+def craft_action(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    parse = re.search("craft_(withdraw|buy|fewer|more|go)_(\\w+)_(\\w+)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Произошла ошибка. Попробуйте начать сначала.", show_alert=True)
+        return
+    action, code, count = parse.groups()
+    count = int(count)
+    explicit = True
+    if action in frozenset(["fewer", "more"]):
+        explicit = action == "more"
+    res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(
+        code, count, update.callback_query.from_user.id, explicit=explicit)
+    if action == "withdraw":
+        send_withdraw(bot, mes.chat_id, "custom_request", withdraw)
+    elif action == "buy":
+        for code, count in list(buy.items()):
+            bot.send_message(chat_id=mes.chat_id, text="/wtb_{}_{}".format(code, count))
+    elif action == "go":
+        name = get_craft_name_by_code(code)
+        res = "Действия для крафта:\n💰Купить недостающие ресурсы (достать с биржи)\n" \
+              "📦Достать из гильдии всё необходимое\n\n"
+        i = 0
+        while True:
+            l = to_craft.get(i)
+            if l is None:
+                break
+            item_code, item_count = l
+            res += "⚒Изготовить <code>{}</code> {} x {}: <a href=\"t.me/share/url?url=/craft_{} {}\">" \
+                   "/craft_{} {}</a>\n".format(
+                        item_code, get_resource_name_by_code(item_code), item_count, item_code, item_count,
+                        item_code, item_count)
+            i += 1
+        res += "\n<a href=\"t.me/share/url?url=/craft_{}{}\">Изготовить {}!</a>".format(
+            code, " {}".format(count) if count > 1 else "", name)
+        bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
+
+    elif action in frozenset(["fewer", "more"]):
+        buttons = get_craft_buttons(code, count, explicit=explicit)
+        try:
+            bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=res,
+                                reply_markup=buttons, parse_mode='HTML')
+        except Exception:
+            logging.error(traceback.format_exc())
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")
+
+
+def search_craft(bot, update):
+    search = update.message.text.partition(" ")[2]
+    if len(search) < 4:
+        bot.send_message(chat_id=update.message.chat_id, text="Слишком короткий поисковый запрос (менее 4 символов)")
+        return
+    response = "Найденная экипировка:\n"
+    suitable_equipment = search_equipment_by_name(search)
+    if not suitable_equipment:
+        bot.send_message(chat_id=update.message.chat_id, text="Экипировка не найдена.")
+        return
+    for eq in suitable_equipment:
+        response += "{} /craft_{}\n".format(eq.name, eq.format_code())
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+
+
+def get_possible_buttons(selected_tier: int):
+    return build_inline_buttons_menu(
+        TIERS, "craft_possible_tier_", 2, None if selected_tier is None else lambda data, num: num == selected_tier,
+        skip_first=2)
+
+
+POSSIBLE_LIMIT = 20
+
+
+def get_possible_text(stock, tier: int = None) -> str:
+    can_craft, possible_craft = [], []
+    for code in list(equipment_names.values()):
+        short_code = code[1:]
+        item = items.get(short_code)
+        if item is None:
+            continue
+        parts_count = stock.get("k" + short_code, 0)
+        recipes_count = stock.get("r" + short_code, 0)
+        need_parts = max(0, item[2] - parts_count) + 1 - min(1, recipes_count)
+        craft_count = min(recipes_count, parts_count // item[2])
+        eq = get_equipment_by_name(item[0])
+        if eq is None:
+            logging.warning("Equipment is None for {}".format(item[0]))
+            continue
+        if tier is not None and eq.tier != tier:
+            continue
+        if need_parts == 0:
+            can_craft.append([need_parts, eq, craft_count])
+        else:
+            possible_craft.append([need_parts, eq, recipes_count, parts_count, item[2]])
+    can_craft.sort(key=lambda x: (-x[1].tier, x[1].name))
+    possible_craft.sort(key=lambda x: (x[0], (-x[1].tier, x[1].name)))
+    res = "Экипировка, которую можно скрафтить:\n"
+    for item in can_craft:
+        res += "{}{} x {}: /craft_{}\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[1].format_code())
+    res += "\nНемного не хватает:\n"
+    for item in possible_craft[:POSSIBLE_LIMIT]:
+        res += "{}{} - {}📄 {}/{}🔩\n".format(item[1].get_tier_emoji(), item[1].name, item[2], item[3], item[4])
+    return res
+
+
+def craft_possible(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock() if guild is not None else {}
+    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
+    res = get_possible_text(stock)
+    buttons = InlineKeyboardMarkup(get_possible_buttons(None))
+    bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
+
+
+def set_craft_possible_tier(bot, update, user_data):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    player = Player.get_player(update.callback_query.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    guild_stock = guild.get_stock() if guild is not None else {}
+    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
+    parse = re.search("craft_possible_tier_(\\d+)", data)
+    if parse is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, show_alert=True,
+                                text="Произошла ошибка. Попробуйте начать сначала.")
+        return
+    tier = user_data.get("craft_possible_tier")
+    new_tier = int(parse.group(1))
+    if tier == new_tier:
+        new_tier = None
+        pop_from_user_data_if_presented(user_data, "craft_possible_tier")
+    else:
+        user_data.update({"craft_possible_tier": new_tier})
+    res = get_possible_text(stock, tier=new_tier)
+    buttons = InlineKeyboardMarkup(get_possible_buttons(new_tier))
+    try:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=res,
+                            reply_markup=buttons, parse_mode='HTML')
+    except Exception:
+        logging.error(traceback.format_exc())
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")

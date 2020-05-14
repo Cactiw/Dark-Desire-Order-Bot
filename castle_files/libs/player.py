@@ -169,11 +169,7 @@ class Player:
             if current is None:
                 logging.warning("Equipment is None for code {} in get_player".format(eq_json.get("code")))
                 continue
-            current.name = equipment_list.get("name")
-            current.attack = equipment_list.get("attack")
-            current.defense = equipment_list.get("defense")
-            current.quality = equipment_list.get("quality")
-            current.condition = equipment_list.get("condition")
+            current.set_from_json(equipment_list)
             eq.update({place: current})
         quests_from_db = {}
 

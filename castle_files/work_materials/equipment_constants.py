@@ -2,6 +2,8 @@ from castle_files.libs.equipment import Equipment
 
 import copy
 
+# ВНИМАНИЕ! Айтемы из одного слова, которое повторяется в более продвинутых айтемах (например, gloves),
+# помещать в самый конец!!!
 # Товарищ! При добавлении экипировки не забывай добавить данные о её крафте в item_consts.py!
 main_hand = [
     Equipment("main_hand", "w", "01", "Wooden sword", 1, 0, 0),
@@ -13,7 +15,6 @@ main_hand = [
     Equipment("main_hand", "w", "07", "Rapier", 27, 0, 1),
     Equipment("main_hand", "w", "08", "Short spear", 3, 1, 0),
     Equipment("main_hand", "w", "09", "Long spear", 3, 1, 0),
-    Equipment("main_hand", "w", "10", "Lance", 11, 5, 0),
     Equipment("main_hand", "w", "11", "Elven spear", 12, 7, 1),
     Equipment("main_hand", "w", "12", "Halberd", 14, 10, 1),
     Equipment("main_hand", "w", "18", "Elven Bow", 4, 1, 0),
@@ -65,6 +66,7 @@ main_hand = [
     Equipment("main_hand", "e", "151", "Demon Bow", 26, 12, 2),
     Equipment("main_hand", "e", "154", "Nosferatu Rapier", 0, 0, 2),
 
+    Equipment("main_hand", "w", "10", "Lance", 11, 5, 0),
 ]
 
 second_hand = [
@@ -77,7 +79,7 @@ second_hand = [
     Equipment("second_hand", "w", "45", "Ghost dagger", 12, 1, 3),
     Equipment("second_hand", "w", "46", "Lion Knife", 13, 0, 3),
     Equipment("second_hand", "w", "91", "Griffin Knife", 15, 0, 4),
-    Equipment("main_hand", "w", "100", "Poniard", 19, 0, 5),
+    Equipment("second_hand", "w", "100", "Poniard", 19, 0, 5),
 
 
     Equipment("second_hand", "e", "152", "Demon Whip", 15, 1, 2),
@@ -134,7 +136,6 @@ head = [
 ]
 
 gloves = [
-    Equipment("gloves", "a", "16", "Gloves", 0, 1, 0),
     Equipment("gloves", "a", "17", "Leather gloves", 0, 2, 0),
     Equipment("gloves", "a", "18", "Steel gauntlets", 0, 3, 0),
     Equipment("gloves", "a", "19", "Silver gauntlets", 0, 5, 1),
@@ -165,6 +166,8 @@ gloves = [
     Equipment("gloves", "e", "134", "Werewolf Gloves", 0, 0, 2),
     Equipment("gloves", "e", "138", "Fleder Gloves", 6, 6, 2),
     Equipment("gloves", "e", "142", "Nosferatu Gloves", 0, 0, 2),
+
+    Equipment("gloves", "a", "16", "Gloves", 0, 1, 0),
 ]
 
 armor = [
@@ -256,8 +259,8 @@ equipment = {
     "cloaks": cloaks
 }
 
-# Хранит имя предмета как ключ и код (с типом) как значение. Заполняется функцией fill_names
-# Пример: { "Knight's sword": "w05" }
+# Хранит имя предмета как ключ (В lower!!) и код (с типом) как значение. Заполняется функцией fill_names
+# Пример: { "knight's sword": "w05" }
 equipment_names = {}
 
 
@@ -265,7 +268,7 @@ def fill_names():
     eq_list = list(equipment.values())
     for lst in eq_list:
         for eq in lst:
-            equipment_names.update({eq.name: "{}{}".format(eq.type, eq.code)})
+            equipment_names.update({eq.name.lower(): "{}{}".format(eq.type, eq.code)})
 
 
 fill_names()
@@ -285,11 +288,24 @@ def get_equipment_by_code(code):
 
 
 def get_equipment_by_name(eq_name):
+    search_name = eq_name.lower()
     names_list = list(equipment_names.items())
     code = None
     for name, item_code in names_list:
-        if name in eq_name:
+        if name in search_name:
             code = item_code
             break
     eq = get_equipment_by_code(code)
+    if eq is not None:
+        eq.name = eq_name
     return eq
+
+
+def search_equipment_by_name(eq_name):
+    eq_name = eq_name.lower()
+    found = []
+    names_list = list(equipment_names.items())
+    for name, item_code in names_list:
+        if eq_name in name:
+            found.append(get_equipment_by_code(item_code))
+    return found

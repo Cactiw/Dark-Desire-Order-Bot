@@ -133,6 +133,7 @@ def get_view_guild_buttons(guild, user_id=None):
     buttons = [
         [
             InlineKeyboardButton("Список игроков", callback_data="gipl_{}".format(guild.id)),
+            InlineKeyboardButton("🏷Снаряжение", callback_data="gieq_{}".format(guild.id)),
             InlineKeyboardButton("Покинуть гильдию", callback_data="gilv_{}".format(guild.id)),
         ],
     ]
@@ -203,6 +204,22 @@ def get_roulette_tops_buttons(curr=""):
             InlineKeyboardButton("{}🎰Игр сыграно".format('✅' if curr == 'roulette_games_played' else ""),
                                  callback_data="roulette_top_games_played"),
         ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_craft_buttons(code, count, explicit=True):
+    buttons = [
+        [
+            InlineKeyboardButton("📦Выдать всё", callback_data="craft_withdraw_{}_{}".format(code, count)),
+            InlineKeyboardButton("💰Купить всё", callback_data="craft_buy_{}_{}".format(code, count)),
+        ],
+        [
+            InlineKeyboardButton("{} ресурсы в наличии".format("⬆Скрыть" if explicit else "⬇Показать"),
+                                 callback_data="craft_{}_{}_{}".format("fewer" if explicit else "more", code, count))
+        ],[
+            InlineKeyboardButton("⚒Крафт!", callback_data="craft_go_{}_{}".format(code, count))
+        ],
     ]
     return InlineKeyboardMarkup(buttons)
 

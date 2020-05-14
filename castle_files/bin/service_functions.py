@@ -2,6 +2,8 @@ from castle_files.work_materials.globals import SUPER_ADMIN_ID, high_access_list
     local_tz, job, utc, dispatcher
 from mwt import MWT
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 import datetime
 import re
 
@@ -13,6 +15,20 @@ def cancel(bot, update, user_data):
         user_data.pop("edit_guild_id")
     bot.send_message(chat_id=update.message.chat_id, text="Операция отменена.")
     return
+
+
+def pop_from_user_data_if_presented(user_data, key):
+    if isinstance(key, list):
+        for k in key:
+            try:
+                user_data.pop(k)
+            except KeyError:
+                pass
+    else:
+        try:
+            user_data.pop(key)
+        except KeyError:
+            pass
 
 
 def pop_from_user_data(bot, update):
@@ -30,6 +46,28 @@ def pop_from_user_data(bot, update):
         return
     user_data.pop(pop_value)
     bot.send_message(chat_id=mes.chat_id, text="Успешно")
+
+
+def increase_or_add_value_to_dict(d: dict, key, value) -> dict:
+    if value <= 0:
+        return d
+    d.update({key: d.get(key, 0) + value})
+    return d
+
+
+def decrease_or_pop_value_from_dict(d: dict, key, value) -> dict:
+    new_value = d.get(key, 0) - value
+    if new_value <= 0:
+        pop_from_user_data_if_presented(d, key)
+    else:
+        d.update({key: new_value})
+    return d
+
+
+def merge_int_dictionaries(d1: dict, d2: dict) -> dict:
+    for k, v in list(d2.items()):
+        d1.update({k: d1.get(k, 0) + v})
+    return d1
 
 
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
@@ -140,6 +178,22 @@ def count_battle_id(message=None):
 
 def dict_invert(d):
     return dict(zip(d.values(), d.keys()))
+
+
+def build_inline_buttons_menu(texts: [str], callback_data_prefix: str, n_cols: int, enabled_func=None,
+                              skip_first: int = None):
+    cur_list = []
+    buttons = [cur_list]
+    for i, text in enumerate(texts):
+        if skip_first is not None and i < skip_first:
+            continue
+        if len(cur_list) == n_cols:
+            cur_list = []
+            buttons.append(cur_list)
+        cur_list.append(InlineKeyboardButton("{}{}".format(
+            "✅" if enabled_func is not None and enabled_func(text, i) else "", text),
+            callback_data="{}{}".format(callback_data_prefix, i)))
+    return buttons
 
 
 @MWT(timeout=15*60)

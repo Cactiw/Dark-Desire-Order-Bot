@@ -147,3 +147,12 @@ class FilterGiveResource(BaseFilter):
 
 
 filter_give_resource = FilterGiveResource()
+
+
+# Крафт
+class FilterCraft(BaseFilter):
+    def filter(self, message):
+        return message.text.lower().startswith("/craft")
+
+
+filter_craft = FilterCraft()

@@ -14,7 +14,7 @@ from castle_files.work_materials.filters.trigger_filters import filter_is_trigge
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
     filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction, \
-    filter_player_misc, filter_player_alch, filter_give_resource, filter_player_alch_craft, filter_reply_deposit
+    filter_player_misc, filter_player_alch, filter_give_resource, filter_player_alch_craft, filter_reply_deposit, filter_craft
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, \
     filter_delete_guild, filter_view_guilds_commanders
@@ -62,13 +62,14 @@ from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger, import_triggers
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
-    deposit, alch_possible_craft
+    deposit, alch_possible_craft, craft, craft_action, set_craft_possible_tier
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
     guild_commanders, g_info, guild_repair, guilds, guilds_division_change_page, edit_guild_inline, \
     inline_edit_guild_division
+from castle_files.bin.equipment import guild_equipment, change_guild_equipment_param
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, unrestrict, \
     send_message_to_chat, guild_top_battles, show_worldtop
 from castle_files.bin.mobs import mob, mob_help, fight_club, fight_club_help, pretend, mobs_notify, \
@@ -212,6 +213,16 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(assistants, pattern="giass_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(guild_reports, pattern="girep_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(leave_guild, pattern="gilv_\\d+"))
+
+    dispatcher.add_handler(CallbackQueryHandler(guild_equipment, pattern="gieq_\\d+", pass_user_data=True))
+    dispatcher.add_handler(CallbackQueryHandler(change_guild_equipment_param, pattern="guild_equipment_\\w+_\\d+_\\d+",
+                                                pass_user_data=True))
+
+    dispatcher.add_handler(CallbackQueryHandler(craft_action,
+                                                pattern="craft_(withdraw|buy|fewer|more|go)_(\\w+)_(\\w+)"))
+    dispatcher.add_handler(CallbackQueryHandler(set_craft_possible_tier, pattern="craft_possible_tier_\\d+",
+                                                pass_user_data=True))
+
 
     dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_setting, pattern="gs.*_\\d+"))
@@ -361,6 +372,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_misc, deposit))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_alch, deposit))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_reply_deposit, deposit))
+
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_craft, craft))
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
