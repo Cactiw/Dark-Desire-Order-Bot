@@ -439,7 +439,9 @@ urned_players = [29821655]
 def hero(bot, update, user_data):
     mes = update.message
     text = mes.text
-    castle = text[0]
+    castle = re.search("([🍁☘️🖤🐢🦇🌹🍆🎖]+)(.+)", text)
+    nickname = castle.group(2)
+    castle = castle.group(1)
     if castle != '🖤':
         pass
         # Игрок не из Скалы
@@ -465,7 +467,6 @@ def hero(bot, update, user_data):
     guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
     if guild_tag:
         guild_tag = guild_tag.group(1)
-    nickname = text.splitlines()[0][1:]
     lvl = int(re.search("🏅Уровень: (\\d+)", text).group(1))
     attack = int(re.search("⚔Атака: (\\d+)", text).group(1))
     defense = int(re.search("🛡Защита: (\\d+)", text).group(1))

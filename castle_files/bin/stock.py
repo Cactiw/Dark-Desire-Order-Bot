@@ -24,6 +24,8 @@ import logging
 import traceback
 import re
 
+WITHDRAW_MESSAGE_LIMIT = 9
+
 
 def stock_sort_comparator(item_code):
     # --> item_code: str || int
@@ -247,7 +249,7 @@ def withdraw_resources(bot, update, user_data):
         res_count = int(res_count.group(1))
         response += "{} {} ".format(code, res_count)
         res_already_counted += 1
-        if res_already_counted >= 8:
+        if res_already_counted >= WITHDRAW_MESSAGE_LIMIT:
             response = "<a href=\"https://t.me/share/url?url={}\">".format(response) + response + "</a>"
             bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
             response = "/g_withdraw "
@@ -288,7 +290,12 @@ def alch_possible_craft(bot, update):
 
 def deposit(bot, update):
     mes = update.message
+    if mes.text == "/deposit":
+        if mes.reply_to_message is None:
+            return
+        mes = mes.reply_to_message
     response = "<b>Ресурсы на складе:</b>\n<em>Нажмите на ресурс, чтобы внести в гильдию</em>\n\n"
+    num = 0
     for string in mes.text.splitlines():
         # parse = re.search("/aa_(\\d+)", string)
         parse = re.search("/lot_(\\S+) (.*) \\((\\d+)\\)", string)
@@ -327,6 +334,9 @@ def deposit(bot, update):
             continue
         response += "<a href=\"https://t.me/share/url?url=/g_deposit {} {}\">{} x {}</a>\n".format(code, count,
                                                                                                    res_name, count)
+        num += 1
+        if num % 5 == 0:
+            response += "\n"
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 

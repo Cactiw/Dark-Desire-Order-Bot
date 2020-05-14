@@ -414,9 +414,9 @@ class CW3API:
                 response_lost += "{} {} ≈ {}\n".format(change, get_item_name_by_code(code),
                                                        "{}💰".format(price * change) if price != 0 else "❔")
                 gold_lost += change * price
-        response_added += "<b>В сумме:</b> <code>{}</code>💰\n\n".format(gold_added) if gold_added > 0 else ""
-        response_lost += "<b>В сумме:</b> <code>{}</code>💰\n\n".format(gold_lost) if gold_lost < 0 else ""
-        response += response_added if gold_added > 0 else "" + response_lost if gold_lost < 0 else ""
+        response_added += "<b>В сумме:</b> <code>{}</code>💰\n\n".format(gold_added)
+        response_lost += "<b>В сумме:</b> <code>{}</code>💰\n\n".format(gold_lost)
+        response += (response_added if gold_added > 0 else "") + (response_lost if gold_lost < 0 else "")
         response += "<b>Всего:</b> <code>{}</code>💰\n".format(gold_added + gold_lost)
         return response
 
@@ -507,9 +507,9 @@ class CW3API:
                 response = "Итоги битвы {}<b>{}</b>\n".format(guild.castle, guild.tag)
                 response += "<b>🎖Glory:</b> <code>{}</code>\n\n".format(glory - old_glory)
                 response += self.get_stock_change_text(old_stock, stock)
-                attack, defense, exp, gold, stock = guild.count_battle_stats()
-                response += "\nПредыдущая битва:\n<code>Атака: {:>4}⚔\nЗащита:{:>4}🛡\nОпыт: {:>5}🔥\nЗолото:{:>4}💰\n" \
-                            "Сток:  {:>4}📦</code>\n".format(attack, defense, exp, gold, stock)
+                attack, defense, exp, gold, total_stock = guild.count_battle_stats()
+                response += "\nПредыдущая битва:\n<code>Атака: {:>5}⚔\nЗащита:{:>5}🛡\nОпыт: {:>6}🔥\nЗолото:{:>5}💰\n" \
+                            "Сток:  {:>5}📦</code>\n".format(attack, defense, exp, gold, total_stock)
                 self.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
                 guild.api_info.pop("change_stock_send")
                 guild.update_to_database(need_order_recashe=False)

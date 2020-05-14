@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID
+    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID, job
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -14,7 +14,7 @@ from castle_files.work_materials.filters.trigger_filters import filter_is_trigge
 from castle_files.work_materials.filters.report_filters import filter_is_report, filter_battle_stats
 from castle_files.work_materials.filters.stock_filters import filter_guild_stock_parts, filter_guild_stock_recipes, \
     filter_stock_withdraw, filter_guild_stock_resources, filter_player_stock_resources, filter_player_auction, \
-    filter_player_misc, filter_player_alch, filter_give_resource, filter_player_alch_craft, filter_craft
+    filter_player_misc, filter_player_alch, filter_give_resource, filter_player_alch_craft, filter_reply_deposit, filter_craft
 from castle_files.work_materials.filters.guild_filters import filter_edit_guild, filter_change_guild_commander, \
     filter_change_guild_chat, filter_view_guild, filter_change_guild_division, filter_remove_player, \
     filter_delete_guild, filter_view_guilds_commanders
@@ -44,6 +44,8 @@ from castle_files.work_materials.filters.castle_duty_filters import filter_begin
 from castle_files.work_materials.filters.vote_filters import filter_add_vote_text, filter_add_vote_variant, \
     filter_edit_vote_duration, filter_request_edit_vote_duration, filter_start_vote, filter_view_vote, filter_vote, \
     filter_vote_results, filter_edit_vote_classes
+from castle_files.work_materials.filters.alliance_filters import filter_alliance_location, filter_alliance_info, \
+    filter_view_alliance, filter_alliance_roster, filter_alliance_pin
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
@@ -58,7 +60,7 @@ from castle_files.bin.profile import hero, profile, view_profile, add_class_from
 from castle_files.bin.class_functions import add_trap, trap_stats
 from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_reputation, change_guilds_reputation
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
-    info_trigger, replace_trigger
+    info_trigger, replace_trigger, import_triggers
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
     deposit, alch_possible_craft, craft, craft_action, set_craft_possible_tier
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
@@ -95,6 +97,8 @@ from castle_files.bin.statuses import status_shop, buy_status, statuses, status_
     request_set_own_status, set_own_status, moderate_status
 from castle_files.bin.rewards import smuggler, request_get_reward, get_reward, answer_reward, moderate_reward, \
     delete_message
+from castle_files.bin.alliances import update_alliance, add_alliance_location, ga_map, view_alliance, alliance_roster, \
+    alliance_stats, alliance_pin, set_alliance_hq_chat, ga_expire, ga
 from castle_files.bin.trade_unions import add_union, union_list, add_union_chat_id, fill_union_chats, check_and_kick, \
     print_union_players, clear_union_list, view_guild_players_in_union, add_to_union_user_id, view_guild_unions, \
     count_union_stats, add_union_assistant, del_union_assistant, top_union_stats, split_union
@@ -152,14 +156,21 @@ def castle_hello(bot, update):
         notified = []
         cp.special_info.update({"notified_on_join": notified})
     if mes.from_user.id not in notified:
+        notified.append(mes.from_user.id)
+        cp.update_location_to_database()
+        job.run_once(hello_check, 2, context={"mes": mes})
+
+
+def hello_check(bot, job):
+    mes = job.context.get("mes")
+    user = bot.getChatMember(chat_id=mes.chat_id, user_id=mes.from_user.id)
+    if user.status not in frozenset(['kicked', 'restricted', 'left']):
         bot.send_message(chat_id=mes.chat_id,
                          text="Привет, новичок!\n\nДоложи капитану стражи о прибытии, "
                               "прислав в чат пароль в формате XXX XXX латинскими буквами.\n\n"
                               "<a href=\"https://t.me/joinchat/F4YvQUUfsDhK1bYfU_S1Fw\">Вступай в "
                               "академию</a>, где ты получишь необходимые знания и навыки!",
                          reply_to_message_id=mes.message_id, parse_mode='HTML', disable_web_page_preview=True)
-        notified.append(mes.from_user.id)
-        cp.update_location_to_database()
 
 
 def show_data(bot, update, user_data, args):
@@ -233,6 +244,8 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(inline_edit_guild_division, pattern="guild_change_division_\\d+.*"))
     dispatcher.add_handler(CallbackQueryHandler(guilds_division_change_page, pattern="guilds_divisions_page_\\d+"))
 
+    dispatcher.add_handler(CallbackQueryHandler(alliance_stats, pattern="ga_stats_\\d+"))
+
     dispatcher.add_handler(CallbackQueryHandler(skip))
 
     #
@@ -292,6 +305,17 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
+    # Альянсы
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_view_alliance, view_alliance))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_roster, alliance_roster))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_info, update_alliance))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_alliance_location, add_alliance_location))
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_alliance_pin, alliance_pin))
+    dispatcher.add_handler(CommandHandler('ga', ga))
+    dispatcher.add_handler(CommandHandler('ga_map', ga_map))
+    dispatcher.add_handler(CommandHandler('ga_expire', ga_expire))
+    dispatcher.add_handler(CommandHandler('set_alliance_hq_chat', set_alliance_hq_chat, pass_args=True))
+
     # Профсоюзы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_trade_union, add_union))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_union_list, union_list))
@@ -343,10 +367,11 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_player_alch_craft, alch_possible_craft))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_stock_resources, deposit))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_auction, deposit))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_misc, deposit))
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_player_alch, deposit))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_stock_resources, deposit))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_auction, deposit))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_misc, deposit))
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm & filter_player_alch, deposit))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_reply_deposit, deposit))
 
     dispatcher.add_handler(MessageHandler((Filters.text | Filters.command) & filter_craft, craft))
 
@@ -584,6 +609,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('triggers', triggers))
     dispatcher.add_handler(CommandHandler('info_trigger', info_trigger))
     dispatcher.add_handler(CommandHandler('replace_trigger', replace_trigger))
+    dispatcher.add_handler(CommandHandler('import_triggers', import_triggers, pass_args=True))
 
     # Хендлеры далее специально ниже всех остальных, ибо невозможно проверять статус на эту исполнение этих команд
     dispatcher.add_handler(MessageHandler(Filters.text & filter_castle_gates, castle_gates, pass_user_data=True))

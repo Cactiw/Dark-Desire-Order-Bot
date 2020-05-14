@@ -282,6 +282,20 @@ texts_translate = {
     "Отправлено на модерацию": "Sent for moderation",
     "Награда получается": "The reward is obtained",
 
+    "Это устаревший альянс.": "This alliance message is expired.",
+    "Информация об альянсе и гильдии обновлена. Теперь пришли мне 📋 Roster!":
+        "Information about the Alliance and Guild has been updated. Now send me 📋 Roster!",
+    "Вы не состоите в альянсе. Пусть создатель альянса отправил ответ чв на 🤝Альянс, "
+                              "а затем - 📋 Roster":
+        "You are not a member of the Alliance. Let the Alliance Creator send the PM response to 🤝🤝Альянс, "
+        "and then - 📋 Roster",
+    "Состав альянса обновлён.\n"
+      "Установите чат МИДа альянса командой /set_alliance_hq_chat {chat_id}\n"
+      "<em>chat_id можно получить при помощи команды /chat_info в нужном чате.</em>":
+        "The Alliance has been updated.\n Set the Alliance HQ chat with the command /set_alliance_hq_chat [chat_id]\n"
+        "<em>chat_id can be obtained using the command /chat_info in the desired chat.</em>",
+
+
 
     "В замке проходит голосование! Сделайте свой выбор!": "A vote is being held in the castle! Make your choice!",
     "Доступные голосования в замке:": "Available votes in the castle:\n"
@@ -308,8 +322,24 @@ texts_translate = {
     "Потеряно:": "Lost",
     "В сумме:": "In the sum:",
     "Всего:": "Total:",
+    "Статистика": "Statistics",
 
     "Отправлено на канал. Спасибо!": "Sent to the channel. Thank you!",
+
+    "Владелец:": "Owner:",
+    "Гильдии альянса:": "Alliance guilds:",
+    "Данная функция доступна только командирам гильдий и их заместителям.":
+        "This function is only available for guild commanders and their assistants",
+    "Альянс не соответствует Вашему. Начните сначала.": "This is not your alliance. Return to the beginning.",
+    "Неверный синтаксис.\nПример:": "Incorrect syntax.\nExample:",
+    "Альянс не найден. Обратитесь к создателю альянса, или командиру (его заместителю).":
+        "Alliance not found. Contact alliance owner, or your commander (his assistant).",
+    "Альянс обновлён.": "Alliance updated.",
+    "Локация не найдена, или уже истекла.": "Location not found, or already expired.",
+    "помечена как истёкшая": "marked as expired",
+
+    "Произошла ошибка": "An error occurred",
+
 
     "Гильдия": "Guild",
     "Покинуть гильдию:": "Leave guild:",

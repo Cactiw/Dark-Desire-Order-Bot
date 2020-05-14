@@ -7,6 +7,16 @@ from castle_files.work_materials.globals import CHAT_WARS_ID, MERC_ID
 from castle_files.bin.service_functions import check_access
 
 from telegram import Update
+from functools import wraps
+
+
+def update_filter(func):
+    @wraps(func)
+    def wrapper(self, message):
+        if isinstance(message, Update):
+            message = message.message
+        return func(self, message)
+    return wrapper
 
 
 class FilterIsChatWarsForward(BaseFilter):

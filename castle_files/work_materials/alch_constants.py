@@ -1,3 +1,5 @@
+# @oldf4g property - do NOT copy, do NOT distribute
+
 from collections import defaultdict
 
 alch_recipes = defaultdict(dict)

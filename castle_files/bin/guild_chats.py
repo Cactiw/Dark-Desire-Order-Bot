@@ -11,6 +11,7 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 from castle_files.work_materials.globals import dispatcher
 from castle_files.bin.telethon_script import castles_stats_queue
 from castle_files.bin.api import check_guilds_api_access
+from castle_files.bin.alliances import parse_alliance_battle_results
 
 from telegram.error import TelegramError
 from telegram import ChatPermissions
@@ -132,6 +133,10 @@ def parse_stats():
             save_worldtop(worldtop)
             send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
+        elif data.startswith("🤝Headquarters news:") or data.startswith("🗺State of map:"):
+            # Итоги штабов альянсов
+            logging.info("Got alliance news")
+            parse_alliance_battle_results(data)
         else:
             #  Сообщение о пиратстве
             response_by_tags = {}
