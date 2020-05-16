@@ -192,7 +192,8 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
     response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
                 "\n".format(player.lvl, player.exp or "???", player.attack, player.defense)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
-    response += "Гильдия: {}\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет")
+    response += "Гильдия: {} | {}🔋\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет",
+                                             player.stamina)
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
     elif guild is not None and guild.check_high_access(requested_player.id) and \
