@@ -87,6 +87,7 @@ items = {
     "101": ["Craftsman Apron", "Craftsman Apron part", 4],
     "102": ["Stoneskin Cloak", "Stoneskin Cloak part", 4],
 
+    "103": ["Poniard", "Poniard part", 5],
     "104": ["Lightbane Katana", "Lightbane Katana part", 8],
     "105": ["Doom Warglaive", "Doom Warglaive part", 9],
     "106": ["Decimation Harpoon", "Decimation Harpoon part", 8],
