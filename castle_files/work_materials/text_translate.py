@@ -54,6 +54,7 @@ texts_translate = {
     "Следующее сообщение будет отправлено стражникам на вахте!": "The next message will be sent to the guards on watch!",
     "Вы обратились к стражникам у городских ворот. Ожидайте ответа.": "You turned to the guards at the city gates. Wait for an answer.",
     "Список игроков в гильдии": "List of players in the guild",
+    "Вы действительно хотите покинуть гильдию?": "Are you sure you want to leave the Guild?",
     "Выше — позже": "Up later",
     "Отчёты по последним битвам": "Last reports",
     "Гильдии, в которых состоял": "Guilds history for",
@@ -351,4 +352,6 @@ texts_translate = {
     "камень": "stone",
 
     "Получено": "Received",
+    "Отменено.": "Canceled.",
+
 }
