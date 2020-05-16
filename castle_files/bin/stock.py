@@ -420,11 +420,12 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
             to_craft.update({lvl_name: cur_lvl})
         increase_or_add_value_to_dict(cur_lvl, craft_code, need_count - total_count)
 
+    if not force_deep and craft_code is not None:
+        pop_from_user_data_if_presented(stock, craft_code)
+        increase_or_add_value_to_dict(withdraw, craft_code, guild_count)
+        pop_from_user_data_if_presented(guild_stock, craft_code)
+
     for resource_name, count in list(craft_item.get("recipe").items()):
-        if not force_deep and craft_code is not None:
-            pop_from_user_data_if_presented(stock, craft_code)
-            increase_or_add_value_to_dict(withdraw, craft_code, guild_count)
-            pop_from_user_data_if_presented(guild_stock, craft_code)
 
         new_res = count_craft(
             get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock, withdraw, buy,
