@@ -614,16 +614,14 @@ POSSIBLE_LIMIT = 20
 
 def get_possible_text(stock, tier: int = None) -> str:
     can_craft, possible_craft = [], []
-    for code in list(equipment_names.values()):
-        short_code = code[1:]
-        item = items.get(short_code)
-        if item is None:
+    for short_code, item in list(items.items()):
+        eq = get_equipment_by_name(item[0])
+        if eq is None:
             continue
         parts_count = stock.get("k" + short_code, 0)
         recipes_count = stock.get("r" + short_code, 0)
         need_parts = max(0, item[2] - parts_count) + 1 - min(1, recipes_count)
         craft_count = min(recipes_count, parts_count // item[2])
-        eq = get_equipment_by_name(item[0])
         if eq is None:
             logging.warning("Equipment is None for {}".format(item[0]))
             continue
