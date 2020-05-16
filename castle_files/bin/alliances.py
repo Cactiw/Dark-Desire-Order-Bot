@@ -230,9 +230,10 @@ def add_alliance_location(bot, update):
         location = AllianceLocation(None, link, name, None, lvl, None, 0, False, False)
         location.figure_type()
         location.insert_to_database()
-    if alliance is not None and alliance.hq_chat_id is not None:
-        bot.send_message(chat_id=alliance.hq_chat_id, parse_mode='HTML',
-                         text="Новая локация: <b>{} Lvl.{}</b>\n{}".format(name, lvl, link))
+    for alli in Alliance.get_all_alliances():
+        if alli.hq_chat_id is not None:
+            bot.send_message(chat_id=alli.hq_chat_id, parse_mode='HTML',
+                             text="Новая локация: <b>{} Lvl.{}</b>\n{}".format(name, lvl, link))
 
 
 def add_alliance_link(name, link):
