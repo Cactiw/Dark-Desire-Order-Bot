@@ -366,7 +366,8 @@ def parse_alliance_battle_results(results: str):
 @alliance_access
 def ga(bot, update):
     alliances = Alliance.get_all_alliances()
-    res = "🎪Альянс:\n  |—🗺Локация | битв удерживается\n----------------------------------------------------\n\n"
+    res = "🎪Альянс:\n  |—🗺Локация | битв удерживается\n⚠ - Локация могла истечь\n" \
+          "----------------------------------------\n\n"
     res_end = ""
     player = Player.get_player(update.message.from_user.id)
     alliance = Alliance.get_player_alliance(player)
