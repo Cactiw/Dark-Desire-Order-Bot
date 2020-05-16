@@ -11,7 +11,7 @@ from castle_files.bin.service_functions import check_access
 from castle_files.bin.reports import count_battle_id, count_battle_time
 
 from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_buttons, get_view_guild_buttons, \
-    get_guild_settings_buttons, get_guild_inline_buttons
+    get_guild_settings_buttons, get_guild_inline_buttons, get_leave_guild_buttons
 
 
 from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
@@ -726,26 +726,47 @@ def leave_guild(bot, update):
             return
         guild_id = int(guild_id.group(1))
     player = Player.get_player(user_id)
-    if player is None:
-        bot.send_message(chat_id=mes.chat_id, text="Игрок не найден. Пожалуйста, отправьте форвард /hero.")
-        return
     if player.guild is None:
         bot.send_message(chat_id=mes.chat_id, text="Вы не состоите в гильдии.")
         return
-    if guild_id is None:
-        guild_id = player.guild
-    guild = Guild.get_guild(guild_id=guild_id)
+    bot.send_message(chat_id=mes.chat_id, text="Вы действительно хотите покинуть гильдию?",
+                     reply_markup=get_leave_guild_buttons())
+    if update.callback_query is not None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def leave_guild_confirm(bot, update):
+    mes = update.callback_query.message
+    data = update.callback_query.data
+    really_leave = "yes" in data
+    player = Player.get_player(update.callback_query.from_user.id)
+    if player is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Игрок не найден. Пожалуйста, отправьте форвард /hero.",
+                                show_alert=True)
+        return
+    if player.guild is None:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Вы не состоите в гильдии",
+                                show_alert=True)
+        return
+    if not really_leave:
+        bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text="Отменено.")
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Успешно отменено.")
+        return
+    guild = Guild.get_guild(guild_id=player.guild)
     if guild is None:
-        bot.send_message(chat_id=mes.chat_id, text="Гильдия не найдена.")
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
+                                text="Гильдия не найдена",
+                                show_alert=True)
         return
     if guild.commander_id == player.id:
         # bot.send_message(chat_id=mes.chat_id, text="Командир не может покинуть гильдию")
         # return
         guild.commander_id = None
     guild.delete_player(player)
-    bot.send_message(chat_id=mes.chat_id, text="Вы успешно покинули гильдию")
-    if update.callback_query is not None:
-        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text="Вы успешно покинули гильдию.")
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
 # Добавление игрока в гильдию

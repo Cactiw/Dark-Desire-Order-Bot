@@ -168,6 +168,16 @@ def get_guild_settings_buttons(guild):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_leave_guild_buttons():
+    buttons = [
+        [
+            InlineKeyboardButton("✅Да", callback_data="leave_guild_yes"),
+            InlineKeyboardButton("❌Нет", callback_data="leave_guild_no"),
+        ]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
 def get_update_history_buttons(update_id, last_update_id):
     buttons = [[]]
     if update_id != 1:
