@@ -39,7 +39,7 @@ class Equipment:
         return self.emoji.get(self.tier)
 
     def get_clear_name(self) -> str:
-        clear_name = re.search("(⚡?\\+?\\d*\\s?(.+?))\\s", self.name)
+        clear_name = re.search("(⚡?\\+?\\d*\\s)?(.+?)\\s", self.name + " ")
         return clear_name.group(2)
 
     def to_json(self):
