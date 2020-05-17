@@ -18,6 +18,7 @@ import datetime
 import json
 import pika
 import re
+import copy
 
 from multiprocessing import Queue
 
@@ -484,7 +485,8 @@ class CW3API:
                     if lst is None:
                         lst = []
                         equipment_temp.update({eq.name: lst})
-                    lst.append(eq)
+                    for i in range(count):
+                        lst.append(copy.deepcopy(eq))
                 stock.update({code or i_name: count})
             stock = {k: stock[k] for k in sorted(stock, key=stock_sort_comparator)}
             self.__set_guild_equipment_codes(codes, equipment_temp, equipment)

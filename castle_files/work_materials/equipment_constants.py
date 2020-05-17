@@ -289,6 +289,8 @@ def get_equipment_by_code(code):
 
 def get_equipment_by_name(eq_name):
     search_name = eq_name.lower()
+    if any(i in search_name for i in frozenset(["recipe", "shaft", "part", "blade", "fragment", "piece", "head"])):
+        return None
     names_list = list(equipment_names.items())
     code = None
     for name, item_code in names_list:
