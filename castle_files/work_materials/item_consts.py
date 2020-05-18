@@ -95,7 +95,7 @@ items = {
     "108": ["Heartstriker Bow", "Heartstriker Bow part", 7],
     "109": ["Windstalker Bow", "Windstalker Bow part", 9],
     "110": ["Malificent Maul", "Malificent Maul part", 7],
-    "111": ["Brutalizer Flail", "Brutalizer Flail part", 8],
+    "111": ["Brutalizer Flail", "Brutalizer Flail part", 9],
     "112": ["Manticore Armor", "Manticore Armor part", 8],
     "113": ["Manticore Helmet", "Manticore Helmet part", 8],
     "114": ["Manticore Boots", "Manticore Boots part", 8],
