@@ -526,7 +526,7 @@ def update_daily_quests(bot, job):
         for i in range(3):
             quest = copy.deepcopy(random.choice(list(quests.values())))
             limit = 0
-            while quest.id in forbidden_list and limit < 5:
+            while (quest.id in forbidden_list or quest.skip_selection) and limit < 5:
                 quest = copy.deepcopy(random.choice(list(quests.values())))
                 limit += 1
             quest.start(player)

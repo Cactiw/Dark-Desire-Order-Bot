@@ -14,7 +14,7 @@ class Quest:
     ALL_DAILY_QUESTS_REWARD = 100
 
     def __init__(self, id: int, quest_type: str, duration_type: str, description: str, objective, reward: int,
-                 status: str, progress, started_time: time.time(), daily_unique=False):
+                 status: str, progress, started_time: time.time(), daily_unique=False, skip_selection: bool = False):
         self.id = id
         self.type = quest_type
         self.duration_type = duration_type
@@ -25,6 +25,7 @@ class Quest:
         self.progress = progress
         self.started_time = started_time
         self.daily_unique = daily_unique
+        self.skip_selection = skip_selection
         self.player = None
         pass
 
@@ -159,9 +160,9 @@ quests = {
     3: Quest(id=3, quest_type="feedback_request_duty", duration_type="Daily", objective=1,
              description="Обратиться к стражникам <b>{}</b> раз", reward=25, status="Closed", progress=0,
              started_time=None, daily_unique=True),
-    # 4: Quest(id=4, quest_type="feedback_request_king", duration_type="Daily", objective=1,
-    #          description="Попросить аудиенции у Короля", reward=25, status="Closed", progress=0,
-    #          started_time=None, daily_unique=True),
+    4: Quest(id=4, quest_type="feedback_request_king", duration_type="Daily", objective=1,
+             description="Попросить аудиенции у Короля", reward=25, status="Closed", progress=0,
+             started_time=None, daily_unique=True, skip_selection=True),
     5: CollectResourceQuest(id=5, resources={}, reward=25, status="Closed", progress={}, started_time=None,
                             objective_draft={"available_resources": ["🌲Wood", "⛰Stone"],
                                              "count": [3, 15]}, daily_unique=True),
