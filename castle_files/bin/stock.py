@@ -432,6 +432,7 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
             buy,
             to_craft, current_offset + (LEVEL_OFFSET if not force_deep else ""),
             depth=depth, explicit=explicit)
+        merge_int_dictionaries(withdraw, current_withdraw)
 
         res += "<a href=\"/g_withdraw {}\">{}</a>\n".format(
                " ".join(["{} {}".format(code, count) for code, count in current_withdraw.items()]), new_res

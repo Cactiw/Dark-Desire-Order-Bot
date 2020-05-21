@@ -65,6 +65,12 @@ def decrease_or_pop_value_from_dict(d: dict, key, value) -> dict:
 
 
 def merge_int_dictionaries(d1: dict, d2: dict) -> dict:
+    """
+    Function that add to first dictionary values of the second (d1[value] = d1[value] + d2[value]) IN-PLACE!
+    :param d1:
+    :param d2:
+    :return:
+    """
     for k, v in list(d2.items()):
         d1.update({k: d1.get(k, 0) + v})
     return d1
