@@ -9,7 +9,7 @@ import re
 
 class Equipment:
     quality = {"Fine": "E", "High": "D", "Great": "C", "Excellent": "B", "Masterpiece": "A"}
-    all_quality = ["E", "D", "C", "B", "A", "CE", "CD", "CC", "CB", "CA"]
+    all_quality = ["No quality", "E", "D", "C", "B", "A", "CE", "CD", "CC", "CB", "CA"]
     emoji = {0: '', 1: '📕', 2: '📗', 3: '📘', 4: '📙', 5: '📒'}
 
     def __init__(self, place, item_type, code, name, attack, defense, tier, condition=None, quality=None):
