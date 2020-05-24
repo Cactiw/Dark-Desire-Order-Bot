@@ -652,7 +652,7 @@ def craft_possible(bot, update):
     player = Player.get_player(update.message.from_user.id)
     guild = Guild.get_guild(player.guild)
     guild_stock = guild.get_stock() if guild is not None else {}
-    stock = merge_int_dictionaries(player.stock.copy(), guild_stock.copy())
+    stock = merge_int_dictionaries((player.stock or {}).copy(), guild_stock.copy())
     res = get_possible_text(stock)
     buttons = InlineKeyboardMarkup(get_possible_buttons(None))
     bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
