@@ -345,14 +345,22 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_gear_info(self, channel, method, header, body):
+        payload = body.get("payload")
+        player_id = payload.get("userId")
+        player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
         if body.get("result") != "Ok":
             logging.error("error while requesting gear info, {}".format(body))
+            if body.get("result") == "Forbidden":
+                try:
+                    player.api_info.get("access", []).remove("gear")
+                    player.update()
+                except ValueError:
+                    pass
+                except Exception:
+                    logging.error("Can not retrieve gear access for Forbidden result: {}".format(traceback.format_exc()))
             return
         try:
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
-            payload = body.get("payload")
-            player_id = payload.get("userId")
-            player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
             if player is None:
                 return
             gear_info = payload.get("gearInfo")
