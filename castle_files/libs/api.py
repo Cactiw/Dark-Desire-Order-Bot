@@ -346,7 +346,7 @@ class CW3API:
 
     def on_gear_info(self, channel, method, header, body):
         if body.get("result") != "Ok":
-            logging.error("error while requesting guild info, {}".format(body))
+            logging.error("error while requesting gear info, {}".format(body))
             return
         try:
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
@@ -424,7 +424,7 @@ class CW3API:
     def on_stock_info(self, channel, method, header, body):
         try:
             if body.get("result") != "Ok":
-                logging.error("error while requesting guild info, {}".format(body))
+                logging.error("error while requesting stock info, {}".format(body))
                 return
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             payload = body.get("payload")
@@ -464,15 +464,26 @@ class CW3API:
 
     def on_guild_info(self, channel, method, header, body):
         try:
+            payload = body.get("payload")
+            player_id = payload.get("userId")
+            player = Player.get_player(player_id, notify_on_error=False)
+            guild = Guild.get_guild(player.guild)
             if body.get("result") != "Ok":
                 logging.error("error while requesting guild info, {}".format(body))
+                if body.get("result") == "Forbidden":
+                    try:
+                        guild.api_info.get("api_players", []).remove(player_id)
+                        guild.update_to_database(need_order_recashe=False)
+                    except ValueError:
+                        pass
+                    except Exception:
+                        logging.error("Can not remove guild api access: {}".format(traceback.format_exc()))
                 return
             # print(body)
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
-            payload = body.get("payload")
             name, glory, lvl, members, stock_size, stock_limit, \
-                player_id, tag, castle = payload.get("name"), payload.get("glory"), payload.get("level"), \
-                payload.get("members"),  payload.get("stockSize"), payload.get("stockLimit"), payload.get("userId"), \
+                tag, castle = payload.get("name"), payload.get("glory"), payload.get("level"), \
+                payload.get("members"),  payload.get("stockSize"), payload.get("stockLimit"), \
                 payload.get("tag"), payload.get("castle")
             got_stock = payload.get("stock")
             codes = payload.get("itemCodes")
@@ -494,7 +505,6 @@ class CW3API:
             if player is None or player.guild is None:
                 logging.warning("Received guild info, but player is None (or guild) for id {}".format(player_id))
                 return
-            guild = Guild.get_guild(player.guild)
             if guild is None or guild.tag != tag:
                 logging.warning("Received guild info, but guild is None or not euqal for"
                                 " {} (@{})".format(player.nickname, player.username))

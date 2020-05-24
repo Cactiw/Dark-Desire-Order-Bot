@@ -577,8 +577,8 @@ def update_stock_for_fails(bot, job):
     for row in rows:
         guild = Guild.get_guild(guild_id=row[0])
         api_players = guild.api_info.get("api_players")
-        if len(api_players) > 0:
-            api_players.pop(0)
+        # if len(api_players) > 0:  # Сомнительно, часто гильдии не обновляются из-за багов АПИ
+        #     api_players.pop(0)
         if not api_players:
             guild.api_info.clear()
             bot.send_message(chat_id=SUPER_ADMIN_ID, parse_mode='HTML',
