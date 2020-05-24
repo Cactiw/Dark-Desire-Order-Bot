@@ -474,7 +474,8 @@ class CW3API:
         try:
             payload = body.get("payload")
             if payload is None:
-                logger.error("Payload is None in guild info: {}".format(body))
+                logger.debug("Payload is None in guild info: {}".format(body))
+                return
             player_id = payload.get("userId")
             player = Player.get_player(player_id, notify_on_error=False)
             guild = Guild.get_guild(player.guild)
