@@ -787,6 +787,10 @@ class CW3API:
                     self.start()
                 except Exception:
                     pass
+                    try:
+                        self.stop()
+                    except Exception:
+                        pass
                     logger.info("Failed to reconnect CW API, retrying in {} seconds".format(WAIT_BEFORE_RETRY_SECONDS))
                     time.sleep(WAIT_BEFORE_RETRY_SECONDS)
         except KeyboardInterrupt:
