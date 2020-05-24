@@ -473,6 +473,8 @@ class CW3API:
     def on_guild_info(self, channel, method, header, body):
         try:
             payload = body.get("payload")
+            if payload is None:
+                logger.error("Payload is None in guild info: {}".format(body))
             player_id = payload.get("userId")
             player = Player.get_player(player_id, notify_on_error=False)
             guild = Guild.get_guild(player.guild)
