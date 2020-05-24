@@ -259,7 +259,7 @@ class Guild:
     def get_equipment(self):
         eq = self.api_info.get("equipment")
         if not eq:
-            return eq
+            return []
         equipment = []
         for eq_dict in eq:
             eq_dict = json.loads(eq_dict)
