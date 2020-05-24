@@ -770,9 +770,30 @@ class CW3API:
         # self.connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
-        self.connection.ioloop.stop()
-        self.connect()
-        self.connection.ioloop.start()
+        # self.connection.ioloop.stop()
+        # self.connect()
+        # self.connection.ioloop.start()
+        try:
+            self.stop()
+        except Exception:
+            logger.warning("Failed to stop CW API in reconnect: {}".format(traceback.format_exc()))
+        self.try_reconnect_forever()
+
+    def try_reconnect_forever(self):
+        WAIT_BEFORE_RETRY_SECONDS = 30
+        try:
+            while True:
+                try:
+                    self.start()
+                except Exception:
+                    pass
+                    logger.info("Failed to reconnect CW API, retrying in {} seconds".format(WAIT_BEFORE_RETRY_SECONDS))
+                    time.sleep(WAIT_BEFORE_RETRY_SECONDS)
+        except KeyboardInterrupt:
+            return
+        except Exception:
+            logger.error(traceback.format_exc())
+
 
     def start(self):
         logger.warning("Starting the API")
