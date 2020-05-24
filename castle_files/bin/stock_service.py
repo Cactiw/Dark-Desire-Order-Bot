@@ -49,6 +49,7 @@ def get_item_name_by_code(code):
             for name, potion in list(alch_recipes.items()):
                 if potion.get("code") == code:
                     return name
+        return code
     except Exception:
         logging.error(traceback.format_exc())
         return code
