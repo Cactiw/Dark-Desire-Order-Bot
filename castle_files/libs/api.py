@@ -30,6 +30,7 @@ print(threading.current_thread().ident)
 
 class CW3API:
     MAX_REQUESTS_PER_SECOND = 30
+    WAIT_BEFORE_RETRY_CONNECTION_SECONDS = 120
     api_info = {}
 
     def __init__(self, cwuser, cwpass, workers=1):
@@ -767,8 +768,9 @@ class CW3API:
         self.in_channel = None
         self.connected = False
         # logging.warning("Connection closed, {}, {}, reconnection in 5 seconds".format(reply_code, reply_text))
-        logging.warning("Connection closed, {}, reconnection in 5 seconds".format(args))
-        time.sleep(5)
+        logging.warning("Connection closed, {}, reconnection in {} seconds".format(
+                args, self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
+        time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
         self.reconnect()
         # self.connection.add_timeout(5, self.reconnect)
 
@@ -783,7 +785,6 @@ class CW3API:
         self.try_reconnect_forever()
 
     def try_reconnect_forever(self):
-        WAIT_BEFORE_RETRY_SECONDS = 30
         try:
             while True:
                 try:
@@ -794,8 +795,9 @@ class CW3API:
                         self.stop()
                     except Exception:
                         pass
-                    logger.info("Failed to reconnect CW API, retrying in {} seconds".format(WAIT_BEFORE_RETRY_SECONDS))
-                    time.sleep(WAIT_BEFORE_RETRY_SECONDS)
+                    logger.info("Failed to reconnect CW API, retrying in {} seconds".format(
+                        self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
+                    time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
         except KeyboardInterrupt:
             return
         except Exception:
