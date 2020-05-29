@@ -30,7 +30,7 @@ print(threading.current_thread().ident)
 
 class CW3API:
     MAX_REQUESTS_PER_SECOND = 30
-    WAIT_BEFORE_RETRY_CONNECTION_SECONDS = 120
+    WAIT_BEFORE_RETRY_CONNECTION_SECONDS = 10 * 60
     api_info = {}
 
     def __init__(self, cwuser, cwpass, workers=1):
