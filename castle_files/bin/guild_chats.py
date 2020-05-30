@@ -488,7 +488,7 @@ def rangers_notify_start(bot, update):
         except TypeError:
             return
     count = 0
-    request = "select id from players where game_class = 'Ranger' and class_skill_lvl is not NULL"
+    request = "select id from players where class_skill_lvl is not NULL"
     cursor.execute(request)
     row = cursor.fetchone()
     while row is not None:
