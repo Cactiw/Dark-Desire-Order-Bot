@@ -96,7 +96,7 @@ class FilterSetClass(BaseFilter):
         if message.text:
             if message.forward_from is None:
                 return False
-            return 'skills levels' in message.text and filter_is_chat_wars_forward(message) and filter_is_pm(message)
+            return 'уровни навыков' in message.text and filter_is_chat_wars_forward(message) and filter_is_pm(message)
         return False
 
 
