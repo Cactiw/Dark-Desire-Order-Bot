@@ -186,11 +186,12 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
                                                  player.id)
     if user_data is None:
         user_data = dispatcher.user_data.get(player.id)
-    response += "🔘: <code>{}</code>\n".format(player.reputation) if not user_data.get("rp_off") else "\n"
     if player.status is not None:
         response += "Статус: <b>{}</b>\n".format(get_status_text_by_id(player.status, player.id))
     response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
                 "\n".format(player.lvl, player.exp or "???", player.attack, player.defense)
+    response += ("👝: {}, ".format(player.pogs) if player.pogs is not None else "") + \
+        "🔘: <code>{}</code>\n".format(player.reputation)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {} | {}🔋\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет",
                                              player.stamina)

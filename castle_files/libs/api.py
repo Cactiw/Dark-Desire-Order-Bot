@@ -301,6 +301,7 @@ class CW3API:
             profile = payload.get("profile")
             player.attack = profile.get("atk")
             player.castle = profile.get("castle")
+            player.pogs = profile.get("pouches")
             try:
                 player.game_class = classes_to_emoji_inverted.get(profile.get("class"))
             except Exception:
