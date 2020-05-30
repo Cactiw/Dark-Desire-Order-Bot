@@ -434,9 +434,9 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
             depth=depth, explicit=explicit)
         merge_int_dictionaries(withdraw, current_withdraw)
 
-        res += "<a href=\"/g_withdraw {}\">{}</a>\n".format(
+        res += ("<a href=\"/g_withdraw {}\">{}</a>\n".format(
                " ".join(["{} {}".format(code, count) for code, count in current_withdraw.items()]), new_res
-        ) if current_withdraw is not None else "{}\n".format(new_res)
+        ) if current_withdraw is not None else "{}\n".format(new_res)) if new_res != "" else ""
         if res[-2:] == "\n\n":
             res = res[:-1]
     return res[:-1]
@@ -462,7 +462,6 @@ def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_st
                    explicit: bool) -> str:
     craft_text = count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, to_craft, "",
                              force_deep=True, explicit=explicit)
-    print(craft_text)
     collect_craft(to_craft)
     return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\n\n" \
           "<em>📦📤 - нужно достать из гильдии\n" \
