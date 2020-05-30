@@ -81,7 +81,7 @@ def add_report(bot, update, user_data):
         outplay_attack = int(outplay.group(2))
         outplay_dict.update({"nickname": outplay_nickname, "attack": outplay_attack})
 
-    if 'Encounter:' in s or ('hit' in s.lower() and 'miss' in s.lower() and 'last hit' in s.lower()):
+    if 'Встреча:' in s or ('Твои удары' in s.lower() and 'Атаки врагов' in s.lower() and 'Ластхит' in s.lower()):
         # Репорт с мобов
         earned = re.search("Получено: (.+) \\((\\d+)\\)", s)
         if earned is not None:
@@ -111,11 +111,11 @@ def add_report(bot, update, user_data):
                     buff = parse.group(1)
                     buffs.pop()
                     buffs.append(buff)
-        hit = re.search("Your attacks: (\\d+)", s)
+        hit = re.search("Твои удары: (\\d+)", s)
         hit = int(hit.group(1)) if hit is not None else 0
-        miss = re.search("Hostile strikes: (\\d+)", s)
+        miss = re.search("Атаки врагов: (\\d+)", s)
         miss = int(miss.group(1)) if miss is not None else 0
-        last_hit = re.search("Last hit: (\\d+)", s)
+        last_hit = re.search("Ластхит: (\\d+)", s)
         last_hit = int(last_hit.group(1)) if last_hit is not None else 0
         request = "select report_id from mob_reports where date_created = %s and player_id = %s"
         cursor.execute(request, (forward_message_date, player.id))
