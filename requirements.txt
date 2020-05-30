@@ -6,3 +6,4 @@ pytz
 tzlocal
 pySocks
 gitpython
+kafka-python
