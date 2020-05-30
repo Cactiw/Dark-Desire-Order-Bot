@@ -19,6 +19,7 @@ import json
 import pika
 import re
 import copy
+import kafka
 
 from multiprocessing import Queue
 
@@ -46,6 +47,8 @@ class CW3API:
         self.active = True  # True при запуске, и False в самом конце, если self.active == True и
         #                   # self.connected == False, то это значит, что соединение оборвалось само.
 
+        self.kafka_active = False
+
         self.guild_changes = {}
         self.guild_changes_work = None
 
@@ -64,9 +67,8 @@ class CW3API:
         self.EXCHANGE = "{}_ex".format(cwuser)
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
-        self.SEX_DIGEST = "{}_sex_digest".format(self.cwuser)
-        self.YELLOW_PAGES = "{}_yellow_pages".format(self.cwuser)
-        self.DEALS = "{}_deals".format(self.cwuser)
+
+        self.kafka_consumer = None
 
         self.sent = 0
         self.got_responses = 0
@@ -75,8 +77,24 @@ class CW3API:
             "createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
             "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info,
             "requestGearInfo": self.on_gear_info, "authAdditionalOperation": self.on_request_additional_operation,
-            "grantAdditionalOperation": self.on_grant_additional_operational, "requestStock": self.on_stock_info
+            "grantAdditionalOperation": self.on_grant_additional_operational, "requestStock": self.on_stock_info,
+            'cw3-deals': self.on_deals,
+            # 'cw3-offers': self.on_offers,  # not inplemented
+            'cw3-sex_digest': self.on_sex_digest,
+            'cw3-yellow_pages': self.on_yellow_pages,
+            # 'cw3-au_digest': self.on_au_digest,  # not implemented
         }
+
+    def kafka_work(self):
+        for message in self.kafka_consumer:
+            try:
+                self.callbacks.get(message.topic, lambda x: x)(message.value)
+            except Exception:
+                logging.error(traceback.format_exc())
+
+            if not self.kafka_active:
+                return
+
 
     def connect(self):
         self.connecting = True
@@ -99,24 +117,16 @@ class CW3API:
             self.in_channel = channel
             tag = self.in_channel.basic_consume(self.INBOUND, on_message_callback=self.__on_message)
             self.consumer_tags.append(tag)
-            tag = self.in_channel.basic_consume(self.SEX_DIGEST, on_message_callback=self.on_sex_digest)
-            self.consumer_tags.append(tag)
-            tag = self.in_channel.basic_consume(self.DEALS, on_message_callback=self.on_deals)
-            self.consumer_tags.append(tag)
-            tag = self.in_channel.basic_consume(self.YELLOW_PAGES, on_message_callback=self.on_yellow_pages)
-            self.consumer_tags.append(tag)
+
         logger.warning("Consuming")
 
     def __on_cancel(self, obj=None):
         print(obj)
         logger.warning("Consumer cancelled")
 
-    def on_sex_digest(self, channel, method, header, body):
+    def on_sex_digest(self, body):
         try:
-            channel.basic_ack(method.delivery_tag)
             prices = {}
-            body = json.loads(body)
-            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             for item in body:
                 name = item.get("name")
                 try:
@@ -133,20 +143,16 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
-    def on_yellow_pages(self, channel, method, header, body):
+    def on_yellow_pages(self, body):
         try:
-            channel.basic_ack(method.delivery_tag)
-            body = json.loads(body)
             shops = body
             self.api_info.update({"shops": shops})
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
             logging.error(traceback.format_exc())
 
-    def on_deals(self, channel, method, header, body):
+    def on_deals(self, body):
         try:
-            channel.basic_ack(method.delivery_tag)
-            body = json.loads(body)
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             seller_id = body.get("sellerId")
             item, qty, castle = body.get("item"), body.get("qty"), body.get("buyerCastle")
@@ -185,14 +191,8 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def __on_message(self, channel, method, header, body):
-        # print(json.dumps(json.loads(body), sort_keys=1, indent=4, ensure_ascii=False))
         self.got_responses += 1
-        # print(method, header, body)
-        # print(json.loads(body))
-        # print(method.consumer_tag, method.delivery_tag)
-        # print(header.timestamp)
         channel.basic_ack(method.delivery_tag)
-        # method, header, body = json.loads(method), json.loads(header), json.loads(body)
         body = json.loads(body)
         result = body.get("result")
         if result == 'InvalidToken':
@@ -702,7 +702,6 @@ class CW3API:
 
     # Голая отправка запроса, без ограничений
     def __publish_message(self, message):
-        # properties = pika.BasicProperties(app_id='cactiw_castle_skalen', content_type='application/json')
         try:
             self.sent += 1
             return self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY,
@@ -788,7 +787,7 @@ class CW3API:
         try:
             while True:
                 try:
-                    self.start()
+                    self.start_pika()
                 except Exception:
                     pass
                     try:
@@ -803,8 +802,30 @@ class CW3API:
         except Exception:
             logger.error(traceback.format_exc())
 
-
     def start(self):
+        self.start_pika()
+        self.start_kafka()
+
+    def start_kafka(self):
+        self.kafka_active = True
+        self.kafka_consumer = kafka.KafkaConsumer(
+            'cw3-offers',
+            'cw3-deals',
+            'cw3-duels',
+            'cw3-sex_digest',
+            'cw3-yellow_pages',
+            'cw3-au_digest',
+
+            bootstrap_servers=['digest-api.chtwrs.com:9092'],
+            auto_offset_reset='earliest',
+            enable_auto_commit=True,
+            group_id='cactiw_cw3_group_id',
+            value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+        )
+        kafka_thread = threading.Thread(target=self.kafka_work)
+        kafka_thread.start()
+
+    def start_pika(self):
         logger.warning("Starting the API")
         self.active = True
         self.conn = Conn(psql_creditals)
@@ -830,6 +851,10 @@ class CW3API:
             self.connection.ioloop.start()
 
     def stop(self):
+        self.stop_pika()
+        self.kafka_active = False
+
+    def stop_pika(self):
         print("closing connection")
         logging.error("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
         self.active = False
