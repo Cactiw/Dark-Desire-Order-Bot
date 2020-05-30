@@ -164,7 +164,8 @@ def check_guilds_api_access(bot=None, job=None):
         request = "update guilds set api_info = (api_info::jsonb - 'api_players')"
         cursor.execute(request)
     logging.info("Checking API access for guilds")
-    request = "select guild_id from guilds where (api_info -> 'api_players') is null"
+    request = "select guild_id from guilds where (api_info -> 'api_players') is null or " \
+              "(api_info -> 'api_players')::text = '[]'::text"
     cursor.execute(request)
     rows = cursor.fetchall()
     if not rows:
