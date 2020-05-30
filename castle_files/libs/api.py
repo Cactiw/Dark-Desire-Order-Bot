@@ -67,9 +67,6 @@ class CW3API:
         self.EXCHANGE = "{}_ex".format(cwuser)
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
-        # self.SEX_DIGEST = "{}_sex_digest".format(self.cwuser)
-        # self.YELLOW_PAGES = "{}_yellow_pages".format(self.cwuser)
-        # self.DEALS = "{}_deals".format(self.cwuser)
 
         self.kafka_consumer = None
 
@@ -120,14 +117,6 @@ class CW3API:
             self.in_channel = channel
             tag = self.in_channel.basic_consume(self.INBOUND, on_message_callback=self.__on_message)
             self.consumer_tags.append(tag)
-
-            # pika public queues - deprecated
-            # tag = self.in_channel.basic_consume(self.SEX_DIGEST, on_message_callback=self.on_sex_digest)
-            # self.consumer_tags.append(tag)
-            # tag = self.in_channel.basic_consume(self.DEALS, on_message_callback=self.on_deals)
-            # self.consumer_tags.append(tag)
-            # tag = self.in_channel.basic_consume(self.YELLOW_PAGES, on_message_callback=self.on_yellow_pages)
-            # self.consumer_tags.append(tag)
 
         logger.warning("Consuming")
 
@@ -202,14 +191,8 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def __on_message(self, channel, method, header, body):
-        # print(json.dumps(json.loads(body), sort_keys=1, indent=4, ensure_ascii=False))
         self.got_responses += 1
-        # print(method, header, body)
-        # print(json.loads(body))
-        # print(method.consumer_tag, method.delivery_tag)
-        # print(header.timestamp)
         channel.basic_ack(method.delivery_tag)
-        # method, header, body = json.loads(method), json.loads(header), json.loads(body)
         body = json.loads(body)
         result = body.get("result")
         if result == 'InvalidToken':
@@ -719,7 +702,6 @@ class CW3API:
 
     # Голая отправка запроса, без ограничений
     def __publish_message(self, message):
-        # properties = pika.BasicProperties(app_id='cactiw_castle_skalen', content_type='application/json')
         try:
             self.sent += 1
             return self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY,
