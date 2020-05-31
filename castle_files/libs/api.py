@@ -110,6 +110,8 @@ class CW3API:
         self.connection.channel(on_open_callback=self.__on_channel_open)
         self.connection.add_on_close_callback(self.on_conn_close)
 
+        self.start_kafka()
+
     def __on_channel_open(self, channel):
         self.connected = True
         self.connecting = False
@@ -810,7 +812,6 @@ class CW3API:
 
     def start(self):
         self.start_pika()
-        self.start_kafka()
 
     def start_kafka(self):
         self.kafka_active = True
@@ -828,6 +829,10 @@ class CW3API:
             group_id='cactiw_cw3_group_id',
             value_deserializer=lambda x: json.loads(x.decode('utf-8'))
         )
+        self.start_kafka_consuming()
+
+    def start_kafka_consuming(self):
+        time.sleep(10)
         kafka_thread = threading.Thread(target=self.kafka_work)
         kafka_thread.start()
 
@@ -845,16 +850,7 @@ class CW3API:
         try:
             self.connection.ioloop.start()
         except KeyboardInterrupt:
-            print("closing connection")
-            if self.consumer_tags:
-                for tag in self.consumer_tags:
-                    self.in_channel.basic_cancel(self.__on_cancel, tag)
-            self.channel.close()
-            self.in_channel.close()
-            self.connection.close()
-            self.conn.close()
-            # Loop until we're fully closed, will stop on its own
-            self.connection.ioloop.start()
+            self.stop()
 
     def stop(self):
         self.kafka_active = False
