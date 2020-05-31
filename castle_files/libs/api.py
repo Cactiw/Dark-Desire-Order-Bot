@@ -762,21 +762,18 @@ class CW3API:
                 logging.error(traceback.format_exc())
             request = self.requests_queue.get()
 
-    # Метод, который будет вызван обрыве соединения, если оно оборвалось
+    # Метод, который будет вызван обрыве соединения
     def on_conn_close(self, *args):  # connection, reply_code, reply_text):
-        print("in on_conn_close")
+        logging.warning("in on_conn_close")
         if self.active is False:
             return
         self.channel = None
         self.in_channel = None
         self.connected = False
-        # logging.warning("Connection closed, {}, {}, reconnection in 5 seconds".format(reply_code, reply_text))
         logging.warning("Connection closed, {}, reconnection in {} seconds".format(
                 args, self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
-        time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
+        # self.connection.add_timeout(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS, self.reconnect)
         self.kill_parent_process()
-        # self.reconnect()
-        # self.connection.add_timeout(5, self.reconnect)
 
     @staticmethod
     def kill_parent_process():
