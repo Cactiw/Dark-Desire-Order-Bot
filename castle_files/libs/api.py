@@ -4,6 +4,7 @@
 
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals,\
     MID_CHAT_ID
+from globals import master_pid
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.equipment import Equipment
@@ -20,6 +21,8 @@ import pika
 import re
 import copy
 import kafka
+import os
+import signal
 
 from multiprocessing import Queue
 
@@ -771,8 +774,13 @@ class CW3API:
         logging.warning("Connection closed, {}, reconnection in {} seconds".format(
                 args, self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
         time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
-        self.reconnect()
+        self.kill_parent_process()
+        # self.reconnect()
         # self.connection.add_timeout(5, self.reconnect)
+
+    @staticmethod
+    def kill_parent_process():
+        os.kill(master_pid, signal.SIGINT)
 
     def reconnect(self):
         # self.connection.ioloop.stop()
@@ -852,8 +860,8 @@ class CW3API:
             self.connection.ioloop.start()
 
     def stop(self):
-        self.stop_pika()
         self.kafka_active = False
+        self.stop_pika()
 
     def stop_pika(self):
         print("closing connection")
