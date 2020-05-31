@@ -12,7 +12,7 @@ from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
 from castle_files.bin.service_functions import get_time_remaining_to_battle
 
-from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID
+from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher
 
 from config import cwuser, cwpass
 
@@ -185,6 +185,7 @@ def search_for_players_with_api_access(guild: Guild):
     :return: None
     """
     logging.info("Requesting information about {} players with API access".format(guild.tag))
+    dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Обновляю данные о доступе к АПИ у {}".format(guild.tag))
     guild.api_info.update({"api_players": []})
     for player_id in guild.members:
         player = Player.get_player(player_id)
@@ -581,7 +582,7 @@ def update_stock_for_fails(bot, job):
         # if len(api_players) > 0:  # Сомнительно, часто гильдии не обновляются из-за багов АПИ
         #     api_players.pop(0)
         if not api_players:
-            guild.api_info.clear()
+            # guild.api_info.clear()
             bot.send_message(chat_id=SUPER_ADMIN_ID, parse_mode='HTML',
                              text="Гильдию <b>{}</b> невозможно обновить - нет игроков с доступом к АПИ."
                                   "".format(guild.tag))
