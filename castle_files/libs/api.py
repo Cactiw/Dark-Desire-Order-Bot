@@ -774,8 +774,10 @@ class CW3API:
         self.connected = False
         logging.warning("Connection closed, {}, reconnection in {} seconds".format(
                 args, self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
+        time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
+        self.reconnect()
         # self.connection.add_timeout(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS, self.reconnect)
-        self.kill_parent_process()
+        # self.kill_parent_process()
 
     @staticmethod
     def kill_parent_process():
@@ -851,6 +853,8 @@ class CW3API:
             self.connection.ioloop.start()
         except KeyboardInterrupt:
             self.stop()
+
+        threading.Timer(30 * 60, self.reconnect).start()
 
     def stop(self):
         self.kafka_active = False
