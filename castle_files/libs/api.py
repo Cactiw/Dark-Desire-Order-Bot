@@ -788,7 +788,7 @@ class CW3API:
         # self.connect()
         # self.connection.ioloop.start()
         try:
-            self.stop()
+            self.stop_pika()
         except Exception:
             logger.warning("Failed to stop CW API in reconnect: {}".format(traceback.format_exc()))
         self.try_reconnect_forever()
@@ -801,7 +801,7 @@ class CW3API:
                 except Exception:
                     pass
                     try:
-                        self.stop()
+                        self.stop_pika()
                     except Exception:
                         pass
                     logger.info("Failed to reconnect CW API, retrying in {} seconds".format(
