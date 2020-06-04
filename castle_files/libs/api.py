@@ -290,8 +290,6 @@ class CW3API:
             logging.error(traceback.format_exc())
 
 
-
-
     def on_request_profile(self, channel, method, header, body):
         if body.get("result") != "Ok":
             logging.error("error while requesting profile, {}".format(body))
