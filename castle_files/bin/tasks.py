@@ -27,4 +27,5 @@ def plan_daily_tasks(bot=None, job=None):
 
 
 def plan_guilds_api_players_update():
-    plan_work(check_guilds_api_access, 3, 0, 0, context={"reset": True})
+    return  # Temporary disabled due to very unstable API work last days!
+    # plan_work(check_guilds_api_access, 3, 0, 0, context={"reset": True})
