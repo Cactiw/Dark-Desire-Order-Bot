@@ -101,7 +101,9 @@ class CW3API:
                 return
 
     def set_restart_timer(self):
+        logging.info("Setting up API restart timer...")
         if self.restart_timer is not None:
+            logging.info("Timer has already set, canceling old one.")
             self.restart_timer.cancel()
         self.restart_timer = threading.Timer(30 * 60, self.reconnect)
         self.restart_timer.start()
