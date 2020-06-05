@@ -73,6 +73,8 @@ class CW3API:
 
         self.kafka_consumer = None
 
+        self.restart_timer = None
+
         self.sent = 0
         self.got_responses = 0
 
@@ -98,6 +100,11 @@ class CW3API:
             if not self.kafka_active:
                 return
 
+    def set_restart_timer(self):
+        if self.restart_timer is not None:
+            self.restart_timer.cancel()
+        self.restart_timer = threading.Timer(30 * 60, self.reconnect)
+        self.restart_timer.start()
 
     def connect(self):
         self.connecting = True
@@ -109,6 +116,8 @@ class CW3API:
         self.connection.channel(on_open_callback=self.__on_channel_open)
         self.connection.channel(on_open_callback=self.__on_channel_open)
         self.connection.add_on_close_callback(self.on_conn_close)
+
+        self.set_restart_timer()
 
         self.start_kafka()
 
@@ -821,6 +830,9 @@ class CW3API:
         self.start_pika()
 
     def start_kafka(self):
+        if self.kafka_active:
+            logging.warning("Kafka already consuming, returning")
+            return
         self.kafka_active = True
         self.kafka_consumer = kafka.KafkaConsumer(
             'cw3-offers',
@@ -858,8 +870,6 @@ class CW3API:
             self.connection.ioloop.start()
         except KeyboardInterrupt:
             self.stop()
-
-        threading.Timer(30 * 60, self.reconnect).start()
 
     def stop(self):
         self.kafka_active = False
