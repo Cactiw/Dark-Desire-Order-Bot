@@ -488,8 +488,7 @@ class CW3API:
                 logging.error("error while requesting guild info, {}".format(body))
                 if body.get("result") == "Forbidden":
                     try:
-                        guild.api_info.get("api_players", []).remove(player_id)
-                        guild.update_to_database(need_order_recashe=False)
+                        self.remove_player_from_guild_access(guild, player)
                     except ValueError:
                         pass
                     except Exception:
@@ -691,11 +690,19 @@ class CW3API:
             raise RuntimeError
         token = player.api_info.get("token")
         if token is None:
+            self.remove_player_from_guild_access(Guild.get_guild(player.guild), player)
             raise RuntimeError
         self.publish_message({
             "token": token,
             "action": "guildInfo"
         })
+
+    def remove_player_from_guild_access(self, guild, player):
+        try:
+            guild.api_info.get("api_players", []).remove(player.id)
+            guild.update_to_database(need_order_recashe=False)
+        except ValueError:
+            logging.warning("Player not found in guild access list (Api.remove_player_from_guild_access)")
 
     def get_message(self):
         self.channel.basic_get(self.INBOUND, self.__on_message)
