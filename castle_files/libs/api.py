@@ -894,8 +894,17 @@ class CW3API:
         self.in_channel.close()
         self.connection.close()
         self.conn.close()
-        print("starting loop")
+        print("Stopping loop")
         self.connection.ioloop.stop()
         print("loop ended")
         for worker in self.workers:
             worker.join()
+
+        logging.info("API shutdown complete")
+
+        self.channel = None
+        self.in_channel = None
+        self.connection = None
+        self.conn = None
+        self.workers.clear()
+        self.consumer_tags.clear()
