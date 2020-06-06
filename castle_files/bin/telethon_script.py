@@ -1,7 +1,7 @@
 from telethon.sync import TelegramClient, events, connection
 from telethon.tl.types import PeerChannel
 
-from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID
+from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG
 
 try:
     from config import phone, username, password, api_id, api_hash
@@ -61,16 +61,17 @@ def script_work():
 async def stats_handler(event):
     global guilds_str
     text = event.message.message
-    if event.message.to_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID) and \
+    if event.message.to_id in [PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)] and \
             ('Результаты сражений:' in text or '⛺️Гильдия' in text or '⛺Гильдия' in text or "Headquarters" in text or
              "🗺State of map" in text):
+        debug = event.message.to_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
         logging.error("Received data from telegram, sending: {}".format(text))
         if '⛺️Гильдия' in text:
             guilds_str += text + "\n"
             logging.info("Adding text to guilds_str = {}".format(guilds_str))
         else:
             print("put stats in queue")
-            castles_stats_queue.put(text)
-            castles_stats_queue.put(guilds_str)
+            castles_stats_queue.put({"data": text, "debug": debug})
+            castles_stats_queue.put({"data": guilds_str, "debug": debug})
             guilds_str = ""
             return

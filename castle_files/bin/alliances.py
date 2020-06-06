@@ -308,7 +308,7 @@ def sort_and_add_types_to_location_list(location_to_text: [AllianceLocation, str
     return res
 
 
-def parse_alliance_battle_results(results: str):
+def parse_alliance_battle_results(results: str, debug: bool):
     if results.startswith("🤝Headquarters news:"):
         # Сводки с самих альянсов
         total_results = "🤝Headquarters news:\n"
@@ -328,7 +328,8 @@ def parse_alliance_battle_results(results: str):
             emoji = get_hq_battle_emoji(battle_result, attack, defense)
             total_results += "{}{}{}{}\n".format(emoji, name, " -{}📦".format(stock) if stock > 0 else "",
                                                         " -{}🎖".format(glory) if glory > 0 else "")
-        AllianceResults.set_hq_text(total_results)
+        if not debug:
+            AllianceResults.set_hq_text(total_results)
     elif results.startswith("🗺State of map:"):
         # Сводки с локаций
         AllianceLocation.increase_turns_owned()
@@ -362,7 +363,8 @@ def parse_alliance_battle_results(results: str):
 
             locations_to_results.append([location, location_result])
 
-        AllianceResults.set_location_text(sort_and_add_types_to_location_list(locations_to_results))
+        if not debug:
+            AllianceResults.set_location_text(sort_and_add_types_to_location_list(locations_to_results))
 
 
 @alliance_access

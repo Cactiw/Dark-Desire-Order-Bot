@@ -85,37 +85,40 @@ def sort_worldtop(worldtop):
 def parse_stats():
     data = castles_stats_queue.get()
     while data is not None:
+        debug = data.get("debug", False)
+        data = data.get("data")
         # logging.error("Got data in parse: {}".format(data))
         if 'Результаты сражений:' in data:
             # Результаты битвы замков
-            response_all = "Игроки, попавшие в топ:\n"
-            for guild_id in Guild.guild_ids:
-                response = ""
-                guild = Guild.get_guild(guild_id=guild_id)
-                tag = guild.tag
-                for castle_results_string in data.split("\n\n"):
-                    if tag in castle_results_string:
-                        try:
-                            attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
-                        except TypeError:
-                            attacked_castle = "???"
-                        nicknames_list = re.findall(".\\[{}\\][^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
-                        print(nicknames_list)
-                        for nickname in nicknames_list:
-                            if response == "":
-                                response = "Игроки, попавшие в топ:\n"
-                            response += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
-                                                                  attacked_castle, nickname[:-1])
-
-                            response_all += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
+            if not debug:
+                response_all = "Игроки, попавшие в топ:\n"
+                for guild_id in Guild.guild_ids:
+                    response = ""
+                    guild = Guild.get_guild(guild_id=guild_id)
+                    tag = guild.tag
+                    for castle_results_string in data.split("\n\n"):
+                        if tag in castle_results_string:
+                            try:
+                                attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
+                            except TypeError:
+                                attacked_castle = "???"
+                            nicknames_list = re.findall(".\\[{}\\][^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
+                            print(nicknames_list)
+                            for nickname in nicknames_list:
+                                if response == "":
+                                    response = "Игроки, попавшие в топ:\n"
+                                response += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
                                                                       attacked_castle, nickname[:-1])
 
-                if response != "":
-                    if guild.chat_id is None:
-                        continue
-                    dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
-            if response_all != "Игроки, попавшие в топ:\n":
-                dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
+                                response_all += "{}{} <b>{}</b>\n".format("🛡️" if nickname[0] == attacked_castle else"⚔️",
+                                                                          attacked_castle, nickname[:-1])
+
+                    if response != "":
+                        if guild.chat_id is None:
+                            continue
+                        dispatcher.bot.send_message(chat_id=guild.chat_id, text=response, parse_mode='HTML')
+                if response_all != "Игроки, попавшие в топ:\n":
+                    dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
             worldtop_strings = data.split("\n\n")[-1].splitlines()
             worldtop = load_worldtop(battle_id=count_battle_id() - 1)
             old_worldtop = copy.deepcopy(worldtop)
@@ -131,12 +134,13 @@ def parse_stats():
                 sort_worldtop(worldtop)
                 logging.info("Worldtop updated: {}: {}".format(castle, count))
             save_worldtop(worldtop)
-            send_worldtop_update(old_worldtop, worldtop)
+            if not debug:
+                send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
         elif data.startswith("🤝Headquarters news:") or data.startswith("🗺State of map:"):
             # Итоги штабов альянсов
             logging.info("Got alliance news")
-            parse_alliance_battle_results(data)
+            parse_alliance_battle_results(data, debug)
         else:
             #  Сообщение о пиратстве
             response_by_tags = {}
