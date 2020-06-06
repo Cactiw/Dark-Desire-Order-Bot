@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals,\
-    MID_CHAT_ID
+    MID_CHAT_ID, SUPER_ADMIN_ID
 from globals import master_pid
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -832,25 +832,29 @@ class CW3API:
         self.start_pika()
 
     def start_kafka(self):
-        if self.kafka_active:
-            logging.warning("Kafka already consuming, returning")
-            return
-        self.kafka_active = True
-        self.kafka_consumer = kafka.KafkaConsumer(
-            'cw3-offers',
-            'cw3-deals',
-            'cw3-duels',
-            'cw3-sex_digest',
-            'cw3-yellow_pages',
-            'cw3-au_digest',
+        try:
+            if self.kafka_active:
+                logging.warning("Kafka already consuming, returning")
+                return
+            self.kafka_active = True
+            self.kafka_consumer = kafka.KafkaConsumer(
+                'cw3-offers',
+                'cw3-deals',
+                'cw3-duels',
+                'cw3-sex_digest',
+                'cw3-yellow_pages',
+                'cw3-au_digest',
 
-            bootstrap_servers=['digest-api.chtwrs.com:9092'],
-            auto_offset_reset='earliest',
-            enable_auto_commit=True,
-            group_id='cactiw_cw3_group_id',
-            value_deserializer=lambda x: json.loads(x.decode('utf-8'))
-        )
-        self.start_kafka_consuming()
+                bootstrap_servers=['digest-api.chtwrs.com:9092'],
+                auto_offset_reset='earliest',
+                enable_auto_commit=True,
+                group_id='cactiw_cw3_group_id',
+                value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+            )
+            self.start_kafka_consuming()
+        except Exception:
+            logging.exception("Can not start kafka: {}".format(traceback.format_exc()))
+            dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Невозможно запустить kafka API")
 
     def start_kafka_consuming(self):
         time.sleep(10)
