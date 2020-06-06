@@ -13,6 +13,9 @@ except ImportError:
     telethon_proxy = None
 
 from multiprocessing import Queue
+
+from retrying import retry
+
 import socks
 import logging
 
@@ -25,6 +28,16 @@ TEST_CHANNEL_ID = 1353017829
 guilds_str = ""
 
 
+WAIT_BEFORE_RETRY = 30
+MAX_RETRIES = 5
+
+
+def not_keyboard_interrupt(exception: Exception) -> bool:
+    return not isinstance(exception, KeyboardInterrupt)
+
+
+@retry(wait_fixed=WAIT_BEFORE_RETRY * 1000, retry_on_exception=not_keyboard_interrupt,
+       stop_max_attempt_number=MAX_RETRIES)
 def script_work():
     global client
     session_path = "./sessions/{}".format(username)

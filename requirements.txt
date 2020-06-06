@@ -7,3 +7,4 @@ tzlocal
 pySocks
 gitpython
 kafka-python
+retrying
