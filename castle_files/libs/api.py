@@ -813,12 +813,14 @@ class CW3API:
         try:
             while True:
                 try:
+                    self.clear_api_state()
                     self.start_pika()
                 except Exception:
                     pass
                     try:
                         self.stop_pika()
                     except Exception:
+                        self.clear_api_state()
                         pass
                     logger.info("Failed to reconnect CW API, retrying in {} seconds".format(
                         self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
@@ -902,6 +904,10 @@ class CW3API:
 
         logging.info("API shutdown complete")
 
+        self.clear_api_state()
+
+
+    def clear_api_state(self):
         self.channel = None
         self.in_channel = None
         self.connection = None
