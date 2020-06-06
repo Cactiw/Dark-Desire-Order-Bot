@@ -741,7 +741,7 @@ class CW3API:
             if self.active is False:
                 return
             if not self.connected or self.channel is None:
-                for i in range(10):
+                for i in range(30):
                     time.sleep(1)
                     if self.connected:
                         break
