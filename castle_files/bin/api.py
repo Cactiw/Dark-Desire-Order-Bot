@@ -527,10 +527,9 @@ def grassroots_update_stock(bot, job):
     while row is not None:
         player = Player.get_player(row[0], notify_on_error=False, new_cursor=cursor)
         count_all += 1
-        if change_send:
-            player.api_info.update({"change_stock_send": True})
-            player.update()
-            count += 1
+        player.api_info.update({"change_stock_send": change_send})
+        player.update()
+        count += 1 if change_send else 0
         cwapi.update_stock(player.id, player=player)
         row = cursor.fetchone()
     bot.send_message(chat_id=SUPER_ADMIN_ID,
