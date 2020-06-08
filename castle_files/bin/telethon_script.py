@@ -18,6 +18,7 @@ from retrying import retry
 
 import socks
 import logging
+import traceback
 
 logging.getLogger('telethon').setLevel(logging.WARNING)
 
@@ -33,6 +34,7 @@ MAX_RETRIES = 5
 
 
 def not_keyboard_interrupt(exception: Exception) -> bool:
+    logging.error(traceback.format_exc())
     return not isinstance(exception, KeyboardInterrupt)
 
 
