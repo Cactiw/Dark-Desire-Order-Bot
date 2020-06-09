@@ -38,16 +38,20 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     response = "{}Обнаруженные мобы{}:\n".format(created_player.castle if created_player is not None else "",
                                                  ", засада!" if minutes == 5 else "")
     avg_lvl = 0
+    champion = False
     for i, name in enumerate(mobs):
         lvl = lvls[i]
-        avg_lvl += lvl
+        if "⚜️Forbidden Champion" in name:
+            champion = True
+        else:
+            avg_lvl += lvl
         response += "<b>{}</b> 🏅: <code>{}</code>\n{}".format(name, lvl, "  ╰ {}\n".format(buffs[i]) if buffs[i] != ""
                                                               else "")
-    avg_lvl /= len(lvls)
+
+    avg_lvl = (avg_lvl / len(lvls)) if not champion else max(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
     response += "\n" + get_player_stats_text(created_player, forward_message_date)
-
 
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     remaining_time = datetime.timedelta(minutes=minutes) - (now - forward_message_date)
@@ -56,7 +60,8 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     else:
         response += "\nОсталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
                                                                           int(remaining_time.total_seconds() % 60)))
-    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - 5), int(avg_lvl + 10)),
+    minus, plus = (5 if not champion else 18), (7 if not champion else -8)
+    buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - minus), int(avg_lvl + plus)),
                                      url=u"https://t.me/share/url?url=/fight_{}".format(link)),
                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
     if len(helpers) >= 5:
@@ -78,6 +83,12 @@ def get_mobs_text_by_link(link):
     response = get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, player_id)
     return response
 
+
+def get_suitable_lvls(text):
+    champion = False
+    if "⚜️Forbidden Champion" in text:
+        champion = True
+    return (5 if not champion else 18), (7 if not champion else -8)
 
 
 def mob(bot, update):
@@ -179,10 +190,11 @@ def mob(bot, update):
                     if guild is not None and guild.chat_id == mes.chat_id:
                         ping_list += guild.members
                     if ping_list:
+                        minus, plus = get_suitable_lvls(mes.text)
                         ping = []
                         for pl_id in ping_list:
                             pl = Player.get_player(pl_id)
-                            if avg_lvl - 5 <= pl.lvl <= avg_lvl + 10:
+                            if avg_lvl - minus <= pl.lvl <= avg_lvl + plus:
                                 on = pl.settings.get("mobs_notify")
                                 if on is None:
                                     on = True

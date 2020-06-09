@@ -910,6 +910,7 @@ class CW3API:
 
 
     def clear_api_state(self):
+        logging.info("Clearing api state...")
         self.channel = None
         self.in_channel = None
         self.connection = None
