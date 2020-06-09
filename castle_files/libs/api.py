@@ -807,11 +807,13 @@ class CW3API:
             self.stop_pika()
         except Exception:
             logger.warning("Failed to stop CW API in reconnect: {}".format(traceback.format_exc()))
+        logger.info("Connection closed successfully, reconnecting.")
         self.try_reconnect_forever()
 
     def try_reconnect_forever(self):
         try:
             while True:
+                time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
                 try:
                     self.clear_api_state()
                     self.start_pika()
@@ -824,8 +826,8 @@ class CW3API:
                         pass
                     logger.info("Failed to reconnect CW API, retrying in {} seconds".format(
                         self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
-                    time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
                 else:
+                    logger.info("Reconnection successful.")
                     break
         except KeyboardInterrupt:
             return
@@ -889,8 +891,6 @@ class CW3API:
         print("closing connection")
         logging.error("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
         self.active = False
-        for i in range(self.num_workers):
-            self.requests_queue.put(None)
         if self.consumer_tags:
             for tag in self.consumer_tags:
                 self.in_channel.basic_cancel(tag, self.__on_cancel)
@@ -901,13 +901,18 @@ class CW3API:
         print("Stopping loop")
         self.connection.ioloop.stop()
         print("loop ended")
+
+        for i in range(self.num_workers):
+            self.requests_queue.put(None)
+
         for worker in self.workers:
-            worker.join()
+            worker.join(timeout=5)
+            if worker.is_alive():
+                logger.error("API worker alive after waiting (in .stop())")
 
         logging.info("API shutdown complete")
 
         self.clear_api_state()
-
 
     def clear_api_state(self):
         logging.info("Clearing api state...")
