@@ -38,8 +38,15 @@ class CW3API:
     WAIT_BEFORE_RETRY_CONNECTION_SECONDS = 30
     api_info = {}
 
-    def __init__(self, cwuser, cwpass, workers=1):
-        # TODO Разобраться с несколькими работниками (нельзя использовать 1 канал на всех)
+    def __init__(self, cwuser: str, cwpass: str, workers: int = 1):
+        """
+        Инициализация класса для работы с АПИ
+        :param cwuser: str - API username
+        :param cwpass: str - API password
+        :param workers: int - Number of workers to use
+        """
+
+        # TODO Разобраться с пулом работников (нельзя использовать 1 канал на всех)
         self.__lock = threading.Lock()
         self.lock = threading.Condition(self.__lock)
         self.cwuser = cwuser
@@ -91,6 +98,9 @@ class CW3API:
         }
 
     def kafka_work(self):
+        """
+        Главный цикл работы kafka - итерация по сообщениям в очереди, пока self.kafka_active is True
+        """
         for message in self.kafka_consumer:
             try:
                 self.callbacks.get(message.topic, lambda x: x)(message.value)
@@ -100,14 +110,11 @@ class CW3API:
             if not self.kafka_active:
                 return
 
-    def connect(self):
-        self.connecting = True
-        self.connection = kombu.Connection(self.url)
-        self.connection.connect()
-        self.producer = self.connection.Producer(auto_declare=False)
-        self.connecting = False
-
     def on_sex_digest(self, body):
+        """
+        Обработка сообщения о ценах на бирже
+        :param body: dict - Message body
+        """
         try:
             prices = {}
             for item in body:
@@ -127,6 +134,10 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_yellow_pages(self, body):
+        """
+        Обработка сообщения с лавками в игре
+        :param body: dict - Message body
+        """
         try:
             shops = body
             self.api_info.update({"shops": shops})
@@ -135,6 +146,10 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_deals(self, body):
+        """
+        Обработка сообщения со сделкой на бирже
+        :param body: dict - Message body
+        """
         try:
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
             seller_id = body.get("sellerId")
@@ -174,6 +189,11 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def __on_message(self, body, message):
+        """
+        Метод, который вызывается при получения сообщения ИЗ ПРИВАТНОЙ ОЧЕРЕДИ (не kafka!)
+        :param body: dict - Message body
+        :param message: Message - Message itself
+        """
         self.got_responses += 1
         print("Got {}".format(body))
         message.ack()
@@ -201,12 +221,20 @@ class CW3API:
         callback(body)
 
     def on_create_auth_code(self, body):
+        """
+        Метод, вызывающийся по получению результата о создании кода авторизации АПИ
+        :param body: dict - Message body
+        """
         print("in callback", body)
         if body.get("result") != "Ok":
             logging.error("error while creating auth code, {}".format(body))
             return
 
     def on_grant_token(self, body):
+        """
+        Метод, который вызывается при получении ответа на отправленный код авторизации АПИ
+        :param body: dict - Message body
+        """
         print("in callback", body)
         if body.get("result") != "Ok":
             logging.error("error while creating auth code, {}".format(body))
@@ -229,6 +257,10 @@ class CW3API:
         self.auth_additional_operation(player_id, "GetGearInfo")
 
     def on_request_additional_operation(self, body):
+        """
+        Метод, который вызывается при получении ответа о запрошенной дополнительной операции
+        :param body: dict - Message body
+        """
         if body.get("result") != "Ok":
             logging.error("error while requesting additional operation, {}".format(body))
             return
@@ -243,6 +275,10 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_grant_additional_operational(self, body):
+        """
+        Метод, который вызывается при получении ответа о подтверждении кодом дополнительной операции
+        :param body: dict - Message body
+        """
         accesses = {"GetGearInfo": "gear", "TradeTerminal": "wtb"}
         try:
             payload = body.get("payload")
@@ -270,6 +306,10 @@ class CW3API:
 
 
     def on_request_profile(self, body):
+        """
+        Метод, который вызывается при получении профиля игрока
+        :param body: dict - Message body
+        """
         if body.get("result") != "Ok":
             logging.error("error while requesting profile, {}".format(body))
             return
@@ -329,6 +369,10 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_gear_info(self, body):
+        """
+        Метод, который вызывается при получении экипировки игрока
+        :param body: dict - Message body
+        """
         payload = body.get("payload")
         player_id = payload.get("userId")
         player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
@@ -378,6 +422,12 @@ class CW3API:
 
 
     def get_stock_change_text(self, old_stock, new_stock):
+        """
+        Метод, возвращающий текст о разнице в стоке
+        :param old_stock: dict { str: int } - Old stock
+        :param new_stock: dict { str: int } - New stock
+        :return: str - Changes text
+        """
         response = "📦Изменения в стоке:\n"
         prices = self.api_info.get("prices") or {}
         changes = {}
@@ -414,6 +464,10 @@ class CW3API:
         return response
 
     def on_stock_info(self, body):
+        """
+        Метод, который вызывается при получении стока игрока
+        :param body: dict - Message body
+        """
         try:
             if body.get("result") != "Ok":
                 logging.error("error while requesting stock info, {}".format(body))
@@ -455,6 +509,10 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     def on_guild_info(self, body):
+        """
+        Метод, который вызывается при получении информации о гильдии (в том числе и её стока)
+        :param body: dict - Message body
+        """
         try:
             payload = body.get("payload")
             if payload is None:
@@ -537,6 +595,13 @@ class CW3API:
 
     @staticmethod
     def __set_guild_equipment_codes(codes: dict, equipment_temp: dict, equipment: list):
+        """
+        Метод, записывающий экипировку гильдии (сопоставляющий название предметов и их коды)
+        :param codes: dict { str : str } - Dictionary with item codes
+        :param equipment_temp: Temporally stored equipment - same as in CW response
+        :param equipment: result equipment
+        :return: None
+        """
         for code, name in list(codes.items()):
             lst: list = equipment_temp.get(name)
             if not lst:
@@ -550,6 +615,9 @@ class CW3API:
     #
 
     def send_guild_changes_to_mid(self):
+        """
+        Метод, который отправляет сообщение с изменениями гп у гильдий в мид (после каждой битвы)
+        """
         guild_changes = {k: v for k, v in sorted(list(self.guild_changes.items()), key=lambda x: x[1], reverse=True)}
         logging.error(guild_changes)
         self.guild_changes_work = None
@@ -560,15 +628,22 @@ class CW3API:
             response += "{}<b>{}</b> 🎖:<code>{:>3}</code>\n".format(guild.castle, guild.tag, glory_change)
         self.bot.send_message(chat_id=MID_CHAT_ID, text=response, parse_mode='HTML')
 
-    # Запрос доступа к апи
     def request_auth_token(self, user_id):
+        """
+        Запрос доступа к апи игрока с id = user_id
+        :param user_id: int - Player.id
+        """
         self.publish_message({
               "action": "createAuthCode",
               "payload": {"userId": user_id}
         })
 
-    # Предоставление кода для получения токена к апи
     def grant_token(self, user_id, auth_code):
+        """
+        Предоставление кода для получения токена к апи
+        :param user_id: int - Player.id
+        :param auth_code: str - Authentication code
+        """
         payload = {
                 "userId": user_id,
                 "authCode": "{}".format(auth_code)
@@ -579,6 +654,12 @@ class CW3API:
         })
 
     def auth_additional_operation(self, user_id, operation, player=None):
+        """
+        Метод запроса доступа к дополнительной операции
+        :param user_id: int - Player.id
+        :param operation: str - Operation name (example - "TradeTerminal")
+        :param player: optional | Player instance (to avoid database request)
+        """
         if player is None:
             player = Player.get_player(user_id, notify_on_error=False)
             if player is None:
@@ -596,6 +677,13 @@ class CW3API:
         })
 
     def grant_additional_operation(self, user_id, request_id, auth_code, player=None):
+        """
+        Метод отправки кода доступа к дополнительной операции
+        :param user_id: int - Player.id
+        :param request_id: str - Request id (from auth_additional_operation)
+        :param auth_code: str - Authentication code
+        :param player: optional | Player instance (to avoid database request)
+        """
         if player is None:
             player = Player.get_player(user_id, notify_on_error=False)
         if player is None:
@@ -616,6 +704,11 @@ class CW3API:
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
     def update_player(self, player_id, player=None):
+        """
+        Метод запроса обновления игрока
+        :param player_id: int - Player.id
+        :param player: optional | Player instance (to avoid database request)
+        """
         if player is None:
             player = Player.get_player(player_id, notify_on_error=False)
             if player is None:
@@ -631,6 +724,11 @@ class CW3API:
         })
 
     def update_gear(self, player_id, player=None):
+        """
+        Метод запроса обновления снаряжения игрока
+        :param player_id: int - Player.id
+        :param player: optional | Player instance (to avoid database request)
+        """
         if player is None:
             player = Player.get_player(player_id, notify_on_error=False)
             if player is None:
@@ -646,6 +744,11 @@ class CW3API:
         })
 
     def update_stock(self, player_id, player=None):
+        """
+        Метод запроса обновления стока игрока
+        :param player_id: int - Player.id
+        :param player: optional | Player instance (to avoid database request)
+        """
         if player is None:
             player = Player.get_player(player_id, notify_on_error=False)
             if player is None:
@@ -661,6 +764,11 @@ class CW3API:
 
     # Обновление одного игрока через API, кидает RuntimeError, если не найден игрок или его токен
     def update_guild_info(self, player_id, player=None):
+        """
+        Метод запроса обновления гильдии игрока
+        :param player_id: int - Player.id
+        :param player: optional | Player instance (to avoid database request)
+        """
         if player is None:
             player = Player.get_player(player_id, notify_on_error=False)
             if player is None:
@@ -677,18 +785,29 @@ class CW3API:
         })
 
     def remove_player_from_guild_access(self, guild, player):
+        """
+        Метод для удаления игрока из списка доступа гильдии к АПИ
+        :param guild: Guild instance
+        :param player: Player instance
+        """
         try:
             guild.api_info.get("api_players", []).remove(player.id)
             guild.update_to_database(need_order_recashe=False)
         except ValueError:
             logging.warning("Player not found in guild access list (Api.remove_player_from_guild_access)")
 
-    # Запрос кладётся в очередь запросов
     def publish_message(self, message):
+        """
+        Запрос кладётся в очередь запросов на отправку
+        :param message: dict - Message to publish
+        """
         self.requests_queue.put(message)
 
-    # Голая отправка запроса, без ограничений
     def __publish_message(self, message):
+        """
+        Голая отправка запроса, без учёта ограничений.
+        :param message: dict - Message to publish
+        """
         try:
             self.sent += 1
             return self.producer.publish(
@@ -709,6 +828,10 @@ class CW3API:
 
     # Функция для отправки запроса с учётом всех ограничений
     def actually_publish_message(self, message):
+        """
+        Функция, которая учитывает все ограничения на отправку сообщений, ожидая, когда сообщение сможет быть отправлено
+        :param message: dict - Message to publish
+        """
         try:
             self.lock.acquire()
             # print(self.connected, self.channel)
@@ -741,11 +864,18 @@ class CW3API:
         pass
 
     def __release_resource(self):
+        """
+        Метод, который вызывается через секунду после отправки сообщения.
+        Снижает количество отправленных запросов в эту секунду на 1
+        """
         with self.lock:
             self.__requests_per_second -= 1
             self.lock.notify_all()
 
     def __work(self):
+        """
+        Метод, в котором крутится работник, отправляющий сообщения
+        """
         request = self.requests_queue.get()
         while self.active is True and request is not None:
             try:
@@ -755,9 +885,17 @@ class CW3API:
             request = self.requests_queue.get()
 
     def start(self):
+        """
+        Метод для запуска АПИ (вызывается извне)
+        """
         self.start_pika()
+        self.start_kafka()
 
     def start_kafka(self):
+        """
+        Метод запуска kafka - для публичных очередей
+        Вызывается после успешного запуска Kombu API
+        """
         try:
             if self.kafka_active:
                 logging.warning("Kafka already consuming, returning")
@@ -782,17 +920,19 @@ class CW3API:
             logging.exception("Can not start kafka: {}".format(traceback.format_exc()))
             dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Невозможно запустить kafka API")
 
-    def start_pika_consuming(self):
-        consumer = CWConsumer(self.connection, self.inbound_queue, self.__on_message)
-        self.consumer_tags.append(consumer)
-        threading.Thread(target=consumer.run).start()
-
     def start_kafka_consuming(self):
+        """
+        Метод, создающий дополнительный поток для бесконечного получения и обработки сообщений
+        из публичных очередей (kafka)
+        """
         time.sleep(10)
         kafka_thread = threading.Thread(target=self.kafka_work)
         kafka_thread.start()
 
     def start_pika(self):
+        """
+        Метод, запускающий API для частных очередей используя Pika (теперь Kombu).
+        """
         logger.warning("Starting the API")
         self.active = True
         self.conn = Conn(psql_creditals)
@@ -805,13 +945,35 @@ class CW3API:
             self.workers.append(worker)
         self.start_pika_consuming()
 
-        self.start_kafka()
+    def connect(self):
+        """
+        Метод создания соединения через Kombu
+        """
+        self.connecting = True
+        self.connection = kombu.Connection(self.url)
+        self.connection.connect()
+        self.producer = self.connection.Producer(auto_declare=False)
+        self.connecting = False
+
+    def start_pika_consuming(self):
+        """
+        Метод, создающий потребителей (consumers) сообщений из очереди ответов CW.
+        """
+        consumer = CWConsumer(self.connection, self.inbound_queue, self.__on_message)
+        self.consumer_tags.append(consumer)
+        threading.Thread(target=consumer.run).start()
 
     def stop(self):
+        """
+        Метод для полной остановки АПИ (вызывается извне) и завершения всех потоков.
+        """
         self.kafka_active = False
         self.stop_pika()
 
     def stop_pika(self):
+        """
+        Метод остановки АПИ Kombu
+        """
         print("closing connection")
         logging.error("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
         self.active = False
@@ -836,6 +998,9 @@ class CW3API:
         self.clear_api_state()
 
     def clear_api_state(self):
+        """
+        Метод для очистки состояния АПИ (удаления соединений, работников)
+        """
         logging.info("Clearing api state...")
         self.connection = None
         self.conn = None
@@ -845,12 +1010,28 @@ class CW3API:
 
 
 class CWConsumer(ConsumerMixin):
+    """
+    Обёртка над классом ConsumerMixin
+    Обрабатывает поступающие сообщения в очереди
+    Запускается в отдельном потоке (не обязательно, даже возможно опасно - TODO выяснить)
+    Подробнее - https://docs.celeryproject.org/projects/kombu/en/stable/userguide/consumers.html#consumer-mixin-classes
+    """
     def __init__(self, connection, queue, on_message):
-        self.connection = connection
-        self.queue = queue
+        self.connection = connection  # Соединение, или канал
+        self.queue = queue  # Очередь для мониторинга
         self.on_message = on_message  # Pass method to process the message, accepts message body and message class
 
     def get_consumers(self, Consumer, channel):
+        """
+        Возвращает потребителей, которые будут запущены.
+        Можно добавить ещё одного при большой нагрузке, но тогда необходимо создать для него дополнительный канал руками
+
+        Метод будет вызван автоматически.
+
+        :param Consumer: Consumer instance - will be passed automatically
+        :param channel: Channel instance - will be passed automatically
+        :return: [ Consumer ]
+        """
         return [
             Consumer([self.queue], callbacks=[self.on_message], accept=['json'], auto_declare=False),
         ]
