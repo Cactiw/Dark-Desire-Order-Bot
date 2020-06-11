@@ -845,6 +845,8 @@ class CW3API:
             self.workers.append(worker)
         self.start_pika_consuming()
 
+        self.start_kafka()
+
     def stop(self):
         self.kafka_active = False
         self.stop_pika()
