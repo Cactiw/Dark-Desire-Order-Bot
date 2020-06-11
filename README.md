@@ -11,7 +11,7 @@ queue`s overthlow.
 ## Installation
 `sudo apt-get update`
 
-`sudo apt-get install python3-pip python3-setuptools postgresql postgresql-contrib vim`
+`sudo apt-get install python3 python3-pip python3-setuptools python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev postgresql postgresql-contrib vim`
 
 `cd /etc/postgresql/10/main`
 (10 is version number, replace for your one)
