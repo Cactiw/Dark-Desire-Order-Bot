@@ -17,14 +17,15 @@ import traceback
 import time
 import datetime
 import json
-import pika
 import re
+import kombu
 import copy
 import kafka
 import os
 import signal
 
 from multiprocessing import Queue
+from kombu.mixins import ConsumerMixin
 
 logger = logging.getLogger("API")
 logger.setLevel(logging.INFO)
@@ -43,8 +44,7 @@ class CW3API:
         self.lock = threading.Condition(self.__lock)
         self.cwuser = cwuser
         self.cwpass = cwpass
-        self.url = f'amqps://{cwuser}:{cwpass}@api.chtwrs.com:5673/?socket_timeout=5'
-        self.parameters = pika.URLParameters(self.url)
+        self.url = f'amqps://{cwuser}:{cwpass}@api.chtwrs.com:5673'
         self.connected = False  # Соединение активно в данный момент
         self.connecting = False  # True, если соединение не установлено, но пытается установиться в данный момент
         self.active = True  # True при запуске, и False в самом конце, если self.active == True и
@@ -58,8 +58,7 @@ class CW3API:
         self.conn = None
         self.cursor = None
         self.connection = None
-        self.channel = None
-        self.in_channel = None
+        self.producer = None
         self.bot = dispatcher.bot
         self.consumer_tags = []
         self.num_workers = workers  # Число работников, работающих над отправкой запросов
@@ -70,6 +69,9 @@ class CW3API:
         self.EXCHANGE = "{}_ex".format(cwuser)
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
+
+        self.exchange = kombu.Exchange(self.EXCHANGE)
+        self.inbound_queue = kombu.Queue(self.INBOUND)
 
         self.kafka_consumer = None
 
@@ -100,45 +102,11 @@ class CW3API:
             if not self.kafka_active:
                 return
 
-    def set_restart_timer(self):
-        logging.info("Setting up API restart timer...")
-        if self.restart_timer is not None:
-            logging.info("Timer has already set, canceling old one.")
-            self.restart_timer.cancel()
-        self.restart_timer = threading.Timer(30 * 60, self.reconnect)
-        self.restart_timer.start()
-
     def connect(self):
         self.connecting = True
-        self.connection = pika.SelectConnection(self.parameters, on_open_callback=self.__on_conn_open)
-
-    def __on_conn_open(self, connection):
-        logger.warning("Connection opened")
-        self.connection = connection
-        self.connection.channel(on_open_callback=self.__on_channel_open)
-        self.connection.channel(on_open_callback=self.__on_channel_open)
-        self.connection.add_on_close_callback(self.on_conn_close)
-
-        self.set_restart_timer()
-
-        self.start_kafka()
-
-    def __on_channel_open(self, channel):
-        self.connected = True
-        self.connecting = False
-        logger.warning("Channel opened")
-        if self.channel is None:
-            self.channel = channel
-        else:
-            self.in_channel = channel
-            tag = self.in_channel.basic_consume(self.INBOUND, on_message_callback=self.__on_message)
-            self.consumer_tags.append(tag)
-
-        logger.warning("Consuming")
-
-    def __on_cancel(self, obj=None):
-        print(obj)
-        logger.warning("Consumer cancelled")
+        self.connection = kombu.Connection(self.url)
+        self.connection.connect()
+        self.producer = self.connection.Producer(auto_declare=False)
 
     def on_sex_digest(self, body):
         try:
@@ -206,10 +174,11 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
-    def __on_message(self, channel, method, header, body):
+    def __on_message(self, body, message):
         self.got_responses += 1
-        channel.basic_ack(method.delivery_tag)
-        body = json.loads(body)
+        print("Got {}".format(body))
+        message.ack()
+
         result = body.get("result")
         if result == 'InvalidToken':
             cursor = self.conn.cursor()
@@ -228,17 +197,17 @@ class CW3API:
 
         callback = self.callbacks.get(body.get("action"))
         if callback is None:
-            logging.warning("Callback is None for {}, {}, {}".format(method, header, body))
+            logging.warning("Callback is None for {}".format(body))
             return
-        callback(channel, method, header, body)
+        callback(body)
 
-    def on_create_auth_code(self, channel, method, header, body):
+    def on_create_auth_code(self, body):
         print("in callback", body)
         if body.get("result") != "Ok":
             logging.error("error while creating auth code, {}".format(body))
             return
 
-    def on_grant_token(self, channel, method, header, body):
+    def on_grant_token(self, body):
         print("in callback", body)
         if body.get("result") != "Ok":
             logging.error("error while creating auth code, {}".format(body))
@@ -260,7 +229,7 @@ class CW3API:
                                    "пожалуйста, Пришлите форвард сообщения, полученного от @ChatWarsBot.")
         self.auth_additional_operation(player_id, "GetGearInfo")
 
-    def on_request_additional_operation(self, channel, method, header, body):
+    def on_request_additional_operation(self, body):
         if body.get("result") != "Ok":
             logging.error("error while requesting additional operation, {}".format(body))
             return
@@ -274,7 +243,7 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
-    def on_grant_additional_operational(self, channel, method, header, body):
+    def on_grant_additional_operational(self, body):
         accesses = {"GetGearInfo": "gear", "TradeTerminal": "wtb"}
         try:
             payload = body.get("payload")
@@ -301,7 +270,7 @@ class CW3API:
             logging.error(traceback.format_exc())
 
 
-    def on_request_profile(self, channel, method, header, body):
+    def on_request_profile(self, body):
         if body.get("result") != "Ok":
             logging.error("error while requesting profile, {}".format(body))
             return
@@ -360,7 +329,7 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
-    def on_gear_info(self, channel, method, header, body):
+    def on_gear_info(self, body):
         payload = body.get("payload")
         player_id = payload.get("userId")
         player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
@@ -445,7 +414,7 @@ class CW3API:
         response += "<b>Всего:</b> <code>{}</code>💰\n".format(gold_added + gold_lost)
         return response
 
-    def on_stock_info(self, channel, method, header, body):
+    def on_stock_info(self, body):
         try:
             if body.get("result") != "Ok":
                 logging.error("error while requesting stock info, {}".format(body))
@@ -486,7 +455,7 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
-    def on_guild_info(self, channel, method, header, body):
+    def on_guild_info(self, body):
         try:
             payload = body.get("payload")
             if payload is None:
@@ -715,9 +684,6 @@ class CW3API:
         except ValueError:
             logging.warning("Player not found in guild access list (Api.remove_player_from_guild_access)")
 
-    def get_message(self):
-        self.channel.basic_get(self.INBOUND, self.__on_message)
-
     # Запрос кладётся в очередь запросов
     def publish_message(self, message):
         self.requests_queue.put(message)
@@ -726,8 +692,17 @@ class CW3API:
     def __publish_message(self, message):
         try:
             self.sent += 1
-            return self.channel.basic_publish(exchange=self.EXCHANGE, routing_key=self.ROUTING_KEY,
-                                              body=json.dumps(message), properties=None)
+            return self.producer.publish(
+                message,
+                retry=True,
+                retry_policy={
+                    'interval_start': 0,  # First retry immediately,
+                    'interval_step': 2,  # then increase by 2s for every retry.
+                    'interval_max': 30,  # but don't exceed 30s between retries.
+                    'max_retries': 30,  # give up after 30 tries.
+                },
+                exchange=self.EXCHANGE,
+                routing_key=self.ROUTING_KEY)
         except AttributeError:
             logging.warning(traceback.format_exc())
             self.sent -= 1
@@ -740,7 +715,7 @@ class CW3API:
             # print(self.connected, self.channel)
             if self.active is False:
                 return
-            if not self.connected or self.channel is None:
+            if self.connection is None or not self.connection.connected:
                 for i in range(30):
                     time.sleep(1)
                     if self.connected:
@@ -779,21 +754,6 @@ class CW3API:
             except Exception:
                 logging.error(traceback.format_exc())
             request = self.requests_queue.get()
-
-    # Метод, который будет вызван обрыве соединения
-    def on_conn_close(self, *args):  # connection, reply_code, reply_text):
-        logging.warning("in on_conn_close")
-        if self.active is False:
-            return
-        self.channel = None
-        self.in_channel = None
-        self.connected = False
-        logging.warning("Connection closed, {}, reconnection in {} seconds".format(
-                args, self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
-        time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
-        self.reconnect()
-        # self.connection.add_timeout(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS, self.reconnect)
-        # self.kill_parent_process()
 
     @staticmethod
     def kill_parent_process():
@@ -862,6 +822,11 @@ class CW3API:
             logging.exception("Can not start kafka: {}".format(traceback.format_exc()))
             dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Невозможно запустить kafka API")
 
+    def start_pika_consuming(self):
+        consumer = CWConsumer(self.connection, self.inbound_queue, self.__on_message)
+        self.consumer_tags.append(consumer)
+        threading.Thread(target=consumer.run).start()
+
     def start_kafka_consuming(self):
         time.sleep(10)
         kafka_thread = threading.Thread(target=self.kafka_work)
@@ -878,10 +843,7 @@ class CW3API:
             worker = threading.Thread(target=self.__work)
             worker.start()
             self.workers.append(worker)
-        try:
-            self.connection.ioloop.start()
-        except KeyboardInterrupt:
-            self.stop()
+        self.start_pika_consuming()
 
     def stop(self):
         self.kafka_active = False
@@ -891,16 +853,13 @@ class CW3API:
         print("closing connection")
         logging.error("Sent {} requests, got {} responses".format(self.sent, self.got_responses))
         self.active = False
-        if self.consumer_tags:
-            for tag in self.consumer_tags:
-                self.in_channel.basic_cancel(tag, self.__on_cancel)
-        self.channel.close()
-        self.in_channel.close()
+
+        for consumer in self.consumer_tags:
+            consumer.should_stop = True
+
         self.connection.close()
         self.conn.close()
         print("Stopping loop")
-        self.connection.ioloop.stop()
-        print("loop ended")
 
         for i in range(self.num_workers):
             self.requests_queue.put(None)
@@ -916,9 +875,20 @@ class CW3API:
 
     def clear_api_state(self):
         logging.info("Clearing api state...")
-        self.channel = None
-        self.in_channel = None
         self.connection = None
         self.conn = None
+        self.producer = None
         self.workers.clear()
         self.consumer_tags.clear()
+
+
+class CWConsumer(ConsumerMixin):
+    def __init__(self, connection, queue, on_message):
+        self.connection = connection
+        self.queue = queue
+        self.on_message = on_message  # Pass method to process the message, accepts message body and message class
+
+    def get_consumers(self, Consumer, channel):
+        return [
+            Consumer([self.queue], callbacks=[self.on_message], accept=['json'], auto_declare=False),
+        ]
