@@ -75,8 +75,6 @@ class CW3API:
 
         self.kafka_consumer = None
 
-        self.restart_timer = None
-
         self.sent = 0
         self.got_responses = 0
 
@@ -107,6 +105,7 @@ class CW3API:
         self.connection = kombu.Connection(self.url)
         self.connection.connect()
         self.producer = self.connection.Producer(auto_declare=False)
+        self.connecting = False
 
     def on_sex_digest(self, body):
         try:
@@ -754,45 +753,6 @@ class CW3API:
             except Exception:
                 logging.error(traceback.format_exc())
             request = self.requests_queue.get()
-
-    @staticmethod
-    def kill_parent_process():
-        os.kill(master_pid, signal.SIGINT)
-
-    def reconnect(self):
-        # self.connection.ioloop.stop()
-        # self.connect()
-        # self.connection.ioloop.start()
-        try:
-            self.stop_pika()
-        except Exception:
-            logger.warning("Failed to stop CW API in reconnect: {}".format(traceback.format_exc()))
-        logger.info("Connection closed successfully, reconnecting.")
-        self.try_reconnect_forever()
-
-    def try_reconnect_forever(self):
-        try:
-            while True:
-                time.sleep(self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS)
-                try:
-                    self.clear_api_state()
-                    self.start_pika()
-                except Exception:
-                    pass
-                    try:
-                        self.stop_pika()
-                    except Exception:
-                        self.clear_api_state()
-                        pass
-                    logger.info("Failed to reconnect CW API, retrying in {} seconds".format(
-                        self.WAIT_BEFORE_RETRY_CONNECTION_SECONDS))
-                else:
-                    logger.info("Reconnection successful.")
-                    break
-        except KeyboardInterrupt:
-            return
-        except Exception:
-            logger.error(traceback.format_exc())
 
     def start(self):
         self.start_pika()
