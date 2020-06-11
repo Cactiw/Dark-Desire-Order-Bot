@@ -86,12 +86,16 @@ class CW3API:
         self.got_responses = 0
 
         self.callbacks = {
-            "createAuthCode": self.on_create_auth_code, "grantToken": self.on_grant_token,
-            "requestProfile": self.on_request_profile, "guildInfo": self.on_guild_info,
-            "requestGearInfo": self.on_gear_info, "authAdditionalOperation": self.on_request_additional_operation,
-            "grantAdditionalOperation": self.on_grant_additional_operational, "requestStock": self.on_stock_info,
+            "createAuthCode": self.on_create_auth_code,
+            "grantToken": self.on_grant_token,
+            "requestProfile": self.on_request_profile,
+            "guildInfo": self.on_guild_info,
+            "requestGearInfo": self.on_gear_info,
+            "authAdditionalOperation": self.on_request_additional_operation,
+            "grantAdditionalOperation": self.on_grant_additional_operational,
+            "requestStock": self.on_stock_info,
             'cw3-deals': self.on_deals,
-            # 'cw3-offers': self.on_offers,  # not inplemented
+            # 'cw3-offers': self.on_offers,  # not implemented
             'cw3-sex_digest': self.on_sex_digest,
             'cw3-yellow_pages': self.on_yellow_pages,
             # 'cw3-au_digest': self.on_au_digest,  # not implemented
@@ -796,6 +800,8 @@ class CW3API:
         except ValueError:
             logging.warning("Player not found in guild access list (Api.remove_player_from_guild_access)")
 
+    # Далее служебные методы
+
     def publish_message(self, message):
         """
         Запрос кладётся в очередь запросов на отправку
@@ -827,7 +833,7 @@ class CW3API:
             self.publish_message(message)
 
     # Функция для отправки запроса с учётом всех ограничений
-    def actually_publish_message(self, message):
+    def _publish_message(self, message):
         """
         Функция, которая учитывает все ограничения на отправку сообщений, ожидая, когда сообщение сможет быть отправлено
         :param message: dict - Message to publish
@@ -879,10 +885,12 @@ class CW3API:
         request = self.requests_queue.get()
         while self.active is True and request is not None:
             try:
-                self.actually_publish_message(message=request)
+                self._publish_message(message=request)
             except Exception:
                 logging.error(traceback.format_exc())
             request = self.requests_queue.get()
+
+    # Далее управляющие метода (запуск, остановка, ...)
 
     def start(self):
         """
