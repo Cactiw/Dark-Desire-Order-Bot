@@ -185,7 +185,7 @@ def search_for_players_with_api_access(guild: Guild):
     :return: None
     """
     logging.info("Requesting information about {} players with API access".format(guild.tag))
-    dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Обновляю данные о доступе к АПИ у {}".format(guild.tag))
+    # dispatcher.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Обновляю данные о доступе к АПИ у {}".format(guild.tag))
     guild.api_info.update({"api_players": []})
     for player_id in guild.members:
         player = Player.get_player(player_id)
