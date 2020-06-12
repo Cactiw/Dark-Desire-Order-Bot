@@ -199,7 +199,7 @@ class CW3API:
         :param message: Message - Message itself
         """
         self.got_responses += 1
-        print("Got {}".format(body))
+        # print("Got {}".format(body))
         message.ack()
 
         result = body.get("result")
