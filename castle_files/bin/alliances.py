@@ -213,7 +213,7 @@ def add_alliance_location(bot, update):
         if filter_is_pm(mes):
             bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка")
         return
-    request = "select id from alliance_locations where link = %s"
+    request = "select id from alliance_locations where link = %s and expired is false"
     cursor.execute(request, (link,))
     row = cursor.fetchone()
     if row is not None:
