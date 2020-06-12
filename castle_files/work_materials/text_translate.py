@@ -64,7 +64,7 @@ texts_translate = {
     "🛒Уведомления о продаже    ":  "🛒Sale notifications:      ",
     "📦Изменения в стоке        ":  "📦Stock changes            ",
     "📌Пинг на аим              ": "📌Aim ping                 ",
-    "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n\n"
+    "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
         "На лобном месте, левее фонтана, прибит пергамент с важной новостью:": "You stand in the middle of the ⛲️Central square of the Rock of the Dark Desire.\n\n"    
         "On the frontal place, to the left of the fountain, the parchment with important news is nailed:",
     "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
@@ -73,9 +73,8 @@ texts_translate = {
         "You stand in the middle of the ⛲️Central square of the Rock of the Dark Desire.\n"
         "The cold wind chills to the bone and the square is not crowded.\nWINTER IS COMING!\n\n"
         "On the frontal place, to the left of the fountain, the parchment with important news is nailed:",
-    "Заверенно подписью и печатью Короля.\n\n"
+    "Заверенно подписью и печатью Короля.": "Signed and sealed by the King.",
     "По правую руку во всю работает команда землемеров, строительная площадка работает в 3 смены.":
-        "Signed and sealed by the King."
         "On the right hand in all the team of surveyors works, the construction site works in 3 shifts.",
 
     "Именем Короля!\nПостановляю:\n1\\) Начать организованную подготовку и сбор запасов на холодный сезон.\n"
