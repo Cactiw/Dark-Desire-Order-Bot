@@ -8,7 +8,9 @@ import re
 
 
 class Equipment:
-    quality = {"Fine": "E", "High": "D", "Great": "C", "Excellent": "B", "Masterpiece": "A"}
+    quality = {"Fine": "E", "High": "D", "Great": "C", "Excellent": "B", "Masterpiece": "A",
+               "Epic Fine": "SE", "Epic High": "SD", "Epic Great": "SC", "Epic Excellent": "SB",
+               "Epic Masterpiece": "SA"}
     all_quality = ["No quality", "E", "D", "C", "B", "A", "CE", "CD", "CC", "CB", "CA"]
     emoji = {0: '', 1: '📕', 2: '📗', 3: '📘', 4: '📙', 5: '📒'}
 
