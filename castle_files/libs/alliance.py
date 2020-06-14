@@ -138,7 +138,7 @@ class AllianceResults:
                         text=AllianceResults.add_flag_to_old_alliance_locations(
                             alliance.add_flag_to_name(cls.get_text()), alliance.id))
             for guild in Guild.get_all_guilds():
-                if guild.settings.get("alliance_results", False):
+                if guild.settings is not None and guild.settings.get("alliance_results", False):
                     alliance = Alliance.get_alliance(guild.alliance_id) if guild.alliance_id is not None else None
                     text_to_send = alliance.add_flag_to_name(cls.get_text(), locations=True) if alliance is not None \
                         else cls.get_text()

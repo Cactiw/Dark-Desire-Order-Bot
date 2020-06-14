@@ -140,7 +140,10 @@ def parse_stats():
         elif data.startswith("🤝Headquarters news:") or data.startswith("🗺State of map:"):
             # Итоги штабов альянсов
             logging.info("Got alliance news")
-            parse_alliance_battle_results(data, debug)
+            try:
+                parse_alliance_battle_results(data, debug)
+            except Exception:
+                logging.error(traceback.format_exc())
         else:
             #  Сообщение о пиратстве
             response_by_tags = {}
