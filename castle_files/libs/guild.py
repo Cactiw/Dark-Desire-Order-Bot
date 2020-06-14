@@ -279,6 +279,14 @@ class Guild:
         return self.orders_enabled
 
     @staticmethod
+    def get_all_guilds():
+        return list(map(lambda guild_id: Guild.get_guild(guild_id), Guild.guild_ids))
+
+    @staticmethod
+    def get_active_guilds():
+        return list(filter(lambda guild: guild.is_active(), Guild.get_all_guilds()))
+
+    @staticmethod
     def fill_guild_ids():
         Guild.guild_ids.clear()
         request = "select guild_id from guilds order by guild_id asc"

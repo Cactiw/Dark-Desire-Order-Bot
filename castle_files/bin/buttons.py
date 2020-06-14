@@ -163,6 +163,11 @@ def get_guild_settings_buttons(guild):
             InlineKeyboardButton("{} пинги к битве".format("Отключить" if guild.settings is not None and
                                                            guild.settings.get("battle_notify") else "Включить"),
                                  callback_data="gsbattlenotify_{}".format(guild.id)),
+        ],
+        [
+            InlineKeyboardButton("{} сводки альянса".format(
+                "Отключить" if guild.settings is None or guild.settings.get("alliance_results") else "Включить"),
+                callback_data="gsallianceresults_{}".format(guild.id)),
         ]
     ]
     return InlineKeyboardMarkup(buttons)
