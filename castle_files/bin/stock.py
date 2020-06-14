@@ -12,6 +12,7 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
+from castle_files.libs.equipment import Equipment
 
 from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_by_name, get_equipment_by_code, \
     get_equipment_by_name
@@ -506,6 +507,10 @@ def collect_craft(to_craft: dict):
         i -= 1
 
 
+def get_shops_text(eq) -> str:
+    return ""
+    pass
+
 
 def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True) -> tuple:
     name = get_craft_name_by_code(code)
@@ -515,7 +520,8 @@ def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explici
     guild_stock = guild.get_stock({}).copy()
     withdraw, buy, to_craft = {}, {}, {}
     res = get_craft_text(craft_eq, name, code, count, player.stock.copy(), guild_stock, withdraw, buy, to_craft,
-                         explicit=explicit)
+                         explicit=explicit)  # Has side-effects!
+    res += get_shops_text(get_equipment_by_name(name))
     return res, withdraw, buy, to_craft
 
 
