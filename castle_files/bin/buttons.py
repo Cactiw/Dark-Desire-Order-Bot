@@ -223,16 +223,21 @@ def get_roulette_tops_buttons(curr=""):
     return InlineKeyboardMarkup(buttons)
 
 
-def get_craft_buttons(code, count, explicit=True):
+def get_craft_buttons(code, count, explicit=True, recipe_only=True):
     buttons = [
         [
             InlineKeyboardButton("📦Выдать всё", callback_data="craft_withdraw_{}_{}".format(code, count)),
             InlineKeyboardButton("💰Купить всё", callback_data="craft_buy_{}_{}".format(code, count)),
         ],
         [
-            InlineKeyboardButton("{} ресурсы в наличии".format("⬆Скрыть" if explicit else "⬇Показать"),
-                                 callback_data="craft_{}_{}_{}".format("fewer" if explicit else "more", code, count))
-        ],[
+            InlineKeyboardButton("{} в наличии".format("⬆Скрыть" if explicit else "⬇Показать"),
+                                 callback_data="craft_{}_{}_{}_{}_{}".format(
+                                     "fewer" if explicit else "more", code, count, explicit, recipe_only)),
+            InlineKeyboardButton("{}".format("⬆Только рецепт" if not recipe_only else "⬇Составные части"),
+                                 callback_data="craft_{}_{}_{}_{}_{}".format(
+                                     "all" if recipe_only else "recipeonly", code, count, explicit, recipe_only))
+        ],
+        [
             InlineKeyboardButton("⚒Крафт!", callback_data="craft_go_{}_{}".format(code, count))
         ],
     ]

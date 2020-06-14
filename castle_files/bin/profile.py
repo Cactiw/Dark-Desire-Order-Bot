@@ -11,7 +11,8 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
 
 from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
-from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id
+from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id, \
+    get_forward_message_time
 from castle_files.bin.reports import count_battle_time
 from castle_files.bin.statuses import get_status_text_by_id, get_status_message_by_text
 from castle_files.bin.api import auth
@@ -459,7 +460,7 @@ def hero(bot, update, user_data):
     if player is None and mes.chat_id != mes.from_user.id:
         # Добавление новых пользователей только в личке у бота
         return
-    forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    forward_message_date = get_forward_message_time(mes)
     print(forward_message_date)
     if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30) and \
             mes.from_user.id not in urned_players:

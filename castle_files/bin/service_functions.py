@@ -120,7 +120,11 @@ def fill_allowed_list():
 
 
 def get_forward_message_time(mes):
-    return utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    try:
+        value = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except ValueError:
+        value = mes.forward_date.astimezone(tz=moscow_tz).replace(tzinfo=None)
+    return value
 
 
 def get_message_and_player_id(update):

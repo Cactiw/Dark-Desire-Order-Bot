@@ -21,6 +21,8 @@ from castle_files.bin.service_functions import increase_or_add_value_to_dict, de
 from castle_files.bin.buttons import get_craft_buttons
 from castle_files.bin.equipment import TIERS, InlineKeyboardMarkup
 
+from distutils.util import strtobool
+
 import logging
 import traceback
 import re
@@ -359,6 +361,10 @@ LEVEL_OFFSET = "    "
 LEVEL_SEPARATOR = "|"
 
 
+def check_depth(depth, depth_limit) -> bool:
+    return depth_limit is not None and depth > depth_limit
+
+
 def get_craft_by_name(name: str) -> dict:
     return craft_dict.get(name)
 
@@ -372,7 +378,7 @@ def format_resource_string(name, code, player_count, guild_count, total_count, n
 
 
 def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, withdraw: dict,
-                buy: dict, to_craft: dict, current_offset: str, depth: int = 0,
+                buy: dict, to_craft: dict, current_offset: str, depth: int = 0, depth_limit: int = None,
                 force_deep: bool = False, explicit: bool = True):
     depth += 1
     if craft_item is None:
@@ -401,14 +407,14 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
                 increase_or_add_value_to_dict(buy, craft_code, buy_count)
         else:
             decrease_or_pop_value_from_dict(stock, craft_code, need_count)
-        if enough and not explicit:
+        if (enough and not explicit) or check_depth(depth, depth_limit):
             return ""
         return "{}{}".format(
             current_offset, format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
                                                    need_count,
                                                    need_separator=current_offset != ""))
     res = ""
-    if not force_deep:
+    if not force_deep or depth == depth_limit:
         res += "{}{}\n".format(current_offset,
                                format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
                                                       need_count,
@@ -432,7 +438,7 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
             get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock, current_withdraw,
             buy,
             to_craft, current_offset + (LEVEL_OFFSET if not force_deep else ""),
-            depth=depth, explicit=explicit)
+            depth=depth, depth_limit=depth_limit, explicit=explicit)
         merge_int_dictionaries(withdraw, current_withdraw)
 
         res += ("<a href=\"/g_withdraw {}\">{}</a>\n".format(
@@ -440,7 +446,7 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
         ) if current_withdraw is not None else "{}\n".format(new_res)) if new_res != "" else ""
         if res[-2:] == "\n\n":
             res = res[:-1]
-    return res[:-1]
+    return res[:-1] if not check_depth(depth, depth_limit) else ""
 
 
 def format_buy_resources(buy: dict) -> str:
@@ -460,9 +466,9 @@ def format_buy_resources(buy: dict) -> str:
 
 
 def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_stock, withdraw, buy, to_craft,
-                   explicit: bool) -> str:
+                   explicit: bool, depth_limit: int) -> str:
     craft_text = count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, to_craft, "",
-                             force_deep=True, explicit=explicit)
+                             force_deep=True, explicit=explicit, depth_limit=depth_limit)
     collect_craft(to_craft)
     return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\n\n" \
           "<em>📦📤 - нужно достать из гильдии\n" \
@@ -509,18 +515,19 @@ def collect_craft(to_craft: dict):
 
 def get_shops_text(eq) -> str:
     return ""
-    pass
 
 
-def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True) -> tuple:
+def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True,
+                                            depth_limit: int = None) -> tuple:
     name = get_craft_name_by_code(code)
     craft_eq = get_craft_by_name(name)
     player = Player.get_player(player_id)
     guild = Guild.get_guild(player.guild)
-    guild_stock = guild.get_stock({}).copy()
+    guild_stock = guild.get_stock({}).copy() if guild is not None else {}
+    player_stock = player.stock.copy() if player is not None else {}
     withdraw, buy, to_craft = {}, {}, {}
-    res = get_craft_text(craft_eq, name, code, count, player.stock.copy(), guild_stock, withdraw, buy, to_craft,
-                         explicit=explicit)  # Has side-effects!
+    res = get_craft_text(craft_eq, name, code, count, player_stock, guild_stock, withdraw, buy, to_craft,
+                         explicit=explicit, depth_limit=depth_limit)  # Has side-effects!
     res += get_shops_text(get_equipment_by_name(name))
     return res, withdraw, buy, to_craft
 
@@ -545,7 +552,8 @@ def craft(bot, update):
         bot.send_message(chat_id=update.message.chat_id, text="Предмет не найден.")
         return
     count = int(parse.group(3)) if parse.group(3) is not None else 1
-    res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(code, count, update.message.from_user.id)
+    res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(
+        code, count, update.message.from_user.id, depth_limit=2)
     buttons = get_craft_buttons(code, count)
     bot.send_message(chat_id=update.message.chat_id, text=res, parse_mode='HTML', reply_markup=buttons)
 
@@ -553,18 +561,33 @@ def craft(bot, update):
 def craft_action(bot, update):
     mes = update.callback_query.message
     data = update.callback_query.data
-    parse = re.search("craft_(withdraw|buy|fewer|more|go)_(\\w+)_(\\w+)", data)
+    parse = re.search("craft_(withdraw|buy|fewer|more|go|all|recipeonly)_([^_]+)_([^_]+)", data)
     if parse is None:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                 text="Произошла ошибка. Попробуйте начать сначала.", show_alert=True)
         return
+    message_need_to_be_updated = False
     action, code, count = parse.groups()
     count = int(count)
     explicit = True
-    if action in frozenset(["fewer", "more"]):
-        explicit = action == "more"
+    recipe_only = False
+    if action in frozenset({"fewer", "more", "all", "recipeonly"}):
+        message_need_to_be_updated = True
+        state = re.search("craft_[^_]+_[^_]+_[^_]+_([^_]+)_([^_]+)", data)
+        if state is None:
+            logging.warning("State is None in craft")
+            explicit = action == "more"
+            recipe_only = True
+        else:
+            explicit, recipe_only = state.groups()
+            explicit, recipe_only = strtobool(explicit), strtobool(recipe_only)
+        if action in frozenset({"fewer", "more"}):
+            explicit = action == "more"
+        elif action in frozenset({"all", "recipeonly"}):
+            recipe_only = action == "recipeonly"
+
     res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(
-        code, count, update.callback_query.from_user.id, explicit=explicit)
+        code, count, update.callback_query.from_user.id, explicit=explicit, depth_limit=2 if recipe_only else None)
     if action == "withdraw":
         send_withdraw(bot, mes.chat_id, "custom_request", withdraw)
     elif action == "buy":
@@ -589,8 +612,8 @@ def craft_action(bot, update):
             code, " {}".format(count) if count > 1 else "", name)
         bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 
-    elif action in frozenset(["fewer", "more"]):
-        buttons = get_craft_buttons(code, count, explicit=explicit)
+    if message_need_to_be_updated:
+        buttons = get_craft_buttons(code, count, explicit=explicit, recipe_only=recipe_only)
         try:
             bot.editMessageText(chat_id=mes.chat_id, message_id=mes.message_id, text=res,
                                 reply_markup=buttons, parse_mode='HTML')
