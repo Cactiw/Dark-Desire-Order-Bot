@@ -519,7 +519,7 @@ def get_guild_settings_text(guild):
         alliance_results = False
         settings.update({"alliance_results": alliance_results})
 
-    response += "<code>{:<20}</code> <b>{}</b>\n".format("🤝Сводки альянсов",
+    response += "<code>{:<18}</code> <b>{}</b>\n".format("🤝Сводки альянсов",
                                                          "✅включены" if alliance_results else "❌отключены")
     return response
 

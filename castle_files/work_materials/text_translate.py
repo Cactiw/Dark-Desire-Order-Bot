@@ -98,7 +98,7 @@ texts_translate = {
     "🔔Напоминалка в 12": "🔔12PM notification ",
     "⚔️️Пинги к битве": "⚔️️Battle pings   ",
     "📌Пинг на мобов": "📌Mobs pings   ",
-    "Сводки альянсов ": "Alliance results",
+    "Сводки альянсов": "Alliance results ",
     "включ[её]н[^<]?": "On",
     "отключ[её]н[^<]?": "Off",
     "Изменения в опыте": "Experience changes",
