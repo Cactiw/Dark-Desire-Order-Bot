@@ -358,7 +358,8 @@ def get_craft_name_by_code(code: str) -> str:
 
 
 LEVEL_OFFSET = "    "
-LEVEL_SEPARATOR = "|"
+LEVEL_SEPARATOR = "├"
+LAST_IN_LEVEL_SEPARATOR = "└"
 
 
 def check_depth(depth, depth_limit) -> bool:
@@ -370,16 +371,19 @@ def get_craft_by_name(name: str) -> dict:
 
 
 def format_resource_string(name, code, player_count, guild_count, total_count, need_count,
-                           need_separator: bool = True) -> str:
-    return "{} {} {} x {} | {}{}".format(
-        LEVEL_SEPARATOR if need_separator else "", "<code>{}</code>".format(code) if code is not None else "",
+                           need_separator: bool = True, close_separator: bool = False, depth: int = None) -> str:
+    emoji = "📜" if code[0] == "r" else ("🔩" if code[0] == "k" else "📦")
+    return "{} {}{} {} x {} | {}{}".format(
+        (LAST_IN_LEVEL_SEPARATOR if close_separator else LEVEL_SEPARATOR) if need_separator else "",
+        emoji if depth < 3 else "",
+        "<code>{}</code>".format(code) if code is not None else "",
         name, need_count, ("" if player_count >= need_count else "{}📤 ".format(need_count - player_count))
         if total_count >= need_count else "{} ".format(total_count), "✅" if total_count >= need_count else "❌")
 
 
 def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict, guild_stock: dict, withdraw: dict,
                 buy: dict, to_craft: dict, current_offset: str, depth: int = 0, depth_limit: int = None,
-                force_deep: bool = False, explicit: bool = True):
+                force_deep: bool = False, explicit: bool = True, last_one: bool = False):
     depth += 1
     if craft_item is None:
         craft_type = "simple"
@@ -411,14 +415,14 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
             return ""
         return "{}{}".format(
             current_offset, format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
-                                                   need_count,
-                                                   need_separator=current_offset != ""))
+                                                   need_count, depth=depth,
+                                                   need_separator=current_offset != "", close_separator=last_one))
     res = ""
     if not force_deep or depth == depth_limit:
         res += "{}{}\n".format(current_offset,
                                format_resource_string(craft_name, craft_code, player_count, guild_count, total_count,
-                                                      need_count,
-                                                      need_separator=current_offset != ""))
+                                                      need_count, depth=depth,
+                                                      need_separator=current_offset != "", close_separator=last_one))
 
         lvl_name = "level_{}".format(depth)
         cur_lvl = to_craft.get(lvl_name)
@@ -432,13 +436,14 @@ def count_craft(craft_item: dict, craft_name: str, need_count: int, stock: dict,
         increase_or_add_value_to_dict(withdraw, craft_code, guild_count)
         pop_from_user_data_if_presented(guild_stock, craft_code)
 
-    for resource_name, count in list(craft_item.get("recipe").items()):
+    resources_to_craft = list(craft_item.get("recipe").items())
+    for i, (resource_name, count) in enumerate(resources_to_craft):
         current_withdraw = {}
         new_res = count_craft(
             get_craft_by_name(resource_name), resource_name, count * need_count, stock, guild_stock, current_withdraw,
             buy,
             to_craft, current_offset + (LEVEL_OFFSET if not force_deep else ""),
-            depth=depth, depth_limit=depth_limit, explicit=explicit)
+            depth=depth, depth_limit=depth_limit, explicit=explicit, last_one=i == len(resources_to_craft) - 1)
         merge_int_dictionaries(withdraw, current_withdraw)
 
         res += ("<a href=\"/g_withdraw {}\">{}</a>\n".format(
