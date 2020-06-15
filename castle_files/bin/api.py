@@ -393,7 +393,7 @@ def ws_with_code(bot, update):
         mana = offer.get("price")
         res += shop.format_offer(eq, offer)
 
-    result = "Лавки не найдены" if res == "" else "Лавки с {} (нужно {}💧)\n".format(eq.name, mana) + res
+    result = "Лавки не найдены" if res == "" else "Открытые лавки с {} (нужно {}💧)\n".format(eq.name, mana) + res
 
     bot.send_message(chat_id=update.message.chat_id, text=result,
                      parse_mode='HTML')

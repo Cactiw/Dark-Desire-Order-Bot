@@ -173,6 +173,13 @@ texts_translate = {
     "Текущий статус:": "Current status:",
 
     "Квест выполнен.": "Quest completed.",
+    "Ежедневные квесты:": "Daily quests:",
+    "Выиграть (\\d+) арены": "Win {} arenas",
+    "Собрать в квестах": "Collect in quests",
+    "человека со статусом": "players with status",
+    "Обратиться к миду (\\d+) раз": "Contact HQ {} time(s)",
+    "Обратиться к стражникам (\\d+) раз": "Contact guardians {} time(s)",
+    "Посетить (\\d+) битвы": "Visit {} battles",
 
     "Последние коммиты в гите:": "Latest git commits:",
 
@@ -294,6 +301,15 @@ texts_translate = {
     "Действия для крафта:": "Action to craft",
     "Купить недостающие ресурсы \\(достать с биржи\\)": "Buy missing resources (or get them from exchange)",
     "Достать из гильдии всё необходимое": "Withdraw all necessary resources from the guild",
+    "Для отображения лавок нажмите": "To display open stores, click",
+    "Доступные лавки": "Open shops",
+    "Все лавки": "All shops",
+    "Открытые лавки с": "Opened shops with",
+    "Сейчас закрыты:": "Now closed",
+    "Слишком короткий поисковый запрос \\(менее (4) символов\\)":
+        "Search query is too short (minimum {} symbols are required)",
+    "Найденная экипировка:": "Equipment found:",
+    "Нужно": "Need",
     "Крафт": "Craft",
     "Изготовить": "Craft",
 
