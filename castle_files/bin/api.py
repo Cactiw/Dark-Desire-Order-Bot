@@ -6,6 +6,7 @@
 from castle_files.libs.api import CW3API
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
+from castle_files.bin.stock_service import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.stock import get_item_name_by_code
@@ -365,6 +366,38 @@ def ws(bot, update):
             response += "<em>{}, 💧{} 💰{}</em>\n".format(offer.get("item"), offer.get("mana"), offer.get("price"))
         response += "\n"
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
+
+
+def ws_with_code(bot, update):
+    code = re.match("/ws_(\\w+)", update.message.text)
+    if code is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
+        return
+    code = code.group(1)
+    eq = get_equipment_by_code(code)
+    if eq is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Экипировка не найдена.")
+        return
+    shops = eq.get_quality_shops()
+    shops.sort(key=lambda sh: (sh.is_open(), sh.qualityCraftLevel, -sh.get_offer(eq.name).get("price")),
+               reverse=True)
+
+    res = ""
+    closed = False
+    mana = None
+    for shop in shops:
+        if not shop.is_open() and closed is False:
+            closed = True
+            res += "\nСейчас закрыты:\n"
+        offer = shop.get_offer(eq.name)
+        mana = offer.get("price")
+        res += shop.format_offer(eq, offer)
+
+    result = "Лавки не найдены" if res == "" else "Лавки с {} (нужно {}💧)\n".format(eq.name, mana) + res
+
+    bot.send_message(chat_id=update.message.chat_id, text=result,
+                     parse_mode='HTML')
+
 
 
 def stock(bot, update):

@@ -51,7 +51,7 @@ from castle_files.work_materials.filters.trade_union_filters import filter_trade
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
-    stock, ws, players_update_monitor, autospend_gold
+    stock, ws, players_update_monitor, autospend_gold, ws_with_code
 from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher, send_guilds_stats
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -303,6 +303,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('repair', repair))
     dispatcher.add_handler(CommandHandler('ws', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
+    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex('/ws_\\w+'), ws_with_code))
     dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
