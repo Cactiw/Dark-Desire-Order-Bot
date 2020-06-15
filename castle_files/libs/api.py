@@ -8,6 +8,8 @@ from globals import master_pid
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.equipment import Equipment
+from castle_files.libs.shop import Shop
+
 from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator, \
     get_item_name_by_code
 
@@ -145,6 +147,8 @@ class CW3API:
         try:
             shops = body
             self.api_info.update({"shops": shops})
+            for shop in shops:
+                Shop.update_or_create_shop(shop)
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
             logging.error(traceback.format_exc())
