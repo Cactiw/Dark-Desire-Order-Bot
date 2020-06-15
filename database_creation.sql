@@ -322,4 +322,28 @@ create table alliance_locations
 
 alter table alliance_locations
     owner to admin;
+    
+create table shops (
+    id serial primary key,
+    link varchar,
+    name varchar,
+    ownerTag varchar,
+    ownerName varchar,
+    ownerCastle varchar,
+    kind varchar,
+    mana int,
+    offers json,
+    specialization json,
+    qualityCraftLevel int,
+    maintenanceEnabled bool,
+    maintenanceCost int,
+    guildDiscount int,
+    castleDiscount int,
 
+    last_seen timestamp
+
+);
+
+alter table shops
+    owner to admin;
+    
