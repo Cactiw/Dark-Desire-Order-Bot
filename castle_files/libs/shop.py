@@ -111,8 +111,8 @@ class Shop:
         if row is None:
             return None
         shop = Shop(*row)
-        if shop.last_update is None or shop.last_seen > shop.last_update :
-            shop.last_update = shop.last_seen
+        if shop.last_update is None or shop.last_seen > shop.last_update:
+            Shop.last_update = shop.last_seen
         return shop
 
     def update(self):
