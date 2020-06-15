@@ -3,6 +3,9 @@
 Класс хранит тип(первая буква кода вещи), код (без типа),
 имя и статы вещи.
 """
+
+from castle_files.libs.shop import Shop
+
 import json
 import re
 
@@ -63,6 +66,16 @@ class Equipment:
     def get_clear_name(self) -> str:
         clear_name = re.search("(⚡?\\+?\\d*\\s)?(.+?)\\s", self.name + " ")
         return clear_name.group(2)
+
+    def get_quality_type(self) -> str:
+        """
+        :return: Тип гуру, который подходит данной экипировке (так, как получается от АПИ ЧВ)
+        """
+        return self.types_to_guru.get(self.place)
+
+    def get_quality_shops(self):
+        shops = Shop.get_quality_shops(self.get_quality_type())
+        return list(filter(lambda shop: self.name.lower() in map(lambda s: s.lower(), shop.get_offered_names()), shops))
 
     def to_json(self):
         dictionary = {

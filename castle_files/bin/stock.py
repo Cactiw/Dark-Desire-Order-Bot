@@ -519,7 +519,23 @@ def collect_craft(to_craft: dict):
 
 
 def get_shops_text(eq) -> str:
-    return ""
+    if eq is None:
+        return ""
+    res = ""
+    mana_cost = None
+    shops = eq.get_quality_shops()
+    shops.sort(key=lambda sh: (sh.qualityCraftLevel, -sh.get_offer(eq.name).get("price")),
+               reverse=True)
+    max_lvl = 0
+    for shop in shops:
+        if shop.qualityCraftLevel > max_lvl:
+            max_lvl = shop.qualityCraftLevel
+        if not shop.is_open() or shop.qualityCraftLevel != max_lvl:
+            continue
+        offer = shop.get_offer(eq.name)
+        mana_cost = offer.get("mana")
+        res += shop.format_offer(eq, offer)
+    return "Доступные лавки (Нужно {}💧)\n".format(mana_cost) + res
 
 
 def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True,
@@ -533,7 +549,6 @@ def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explici
     withdraw, buy, to_craft = {}, {}, {}
     res = get_craft_text(craft_eq, name, code, count, player_stock, guild_stock, withdraw, buy, to_craft,
                          explicit=explicit, depth_limit=depth_limit)  # Has side-effects!
-    res += get_shops_text(get_equipment_by_name(name))
     return res, withdraw, buy, to_craft
 
 
@@ -613,8 +628,9 @@ def craft_action(bot, update):
                         item_code, get_resource_name_by_code(item_code), item_count, item_code, item_count,
                         item_code, item_count)
             i += 1
-        res += "\n<a href=\"t.me/share/url?url=/craft_{}{}\">Изготовить {}!</a>".format(
+        res += "\n<a href=\"t.me/share/url?url=/craft_{}{}\">Изготовить {}!</a>\n".format(
             code, " {}".format(count) if count > 1 else "", name)
+        res += "\n{}".format(get_shops_text(eq=get_equipment_by_code(code)))
         bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 
     if message_need_to_be_updated:
