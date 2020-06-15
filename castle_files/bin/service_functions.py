@@ -79,8 +79,8 @@ def merge_int_dictionaries(d1: dict, d2: dict) -> dict:
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
 def plan_work(callback, hour, minute, second, context={}):
     time_to_send = datetime.time(hour=hour, minute=minute, second=second)
-    time_now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).time()
-    day_to_send = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).date()
+    time_now = get_current_time().time()
+    day_to_send = get_current_time().date()
     date_to_send = datetime.datetime.combine(day_to_send, datetime.time(hour=0))
     if time_to_send < time_now:
         date_to_send += datetime.timedelta(days=1)
@@ -90,8 +90,37 @@ def plan_work(callback, hour, minute, second, context={}):
     job.run_once(callback, when=send_time, context=context)
 
 
+digit_to_emoji = {
+    0: "0️⃣",
+    1: "1️⃣",
+    2: "2️⃣",
+    3: "3️⃣",
+    4: "4️⃣",
+    5: "5️⃣",
+    6: "6️⃣",
+    7: "7️⃣",
+    8: "8️⃣",
+    9: "9️⃣",
+    10: "🔟"  # just because it exists
+}
+
+
+def translate_number_to_emoji(n: int) -> str:
+    res = ""
+    while n > 0:
+        digit = n % 10
+        res += digit_to_emoji.get(digit, "")
+        n /= 10
+    return res
+
+
+
 def great_format_time(dt: datetime.datetime) -> str:
     return dt.strftime("%d/%m/%y %H:%M:%S")
+
+
+def get_current_time():
+    return datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
 
 def get_message_forward_time(message):
@@ -134,7 +163,7 @@ def get_message_and_player_id(update):
 
 
 def get_time_remaining_to_battle():
-    now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - datetime.datetime.combine(
+    now = get_current_time() - datetime.datetime.combine(
         datetime.datetime.now().date(), datetime.time(hour=0))
     if now < datetime.timedelta(hours=1):
 
@@ -169,7 +198,7 @@ def count_battle_id(message=None):
     first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
     interval = datetime.timedelta(hours=8)
     if message is None:
-        forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+        forward_message_date = get_current_time()
     else:
         if message.forward_date is not None:
             try:
