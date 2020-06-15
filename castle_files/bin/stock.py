@@ -475,7 +475,7 @@ def get_craft_text(craft_eq, name, code: str, count: int, player_stock, guild_st
     craft_text = count_craft(craft_eq, name, count, player_stock, guild_stock, withdraw, buy, to_craft, "",
                              force_deep=True, explicit=explicit, depth_limit=depth_limit)
     collect_craft(to_craft)
-    return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\n\n" \
+    return "⚒Крафт <b>{}</b> x {}:\n{}\n\n{}\nДля отображения лавок нажмите ⚒Крафт!\n\n" \
           "<em>📦📤 - нужно достать из гильдии\n" \
           "Совет: обновляйте свой сток и сток гильдии перед началом крафта:\n</em>" \
           "/update_stock\n/update_guild".format(
