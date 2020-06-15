@@ -518,24 +518,53 @@ def collect_craft(to_craft: dict):
         i -= 1
 
 
-def get_shops_text(eq) -> str:
-    if eq is None:
-        return ""
+def get_shops_text(eq, name: str = None) -> str:
     res = ""
+
+    if eq is None:
+        LIMIT = 5
+        if name is None:
+            return ""
+        from castle_files.bin.api import cwapi
+        mana_cost = None
+        res_list = []
+        i = 0
+        for shop in cwapi.api_info.get("shops"):
+            offer = None
+            for cur_offer in shop["offers"]:
+                if cur_offer["item"].lower() == name.lower():
+                    offer = cur_offer
+            if offer is None:
+                continue
+            mana_cost = offer.get("mana")
+            if shop.get("mana") < mana_cost:
+                continue
+            cur_res = "{}💰 {}💧 <a href=\"t.me/share/url?url=/ws_{}\">{}{}</a>".format(
+                offer.get("price"), shop["mana"], shop["link"], shop["ownerCastle"], shop["name"])
+            res_list.append([offer.get("price"), shop.get("mana"), cur_res])
+
+            i += 1
+            if i >= LIMIT:
+                res_list.append([1000000000, 1000000000,
+                                 "...\n<a href=\"t.me/share/url?url=/ws {}\">Все лавки</a>".format(name)])
+                break
+        res_list.sort(key=lambda x: (x[0], -x[1]))
+        return "Доступные лавки (Нужно {}💧)\n".format(mana_cost) + "\n".join(map(lambda x: x[2], res_list))
+
     mana_cost = None
     shops = eq.get_quality_shops()
     shops.sort(key=lambda sh: (sh.qualityCraftLevel, -sh.get_offer(eq.name).get("price")),
                reverse=True)
     max_lvl = 0
     for shop in shops:
+        if not shop.is_open() or shop.qualityCraftLevel < max_lvl:
+            continue
         if shop.qualityCraftLevel > max_lvl:
             max_lvl = shop.qualityCraftLevel
-        if not shop.is_open() or shop.qualityCraftLevel != max_lvl:
-            continue
         offer = shop.get_offer(eq.name)
         mana_cost = offer.get("mana")
         res += shop.format_offer(eq, offer)
-    return "Доступные лавки (Нужно {}💧)\n".format(mana_cost) + res
+    return "Доступные лавки (Нужно {}💧)\n".format(mana_cost) + res + "\nВсе лавки: /ws_{}".format(eq.format_code())
 
 
 def get_craft_text_withdraw_and_buy_by_code(code: str, count, player_id, explicit: bool = True,
@@ -630,7 +659,7 @@ def craft_action(bot, update):
             i += 1
         res += "\n<a href=\"t.me/share/url?url=/craft_{}{}\">Изготовить {}!</a>\n".format(
             code, " {}".format(count) if count > 1 else "", name)
-        res += "\n{}".format(get_shops_text(eq=get_equipment_by_code(code)))
+        res += "\n{}".format(get_shops_text(eq=get_equipment_by_code(code), name=name))
         bot.send_message(chat_id=mes.chat_id, text=res, parse_mode='HTML')
 
     if message_need_to_be_updated:
