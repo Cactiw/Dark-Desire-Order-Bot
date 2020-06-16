@@ -1,4 +1,5 @@
 config*
+!config_example.py
 *.log
 *.session
 *.key
