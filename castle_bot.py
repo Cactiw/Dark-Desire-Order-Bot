@@ -303,7 +303,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('repair', repair))
     dispatcher.add_handler(CommandHandler('ws', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
-    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex('/ws_\\w+'), ws_with_code))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('/ws_\\w+'), ws_with_code))
     dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
