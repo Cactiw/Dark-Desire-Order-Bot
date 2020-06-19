@@ -384,13 +384,13 @@ def ws_with_code(bot, update):
 
     res = ""
     closed = False
-    mana = None
+    mana = 0
     for shop in shops:
         if not shop.is_open() and closed is False:
             closed = True
             res += "\nСейчас закрыты:\n"
         offer = shop.get_offer(eq.name)
-        mana = offer.get("price")
+        mana = max(offer.get("price"), mana)
         res += shop.format_offer(eq, offer)
 
     result = "Лавки не найдены" if res == "" else "Открытые лавки с {} (нужно {}💧)\n".format(eq.name, mana) + res
