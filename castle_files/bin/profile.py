@@ -12,7 +12,7 @@ from castle_files.libs.castle.location import Location
 
 from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
 from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id, \
-    get_forward_message_time
+    get_forward_message_time, get_message_forward_time
 from castle_files.bin.reports import count_battle_time
 from castle_files.bin.statuses import get_status_text_by_id, get_status_message_by_text
 from castle_files.bin.api import auth
@@ -174,7 +174,7 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
         class_links = {}
         barracks.special_info.update({"class_links": class_links})
     try:
-        class_format = (classes_to_emoji.get(player.game_class) + player.game_class) if \
+        class_format = (classes_to_emoji.get(player.game_class, "❔") + player.game_class) if \
             player.game_class is not None else "Воин"
     except Exception:
         class_format = "Воин"
@@ -626,13 +626,21 @@ def change_profile_setting(bot, update):
 
 
 def add_class_from_player(bot, update):
+    translate = {
+        "рыцарь": "Knight",
+        "защитник": "Sentinel",
+        "рейнджер": "Ranger",
+        "алхимик": "Alchemist",
+        "кузнец": "Blacksmith",
+        "добытчик": "Collector",
+    }
     mes = update.message
     player = Player.get_player(mes.from_user.id)
     if player is None:
         bot.send_message(chat_id=mes.from_user.id, text="Сначала необходимо зарегистрироваться. Для этого необходимо "
                                                         "прислать ответ @ChatWarsBot на команду /hero")
         return
-    forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    forward_message_date = get_forward_message_time(mes)
     if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30):
         bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
         return
@@ -641,6 +649,8 @@ def add_class_from_player(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка.", reply_to_message_id=mes.message_id)
         return
     game_class = game_class.group(1)
+    if game_class.lower() in translate:
+        game_class = translate.get(game_class.lower())
     player.game_class = game_class
     player.update_to_database()
     bot.send_message(chat_id=mes.from_user.id, text="Информация о классе обновлена, <b>{}</b>! Теперь ты "
