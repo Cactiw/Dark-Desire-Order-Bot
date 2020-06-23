@@ -26,6 +26,8 @@ import kafka
 import os
 import signal
 
+from kombu.log import setup_logging
+
 from multiprocessing import Queue
 from kombu.mixins import ConsumerMixin
 
@@ -946,11 +948,15 @@ class CW3API:
         Метод, запускающий API для частных очередей используя Pika (теперь Kombu).
         """
         logger.warning("Starting the API")
+        setup_logging(loglevel=logging.DEBUG)
         self.active = True
         self.conn = Conn(psql_creditals)
         self.conn.start()
         self.cursor = self.conn.cursor()
-        self.connect()
+        try:
+            self.connect()
+        except Exception:
+            return
         for i in range(self.num_workers):
             worker = threading.Thread(target=self.__work)
             worker.start()
@@ -963,7 +969,14 @@ class CW3API:
         """
         self.connecting = True
         self.connection = kombu.Connection(self.url)
-        self.connection.connect()
+        try:
+            self.connection.connect()
+        except Exception as e:
+            traceback.format_exc()
+            self.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Невозможно запустить апи: {}\n"
+                                                               "Выполняется повторное подключение".format(e))
+            self.start_pika()
+            raise e
         self.producer = self.connection.Producer(auto_declare=False)
         self.connecting = False
 

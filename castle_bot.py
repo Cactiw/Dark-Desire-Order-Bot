@@ -130,7 +130,7 @@ import multiprocessing
 import logging
 
 console = logging.StreamHandler()
-console.setLevel(logging.INFO)
+console.setLevel(logging.DEBUG)
 
 log_file = logging.FileHandler(filename='castle_error.log', mode='a')
 log_file.setLevel(logging.ERROR)
