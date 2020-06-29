@@ -17,10 +17,12 @@ defense = ["Деф дома 🖤", "В атаку!", ""]
 defense_to_order = ["\uD83D\uDDA4Деф!🛡", "Attack!", None]
 
 potions = ["⚗️ Атака", "⚗️ Деф"]
-potions_to_order = ["<a href=\"https://t.me/share/url?url=/misc rage\">Пьем ⚔️АТК ⚗️зелья!</a>: "
-                    "<a href=\"https://t.me/share/url?url=/misc rage\">/misc rage</a>\n\n",
-                    "<a href=\"https://t.me/share/url?url=/misc peace\">Пьем 🛡ДЕФ ⚗️зелья</a>: "
-                    "<a href=\"https://t.me/share/url?url=/misc peace\">/misc peace</a>\n\n"]
+potions_to_order = ["Пьем ⚔️АТК ⚗️зелья!\n"
+                    "<a href=\"https://t.me/share/url?url=/misc rage\">⚔️Rage</a>\n"
+                    "<a href=\"https://t.me/share/url?url=/misc morph\">⚗Morph</a>\n\n",
+                    "Пьем 🛡ДЕФ ⚗️зелья!\n"
+                    "<a href=\"https://t.me/share/url?url=/misc peace\">🛡Peace</a>\n"
+                    "<a href=\"https://t.me/share/url?url=/misc morph\">⚗Morph</a>\n\n"]
 
 pult_status_default = {'divisions': [False, False, False, False, False, True], 'target': -1, 'defense': 2,
                        'time': -1, "tactics": 5}
