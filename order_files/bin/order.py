@@ -131,7 +131,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
     if '⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡' in response:
-        response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🛡ФУЛЛ ДЕФ!🛡")
+        response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🖤 ФД! 🖤")
     buttons = get_order_buttons(castle_target, defense)
     orders_sent = 0
     if divisions == 'ALL':
