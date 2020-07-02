@@ -120,7 +120,9 @@ def send_withdraw(bot, update, *args):
                         give.update({p: 1})
                         names.append(p)
     else:
-        for string in update.message.text.splitlines():
+        text = update.message.text.partition("In your stock:")
+        text = text[2] or text[0]
+        for string in text.splitlines():
             if "Нет нужных материалов" in mes.text:
                 parse = re.search("([^\n$]+) x (\\d+)", string)
                 if parse is None:
