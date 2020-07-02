@@ -128,6 +128,14 @@ def update_guild(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
 
 
+def try_update_all_stocks(player_id: int):
+    try:
+        cwapi.update_stock(player_id)
+        cwapi.update_guild_info(player_id)
+    except RuntimeError:
+        pass
+
+
 def get_player_with_api_access_from_guild(guild: Guild):
     """
     Функция, возвращающая человека гильдии, который давал доступ к апи (для обновления гильдии)
