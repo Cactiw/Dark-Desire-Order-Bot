@@ -20,7 +20,6 @@ from castle_files.bin.service_functions import increase_or_add_value_to_dict, de
     pop_from_user_data_if_presented, merge_int_dictionaries, build_inline_buttons_menu
 from castle_files.bin.buttons import get_craft_buttons
 from castle_files.bin.equipment import TIERS, InlineKeyboardMarkup
-from castle_files.bin.api import try_update_all_stocks
 
 from distutils.util import strtobool
 
@@ -603,7 +602,10 @@ def craft(bot, update):
     except Exception:
         bot.send_message(chat_id=update.message.chat_id, text="Предмет не найден.")
         return
+
+    from castle_files.bin.api import try_update_all_stocks
     try_update_all_stocks(update.message.from_user.id)
+
     count = int(parse.group(3)) if parse.group(3) is not None else 1
     res, withdraw, buy, to_craft = get_craft_text_withdraw_and_buy_by_code(
         code, count, update.message.from_user.id, depth_limit=2)
