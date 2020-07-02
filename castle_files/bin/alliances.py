@@ -234,7 +234,14 @@ def add_alliance_location(bot, update):
         if alli.hq_chat_id is not None:
             bot.send_message(chat_id=alli.hq_chat_id, parse_mode='HTML',
                              text="Новая локация: <b>{} Lvl.{}</b>\n{}".format(name, lvl, link))
-    bot.send_message(chat_id=mes.chat_id, text="Спасибо! Новая локация!", reply_to_message_id=mes.message_id)
+
+    text = "Спасибо! Новая локация!"
+    if player is not None:
+        player.reputation += 250
+        player.update()
+        text += "\nПолучено: 250🔘"
+
+    bot.send_message(chat_id=mes.chat_id, text=text, reply_to_message_id=mes.message_id)
 
 
 def add_alliance_link(name, link):
