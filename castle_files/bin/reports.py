@@ -12,6 +12,7 @@ import datetime
 import json
 
 REPORT_REPUTATION_COUNT = 5
+MAX_REPORTS_COMBO = 10
 
 
 def count_battle_time(battle_id) -> datetime.datetime:
@@ -154,7 +155,8 @@ def add_report(bot, update, user_data):
                              None, json.dumps(outplay_dict, ensure_ascii=False) if outplay_dict is not None else None))
 
     player.count_reports()
-    reputation = REPORT_REPUTATION_COUNT
+    combo = count_reports_combo(player.id, battle_id)
+    reputation = REPORT_REPUTATION_COUNT * combo
 
     if forward_message_date < datetime.datetime(year=2019, month=5, day=29, hour=12):
         reputation = 0
@@ -162,7 +164,9 @@ def add_report(bot, update, user_data):
     player.reputation += reputation
     player.update()
     response = "Репорт учтён. Спасибо!\n" \
-               "{}".format("Получено {}🔘!".format(reputation) if not user_data.get("rp_off") else "")
+               "{}".format("Получено {}🔘 ({} х Комбо репортов подряд)!\n{}".format(
+                    reputation, combo, "Максимальное комбо!" if combo == MAX_REPORTS_COMBO else "")
+                                          if not user_data.get("rp_off") else "")
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML')
     if exp != 0:
         on_add_report(player, forward_message_date)
@@ -176,6 +180,25 @@ def add_report(bot, update, user_data):
                                     lvl, exp, gold, stock),
                      parse_mode='HTML')
     """
+
+
+def count_reports_combo(player_id: int, battle_id: int) -> int:
+    """
+    Функция подсчитывает, комбо сданных репортов (сколько репортов сдано подряд).
+    :param player_id: int - Player id
+    :param battle_id: int - Battle id of new reports
+    :return: int - reputation that should be added to player`s balance as a reward
+    """
+    request = "select battle_id from reports where player_id = %s and battle_id < %s order by battle_id desc limit %s"
+    cursor.execute(request, (player_id, battle_id, MAX_REPORTS_COMBO - 1))
+    rows = cursor.fetchall()
+    combo = 1
+    for (new_battle_id, *skip) in rows:
+        if battle_id - new_battle_id > 1:
+            break
+        battle_id = new_battle_id
+        combo += 1
+    return combo
 
 
 def battle_drop(bot, update):

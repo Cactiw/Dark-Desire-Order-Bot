@@ -109,6 +109,8 @@ texts_translate = {
         "Add assistant - /add_assistant - reply on the message of the player that you want to become an assistant.\n"
         "To remove assistant - /del_assistant - similarly, send as a reply on the message of the player that must be removed from the assistatns list.",
     "Статистика гильдии (.+) по битве": "{0} stats at battle",
+    "Комбо репортов подряд": "Combo of reports in a row",
+    "Максимальное комбо": "Maximum combo",
     "репортов": "reports",
     "Не сдали репорты:": "No reports:",
     "Вы не состоите в гильдии. Вступите в гильдию в игре и попросите командира добавить вас в гильдейском чате.":
