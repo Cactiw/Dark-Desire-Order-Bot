@@ -25,6 +25,7 @@ import json
 
 
 REWARD_PRICE_RESET_WEEKS = 2
+REWARD_PRICE_COEFF = 0.3
 
 
 def reward_edit_castle_message(player, reward, *args, **kwargs):
@@ -146,6 +147,15 @@ rewards = {"castle_message_change": {
     "castle_mailing": {
         "price": 10000, "moderation": True, "text": "Введите текст рассылки по замку:", "get": reward_mailing
     },
+    "castle_g_def": {
+        "price": 5000, "moderation": False,
+        "text": "Всем гильдиям замка будет отправлен запрос о защите вашей гильдии.",
+        "get": reward_g_def, "skip_enter_text": True
+    },
+    "castle_request_pin": {
+        "price": 5000, "moderation": True, "text": "Вы получите пин на следующую битву заранее.",
+        "get": reward_request_pin, "skip_enter_text": True
+    },
     "castle_global_trigger": {
         "price": 2500, "moderation": True, "text": "Введите текст, который будет вызывать новый глобальный триггер:",
         "next": "Отправьте сообщение с триггером.", "get": reward_global_trigger
@@ -157,14 +167,6 @@ rewards = {"castle_message_change": {
     "castle_change_chat_picture": {
         "price": 2500, "moderation": True, "text": "Введите название чата (в произвольной форме):",
         "next": "Отправьте новую аватарку.", "get": reward_change_castle_chat_picture
-    },
-    "castle_g_def": {
-        "price": 5000, "moderation": False, "text": "Всем гильдиям замка будет отправлен запрос о защите вашей гильдии.",
-        "get": reward_g_def, "skip_enter_text": True
-    },
-    "castle_request_pin": {
-        "price": 5000, "moderation": True, "text": "Вы получите пин на следующую битву заранее.",
-        "get": reward_request_pin, "skip_enter_text": True
     },
     "castle_ro": {
         "price": 5000, "moderation": False, "text": "Введите id человека, которому дать read only:",
@@ -249,9 +251,11 @@ def request_reward_confirmation(bot, mes, reward, user_data):
                      parse_mode='HTML', reply_markup=buttons)
 
 
-def get_reward_price(reward_name: str) -> int:
+def get_reward_price(reward_name: str, reward_combo: int = None) -> int:
     reward = rewards.get(reward_name)
-    return reward["price"] * get_reward_combo(reward_name)
+    if reward_combo is None:
+        reward_combo = get_reward_combo(reward_name)
+    return int(reward["price"] * (reward_combo * REWARD_PRICE_COEFF + 1))
 
 
 def get_reward_combo(reward_name: str) -> int:
@@ -260,13 +264,16 @@ def get_reward_combo(reward_name: str) -> int:
     cursor.execute(request, ("reward_{}".format(reward_name),
                              get_current_datetime() - datetime.timedelta(weeks=REWARD_PRICE_RESET_WEEKS)))
     count, *skip = cursor.fetchone()
-    return count + 1
+    return count
 
 
 def format_reward_price(reward_name: str) -> str:
     reward = rewards.get(reward_name)
     combo = get_reward_combo(reward_name)
-    return "{}🔘 ({}🔘 * {})".format(reward["price"] * combo, reward["price"], combo)
+    return "{}🔘 {}".format(
+        get_reward_price(reward_name, combo),
+        "( {}🔘 * (1 + {} * {}) )".format(reward["price"], combo, REWARD_PRICE_COEFF) if combo > 0 and False else ""
+    )
 
 
 def request_get_reward(bot, update, user_data):
