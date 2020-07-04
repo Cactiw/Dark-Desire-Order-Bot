@@ -4,7 +4,7 @@
 
 from castle_files.work_materials.globals import conn, moscow_tz
 
-from castle_files.bin.service_functions import get_current_time, translate_number_to_emoji
+from castle_files.bin.service_functions import get_current_datetime, translate_number_to_emoji
 
 import datetime
 import json
@@ -73,7 +73,7 @@ class Shop:
 
         for attribute in cls.attributes:
             setattr(shop, attribute, shop_dict.get(attribute, None))
-        shop.last_seen = get_current_time()
+        shop.last_seen = get_current_datetime()
 
         if new:
             shop.create()
@@ -135,6 +135,6 @@ class Shop:
             self.link, self.name, self.ownerTag, self.ownerName, self.ownerCastle, self.kind, self.mana,
             self.get_json_offers(),
             self.castleDiscount, self.guildDiscount, self.get_json_specialization(), self.qualityCraftLevel,
-            self.maintenanceEnabled, self.maintenanceCost, get_current_time()))
+            self.maintenanceEnabled, self.maintenanceCost, get_current_datetime()))
         cursor.close()
 

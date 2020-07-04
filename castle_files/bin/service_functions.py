@@ -79,8 +79,8 @@ def merge_int_dictionaries(d1: dict, d2: dict) -> dict:
 # Функция, планирующая работу на конкретное время сегодня, или завтра, если это время сегодня уже прошло
 def plan_work(callback, hour, minute, second, context={}):
     time_to_send = datetime.time(hour=hour, minute=minute, second=second)
-    time_now = get_current_time().time()
-    day_to_send = get_current_time().date()
+    time_now = get_current_datetime().time()
+    day_to_send = get_current_datetime().date()
     date_to_send = datetime.datetime.combine(day_to_send, datetime.time(hour=0))
     if time_to_send < time_now:
         date_to_send += datetime.timedelta(days=1)
@@ -119,7 +119,7 @@ def great_format_time(dt: datetime.datetime) -> str:
     return dt.strftime("%d/%m/%y %H:%M:%S")
 
 
-def get_current_time():
+def get_current_datetime():
     return datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
 
 
@@ -163,7 +163,7 @@ def get_message_and_player_id(update):
 
 
 def get_time_remaining_to_battle():
-    now = get_current_time() - datetime.datetime.combine(
+    now = get_current_datetime() - datetime.datetime.combine(
         datetime.datetime.now().date(), datetime.time(hour=0))
     if now < datetime.timedelta(hours=1):
 
@@ -198,7 +198,7 @@ def count_battle_id(message=None):
     first_battle = datetime.datetime(2018, 5, 27, 9, 0, 0, 0)
     interval = datetime.timedelta(hours=8)
     if message is None:
-        forward_message_date = get_current_time()
+        forward_message_date = get_current_datetime()
     else:
         if message.forward_date is not None:
             try:
