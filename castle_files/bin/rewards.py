@@ -176,6 +176,11 @@ rewards = {"castle_message_change": {
 def receive_reward(player, reward_name, reward, reward_text, cost, *args, **kwargs):
     create_reward_log(player, reward_name, cost, *args, **kwargs)
     reward["get"](player=player, reward=reward_text, cost=cost)
+    dispatcher.bot.send_message(
+        chat_id=CENTRAL_SQUARE_CHAT_ID,
+        text="<b>{}</b> получает награду <b>{}</b>.\nЦена на следующие 2 недели увеличена.\n"
+             "Эту награду в последние 2 недели получали <b>{}</b> раз.".format(get_reward_combo(reward_name)),
+        parse_mode='HTML')
 
 
 def create_reward_log(player, reward_name, cost, *args, **kwargs):
