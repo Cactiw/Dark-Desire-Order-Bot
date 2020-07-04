@@ -11,7 +11,7 @@ from castle_files.bin.trigger import global_triggers_in, get_message_type_and_da
 from castle_files.bin.service_functions import check_access, get_time_remaining_to_battle, get_current_datetime
 
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor, job, \
-    MID_CHAT_ID
+    MID_CHAT_ID, CENTRAL_SQUARE_CHAT_ID
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, TelegramError
@@ -141,21 +141,21 @@ def delete_message(bot, update):
 
 
 rewards = {"castle_message_change": {
-    "price": 5000, "moderation": True, "text": "Введите новое замковое сообщение:", "get": reward_edit_castle_message
+    "price": 2500, "moderation": True, "text": "Введите новое замковое сообщение:", "get": reward_edit_castle_message
     },
     "castle_mailing": {
         "price": 10000, "moderation": True, "text": "Введите текст рассылки по замку:", "get": reward_mailing
     },
     "castle_global_trigger": {
-        "price": 5000, "moderation": True, "text": "Введите текст, который будет вызывать новый глобальный триггер:",
+        "price": 2500, "moderation": True, "text": "Введите текст, который будет вызывать новый глобальный триггер:",
         "next": "Отправьте сообщение с триггером.", "get": reward_global_trigger
     },
     "castle_delete_global_trigger": {
-        "price": 10000, "moderation": False, "text": "Введите текст глобального триггера для удаления:",
+        "price": 2500, "moderation": False, "text": "Введите текст глобального триггера для удаления:",
         "get": reward_remove_global_trigger
     },
     "castle_change_chat_picture": {
-        "price": 5000, "moderation": True, "text": "Введите название чата (в произвольной форме):",
+        "price": 2500, "moderation": True, "text": "Введите название чата (в произвольной форме):",
         "next": "Отправьте новую аватарку.", "get": reward_change_castle_chat_picture
     },
     "castle_g_def": {
@@ -262,7 +262,6 @@ def format_reward_price(reward_name: str) -> str:
     reward = rewards.get(reward_name)
     combo = get_reward_combo(reward_name)
     return "{}🔘 ({}🔘 * {})".format(reward["price"] * combo, reward["price"], combo)
-
 
 
 def request_get_reward(bot, update, user_data):
