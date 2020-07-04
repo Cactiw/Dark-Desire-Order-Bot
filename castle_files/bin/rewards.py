@@ -8,7 +8,7 @@ from castle_files.libs.castle.location import Location
 
 from castle_files.bin.mid import do_mailing
 from castle_files.bin.trigger import global_triggers_in, get_message_type_and_data
-from castle_files.bin.service_functions import check_access, get_time_remaining_to_battle
+from castle_files.bin.service_functions import check_access, get_time_remaining_to_battle, get_current_datetime
 
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor, job, \
     MID_CHAT_ID
@@ -21,6 +21,10 @@ import traceback
 import datetime
 import re
 import time
+import json
+
+
+REWARD_PRICE_RESET_WEEKS = 2
 
 
 def reward_edit_castle_message(player, reward, *args, **kwargs):
@@ -89,7 +93,6 @@ def g_def_remind_after_battle(bot, job):
                      text="Не забудьте снять жетоны тем, "
                           "кто не был в дефе <b>{}</b> в прошедшую битву!".format(job.context.get("tag")),
                      parse_mode='HTML')
-
 
 
 def reward_request_pin(player, reward, cost, *args, **kwargs):
@@ -170,6 +173,17 @@ rewards = {"castle_message_change": {
 }
 
 
+def receive_reward(player, reward_name, reward, reward_text, cost, *args, **kwargs):
+    create_reward_log(player, reward_name, cost, *args, **kwargs)
+    reward["get"](player=player, reward=reward_text, cost=cost)
+
+
+def create_reward_log(player, reward_name, cost, *args, **kwargs):
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (player.id, "reward_{}".format(reward_name), 1, get_current_datetime(),
+                             json.dumps({"cost": cost})))
+    
+
 def smuggler(bot, update):
     mes = update.message
     bot.send_message(chat_id=mes.chat_id,
@@ -178,39 +192,39 @@ def smuggler(bot, update):
                           "- \"Ну ты баклань, если че по делу есть, или вали отсюда на, пока маслину не словил. "
                           "На зырь, только быра-быра, кабанчиком.\"\n\n"
                           "1) \"Услуги Шменкси\"- инвестиция в нелегальную уличную живопись.\n<em>Возможность делать "
-                          "объявление как обращение короля.\n(Будет модерация).</em>\n<b>5000🔘</b>\n"
+                          "объявление как обращение короля.\n(Будет модерация).</em>\n<b>{}</b>\n"
                           "/castle_message_change\n\n"
                           "2) \"Королевская голубятня\"- подкупить стражу у королевской голубятни.\n"
-                          "<em>Возможность сделать рассылку раз в день.\n(Будет модерация).</em>\n<b>10000🔘</b>\n"
+                          "<em>Возможность сделать рассылку раз в день.\n(Будет модерация).</em>\n<b>{}</b>\n"
                           "/castle_mailing\n\n"
                           "3) Рог Хельма Молоторукого - уникальный артефакт прошлого, дающий поистине необузданную "
                           "ярость защитникам родной крепости. Огромная мощь - это огромная ответственность!\n"
-                          "<em>Запрос на массовый деф гильдии.</em>\n<b>5000🔘</b>\n/castle_g_def\n\n"
+                          "<em>Запрос на массовый деф гильдии.</em>\n<b>{}</b>\n/castle_g_def\n\n"
                           "4) Орден Храма Лотоса - мощный артефакт с черного рынка древностей. "
                           "Обладатель ордена имеет поистине катастрофический прирост доверия Короля и его советников.\n"
                           "<b>Но помни, при малейшем намеке на предательство этого доверия в прошлом или настоящем - "
-                          "кара будет суровой.</b>\n<em>Возможность получить пин заранее.</em>\n<b>5000🔘</b>\n"
+                          "кара будет суровой.</b>\n<em>Возможность получить пин заранее.</em>\n<b>{}</b>\n"
                           "/castle_request_pin\n\n"
                           "5) Операция \"Козел в огороде\" - найм банды отпетых отморозков и негодяев для "
                           "бессмысленного ограбления со взломом.\nПускай ограбление Королевской типографии не назвать"
                           "\"ограблением века\", но его точно запомнят по твоему личному глобальному триггеру!\n"
-                          "<em>Личный глобальный тригер.\n(Будет модерация).</em>\n<b>5000🔘</b>\n"
+                          "<em>Личный глобальный тригер.\n(Будет модерация).</em>\n<b>{}</b>\n"
                           "/castle_global_trigger\n\n"
                           "6) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
                           "почти \"ограбления века\".\nКто насрал в глобальные триггеры? Почистим!\n"
-                          "<em>Возможность удалить глобальный тригер.</em>\n<b>10000🔘</b>\n"
+                          "<em>Возможность удалить глобальный тригер.</em>\n<b>{}</b>\n"
                           "/castle_delete_global_trigger\n\n"
                           "7) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
                           "действенное средство. Забыл ее светящиеся крылья ты не сможешь никогда, а вот сменить"
                           " знамена на флагштоках на глазах у всех - вполне.\n"
                           "<em>Выбор аватарки любого чата замка, кроме общего.\n(Будет модерация).</em>\n"
-                          "<b>5000🔘</b>\n/castle_change_chat_picture\n\n"
+                          "<b>{}</b>\n/castle_change_chat_picture\n\n"
                           "8) Доверительное письмо начальника Сыскной Службы Короны.\n"
                           "Корупированные чиновкники - бич любого государства. Но это и большие возможности. "
                           "Прикажите местной страже арестовать беднягу, ведь с этой грамотой у вас "
                           "неограниченные полномочия!\n"
-                          "<em>Возможность впаять ридонли на 30 минут любому.</em>\n<b>5000🔘</b>\n"
-                          "/castle_ro\n\n",
+                          "<em>Возможность впаять ридонли на 30 минут любому.</em>\n<b>{}</b>\n"
+                          "/castle_ro\n\n".format(*list(map(lambda r: format_reward_price(r), list(rewards)))),
                      parse_mode='HTML')
 
 
@@ -230,16 +244,38 @@ def request_reward_confirmation(bot, mes, reward, user_data):
                      parse_mode='HTML', reply_markup=buttons)
 
 
+def get_reward_price(reward_name: str) -> int:
+    reward = rewards.get(reward_name)
+    return reward["price"] * get_reward_combo(reward_name)
+
+
+def get_reward_combo(reward_name: str) -> int:
+    reward = rewards.get(reward_name)
+    request = "select count(*) from castle_logs where action = %s and date > %s"
+    cursor.execute(request, ("reward_{}".format(reward_name),
+                             get_current_datetime() - datetime.timedelta(weeks=REWARD_PRICE_RESET_WEEKS)))
+    count, *skip = cursor.fetchone()
+    return count + 1
+
+
+def format_reward_price(reward_name: str) -> str:
+    reward = rewards.get(reward_name)
+    combo = get_reward_combo(reward_name)
+    return "{}🔘 ({}🔘 * {})".format(reward["price"] * combo, reward["price"], combo)
+
+
+
 def request_get_reward(bot, update, user_data):
     mes = update.message
-    reward = rewards.get(mes.text[1:])
+    reward_name = mes.text[1:]
+    reward = rewards.get(reward_name)
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
     if reward is None:
         bot.send_message(chat_id=mes.chat_id, text="Неверный синтаксис.")
         return
-    if player.reputation < reward["price"]:
+    if player.reputation < get_reward_price(reward_name):
         bot.send_message(chat_id=mes.chat_id, text="Недостаточно 🔘 жетонов")
         return
     if reward.get("skip_enter_text"):
@@ -277,23 +313,24 @@ def answer_reward(bot, update, user_data):
     mes = update.callback_query.message
     player = Player.get_player(update.callback_query.from_user.id)
     if "yes" in update.callback_query.data:
-        reward = rewards.get(user_data.get("reward"))
+        reward_name = user_data.get("reward")
+        reward = rewards.get(reward_name)
         if reward is None:
             bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                     text="Произошла ошибка. Попробуйте начать сначала.", show_alert=True)
             return
-        if player.reputation < reward["price"]:
+        if player.reputation < get_reward_price(reward_name):
             bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                     text="Недостаточно 🔘 жетонов", show_alert=True)
             return
-        player.reputation -= reward["price"]
+        player.reputation -= get_reward_price(reward_name)
         player.update()
         if reward.get("moderation"):
             if user_data.get("reward_moderation") is not None:
                 bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                         text="Одна из наград уже проходит модерацию. Пожалуйста, подождите окончания",
                                         show_alert=True)
-                player.reputation += reward["price"]
+                player.reputation += get_reward_price(reward_name)
                 player.update()
                 return
             add_mes_id = None
@@ -318,7 +355,8 @@ def answer_reward(bot, update, user_data):
         else:
             text = "Награда получается"
             try:
-                reward["get"](player=player, reward=user_data.get("reward_text"), cost=reward["price"])
+                receive_reward(player=player, reward_name=reward_name, reward=reward,
+                               reward_text=user_data.get("reward_text"), cost=get_reward_price(reward_name))
             except Exception:
                 logging.error(traceback.format_exc())
             clear_reward_user_data(user_data)
@@ -352,6 +390,7 @@ def moderate_reward(bot, update):
                                   text="Странная ошибка.",
                                   show_alert=True)
         return
+    reward_name = reward
     reward = rewards.get(reward)
     answer_text = "{} @<b>{}</b> в <code>{}</code>" \
                   "".format("Одобрено" if yes else "Отклонено", update.callback_query.from_user.username,
@@ -365,12 +404,13 @@ def moderate_reward(bot, update):
 
     if yes:
         try:
-            reward["get"](player=player, reward=user_data["reward_text"], message=mes, cost=reward["price"])
+            receive_reward(player=player, reward_name=reward_name, reward=reward,
+                           reward_text=user_data.get("reward_text"), cost=get_reward_price(reward_name))
         except Exception:
             logging.error(traceback.format_exc())
         bot.send_message(chat_id=player.id, text="Награда выдана.")
     else:
-        player.reputation += reward["price"]
+        player.reputation += get_reward_price(reward_name)
         player.update()
         bot.send_message(chat_id=player.id, text="Награда не прошла модерацию.\n🔘Жетоны возвращены.")
     clear_reward_user_data(user_data)
