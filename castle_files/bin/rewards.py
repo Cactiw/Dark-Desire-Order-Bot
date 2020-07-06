@@ -181,7 +181,8 @@ def receive_reward(player, reward_name, reward, reward_text, cost, *args, **kwar
     dispatcher.bot.send_message(
         chat_id=CENTRAL_SQUARE_CHAT_ID,
         text="<b>{}</b> получает награду <b>{}</b>.\nЦена на следующие 2 недели увеличена.\n"
-             "Эту награду в последние 2 недели получали <b>{}</b> раз.".format(get_reward_combo(reward_name)),
+             "Эту награду в последние 2 недели получали <b>{}</b> раз.".format(
+                player.nickname, reward_name, get_reward_combo(reward_name)),
         parse_mode='HTML')
 
 
