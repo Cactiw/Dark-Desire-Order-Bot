@@ -415,7 +415,7 @@ def moderate_reward(bot, update):
 
     if yes:
         try:
-            receive_reward(player=player, reward_name=reward_name, reward=reward,
+            receive_reward(player=player, reward_name=reward_name, reward=reward, message=mes,
                            reward_text=user_data.get("reward_text"), cost=get_reward_price(reward_name))
         except Exception:
             logging.error(traceback.format_exc())
