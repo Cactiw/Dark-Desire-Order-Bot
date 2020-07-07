@@ -1,3 +1,6 @@
+"""
+В данном модуле располагаются функции для дампа и подъёма пользовательских данных на диск (с диска)
+"""
 import castle_files.work_materials.globals as file_globals
 from castle_files.bin.quests import construction_jobs, quest_players, quest_lock
 
@@ -13,6 +16,10 @@ log = logging.getLogger("Save load user data")
 
 
 def load_data():
+    """
+    Функция, которая загружает все данные (которые хранятся на диске) с диска
+    :return: None
+    """
     try:
         f = open('castle_files/backup/user_data', 'rb')
         file_globals.dispatcher.user_data = pickle.load(f)
@@ -45,6 +52,10 @@ def load_data():
 
 
 def save_data():
+    """
+    Функция, которая сохраняет данные на диск раз в N (30) секунд, и перед завершением работы бота.
+    :return: None
+    """
     need_exit = 0
     while need_exit == 0:
         for i in range(0, 5):
