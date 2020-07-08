@@ -112,6 +112,7 @@ class CW3API:
         Главный цикл работы kafka - итерация по сообщениям в очереди, пока self.kafka_active is True
         """
         for message in self.kafka_consumer:
+            continue
             try:
                 self.callbacks.get(message.topic, lambda x: x)(message.value)
             except Exception:
