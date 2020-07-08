@@ -158,12 +158,17 @@ def alliance_roster(bot, update):
                          reply_to_message_id=update.message.message_id)
         return
     tags = re.findall("\\[(\\w+)\\]", update.message.text)
+    for guild in alliance.get_alliance_guilds():
+        guild.alliance_id = None
+        guild.update_to_database()
+
     for guild_tag in tags:
         guild = Guild.get_guild(guild_tag=guild_tag)
         if guild is None:
             continue
         guild.alliance_id = alliance.id
         guild.update_to_database()
+
     bot.send_message(chat_id=update.message.chat_id,
                      text="Состав альянса обновлён.\n"
                           "Установите чат МИДа альянса командой /set_alliance_hq_chat {chat_id}\n"
