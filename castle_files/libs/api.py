@@ -81,6 +81,8 @@ class CW3API:
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
 
+        self.GROUP_ID = "cactiw_castle_skalen_CW3"
+
         self.exchange = kombu.Exchange(self.EXCHANGE)
         self.inbound_queue = kombu.Queue(self.INBOUND)
 
@@ -926,7 +928,7 @@ class CW3API:
                 bootstrap_servers=['digest-api.chtwrs.com:9092'],
                 auto_offset_reset='earliest',
                 enable_auto_commit=True,
-                group_id='cactiw_cw3_group_id',
+                group_id=self.GROUP_ID,
                 value_deserializer=lambda x: json.loads(x.decode('utf-8'))
             )
             self.start_kafka_consuming()
