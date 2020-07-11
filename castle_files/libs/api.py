@@ -86,6 +86,7 @@ class CW3API:
         self.exchange = kombu.Exchange(self.EXCHANGE)
         self.inbound_queue = kombu.Queue(self.INBOUND)
 
+        self.NUM_KAFKA_CONSUMERS = 2
         self.kafka_consumers = []
 
         self.sent = 0
@@ -910,12 +911,12 @@ class CW3API:
 
     def create_kafka_consumer(self):
         return kafka.KafkaConsumer(
-            'cw3-offers',
+            # 'cw3-offers',
             'cw3-deals',
-            'cw3-duels',
+            # 'cw3-duels',
             'cw3-sex_digest',
             'cw3-yellow_pages',
-            'cw3-au_digest',
+            # 'cw3-au_digest',
 
             bootstrap_servers=['digest-api.chtwrs.com:9092'],
             auto_offset_reset='earliest',
@@ -934,8 +935,8 @@ class CW3API:
                 logging.warning("Kafka already consuming, returning")
                 return
             self.kafka_active = True
-            self.kafka_consumers.append(self.create_kafka_consumer())
-            self.kafka_consumers.append(self.create_kafka_consumer())
+            for i in range(self.NUM_KAFKA_CONSUMERS):
+                self.kafka_consumers.append(self.create_kafka_consumer())
             self.start_kafka_consuming()
         except Exception:
             logging.exception("Can not start kafka: {}".format(traceback.format_exc()))
@@ -1009,7 +1010,8 @@ class CW3API:
     def stop_kafka(self):
         self.kafka_active = False
         for consumer in self.kafka_consumers:
-            consumer.close()
+            pass
+            # consumer.close()
 
 
     def stop_pika(self):
