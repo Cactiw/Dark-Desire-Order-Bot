@@ -113,6 +113,7 @@ class CW3API:
         """
         for message in consumer:
             try:
+                logging.info("Got message: {}".format(message))
                 self.callbacks.get(message.topic, lambda x: x)(message.value)
             except Exception:
                 logging.error(traceback.format_exc())
@@ -1002,8 +1003,14 @@ class CW3API:
         """
         Метод для полной остановки АПИ (вызывается извне) и завершения всех потоков.
         """
-        self.kafka_active = False
+        self.stop_kafka()
         self.stop_pika()
+
+    def stop_kafka(self):
+        self.kafka_active = False
+        for consumer in self.kafka_consumers:
+            consumer.close()
+
 
     def stop_pika(self):
         """

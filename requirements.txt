@@ -5,6 +5,7 @@ pytz
 tzlocal
 pySocks
 gitpython
+kafka
 kafka-python
 retrying
 kombu
