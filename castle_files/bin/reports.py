@@ -75,7 +75,7 @@ def add_report(bot, update, user_data):
     battle_id = count_battle_id(mes)
     hp = re.search("❤️Hp: (-?\\d+)", s)
     hp = int(hp.group(1)) if hp is not None else 0
-    outplay = re.search("You outplayed (.+) by ⚔️(\\d+)", s)
+    outplay = re.search("Тактически переиграл (.+) на ⚔️(\\d+)", s)
     outplay_dict = {}
     if outplay is not None:
         outplay_nickname = outplay.group(1)
@@ -130,14 +130,14 @@ def add_report(bot, update, user_data):
                                  additional_defense, lvl, exp, gold, stock, names, lvls, buffs, hp, hit, miss, last_hit))
         return
 
-    equip = re.search("Found: (.+) \\(from (.+)\\)", s)
+    equip = re.search("Найдено: (.+) \\(from (.+)\\)", s)
     equip_change = None
     if equip is not None:
         name = equip.group(1)
         found_from = equip.group(2)
         equip_change = {"status": "Found", "name": name, "from": found_from}
     else:
-        equip = re.search("Lost: (.+)", s)
+        equip = re.search("Утрачено: (.+)", s)
         if equip is not None:
             name = equip.group(1)
             equip_change = {"status": "Lost", "name": name}
