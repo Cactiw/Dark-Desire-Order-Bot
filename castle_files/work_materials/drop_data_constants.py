@@ -15,7 +15,7 @@ daytime_table = {
     '23': 'evening'
 }
 
-avalible_tiers = {
+available_tiers = {
     't2': 'Tier 2',
     'т2': 'Tier 2',
     '/d2': 'Tier 2',
@@ -25,6 +25,9 @@ avalible_tiers = {
     't4': 'Tier 4',
     'т4': 'Tier 4',
     '/d4': 'Tier 4',
+    't5': 'Tier 5',
+    'т5': 'Tier 5',
+    '/d5': 'Tier 5',
     '/dc': 'cloaks',
     'cloaks': 'cloaks'
 }
@@ -160,5 +163,38 @@ drop = {
                 'evening': ["Guard's Spear recipe", "Imperial Axe recipe"],
                 'night': ["Thundersoul Sword recipe", "Composite Bow recipe"]
                     }
+    },
+    'Tier 5': {
+        '🌲Лес': {
+                'morning': ["Manticore armor part", "Manticore boots part", "Discarnate bracers part",
+                            "Lightbane Katana part"],
+                'day': ["Manticore gloves part", "Overseer armor recipe", "Overseer boots recipe",
+                        "Doom Warglaive recipe", "Decimation Harpoon part", "Overseer shield part"],
+                'evening': ["Manticore helmet part", "Manticore boots part", "Windstalker Bow part",
+                            "Overseer shield part"],
+                'night': ["Manticore gloves recipe", "Overseer helmet recipe", "Lightbane Katana part",
+                          "Sinister Ranseur recipe", "Malificent Maul recipe"]
+        },
+        '🍄Болота': {
+                'morning': ["Manticore armor part", "Overseer armor part", "Overseer boots part",
+                            "Doom Warglaive part"],
+                'day': ["Manticore helmet part", "Overseer helmet part", "Discarnate robe recipe",
+                        "Discarnate shoes recipe", "Sinister Ranseur part"],
+                'evening': ["Manticore helmet part", "Manticore gloves part", "Overseer armor part",
+                            "Overseer helmet part", "Malificent Maul part"],
+                'night': ["Manticore armor part", "Manticore gloves part", "Overseer gauntlets recipe",
+                          "Discarnate circlet recipe", "Brutalizer Flail recipe", "Poniard recipe"]
+        },
+        '⛰Горы': {
+                'morning': ["Manticore armor recipe", "Manticore boots recipe", "Overseer boots recipe",
+                            "Discarnate bracers recipe", "Lightbane Katana recipe"],
+                'day': ["Discarnate robe part", "Discarnate shoes part", "Doom Warglaive part",
+                        "Decimation Harpoon recipe", "Heartstriker Bow part", "Heartstriker Bow recipe",
+                        "Windstalker Bow part"],
+                'evening': ["Manticore helmet recipe", "Manticore armor part", "Windstalker Bow recipe",
+                            "Overseer shield recipe"],
+                'night': ["Manticore boots part", "Overseer gauntlets part", "Overseer boots part",
+                          "Discarnate circlet part", "Brutalizer Flail part", "Poniard part"]
+        }
     }
 }

@@ -43,7 +43,7 @@ def drop_table(bot, update):
     if um.text[:5] == '/drop':
         try:
             tier = um.text[um.text.index(' ')+1:].lower()
-            drop_tier = avalible_tiers[tier]
+            drop_tier = available_tiers[tier]
         except ValueError:
             drop_tier = 'Null'
         except KeyError:
@@ -62,7 +62,7 @@ def drop_table(bot, update):
                             parse_mode='HTML')
     if um.text == '/d2' or um.text == '/d3' or um.text or um.text == '/d4'\
             or um.text == '/dc':
-        drop_tier = avalible_tiers[um.text.lower()[:3]]
+        drop_tier = available_tiers[um.text.lower()[:3]]
         text = qdrop(drop_tier)
         bot.sendMessage(chat_id=um.chat_id,
                         text=text,

@@ -409,10 +409,11 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('g_info', g_info))
     dispatcher.add_handler(CommandHandler('guild_commanders', guild_commanders))
 
-    dispatcher.add_handler(CommandHandler('d2', drop_table))
-    dispatcher.add_handler(CommandHandler('d3', drop_table))
-    dispatcher.add_handler(CommandHandler('d4', drop_table))
-    dispatcher.add_handler(CommandHandler('dc', drop_table))
+    # dispatcher.add_handler(CommandHandler('d2', drop_table))
+    # dispatcher.add_handler(CommandHandler('d3', drop_table))
+    # dispatcher.add_handler(CommandHandler('d4', drop_table))
+    # dispatcher.add_handler(CommandHandler('dc', drop_table))
+    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/d[2345c]"), drop_table))
     dispatcher.add_handler(CommandHandler('drop', send_search_bot, pass_args=True))
 
     dispatcher.add_handler(CommandHandler('set_status', set_status))
