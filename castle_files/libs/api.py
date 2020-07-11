@@ -86,7 +86,7 @@ class CW3API:
         self.exchange = kombu.Exchange(self.EXCHANGE)
         self.inbound_queue = kombu.Queue(self.INBOUND)
 
-        self.kafka_consumer = None
+        self.kafka_consumers = []
 
         self.sent = 0
         self.got_responses = 0
@@ -107,11 +107,11 @@ class CW3API:
             # 'cw3-au_digest': self.on_au_digest,  # not implemented
         }
 
-    def kafka_work(self):
+    def kafka_work(self, consumer):
         """
         Главный цикл работы kafka - итерация по сообщениям в очереди, пока self.kafka_active is True
         """
-        for message in self.kafka_consumer:
+        for message in consumer:
             try:
                 self.callbacks.get(message.topic, lambda x: x)(message.value)
             except Exception:
@@ -907,6 +907,22 @@ class CW3API:
         self.start_pika()
         self.start_kafka()
 
+    def create_kafka_consumer(self):
+        return kafka.KafkaConsumer(
+            'cw3-offers',
+            'cw3-deals',
+            'cw3-duels',
+            'cw3-sex_digest',
+            'cw3-yellow_pages',
+            'cw3-au_digest',
+
+            bootstrap_servers=['digest-api.chtwrs.com:9092'],
+            auto_offset_reset='earliest',
+            enable_auto_commit=True,
+            group_id=self.GROUP_ID,
+            value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+        )
+
     def start_kafka(self):
         """
         Метод запуска kafka - для публичных очередей
@@ -917,20 +933,8 @@ class CW3API:
                 logging.warning("Kafka already consuming, returning")
                 return
             self.kafka_active = True
-            self.kafka_consumer = kafka.KafkaConsumer(
-                'cw3-offers',
-                'cw3-deals',
-                'cw3-duels',
-                'cw3-sex_digest',
-                'cw3-yellow_pages',
-                'cw3-au_digest',
-
-                bootstrap_servers=['digest-api.chtwrs.com:9092'],
-                auto_offset_reset='earliest',
-                enable_auto_commit=True,
-                group_id=self.GROUP_ID,
-                value_deserializer=lambda x: json.loads(x.decode('utf-8'))
-            )
+            self.kafka_consumers.append(self.create_kafka_consumer())
+            self.kafka_consumers.append(self.create_kafka_consumer())
             self.start_kafka_consuming()
         except Exception:
             logging.exception("Can not start kafka: {}".format(traceback.format_exc()))
@@ -942,8 +946,12 @@ class CW3API:
         из публичных очередей (kafka)
         """
         time.sleep(10)
-        kafka_thread = threading.Thread(target=self.kafka_work)
-        kafka_thread.start()
+
+        for consumer in self.kafka_consumers:
+            kafka_thread = threading.Thread(target=self.kafka_work, args=[consumer])
+            kafka_thread.start()
+
+            time.sleep(1)
 
     def start_pika(self):
         """
