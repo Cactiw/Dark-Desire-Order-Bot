@@ -21,7 +21,7 @@ import datetime
 from telegram import InlineKeyboardMarkup
 from functools import reduce, wraps
 
-ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury', 'Brown Author']
+ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury', 'Brown Author', 'Fresh Eclipse']
 
 
 def alliance_access(func):
