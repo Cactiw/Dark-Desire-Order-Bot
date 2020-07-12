@@ -100,8 +100,6 @@ texts_translate = {
     "⚔️️Пинги к битве": "⚔️️Battle pings   ",
     "📌Пинг на мобов": "📌Mobs pings   ",
     "Сводки альянсов": "Alliance results ",
-    "включ[её]н[^<]?": "On",
-    "отключ[её]н[^<]?": "Off",
     "Изменения в опыте": "Experience changes",
     "🖇 — полный доступ к АПИ, 📎 — без экипировки": "🖇 - full access to API, 📎 - without equipment",
     "Список заместителей гильдии": "Assistants list for guild",
@@ -209,12 +207,17 @@ texts_translate = {
       "6\\) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
       "почти \"ограбления века\".\nКто насрал в глобальные триггеры\\? Почистим!\n"
       "<em>Возможность удалить глобальный тригер.</em>\n<b>(.+)</b>\n/castle_delete_global_trigger\n\n"
-      "7\\) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
+      "7\\) \"Волшебный туман\". Лучшие маги королевства призовут легендарный туман, который сокроет "
+      "выбранный чат от остальных. На некоторое время только внутренние правила остаются в силе.\n"
+      "<em>Временное отключение всех глобальных триггеров в выбранном чате.\n"
+      "Время не стакается.</em>\n<b>(.+)</b>\nЧас \\| Сутки \\| 2 недели\n"
+      "/dgt_hour /dgt_day /dgt_weeks\n\n"
+      "8\\) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
       "действенное средство. Забыл ее светящиеся крылья ты не сможешь никогда, а вот сменить"
       " знамена на флагштоках на глазах у всех - вполне.\n"
       "<em>Выбор аватарки любого чата замка, кроме общего.\n\\(Будет модерация\\).</em>\n"
       "<b>(.+)</b>\n/castle_change_chat_picture\n\n"
-      "8\\) Доверительное письмо начальника Сыскной Службы Короны.\n"
+      "9\\) Доверительное письмо начальника Сыскной Службы Короны.\n"
       "Корупированные чиновкники - бич любого государства. Но это и большие возможности. "
       "Прикажите местной страже арестовать беднягу, ведь с этой грамотой у вас "
       "неограниченные полномочия!\n"
@@ -243,16 +246,20 @@ texts_translate = {
             "The best search specialists will clean up the traces of the \"robbery of the century\".\n"
             "Who gave a shit about global triggers? Clean it!\n<em>The ability to delete a global trigger.</em>\n"
             "<b>{}</b>\n/castle_delete_global_trigger\n\n"
-            "7) Powder of forgetfulness.\nFairy Vignette of Carnamah kindly left on the table its most effective tool. "
+            "7) \"Magic Fog\". The best mages of the Kingdom will summon the legendary fog, "
+            "which will hide the selected chat from the rest for a while.\n"
+            "<em>Temporarily Disable all global triggers in the selected chat.\n"
+            "Time doesn't sum up.</em>\n{}\nHour | Day | 2 Weeks\n/dgt_hour /dgt_day /dgt_weeks\n\n"
+            "8) Powder of forgetfulness.\nFairy Vignette of Carnamah kindly left on the table its most effective tool. "
             "You can never forget its glowing wings, but you can change the banners on the flagpoles in front of everyone."
             "\n<em>The ability to change an avatar of any castle chat group, except the main castle chat.\nThe reward will be moderated.</em>\n"
             "<b>{}</b>\n/castle_change_chat_picture\n\n"
-            "8) letter of Confidence from the head of the Crown Detective Service.\n"
+            "9) letter of Confidence from the head of the Crown Detective Service.\n"
             "Corrupt officials are the scourge of any state. But these are also great opportunities. "
             "Order the local guard to arrest the poor man, because with this letter you have "
             "unlimited powers!\n"
             "<em>the Ability to enable read only mode for 30 minutes to anyone.</em>\n<b>{}</b>\n"
-            "/castle_ro\n\n",
+            "/castle_ro",
     "Введите новое замковое сообщение": "Enter new castle message",
     "Подтвердите": "Confirm",
     "Получение награды отменено.": "The award has been canceled.",
@@ -268,6 +275,8 @@ texts_translate = {
         "A request to protect your Guild will be sent to all guilds of the castle.",
     "Введите id человека, которому дать read only:": "Enter the id of the person to give read only to:",
     "Количество 🔘жетонов было изменено на <b>(\\d+)</b>": "The number of 🔘tokens was changed on <b>{}</b>",
+    "Введите chat_id чата, в котором отключить триггеры:\n\\(/chat_info в нужном чате\\)":
+        "Enter the chat_id of the chat in which to disable triggers:\n(/chat_info in the desired chat)",
 
     "Ты протягиваешь кошель с жетонами стражнику, шепча на ухо имя бедолаги.\n"
          "-\"ШО, ПРЯМ СОВЕТНИКА КОРОЛЯ, ЗА ТАКИЕ-ТО ДЕНЬГИ?!\"\n"
@@ -386,5 +395,8 @@ texts_translate = {
 
     "Получено": "Received",
     "Отменено.": "Canceled.",
+
+    "включ[её]н[^<]?": "On",
+    "отключ[её]н[^<]?": "Off",
 
 }
