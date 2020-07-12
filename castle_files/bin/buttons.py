@@ -3,7 +3,7 @@
 """
 from telegram import InlineKeyboardButton, KeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
-from castle_files.bin.service_functions import check_access
+from castle_files.bin.service_functions import check_access, get_current_datetime
 
 from castle_files.libs.castle.location import Location, status_to_location
 from castle_files.libs.player import Player
@@ -11,6 +11,8 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.alliance import Alliance
 
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
+
+import datetime
 
 
 def get_profile_buttons(player, whois_access=False, self_request=False):
@@ -561,9 +563,19 @@ def get_text_to_general_buttons(user_data, player=None):
         return Location.get_location_enter_text_by_id(location_id, player=player)
 
 
+def show_web_page_preview(player, user_data):
+    status = user_data.get("status")
+    location_id = user_data.get("location_id")
+    rp_off = user_data.get("rp_off")
+    return status == "central_square" and location_id == 0 and not rp_off and \
+        (player.created is None or get_current_datetime() - player.created < datetime.timedelta(days=30))
+
+
 def send_general_buttons(user_id, user_data, bot=None):
     if bot is None:
         bot = dispatcher.bot
     player = Player.get_player(user_id)
     bot.send_message(chat_id=user_id, text=get_text_to_general_buttons(user_data, player=player),
-                     reply_markup=get_general_buttons(user_data, player=player), parse_mode='HTML')
+                     reply_markup=get_general_buttons(user_data, player=player), parse_mode='HTML',
+                     disable_web_page_preview=show_web_page_preview(player, user_data)
+                     )
