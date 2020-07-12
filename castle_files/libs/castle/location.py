@@ -74,8 +74,9 @@ class Location:
     def update_location_to_database(self):
         cursor = conn.cursor()
         request = "update locations set state = %s, building_process = %s, special_info = %s where location_id = %s"
-        cursor.execute(request, (self.state, self.building_process,
-                                 json.dumps(self.special_info) if self.special_info is not None else None, self.id))
+        cursor.execute(request, (
+            self.state, self.building_process,
+            json.dumps(self.special_info, ensure_ascii=False) if self.special_info is not None else None, self.id))
 
     def create_location_in_database(self):
         request = "select location_id from locations where location_id = %s"
@@ -241,7 +242,8 @@ headquarters = Location(4, "Штаб", "Являясь генералом, Вы 
 
 technical_tower = Location(5, "Башню техно-магических наук",
                            "Добро пожаловать в башню Техно-Магических наук.\n"
-                           "Глашатай верховного  Архимейстера Темного Желания вещает:\n\n📜\n{}",
+                           "Глашатай верховного  Архимейстера Темного Желания вещает:\n\n📜\n{}\n📜\n"
+                           "Вы всегда можете написать @Cactiw о проблеме с ботом.",
                            special_info={"enter_text_format_values": ["Последнее обновление бота"],
                                          "last_update_id": 0})
 technical_tower.create_location_in_database()

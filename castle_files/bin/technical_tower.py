@@ -1,5 +1,6 @@
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_update_history_buttons
 from castle_files.bin.mid import do_mailing
+from castle_files.bin.service_functions import get_current_datetime, great_format_time
 
 from castle_files.libs.castle.location import Location
 from castle_files.libs.guild import Guild
@@ -56,7 +57,8 @@ def change_update_message(bot, update, user_data):
     user_data.update({"status": "technical_tower", "location_id": 5})
     tower = Location.get_location(5)
     format_values = tower.special_info.get("enter_text_format_values")
-    format_values[0] = update.message.text
+    format_values[0] = "Последнее обновление: {}.\nДля просмотра возьмите страничку сверху 🗂Архива".format(
+                great_format_time(get_current_datetime()))
     tower.special_info.update({"enter_text_format_values": format_values})
 
     tower.update_location_to_database()
