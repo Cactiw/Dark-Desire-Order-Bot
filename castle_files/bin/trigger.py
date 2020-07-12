@@ -1,5 +1,5 @@
 from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID
-from castle_files.bin.service_functions import get_admin_ids, check_access
+from castle_files.bin.service_functions import get_admin_ids, check_access, get_current_datetime
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
@@ -12,6 +12,7 @@ import json
 
 triggers_in = {}
 global_triggers_in = []
+ignore_global_triggers = {}
 
 types = {0: "text", 1: "video", 2: "audio", 3: "photo", 4: "document", 5: "sticker", 6: "voice", 7: "Кружок"}
 
@@ -88,12 +89,19 @@ def send_trigger(bot, update):
         trigger_list = []
         triggers_in.update({mes.chat_id: trigger_list})
     if mes.text.lower() not in trigger_list:
+        # Это глобальный триггер
+        if check_global_triggers_ignore(chat_id):
+            return
         chat_id = 0
     request = "select type, data_out from triggers where text_in = %s and chat_id = %s limit 1"
     cursor.execute(request, (mes.text.lower(), chat_id))
     row = cursor.fetchone()
     trigger_type, data = row
     send_trigger_with_type_and_data(bot, update.message.chat_id, trigger_type, data)
+
+
+def check_global_triggers_ignore(chat_id):
+    return ignore_global_triggers.get(chat_id, datetime.datetime(1970, 1, 1)) > get_current_datetime()
 
 
 def remove_trigger(bot, update):
@@ -174,6 +182,19 @@ def fill_triggers_lists():
                 triggers_in.update({chat_id: triggers_list})
             triggers_list.append(text)
         row = cursor.fetchone()
+    fill_triggers_ignore()
+
+
+def fill_triggers_ignore():
+    ignore_global_triggers.clear()
+    request = "select date, additional_info from castle_logs where action ilike " \
+              "'reward_castle_disable_global_triggers%'"
+    cursor.execute(request)
+    for row in cursor.fetchall():
+        chat_id = row[1].get("chat_id")
+        end_time = row[0] + datetime.timedelta(hours=row[1].get("period"))
+        ignore_global_triggers.update({int(chat_id): end_time})
+    print(ignore_global_triggers)
 
 
 def info_trigger(bot, update):

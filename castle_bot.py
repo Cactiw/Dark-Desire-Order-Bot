@@ -532,6 +532,8 @@ def castle_bot_processing():
                                           filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('castle_ro', request_get_reward, pass_user_data=True,
                                           filters=filter_is_pm))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('dgt_(hour|day|weeks)'),
+                                          request_get_reward, pass_user_data=True))
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_get_reward, get_reward, pass_user_data=True))
 

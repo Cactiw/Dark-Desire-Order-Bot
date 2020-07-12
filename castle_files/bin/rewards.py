@@ -7,7 +7,8 @@ from castle_files.libs.guild import Guild
 from castle_files.libs.castle.location import Location
 
 from castle_files.bin.mid import do_mailing
-from castle_files.bin.trigger import global_triggers_in, get_message_type_and_data
+from castle_files.bin.trigger import global_triggers_in, get_message_type_and_data, fill_triggers_ignore, \
+    check_global_triggers_ignore
 from castle_files.bin.service_functions import check_access, get_time_remaining_to_battle, get_current_datetime
 
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor, job, \
@@ -50,7 +51,7 @@ def reward_global_trigger(player, reward, message, cost, *args, **kwargs):
         dispatcher.bot.send_message(player.id, text="Такой глобальный триггер уже существует. Жетоны возвращены.")
         player.reputation += cost
         player.update()
-        return
+        raise RewardRollbackException
     trigger_type, data = get_message_type_and_data(message.reply_to_message)
     request = "insert into triggers(text_in, type, data_out, chat_id, creator, date_created) VALUES (%s, %s, %s, %s, " \
               "%s, %s)"
@@ -67,7 +68,7 @@ def reward_remove_global_trigger(player, reward, cost, *args, **kwargs):
         dispatcher.bot.send_message(player.id, text="Глобальный триггер не найден. Жетоны возвращены.")
         player.reputation += cost
         player.update()
-        return
+        raise RewardRollbackException
     request = "delete from triggers where chat_id = 0 and text_in = %s"
     cursor.execute(request, (reward,))
     global_triggers_in.remove(reward)
@@ -82,7 +83,7 @@ def reward_g_def(player, reward, cost, *args, **kwargs):
                                                     "Жетоны возвращены.")
         player.reputation += cost
         player.update()
-        return
+        raise RewardRollbackException
     do_mailing(dispatcher.bot, "📣📣📣Вы слышите звуки рога! Это {} зазывает сынов и дочерей Скалы на защиту!\n"
                                "/g_def {}".format(guild.tag, guild.tag))
     dispatcher.bot.send_message(chat_id=STATUSES_MODERATION_CHAT_ID,
@@ -106,6 +107,27 @@ def reward_request_pin(player, reward, cost, *args, **kwargs):
 
 def reward_change_castle_chat_picture(player, reward, *args, **kwargs):
     pass
+
+
+def reward_disable_global_triggers(player, reward, cost, *args, **kwargs):
+    if check_global_triggers_ignore(int(reward)):
+        dispatcher.bot.send_message(player.id, text="В чате уже активна награда. Жетоны возвращены.")
+        player.reputation += cost
+        player.update()
+        raise RewardRollbackException
+
+
+def ignore_triggers_updated(player, reward_name, cost, reward_text, *args, **kwargs):
+    fill_triggers_ignore()
+    to_text = {
+        "hour": "час",
+        "day": "сутки",
+        "weeks": "2 недели"
+    }
+    period_text = to_text.get(re.search("(hour|day|weeks)", reward_name).group(1), reward_name)
+    dispatcher.bot.send_message(chat_id=reward_text, text="<b>{}</b> купил отключение глобальных триггеров на "
+                                                          "{}".format(player.nickname, period_text),
+                                parse_mode='HTML')
 
 
 MUTED_MINUTES = 30
@@ -168,6 +190,21 @@ rewards = {"castle_message_change": {
         "price": 2500, "moderation": False, "text": "Введите текст глобального триггера для удаления:",
         "get": reward_remove_global_trigger
     },
+    "castle_disable_global_triggers_hour": {
+        "price": 30, "moderation": False, "text": "Введите chat_id чата, в котором отключить триггеры:\n"
+                                                  "(/chat_info в нужном чате)",
+        "get": reward_disable_global_triggers, "after_reward_received": ignore_triggers_updated
+    },
+    "castle_disable_global_triggers_day": {
+        "price": 600, "moderation": False, "text": "Введите chat_id чата, в котором отключить триггеры:\n"
+                                                   "(/chat_info в нужном чате)",
+        "get": reward_disable_global_triggers, "after_reward_received": ignore_triggers_updated
+    },
+    "castle_disable_global_triggers_weeks": {
+        "price": 6000, "moderation": False, "text": "Введите chat_id чата, в котором отключить триггеры:\n"
+                                                    "(/chat_info в нужном чате)",
+        "get": reward_disable_global_triggers, "after_reward_received": ignore_triggers_updated
+    },
     "castle_change_chat_picture": {
         "price": 2500, "moderation": True, "text": "Введите название чата (в произвольной форме):",
         "next": "Отправьте новую аватарку.", "get": reward_change_castle_chat_picture
@@ -192,12 +229,25 @@ def receive_reward(player, reward_name, reward, reward_text, cost, *args, **kwar
                  "Эту награду в последние 2 недели получали <b>{}</b> раз.".format(
                     player.nickname, reward_name, get_reward_combo(reward_name)),
             parse_mode='HTML')
+        reward.get("after_reward_received", lambda *x: None)(player, reward_name, cost, reward_text, *args, **kwargs)
 
 
-def create_reward_log(player, reward_name, cost, *args, **kwargs):
+period_hours = {
+    "hour": 1,
+    "day": 24,
+    "weeks": 24 * 14
+}
+
+
+def create_reward_log(player, reward_name, cost, reward_text, *args, **kwargs):
+    additional_info = {"cost": cost}
+    if "disable_global_triggers" in reward_name:
+        period = re.search("(hour|day|weeks)", reward_name).group(1)
+        period = period_hours.get(period)
+        additional_info.update({"chat_id": reward_text, "period": period})
     request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
     cursor.execute(request, (player.id, "reward_{}".format(reward_name), 1, get_current_datetime(),
-                             json.dumps({"cost": cost})))
+                             json.dumps(additional_info, ensure_ascii=False)))
     
 
 def smuggler(bot, update):
@@ -230,12 +280,17 @@ def smuggler(bot, update):
                           "почти \"ограбления века\".\nКто насрал в глобальные триггеры? Почистим!\n"
                           "<em>Возможность удалить глобальный тригер.</em>\n<b>{}</b>\n"
                           "/castle_delete_global_trigger\n\n"
-                          "7) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
+                          "7) \"Волшебный туман\". Лучшие маги королевства призовут легендарный туман, который сокроет "
+                          "выбранный чат от остальных. На некоторое время только внутренние правила остаются в силе.\n"
+                          "<em>Временное отключение всех глобальных триггеров в выбранном чате.\n"
+                          "Время не стакается.</em>\n<b>{} | {} | {}</b>\nЧас | Сутки | 2 недели\n"
+                          "/dgt_hour /dgt_day /dgt_weeks\n\n"
+                          "8) Порошок забвения.\nФея Виньета Камнемох любезно оставила на тумбочке свое самое "
                           "действенное средство. Забыл ее светящиеся крылья ты не сможешь никогда, а вот сменить"
                           " знамена на флагштоках на глазах у всех - вполне.\n"
                           "<em>Выбор аватарки любого чата замка, кроме общего.\n(Будет модерация).</em>\n"
                           "<b>{}</b>\n/castle_change_chat_picture\n\n"
-                          "8) Доверительное письмо начальника Сыскной Службы Короны.\n"
+                          "9) Доверительное письмо начальника Сыскной Службы Короны.\n"
                           "Корупированные чиновкники - бич любого государства. Но это и большие возможности. "
                           "Прикажите местной страже арестовать беднягу, ведь с этой грамотой у вас "
                           "неограниченные полномочия!\n"
@@ -287,7 +342,7 @@ def format_reward_price(reward_name: str) -> str:
 
 def request_get_reward(bot, update, user_data):
     mes = update.message
-    reward_name = mes.text[1:]
+    reward_name = mes.text[1:].replace("dgt_", "castle_disable_global_triggers_")
     reward = rewards.get(reward_name)
     player = Player.get_player(mes.from_user.id)
     if player is None:
@@ -300,11 +355,11 @@ def request_get_reward(bot, update, user_data):
         return
     if reward.get("skip_enter_text"):
         # Ничего вводть не надо, сразу на подтверждение кидаю
-        user_data.update({"status": "tea_party", "reward": mes.text[1:], "reward_text": reward.get("text")})
+        user_data.update({"status": "tea_party", "reward": reward_name, "reward_text": reward.get("text")})
         request_reward_confirmation(bot, mes, reward, user_data)
     else:
         # Запрос ввода текста для награды
-        user_data.update({"status": "requested_reward", "reward": mes.text[1:]})
+        user_data.update({"status": "requested_reward", "reward": reward_name})
         bot.send_message(chat_id=mes.chat_id, text=reward["text"])
 
 
@@ -312,10 +367,10 @@ def get_reward(bot, update, user_data):
     mes = update.message
     reward_text = mes.text
     reward = rewards.get(user_data.get("reward"))
-    next_text = reward.get("next")
     if reward is None:
         bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка. Попробуйте начать сначала.")
         return
+    next_text = reward.get("next")
 
     # Уже указана дополнительная информация
     if 'additional' in user_data.get("status"):
