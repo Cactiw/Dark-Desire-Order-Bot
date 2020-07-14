@@ -154,7 +154,7 @@ def reward_read_only(player, reward, cost, *args, **kwargs):
         muted_players.update({mute_player.id: time.time() + MUTED_MINUTES * 60})
         dispatcher.bot.send_message(chat_id=mute_player.id,
                                     text="\"Стражу подкупили!\" - кричишь ты, пока тебя утаскивают в одиночку "
-                                         "на ближайшие пол часа.\nОтличное время подумать, где и когда ты умудрился "
+                                         "на ближайшие полчаса.\nОтличное время подумать, где и когда ты умудрился "
                                          "нажить себе врагов, что аж жетонов не пожалели, чтобы тебе насолить.\n"
                                          "<em>30 минут вы не можете ничего писать в чатах с ботом.</em>",
                                     parse_mode='HTML')
