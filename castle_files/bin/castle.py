@@ -389,7 +389,7 @@ def hall_of_fame(bot, update, user_data):
         unknown_input(bot, update, user_data)
         return
     tops(bot, update, user_data, response="Вы входите в Мандапу Славы - почетное место, где увековечены герои Скалы, "
-                                          "их подвиги и заслуги перед замком. На стене развешены лучшие из лучших.\n\n")
+                                          "их подвиги и заслуги перед замком. На стене развешаны лучшие из лучших.\n\n")
     """
     user_data.update({"status": "hall_of_fame", "location_id": 8})
     send_general_buttons(update.message.from_user.id, user_data, bot=bot)
