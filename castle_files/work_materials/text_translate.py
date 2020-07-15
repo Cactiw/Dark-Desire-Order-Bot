@@ -1,6 +1,6 @@
 texts_translate = {
     "Вы входите в Мандапу Славы - почетное место, где увековечены герои Скалы, их подвиги и заслуги перед замком. На "
-    "стене развешены лучшие из лучших.\n\nВыберите категорию:":
+    "стене развешаны лучшие из лучших.\n\nВыберите категорию:":
         "You are entering the Hall of Fame - an honorable place where the heroes of the Rock, their exploits and "
         "services to the castle are immortalized. There are best of the best on the wall.\n\nSelect a category:",
     "Доброго времени суток!\nВыберите действие:": "Good day to you! Select an action:",
@@ -90,12 +90,12 @@ texts_translate = {
         "You stand in the middle of the ⛲️Central square of the Rock of the Dark Desire.\n"
         "The cold wind chills to the bone and the square is not crowded.\nWINTER IS COMING!\n\n"
         "On the frontal place, to the left of the fountain, the parchment with important news is nailed:",
-    "Заверенно подписью и печатью Короля.": "Signed and sealed by the King.",
+    "Заверено подписью и печатью Короля.": "Signed and sealed by the King.",
     "По правую руку во всю работает команда землемеров, строительная площадка работает в 3 смены.":
         "On the right hand in all the team of surveyors works, the construction site works in 3 shifts.",
 
     "Именем Короля!\nПостановляю:\n1\\) Начать организованную подготовку и сбор запасов на холодный сезон.\n"
-    "2\\) Возвести единый штаб для найма и вознаграждение самых усердных работников.":
+    "2\\) Возвести единый штаб для найма и вознаграждения самых усердных работников.":
         "IN THE NAME OF THE KING!\nDecide:\n"
         "1) Start organized preparation and collection of stocks for the cold season.\n"
         "2) Erect a single headquarters for hiring and rewarding the most diligent workers.",
@@ -126,8 +126,8 @@ texts_translate = {
         "To remove assistant - /del_assistant - similarly, send as a reply on the message of the player that must be "
         "removed from the assistatns list.",
     "Статистика гильдии (.+) по битве": "{0} stats at battle",
-    "Комбо репортов подряд": "Combo of reports in a row",
-    "Максимальное комбо": "Maximum combo",
+    "Комбо репортов подряд": "Reports in a row combo",
+    "Максимальное комбо": "Max combo",
     "репортов": "reports",
     "Не сдали репорты:": "No reports:",
     "Вы не состоите в гильдии. Вступите в гильдию в игре и попросите командира добавить вас в гильдейском чате.":
@@ -170,7 +170,7 @@ texts_translate = {
     "Вы заняты делом. Окончание через": "You're busy. End in",
     "Вы успешно добыли (.+). Казна обновлена. Получено": "You have successfully extracted {}. The Treasury is "
                                                          "updated. Received",
-    "Чайная лига. Здесь ты сможешь узнать новости замка, получить работенку, заработать деньжат и , вероятно, "
+    "Чайная лига. Здесь ты сможешь узнать новости замка, получить работенку, заработать деньжат и, вероятно, "
     "заслужить славу и уважение.":
         "Tea party. Here you can get the news of the castle, get a job, earn money and probably earn fame and respect.",
     "Статусы, доступные для покупки:": "Statuses, that are available to purchase:",
@@ -234,7 +234,7 @@ texts_translate = {
     "\"ограблением века\", но его точно запомнят по твоему личному глобальному триггеру!\n"
     "<em>Личный глобальный тригер.\n\\(Будет модерация\\).</em>\n<b>(.+)</b>\n/castle_global_trigger\n\n"
     "6\\) Спецоперация \"Прачка в прачечной\". Лучшие спецы розыска займутся подчищением следов"
-    "почти \"ограбления века\".\nКто насрал в глобальные триггеры\\? Почистим!\n"
+    "почти \"ограбления века\".\nКто-то насрал в глобальные триггеры\\? Почистим!\n"
     "<em>Возможность удалить глобальный тригер.</em>\n<b>(.+)</b>\n/castle_delete_global_trigger\n\n"
     "7\\) \"Волшебный туман\". Лучшие маги королевства призовут легендарный туман, который сокроет "
     "выбранный чат от остальных. На некоторое время только внутренние правила остаются в силе.\n"
