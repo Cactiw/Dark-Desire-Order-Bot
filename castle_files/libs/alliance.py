@@ -6,13 +6,14 @@ from castle_files.libs.alliance_location import AllianceLocation
 
 class Alliance:
 
-    def __init__(self, alliance_id, link, name, creator_id, assistants, hq_chat_id):
+    def __init__(self, alliance_id, link, name, creator_id, assistants, hq_chat_id, active):
         self.id = alliance_id
         self.link = link
         self.name = name
         self.creator_id = creator_id
         self.assistants = assistants
         self.hq_chat_id = hq_chat_id
+        self.active = active
 
     def add_flag_to_name(self, text: str, locations: bool = False) -> str:
         """
@@ -50,22 +51,23 @@ class Alliance:
 
     def update(self):
         request = "update alliances set link = %s, name = %s, creator_id = %s, assistants = %s, " \
-                  "hq_chat_id = %s " \
+                  "hq_chat_id = %s, active = %s " \
                   "where id = %s"
-        cursor.execute(request, (self.link, self.name, self.creator_id, self.assistants, self.hq_chat_id, self.id))
+        cursor.execute(request, (self.link, self.name, self.creator_id, self.assistants, self.hq_chat_id, self.active,
+                                 self.id))
 
     @staticmethod
     def get_alliance(alliance_id: int) -> 'Alliance':
         if alliance_id is None:
             return None
-        request = "select link, name, creator_id, assistants, hq_chat_id from alliances where id = %s " \
+        request = "select link, name, creator_id, assistants, hq_chat_id, active from alliances where id = %s " \
                   "limit 1"
         cursor.execute(request, (alliance_id,))
         row = cursor.fetchone()
         if row is None:
             return None
-        link, name, creator_id, assistants, hq_chat_id = row
-        return Alliance(alliance_id, link, name, creator_id, assistants, hq_chat_id)
+        link, name, creator_id, assistants, hq_chat_id, active = row
+        return Alliance(alliance_id, link, name, creator_id, assistants, hq_chat_id, active)
 
     @staticmethod
     def get_alliance_by_link(link: str) -> 'Alliance':
@@ -82,7 +84,7 @@ class Alliance:
         cursor.execute(request, (name,))
         row = cursor.fetchone()
         if row is None:
-            alliance = Alliance(None, None, name, None, None, None)
+            alliance = Alliance(None, None, name, None, None, None, True)
             alliance.insert_to_database()
             return alliance
         return Alliance.get_alliance(row[0])
@@ -90,6 +92,12 @@ class Alliance:
     @staticmethod
     def get_all_alliances() -> ['Alliance']:
         request = "select id from alliances order by id asc"
+        cursor.execute(request)
+        return list(map(lambda alliance_id: Alliance.get_alliance(alliance_id[0]), cursor.fetchall()))
+
+    @staticmethod
+    def get_active_alliances() -> ['Alliance']:
+        request = "select id from alliances where active is true order by id asc"
         cursor.execute(request)
         return list(map(lambda alliance_id: Alliance.get_alliance(alliance_id[0]), cursor.fetchall()))
 
