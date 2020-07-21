@@ -235,7 +235,7 @@ def add_alliance_location(bot, update):
         location = AllianceLocation(None, link, name, None, lvl, None, 0, False, False)
         location.figure_type()
         location.insert_to_database()
-    for alli in Alliance.get_all_alliances():
+    for alli in Alliance.get_active_alliances():
         if alli.hq_chat_id is not None:
             bot.send_message(chat_id=alli.hq_chat_id, parse_mode='HTML',
                              text="Новая локация: <b>{} Lvl.{}</b>\n{}".format(name, lvl, link))
@@ -381,7 +381,7 @@ def parse_alliance_battle_results(results: str, debug: bool):
 
 @alliance_access
 def ga(bot, update):
-    alliances = Alliance.get_all_alliances()
+    alliances = Alliance.get_active_alliances()
     res = "🎪Альянс:\n  |—🗺Локация | битв удерживается\n⚠ - Локация могла истечь\n" \
           "----------------------------------------\n\n"
     res_end = ""
@@ -435,12 +435,20 @@ def ga_expire(bot, update):
         return
     location = AllianceLocation.get_location_by_link(link)
     if location is None:
-        bot.send_message(chat_id=update.message.chat_id, text="Локация не найдена, или уже истекла.",
-                         reply_to_message_id=update.message.message_id)
-        return
-    location.expired = True
-    location.update()
-    bot.send_message(chat_id=update.message.chat_id, text="{} помечена как истёкшая".format(location.format_name()))
+        alliance = Alliance.get_alliance_by_link(link)
+        if alliance is None:
+            bot.send_message(chat_id=update.message.chat_id, text="Локация не найдена, или уже истекла.",
+                             reply_to_message_id=update.message.message_id)
+            return
+        alliance.active = False
+        alliance.update()
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="<b>{}</b> помечен как неактивный, и более не будет появляться".format(alliance.name),
+                         parse_mode='HTML')
+    else:
+        location.expired = True
+        location.update()
+        bot.send_message(chat_id=update.message.chat_id, text="{} помечена как истёкшая".format(location.format_name()))
 
 
 @alliance_access
