@@ -1,6 +1,6 @@
-python-telegram-bot
+python-telegram-bot==12.1.1
 psycopg2-binary
-telethon
+telethon==1.14.0
 pytz
 tzlocal
 pySocks
