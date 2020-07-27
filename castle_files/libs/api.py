@@ -114,7 +114,6 @@ class CW3API:
         """
         for message in consumer:
             try:
-                logging.info("Got message: {}".format(message))
                 self.callbacks.get(message.topic, lambda x: x)(message.value)
             except Exception:
                 logging.error(traceback.format_exc())
