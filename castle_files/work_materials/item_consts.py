@@ -21,7 +21,7 @@ items = {
     "19": ["Thundersoul Sword", "Thundersoul blade", 5],
     "20": ["Doomblade sword", "Doomblade blade", 5],
     "21": ["Eclipse", "Eclipse blade", 5],
-    "22": ["Guard’s Spear", "Guard's blade", 5],
+    "22": ["Guard's Spear", "Guard's blade", 5],
     "23": ["King's Defender", "King's Defender blade", 5],
     "24": ["Raging Lance", "Raging Lance blade", 5],
     "25": ["Composite Bow", "Composite Bow shaft", 5],
