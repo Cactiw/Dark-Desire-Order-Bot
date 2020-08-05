@@ -565,7 +565,7 @@ class CW3API:
                         lst.append(copy.deepcopy(eq))
                 stock.update({code or i_name: count})
             stock = {k: stock[k] for k in sorted(stock, key=stock_sort_comparator)}
-            self.__set_guild_equipment_codes(codes, equipment_temp, equipment)
+            self.__set_guild_equipment_codes(codes, equipment_temp, equipment, stock)
             player = Player.get_player(player_id, notify_on_error=False)
             if player is None or player.guild is None:
                 logging.warning("Received guild info, but player is None (or guild) for id {}".format(player_id))
@@ -607,7 +607,7 @@ class CW3API:
             logging.error(traceback.format_exc())
 
     @staticmethod
-    def __set_guild_equipment_codes(codes: dict, equipment_temp: dict, equipment: list):
+    def __set_guild_equipment_codes(codes: dict, equipment_temp: dict, equipment: list, stock: dict):
         """
         Метод, записывающий экипировку гильдии (сопоставляющий название предметов и их коды)
         :param codes: dict { str : str } - Dictionary with item codes
@@ -624,6 +624,17 @@ class CW3API:
             if eq.type not in ["k", "r"]:
                 equipment.append(eq.to_json())
 
+
+            # count = stock.get(code, 0)
+            # for i in range(count):
+            #     try:
+            #         eq: Equipment = lst.pop()
+            #     except IndexError:
+            #         logging.error("Empty equipment list: {}".format(code))
+            #         break
+            #     eq.set_code(code)
+            #     if eq.type not in ["k", "r"]:
+            #         equipment.append(eq.to_json())
 
     #
 
