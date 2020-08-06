@@ -204,6 +204,7 @@ texts_translate = {
 
     "Квест выполнен.": "Quest completed.",
     "Ежедневные квесты:": "Daily quests:",
+    "Все ежедневные квесты выполнены.": "All daily quests completed.",
     "Выиграть <b>(\\d+)</b> арены": "Win <b>{}</b> arenas",
     "Собрать в квестах": "Collect in quests",
     "человека со статусом": "players with status",

@@ -545,7 +545,7 @@ class CW3API:
                         logging.error("Can not remove guild api access: {}".format(traceback.format_exc()))
                 return
             # print(body)
-            # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
+            # print(json.dumps(body, indent=4, ensure_ascii=False))
             name, glory, lvl, members, stock_size, stock_limit, \
                 tag, castle = payload.get("name"), payload.get("glory"), payload.get("level"), \
                 payload.get("members"),  payload.get("stockSize"), payload.get("stockLimit"), \
