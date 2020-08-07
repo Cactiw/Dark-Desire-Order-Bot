@@ -109,7 +109,7 @@ def send_withdraw(bot, update, *args):
                 potions = potions_dict.get(string)
                 if potions is None:
                     if string not in list(resources) and string not in list(equipment_names) and string not in \
-                            list(resources_reverted) and re.match("[rk]\\d\\d?", string) is None:
+                            list(resources_reverted) and re.match("[rkp]\\d\\d?", string) is None:
                         mode = "name"
                         continue
                     names = [string]  # Список из имён, к которым далее следует количество для выдачи
