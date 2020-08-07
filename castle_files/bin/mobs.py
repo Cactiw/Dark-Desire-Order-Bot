@@ -388,7 +388,8 @@ def fight_club(bot, update):
             cur_player = Player.get_player(player_id)
             if cur_player is None:
                 continue
-            if cur_player.settings.get("pretend") and cur_player.lvl in range(lvl - 5, lvl + 11):
+            if cur_player.settings.get("pretend") and cur_player.lvl in range(lvl - 5, lvl + 11) and \
+                    player.username not in ping:
                 ping.append(player.username)
             if len(ping) >= 4:
                 text = "Подпольный бой!\n"
