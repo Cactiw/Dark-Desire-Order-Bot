@@ -188,11 +188,13 @@ def fill_triggers_lists():
 def fill_triggers_ignore():
     ignore_global_triggers.clear()
     request = "select date, additional_info from castle_logs where action ilike " \
-              "'reward_castle_disable_global_triggers%'"
+              "'reward_castle_disable_global_triggers%' order by date"
     cursor.execute(request)
     for row in cursor.fetchall():
         chat_id = row[1].get("chat_id")
         end_time = row[0] + datetime.timedelta(hours=row[1].get("period"))
+        if end_time < datetime.datetime.now():
+            continue
         ignore_global_triggers.update({int(chat_id): end_time})
     print(ignore_global_triggers)
 
