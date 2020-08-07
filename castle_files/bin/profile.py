@@ -464,7 +464,8 @@ def hero(bot, update, user_data):
     print(forward_message_date)
     if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30) and \
             mes.from_user.id not in urned_players:
-        bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
+        bot.send_message(chat_id=mes.chat_id, text="Этот профиль старше 30 секунд. Пришли актуальный профиль!",
+                         reply_to_message_id=mes.message_id)
         return
     # Парсинг хиро
     guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
@@ -642,7 +643,8 @@ def add_class_from_player(bot, update):
         return
     forward_message_date = get_forward_message_time(mes)
     if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30):
-        bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
+        bot.send_message(chat_id=mes.chat_id, text="Этот профиль старше 30 секунд. Пришли актуальный профиль!",
+                         reply_to_message_id=mes.message_id)
         return
     game_class = re.search("🖤{} (\\w+) Скалы".format(re.escape(player.nickname)), mes.text)
     if game_class is None:
