@@ -192,6 +192,7 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
     response += "🏅: <code>{}</code>, 🔥: <code>{}</code> ⚔: <code>{}</code>, 🛡: <code>{}</code>" \
                 "\n".format(player.lvl, player.exp or "???", player.attack, player.defense)
     response += ("👝: {}, ".format(player.pogs) if player.pogs is not None else "") + \
+                ("💧: {}, ".format(player.mana) if player.mana else "") + \
         "🔘: <code>{}</code>\n".format(player.reputation)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
     response += "Гильдия: {} | {}🔋\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет",
