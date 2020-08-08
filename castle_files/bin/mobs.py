@@ -193,24 +193,31 @@ def mob(bot, update):
                         minus, plus = get_suitable_lvls(mes.text)
                         ping = []
                         for pl_id in ping_list:
+                            if pl_id == mes.from_user.id:
+                                continue
                             pl = Player.get_player(pl_id)
                             if avg_lvl - minus <= pl.lvl <= avg_lvl + plus:
-                                on = pl.settings.get("mobs_notify")
-                                if on is None:
-                                    on = True
-                                if on and pl.id != mes.from_user.id:
-                                    ping.append(pl.username)
+                                on = pl.settings.get("mobs_notify",True)
+                                if on:
+                                    if pl.username is None:
+                                        ping.append("[{}](tg://user?id={})".format(pl.nickname,pl_id))
+                                    else:
+                                        ping.append("@{} ".format(pl.username))
                         if ping:
-                            text = "Мобы!\n"
-                            for username in ping:
-                                text += "@{} ".format(username)
-                                ping_count += 1
-                                if ping_count >= PING_LIMIT:
-                                    bot.send_message(chat_id=mes.chat_id, text=text)
-                                    text = "Мобы!\n"
-                                    ping_count = 0
-                            if text != "Мобы!\n":
-                                bot.send_message(chat_id=mes.chat_id, text=text)
+                            for i in range(0, len(ping), PING_LIMIT):
+                                text = "Мобы!\n"
+                                text += "".join(ping[i:i + PING_LIMIT])
+                                bot.send_message(chat_id=mes.chat_id, text=text,parse_mode = "Markdown")
+
+                            #for username in ping:
+                            #    text += username
+                             #   ping_count += 1
+                            #    if ping_count >= PING_LIMIT:
+                             #       bot.send_message(chat_id=mes.chat_id, text=text)
+                             #       text = "Мобы!\n"
+                             #       ping_count = 0
+                            #if text != "Мобы!\n":
+                            #    bot.send_message(chat_id=mes.chat_id, text=text)
         threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link,
                                                                     forward_message_date)).start()
     return
