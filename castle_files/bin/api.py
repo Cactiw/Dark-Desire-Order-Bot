@@ -527,8 +527,6 @@ def autospend_gold(bot, update):
         return
     return
 
-    parse = re.search(" (.*) (\\d+)")
-
 
 def grassroots_update_players(bot, job):
     """

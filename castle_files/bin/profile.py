@@ -115,8 +115,6 @@ def castle_chat_check(message):
         player = Player.get_player(user.id)
         if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
             return False
-        if player is None:
-            return True
         if player is None or player.castle != '🖤':
             return True
     return False
@@ -129,14 +127,13 @@ def remove_players_from_chat(bot, update):
     else:
         users = [message.from_user]
     for user in users:
-        user_id = user.id
         player = Player.get_player(user.id)
         if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
             return
         if player is None or player.castle != '🖤':
             try:
                 text = "Этот чат только для игроков 🖤Скалы"
-                bot.kickChatMember(chat_id=message.chat_id, user_id=user_id)
+                bot.kickChatMember(chat_id=message.chat_id, user_id=user.id)
                 bot.send_message(chat_id=message.chat_id,
                                  text=text, parse_mode='HTML')
             except TelegramError:
@@ -150,8 +147,7 @@ def set_castle_chat(bot, update):
     if mes.chat_id == mes.from_user.id:
         bot.send_message(chat_id=mes.chat_id, text="Команда запрещена в ЛС")
         return
-    on = 'on' in update.message.text
-    if on:
+    if 'on' in update.message.text:
         if mes.chat_id in castle_chats:
             bot.send_message(chat_id=mes.chat_id, text="Чат уже установлен как замковый")
             return
@@ -444,9 +440,11 @@ def hero(bot, update, user_data):
     text = mes.text
     castle = re.search("([🍁☘️🖤🐢🦇🌹🍆🎖]+)(.+)", text)
     nickname = castle.group(2)
+    if "[" in nickname and nickname.startswith("[") is False:
+        nickname = nickname[1:]
     castle = castle.group(1)
-    if castle != '🖤':
-        pass
+    #if castle != '🖤':
+    #    pass
         # Игрок не из Скалы
         # bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
         # return
@@ -467,7 +465,7 @@ def hero(bot, update, user_data):
         bot.send_message(chat_id=mes.chat_id, text="Это устаревший профиль.", reply_to_message_id=mes.message_id)
         return
     # Парсинг хиро
-    guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
+    guild_tag = re.search("\\[(.+)\\]", text)
     if guild_tag:
         guild_tag = guild_tag.group(1)
     lvl = int(re.search("🏅Уровень: (\\d+)", text).group(1))
