@@ -649,13 +649,15 @@ def list_players(bot, update, guild_id=None):
                 else:
                     api_text = "📎"
         rp1, rp2, rp3 = player.get_reports_count()
-        response_new = "{}<b>{}</b> @{} {}\n🔥<code>{}</code>,🏅<code>{}{}{}\n⚔{}, 🛡{}, " \
+        response_new = "{}<b>{}</b> @{} {}\n🔥<code>{}</code>,🏅<code>{}{}{}\n⚔{}, 🛡{}{}, " \
                        "🎖{}/{}</code>" \
                        "".format(classes_to_emoji.get(player.game_class) or "", player.nickname, player.username,
                                  api_text, player.exp, player.lvl,
                                  ", 👝{}".format(player.pogs) if player.pogs is not None else "",
                                  ", 💧{}".format(player.mana) if player.mana else "",
-                                 player.attack, player.defense, rp1, rp2)
+                                 player.attack, player.defense,
+                                 ", ❤{}".format(player.hp) if player.hp else "",
+                                 rp1, rp2)
         if high_access:
             response_new += "\nПоказать профиль: /view_profile_{}" \
                        "".format(player.id)
