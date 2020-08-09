@@ -249,6 +249,7 @@ cloaks = [
     Equipment("cloaks", "a", "102", "Stoneskin Cloak", 3, 6, 4),
 ]
 
+#почему не список?
 equipment = {
     "main_hand": main_hand,
     "second_hand": second_hand,
@@ -265,10 +266,15 @@ equipment_names = {}
 
 
 def fill_names():
-    eq_list = list(equipment.values())
-    for lst in eq_list:
+    for lst in equipment.values():
         for eq in lst:
-            equipment_names.update({eq.name.lower(): "{}{}".format(eq.type, eq.code)})
+            #или отдельно разделить? хз хз
+            equipment_names.update(
+                {
+                    eq.name.lower(): eq,
+                    "{}{}".format(eq.type, eq.code) :eq
+                }
+            )
 
 
 fill_names()
@@ -277,37 +283,40 @@ fill_names()
 def get_equipment_by_code(code):
     if code is None:
         return None
-    eq_type = code[0]
-    eq_code = code[1:]
-    eq_list = list(equipment.values())
-    for lst in eq_list:
-        for eq in lst:
-            if eq.code == eq_code and eq.type == eq_type:
-                return copy.deepcopy(eq)
-    return None
+    return copy.deepcopy(equipment_names.get(code,None))
+    #eq_type = code[0]
+    #eq_code = code[1:]
+    #eq_list = list(equipment.values())
+    #for lst in eq_list:
+    #    for eq in lst:
+    #        if eq.code == eq_code and eq.type == eq_type:
+    #            return copy.deepcopy(eq)
+    #return None
 
 
 def get_equipment_by_name(eq_name):
     search_name = eq_name.lower()
     if any(i in search_name for i in frozenset(["recipe", "shaft", "part", "blade", "fragment", "piece", "head"])):
-        return None
-    names_list = list(equipment_names.items())
-    code = None
-    for name, item_code in names_list:
-        if name in search_name:
-            code = item_code
-            break
-    eq = get_equipment_by_code(code)
-    if eq is not None:
-        eq.name = eq_name
-    return eq
+       return None
+    return copy.deepcopy(equipment_names.get(search_name, None))
+    #names_list = list(equipment_names.items())
+    #code = None
+    #for name, item_code in names_list:
+    #    if name in search_name:
+    #        code = item_code
+    #        break
+    #eq = get_equipment_by_code(code)
+    #if eq is not None:
+    #    eq.name = eq_name
+    #return eq
 
 
 def search_equipment_by_name(eq_name):
     eq_name = eq_name.lower()
-    found = []
-    names_list = list(equipment_names.items())
-    for name, item_code in names_list:
-        if eq_name in name:
-            found.append(get_equipment_by_code(item_code))
-    return found
+    return [value for key,value in equipment_names.items() if eq_name in key]
+    #found = []
+    #names_list = list(equipment_names.items())
+    #for name, item_code in names_list:
+    #    if eq_name in name:
+    #        found.append(get_equipment_by_code(item_code))
+    #return found
