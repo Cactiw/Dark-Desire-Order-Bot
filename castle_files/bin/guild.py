@@ -671,6 +671,49 @@ def list_players(bot, update, guild_id=None):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
 
+def stat_top(bot, update):
+    stats_emoji = {
+        "gold": "💰",
+        "mana": "💧",
+        "hp": "❤️",
+        "attack": "⚔️",
+        "defense": "🛡",
+        "exp": "🔥",
+        "lvl": "🏅",
+        "pogs": "👝",
+        "stamina": "🔋",
+    }
+    short_stats = {
+        "atk": "attack",
+        "def": "defense",
+        "level": "lvl",
+        "experience": "exp",
+    }
+    parse = re.search("/g_(\\w+)", update.message.text)
+    if parse is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
+        return
+    stat = parse.group(1)
+    stat = short_stats.get(stat, stat)
+    requested_player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(requested_player.guild)
+    if guild is None:
+        bot.send_message(chat_id=update.message.chat_id, text="Команда доступна только для игроков в гильдии.")
+        return
+    if not hasattr(requested_player, stat):
+        bot.send_message(chat_id=update.message.chat_id, text="Такой аттрибут не найден.")
+        return
+    sorted_players = sorted(guild.get_members(), key=lambda pl: getattr(pl, stat), reverse=True)
+    response = "{}:\n".format(guild.format())
+    for player in sorted_players:
+        cur_stat = getattr(player, stat)
+        if cur_stat:
+            response += "{} <code>{}</code> {} {}{}\n".format(
+                classes_to_emoji.get(player.game_class), player.lvl, player.pure_nickname,
+                stats_emoji.get(stat, ""), cur_stat)
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
+
+
 # Функция для принудительного удаления игрока из гильдии
 def remove_player(bot, update):
     mes = update.message

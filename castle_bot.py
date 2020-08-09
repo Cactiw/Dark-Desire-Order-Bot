@@ -68,7 +68,7 @@ from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commande
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
     cancel_delete_guild, add_assistant, del_assistant, assistants, guild_reports, guild_setting, edit_guild_setting, \
     guild_commanders, g_info, guild_repair, guilds, guilds_division_change_page, edit_guild_inline, \
-    inline_edit_guild_division, leave_guild_confirm
+    inline_edit_guild_division, leave_guild_confirm, stat_top
 from castle_files.bin.equipment import guild_equipment, change_guild_equipment_param
 from castle_files.bin.guild_chats import notify_guild_attack, notify_guild_to_battle, parse_stats, mute, unrestrict, \
     send_message_to_chat, guild_top_battles, show_worldtop
@@ -379,6 +379,7 @@ def castle_bot_processing():
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
+    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/g_\\w+"), stat_top))
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_view_profile, view_profile))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_player, remove_player))
