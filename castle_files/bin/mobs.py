@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor, mobs_messages, mobs_lock, \
-    dispatcher, conn
+    dispatcher, conn, ping_messages
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.libs.player import Player
@@ -201,19 +201,39 @@ def mob(bot, update):
                                 if on and pl.id != mes.from_user.id:
                                     ping.append(pl.username)
                         if ping:
-                            text = "Мобы!\n"
-                            for username in ping:
-                                text += "@{} ".format(username)
-                                ping_count += 1
-                                if ping_count >= PING_LIMIT:
-                                    bot.send_message(chat_id=mes.chat_id, text=text)
-                                    text = "Мобы!\n"
-                                    ping_count = 0
-                            if text != "Мобы!\n":
-                                bot.send_message(chat_id=mes.chat_id, text=text)
-        threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link,
-                                                                    forward_message_date)).start()
+                            threading.Thread(target=send_notify, args=(link, mes.chat_id, ping)).start()
+
+        threading.Thread(target=send_mob_message_and_start_updating,
+                         args=(bot, mes, player, response, buttons, is_pm, link, forward_message_date)).start()
     return
+
+
+def send_notify(link, chat_id, ping):
+    ping_count = 0
+    text = "Мобы!\n"
+
+    with mobs_lock:
+        messages = ping_messages.get(link)
+        if messages is None:
+            messages = []
+            ping_messages.update({link: messages})
+
+    for username in ping:
+        text += "@{} ".format(username)
+        ping_count += 1
+        if ping_count >= PING_LIMIT:
+            # Ну походу надо Promise реализовывать, ибо тут лимиты не будут соблюдаться,
+            # но вроде пока пользуюся не активно, можно попозже сделать
+            mes = dispatcher.bot.sync_send_message(chat_id=chat_id, text=text)
+            with mobs_lock:
+                messages.append(mes)
+            text = "Мобы!\n"
+            ping_count = 0
+    if text != "Мобы!\n":
+        mes = dispatcher.bot.sync_send_message(chat_id=chat_id, text=text)
+        with mobs_lock:
+            messages.append(mes)
+
 
 
 def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link, forward_message_date):
@@ -277,8 +297,12 @@ def update_mobs_messages_by_link(link, force_update=False):
         return
     text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
     if remaining_time < datetime.timedelta(0):
+        delete_messages = ping_messages.get(link)
+        delete_expired_pings(delete_messages)
         with mobs_lock:
             mobs_messages.pop(link)
+            if delete_messages:
+                ping_messages.pop(link)
         force_update = True
     for mes_info in lst:
         chat_id, message_id, cw_send_time, access,\
@@ -295,6 +319,11 @@ def update_mobs_messages_by_link(link, force_update=False):
                 logging.warning("Got TimeoutError while updating mobs message, sleeping...")
                 time.sleep(1)
             mes_info.update({"last_update_time": time.time()})
+
+
+def delete_expired_pings(messages: list):
+    for message in messages:
+        dispatcher.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
 
 
 def get_helpers_text(helpers):

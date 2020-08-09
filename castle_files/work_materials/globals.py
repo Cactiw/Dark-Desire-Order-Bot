@@ -82,6 +82,7 @@ castle_chats = []
 
 mobs_lock = threading.Lock()
 mobs_messages: {str: [{}]} = {}
+ping_messages: {str: []} = {}
 
 allowed_list = []
 
