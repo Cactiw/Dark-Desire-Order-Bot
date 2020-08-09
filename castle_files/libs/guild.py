@@ -140,6 +140,11 @@ class Guild:
             return default
         return self.api_info.get("stock", default)
 
+    def get_members(self) -> [Player]:
+        return list(map(lambda player_id: Player.get_player(player_id), self.members))
+
+    def format(self) -> str:
+        return "{}{}".format(self.castle or "", self.tag or self.name)
 
     # Метод для добавления игрока в гильдию
     def add_player(self, player_to_add):
