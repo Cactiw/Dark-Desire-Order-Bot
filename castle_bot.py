@@ -379,7 +379,6 @@ def castle_bot_processing():
 
     # Хендлеры для команд гильдий
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_guild, guild_info))
-    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/g_\\w+"), stat_top))
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_view_profile, view_profile))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_remove_player, remove_player))
@@ -408,6 +407,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('view_academy', guild_info))
 
     dispatcher.add_handler(CommandHandler('g_info', g_info))
+    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/g_\\w+"), stat_top))
     dispatcher.add_handler(CommandHandler('guild_commanders', guild_commanders))
 
     # dispatcher.add_handler(CommandHandler('d2', drop_table))
