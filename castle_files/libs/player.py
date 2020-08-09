@@ -94,6 +94,10 @@ class Player:
             self.count_reports()
         return [self.__current_reports_count, self.__previous_reports_count, self.__total_reports_count]
 
+    @property
+    def pure_nickname(self):
+        return self.nickname.partition("]")[2]
+
 
     def check_vote_ability(self):
         """
