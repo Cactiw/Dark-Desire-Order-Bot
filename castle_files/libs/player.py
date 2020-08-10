@@ -105,7 +105,7 @@ class Player:
 
     def format_mobs_stats(self, forward_message_date: datetime.datetime, view_nickname: bool = True):
         if view_nickname:
-            return "{}❤ {}🏅 {}{}".format(
+            return "❤{} 🏅{} {}{}".format(
                 self.hp if self.hp is not None and self.last_updated > forward_message_date else "❔", self.lvl,
                 self.class_emoji, self.pure_nickname)
         else:
