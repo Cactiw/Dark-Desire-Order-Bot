@@ -324,7 +324,10 @@ def update_mobs_messages_by_link(link, force_update=False):
 def delete_expired_pings(messages: list):
     if messages:
         for message in messages:
-            dispatcher.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
+            try:
+                dispatcher.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
+            except Exception:
+                logging.warning("Can not delete mobs ping message: {}".format(traceback.format_exc()))
 
 
 def get_helpers_text(helpers):
