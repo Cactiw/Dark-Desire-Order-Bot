@@ -33,7 +33,8 @@ PING_LIMIT = 4
 MOBS_UPDATE_INTERVAL_SECS = 10
 
 
-def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, created_player_id):
+def get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_message_date, buffs, minutes,
+                              created_player_id):
     created_player = Player.get_player(player_id=created_player_id, notify_on_error=False)
     response = "{}Обнаруженные мобы{}:\n".format(created_player.castle if created_player is not None else "",
                                                  ", засада!" if minutes == 5 else "")
@@ -51,7 +52,8 @@ def get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, b
     avg_lvl = (avg_lvl / len(lvls)) if not champion else max(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
-    response += "\n" + get_player_stats_text(created_player, forward_message_date)
+    ping = get_chat_helpers(chat_id, created_player)
+    response += "\n" + get_player_stats_text(created_player, forward_message_date, ping)
 
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     remaining_time = datetime.timedelta(minutes=minutes) - (now - forward_message_date)
@@ -78,9 +80,10 @@ def get_mobs_info_by_link(link):
     return row
 
 
-def get_mobs_text_by_link(link):
+def get_mobs_text_by_link(link, chat_id):
     mobs, lvls, forward_message_date, helpers, buffs, minutes, player_id = get_mobs_info_by_link(link)
-    response = get_mobs_text_and_buttons(link, mobs, lvls, helpers, forward_message_date, buffs, minutes, player_id)
+    response = get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_message_date, buffs, minutes,
+                                         player_id)
     return response
 
 
@@ -89,6 +92,28 @@ def get_suitable_lvls(text):
     if "⚜️Forbidden Champion" in text:
         champion = True
     return (5 if not champion else 18), (7 if not champion else -8)
+
+
+def get_chat_helpers(chat_id: int, player: Player) -> ['Player']:
+    if chat_id is None:
+        return []
+    barracks = Location.get_location(1)
+    try:
+        ping_list = barracks.special_info.get("mobs_notify").get(str(chat_id)).copy()
+    except Exception:
+        ping_list = None
+    if not ping_list:
+        ping_list = []
+    ping_list = set(ping_list)
+    if player.guild is not None or ping_list:
+        guild = Guild.get_guild(guild_id=player.guild)
+        if guild.is_academy() and chat_id == guild.chat_id:
+            # Пинги для академки отключены
+            return
+        if guild is not None and guild.chat_id == chat_id:
+            ping_list.update(guild.members)
+    ping_list.discard(player.id)
+    return list(map(lambda player_id: Player.get_player(player_id), list(ping_list)))
 
 
 def mob(bot, update):
@@ -117,6 +142,8 @@ def mob(bot, update):
         forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
     except Exception:
         forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
+    # forward_message_date = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) - datetime.timedelta(
+    #     minutes=2, seconds=30)  # Test only
     request = "insert into mobs(link, mob_names, mob_lvls, date_created, created_player, on_channel, buffs, " \
               "minutes) values (" \
               "%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -139,7 +166,7 @@ def mob(bot, update):
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
     minutes = 5 if 'ambush' in mes.text else 3
-    response, buttons, avg_lvl, remaining_time = get_mobs_text_and_buttons(link, names, lvls, helpers,
+    response, buttons, avg_lvl, remaining_time = get_mobs_text_and_buttons(mes.chat_id, link, names, lvls, helpers,
                                                                            forward_message_date, buffs, minutes,
                                                                            mes.from_user.id)
     player = Player.get_player(mes.from_user.id)
@@ -153,7 +180,7 @@ def mob(bot, update):
         #     pass
         else:
             threading.Thread(target=send_mob_message_and_start_updating(bot, mes, player, response, buttons,
-                                                                        is_pm, link, forward_message_date)).start()
+                                                                        is_pm, link, forward_message_date, [])).start()
             bot.send_message(chat_id=mes.chat_id, parse_mode='HTML',
                              text="Отправлено на <a href=\"https://t.me/mobs_skala_cw3\">канал</a>, а также в "
                                   "<a href=\"https://t.me/CwMobsNotifyBot\">бота</a>. Спасибо!")
@@ -173,38 +200,23 @@ def mob(bot, update):
                 logging.error(traceback.format_exc())
     else:
         if remaining_time > datetime.timedelta(0):
-            ping_count = 0
             if not is_pm:
-                barracks = Location.get_location(1)
-                try:
-                    ping_list = barracks.special_info.get("mobs_notify").get(str(mes.chat_id)).copy()
-                except Exception:
-                    ping_list = None
-                if not ping_list:
-                    ping_list = []
-                if player.guild is not None or ping_list:
-                    guild = Guild.get_guild(guild_id=player.guild)
-                    if guild.is_academy() and mes.chat_id == guild.chat_id:
-                        # Пинги для академки отключены
-                        return
-                    if guild is not None and guild.chat_id == mes.chat_id:
-                        ping_list += guild.members
-                    if ping_list:
-                        minus, plus = get_suitable_lvls(mes.text)
-                        ping = []
-                        for pl_id in ping_list:
-                            pl = Player.get_player(pl_id)
-                            if avg_lvl - minus <= pl.lvl <= avg_lvl + plus:
-                                on = pl.settings.get("mobs_notify")
-                                if on is None:
-                                    on = True
-                                if on and pl.id != mes.from_user.id:
-                                    ping.append(pl.username)
-                        if ping:
-                            threading.Thread(target=send_notify, args=(link, mes.chat_id, ping)).start()
+                ping_list = get_chat_helpers(mes.chat_id, player)
+                if ping_list:
+                    minus, plus = get_suitable_lvls(mes.text)
+                    ping = []
+                    for pl in ping_list:
+                        if avg_lvl - minus <= pl.lvl <= avg_lvl + plus:
+                            on = pl.settings.get("mobs_notify")
+                            if on is None:
+                                on = True
+                            if on and pl.id != mes.from_user.id:
+                                ping.append(pl.username)
+                    if ping:
+                        threading.Thread(target=send_notify, args=(link, mes.chat_id, ping)).start()
 
         threading.Thread(target=send_mob_message_and_start_updating,
-                         args=(bot, mes, player, response, buttons, is_pm, link, forward_message_date)).start()
+                         args=(bot, mes, player, response, buttons, is_pm, link, forward_message_date, ping)).start()
     return
 
 
@@ -236,7 +248,7 @@ def send_notify(link, chat_id, ping):
 
 
 
-def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link, forward_message_date):
+def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_pm, link, forward_message_date, ping):
     if is_pm:
         chat_id = MOB_CHAT_ID
     else:
@@ -260,19 +272,22 @@ def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_
                     "cw_send_time": forward_message_date.timestamp(), "access": access,
                     "last_update_time": time.time()})
     if access:
+        for pl in ping:
+            if pl.has_api_access:
+                cwapi.update_player(player_id=pl.id, player=pl)
         player.api_info.update({"mobs_link": link})
         player.update()
         cwapi.update_player(player_id=player.id, player=player)
 
 
-def get_player_stats_text(player: Player, forward_message_date):
+def get_player_stats_text(player: Player, forward_message_date, ping):
     if player is None or player.api_info.get("token") is None:
         return ""
-    response = "🏅: {} ⚔: {} ❤: {} {}\n".format(
-        player.lvl, player.attack,
-        player.hp if player.hp is not None and player.last_updated > forward_message_date else "❔",
-        "/ {}".format(player.max_hp) if player.max_hp is not None and
-        player.last_updated > forward_message_date else "",)
+    response = "Отправивший игрок:\n{}\n".format(player.format_mobs_stats(forward_message_date), bool(ping))
+    if ping:
+        response += "\nПодходящие игроки чата:\n"
+        for player in ping:
+            response += "{}\n".format(player.format_mobs_stats(forward_message_date))
     return response
 
 
@@ -295,7 +310,7 @@ def update_mobs_messages_by_link(link, force_update=False):
     lst = mobs_messages.get(link)
     if not lst:
         return
-    text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link)
+    text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link, None)
     if remaining_time < datetime.timedelta(0):
         delete_messages = ping_messages.get(link)
         delete_expired_pings(delete_messages)
@@ -308,6 +323,7 @@ def update_mobs_messages_by_link(link, force_update=False):
         chat_id, message_id, cw_send_time, access,\
             last_update_time = mes_info.get("chat_id"), mes_info.get("message_id"), \
             mes_info.get("cw_send_time"), mes_info.get("access"), mes_info.get("last_update_time")
+        text, buttons, avg_lvl, remaining_time = get_mobs_text_by_link(link, chat_id)
 
         if force_update or now - last_update_time >= MOBS_UPDATE_INTERVAL_SECS:
             try:
@@ -359,7 +375,7 @@ def mob_help(bot, update):
     else:
         helpers.append(update.callback_query.from_user.username)
     minutes = 5 if 'засада' in mes.text else 3
-    response, buttons, avg_lvl, remailing_time = get_mobs_text_and_buttons(link, names, lvls, helpers,
+    response, buttons, avg_lvl, remailing_time = get_mobs_text_and_buttons(mes.chat_id, link, names, lvls, helpers,
                                                                            forward_message_date, buffs, minutes,
                                                                            player_id)
 

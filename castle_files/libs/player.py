@@ -1,7 +1,7 @@
 """
 В этом модуле объявляется класс Player - класс, хранящий все данных о конкретном игроке.
 """
-from castle_files.work_materials.globals import conn, dispatcher, HOME_CASTLE
+from castle_files.work_materials.globals import conn, dispatcher, HOME_CASTLE, classes_to_emoji
 from castle_files.work_materials.equipment_constants import get_equipment_by_code
 from castle_files.bin.service_functions import count_week_by_battle_id, count_battle_id
 
@@ -13,6 +13,7 @@ from psycopg2 import ProgrammingError
 import logging
 import json
 import time
+import datetime
 
 from multiprocessing import Queue
 
@@ -98,6 +99,25 @@ class Player:
     def pure_nickname(self):
         return self.nickname.partition("]")[2]
 
+    @property
+    def class_emoji(self):
+        return classes_to_emoji.get(self.game_class, '❔')
+
+    def format_mobs_stats(self, forward_message_date: datetime.datetime, view_nickname: bool = True):
+        if view_nickname:
+            return "{}❤ {}🏅 {}{}".format(
+                self.hp if self.hp is not None and self.last_updated > forward_message_date else "❔", self.lvl,
+                self.class_emoji, self.pure_nickname)
+        else:
+            return "🏅: {} ⚔: {} ❤: {} {}".format(
+                self.lvl, self.attack,
+                self.hp if self.hp is not None and self.last_updated > forward_message_date else "❔",
+                "/ {}".format(self.max_hp) if self.max_hp is not None and
+                self.last_updated > forward_message_date else "",)
+
+    @property
+    def has_api_access(self):
+        return self.api_info.get("token") is not None
 
     def check_vote_ability(self):
         """
