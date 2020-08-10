@@ -133,7 +133,7 @@ def get_chat_helpers(chat_id: int, minus, plus, avg_lvl: float, player: Player) 
     ping_list.discard(player.id)
     ping_list = list(filter(lambda player: avg_lvl - minus <= player.lvl <= avg_lvl + plus,
                             map(lambda player_id: Player.get_player(player_id), list(ping_list))))
-    ping_list.sort(key=lambda player: player.hp, reverse=True)
+    ping_list.sort(key=lambda player: player.hp if player.hp is not None else -1, reverse=True)
     return ping_list
 
 
