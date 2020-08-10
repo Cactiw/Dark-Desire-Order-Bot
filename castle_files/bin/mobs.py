@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor, mobs_messages, mobs_lock, \
-    dispatcher, conn, ping_messages
+    dispatcher, conn, ping_messages, classes_to_emoji
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.libs.player import Player
@@ -71,6 +71,23 @@ def get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_messag
     return [response, InlineKeyboardMarkup(buttons), avg_lvl, remaining_time]
 
 
+def get_mob_emoji(mob_name: str) -> str:
+    emojis = {
+        "Wolf": "🐺",
+        "Bear": "🐻",
+        "Boar": "🐗",
+    }
+    mob_class = re.search("forbidden (\\w+)", mob_name.lower())
+    if mob_class is not None and not "⚜️Forbidden Champion" in mob_name:
+        return classes_to_emoji.get(mob_class.group(1).capitalize(), '')
+    for mob_class, emoji in list(emojis.items()):
+        if mob_class in mob_name:
+            return emoji
+    return ''
+
+
+
+
 def get_mobs_info_by_link(link):
     cursor = conn.cursor()
     request = "select mob_names, mob_lvls, date_created, helpers, buffs, minutes, created_player from mobs where link = %s"
@@ -113,10 +130,8 @@ def get_chat_helpers(chat_id: int, minus, plus, avg_lvl: float, player: Player) 
         if guild is not None and guild.chat_id == chat_id:
             ping_list.update(guild.members)
     ping_list.discard(player.id)
-    ping_list = list(map(lambda player_id: Player.get_player(player_id), list(ping_list)))
-    for player in ping_list:
-        if not (avg_lvl - minus <= player.lvl <= avg_lvl + plus):
-            ping_list.remove(player)
+    ping_list = list(filter(lambda player: avg_lvl - minus <= player.lvl <= avg_lvl + plus,
+                            map(lambda player_id: Player.get_player(player_id), list(ping_list))))
     return ping_list
 
 
