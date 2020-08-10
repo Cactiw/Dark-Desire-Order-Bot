@@ -322,8 +322,9 @@ def update_mobs_messages_by_link(link, force_update=False):
 
 
 def delete_expired_pings(messages: list):
-    for message in messages:
-        dispatcher.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
+    if messages:
+        for message in messages:
+            dispatcher.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
 
 
 def get_helpers_text(helpers):
