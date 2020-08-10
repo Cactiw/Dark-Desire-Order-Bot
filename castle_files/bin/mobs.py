@@ -52,7 +52,8 @@ def get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_messag
     avg_lvl = (avg_lvl / len(lvls)) if not champion else max(lvls)
     if helpers:
         response += "\n" + get_helpers_text(helpers)
-    ping = get_chat_helpers(chat_id, created_player)
+    minus, plus = (5 if not champion else 18), (7 if not champion else -8)
+    ping = get_chat_helpers(chat_id, minus, plus, avg_lvl, created_player)
     response += "\n" + get_player_stats_text(created_player, forward_message_date, ping)
 
     now = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
@@ -62,7 +63,6 @@ def get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_messag
     else:
         response += "\nОсталось: <b>{}</b>".format("{:02d}:{:02d}".format(int(remaining_time.total_seconds() // 60),
                                                                           int(remaining_time.total_seconds() % 60)))
-    minus, plus = (5 if not champion else 18), (7 if not champion else -8)
     buttons = [[InlineKeyboardButton(text="⚔ {}-{}🏅".format(int(avg_lvl - minus), int(avg_lvl + plus)),
                                      url=u"https://t.me/share/url?url=/fight_{}".format(link)),
                 InlineKeyboardButton(text="🤝Помогаю!", callback_data="mob_partify_{}".format(link))]]
@@ -94,7 +94,7 @@ def get_suitable_lvls(text):
     return (5 if not champion else 18), (7 if not champion else -8)
 
 
-def get_chat_helpers(chat_id: int, player: Player) -> ['Player']:
+def get_chat_helpers(chat_id: int, minus, plus, avg_lvl: float, player: Player) -> ['Player']:
     if chat_id is None:
         return []
     barracks = Location.get_location(1)
@@ -113,7 +113,11 @@ def get_chat_helpers(chat_id: int, player: Player) -> ['Player']:
         if guild is not None and guild.chat_id == chat_id:
             ping_list.update(guild.members)
     ping_list.discard(player.id)
-    return list(map(lambda player_id: Player.get_player(player_id), list(ping_list)))
+    ping_list = list(map(lambda player_id: Player.get_player(player_id), list(ping_list)))
+    for player in ping_list:
+        if not (avg_lvl - minus <= player.lvl <= avg_lvl + plus):
+            ping_list.remove(player)
+    return ping_list
 
 
 def mob(bot, update):
@@ -199,19 +203,18 @@ def mob(bot, update):
             except Exception:
                 logging.error(traceback.format_exc())
     else:
+        ping = []
         if remaining_time > datetime.timedelta(0):
             if not is_pm:
-                ping_list = get_chat_helpers(mes.chat_id, player)
+                minus, plus = get_suitable_lvls(mes.text)
+                ping_list = get_chat_helpers(mes.chat_id, minus, plus, avg_lvl, player)
                 if ping_list:
-                    minus, plus = get_suitable_lvls(mes.text)
-                    ping = []
                     for pl in ping_list:
-                        if avg_lvl - minus <= pl.lvl <= avg_lvl + plus:
-                            on = pl.settings.get("mobs_notify")
-                            if on is None:
-                                on = True
-                            if on and pl.id != mes.from_user.id:
-                                ping.append(pl.username)
+                        on = pl.settings.get("mobs_notify")
+                        if on is None:
+                            on = True
+                        if on and pl.id != mes.from_user.id:
+                            ping.append(pl.username)
                     if ping:
                         threading.Thread(target=send_notify, args=(link, mes.chat_id, ping)).start()
 
