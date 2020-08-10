@@ -220,7 +220,7 @@ def mob(bot, update):
             except Exception:
                 logging.error(traceback.format_exc())
     else:
-        ping = []
+        ping, ping_list = [], []
         if remaining_time > datetime.timedelta(0):
             if not is_pm:
                 minus, plus = get_suitable_lvls(mes.text)
@@ -233,10 +233,10 @@ def mob(bot, update):
                         if on and pl.id != mes.from_user.id:
                             ping.append(pl.username)
                     if ping:
-                        threading.Thread(target=send_notify, args=(link, mes.chat_id, ping)).start()
+                        threading.Thread(target=send_notify, args=(link, mes.chat_id, ping_list)).start()
 
         threading.Thread(target=send_mob_message_and_start_updating,
-                         args=(bot, mes, player, response, buttons, is_pm, link, forward_message_date, ping)).start()
+                         args=(bot, mes, player, response, buttons, is_pm, link, forward_message_date, ping_list)).start()
     return
 
 
