@@ -704,7 +704,7 @@ def stat_top(bot, update):
     if not (filter_is_pm(update.message) or update.message.chat_id == guild.chat_id):
         return
     if not hasattr(requested_player, stat):
-        bot.send_message(chat_id=update.message.chat_id, text="Такой аттрибут не найден.")
+        # bot.send_message(chat_id=update.message.chat_id, text="Такой атрибут не найден.")
         return
     sorted_players = sorted(guild.get_members(), key=lambda pl: getattr(pl, stat), reverse=True)
     response = "{}:\n".format(guild.format())
