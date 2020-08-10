@@ -48,7 +48,7 @@ def get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_messag
             avg_lvl += lvl
         emoji = get_mob_emoji(name)
         response += "{}<b>{}</b> 🏅: <code>{}</code>\n{}".format(
-            emoji, name, lvl, "  ╰ {}\n".format(buffs[i]) if buffs[i] != "" else "")
+            emoji, name, lvl, "       ╰ {}\n".format(buffs[i]) if buffs[i] != "" else "")
 
     avg_lvl = (avg_lvl / len(lvls)) if not champion else max(lvls)
     if helpers:
