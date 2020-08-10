@@ -301,7 +301,7 @@ def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_
 def get_player_stats_text(player: Player, forward_message_date, ping):
     if player is None or player.api_info.get("token") is None:
         return ""
-    response = "Отправивший игрок:\n{}\n".format(player.format_mobs_stats(forward_message_date), bool(ping))
+    response = "Отправивший игрок:\n{}\n".format(player.format_mobs_stats(forward_message_date, bool(ping)))
     if ping:
         response += "\nПодходящие игроки чата:\n"
         for player in ping:
