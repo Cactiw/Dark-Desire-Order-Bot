@@ -15,6 +15,7 @@ from castle_files.bin.buttons import get_edit_guild_buttons, get_delete_guild_bu
 
 
 from castle_files.work_materials.globals import dispatcher, cursor, conn, SUPER_ADMIN_ID, classes_to_emoji
+from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from order_files.work_materials.pult_constants import divisions as divisions_const
 
@@ -699,6 +700,8 @@ def stat_top(bot, update):
     guild = Guild.get_guild(requested_player.guild)
     if guild is None:
         bot.send_message(chat_id=update.message.chat_id, text="Команда доступна только для игроков в гильдии.")
+        return
+    if not (filter_is_pm(update.message) or update.message.chat_id == guild.chat_id):
         return
     if not hasattr(requested_player, stat):
         bot.send_message(chat_id=update.message.chat_id, text="Такой аттрибут не найден.")
