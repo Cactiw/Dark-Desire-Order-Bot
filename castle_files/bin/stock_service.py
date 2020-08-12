@@ -11,12 +11,17 @@ import traceback
 
 def get_item_code_by_name(name):
     name = name.lower()
+    max_len = len(list(items.values())[-1])
     for num, elem in list(items.items()):
         if name == elem[1].lower():
             code = "k" + num
+            if len(elem) == max_len:
+                code = "k" + elem[-1]
             return code
         elif elem[0].lower() in name and "recipe" in name:
             code = "r" + num
+            if len(elem) == max_len:
+                code = "r" + elem[-2]
             return code
         else:
             continue
@@ -39,12 +44,21 @@ def get_item_name_by_code(code):
         item = resources_reverted.get(code)
         if item is not None:
             return item
-        if code[0] in ["k", "r"]:
+        if code[0] in {"k", "r"}:
             item = items.get(code[1:])
             if code[0] == 'k':
                 return item[1]
             if code[0] == 'r':
-                return item[0] + " recipe"
+                max_len = len(list(items.values())[-1])
+                if len(item) < max_len:
+                    return item[0] + " recipe"
+                for item_code, item in list(items.items()):
+                    if len(item) < max_len:
+                        if item_code == code[1:]:
+                            return item[0] + " recipe"
+                    else:
+                        if item[-2] == code[1:]:
+                            return item[0] + " recipe"
         if code[0] == "p":
             for name, potion in list(alch_recipes.items()):
                 if potion.get("code") == code:

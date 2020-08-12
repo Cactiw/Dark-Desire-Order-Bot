@@ -138,13 +138,7 @@ def send_withdraw(bot, update, *args):
                 name = parse.group(2)
                 code = resources.get(name)
             if code is None:
-                for num, elem in list(items.items()):
-                    if name.lower() == elem[1].lower():
-                        code = "k" + num
-                    elif elem[0].lower() in name.lower():
-                        code = "r" + num
-                    else:
-                        continue
+                code = get_item_code_by_name(name)
             if code is None:
                 continue
             give.update({code: count})
@@ -174,8 +168,11 @@ def guild_recipes(bot, update, user_data):
     mes = update.message
     user_recipes = {}
     for string in mes.text.splitlines()[1:]:
-        item_code = re.match("r\\S+", string).group()[1:]
-        item_count = int(re.search("x (\\d+)", string).group(1))
+        item = re.match("r(\\S+) (.+) x (\\d+)", string)
+        item_code = item.group(1)
+        item_name = item.group(2)
+        item_count = int(item.group(3))
+        item_code = get_item_code_by_name(item_name)[1:]
         user_recipes.update({item_code: item_count})
     user_data.update({"recipes": user_recipes})
     bot.send_message(chat_id=mes.chat_id, text="Отлично! Теперь пришли мне форвард /g_stock_parts из @ChatWarsBot")
@@ -328,13 +325,7 @@ def deposit(bot, update):
                 count = int(parse.group(3))
                 code = resources.get(res_name)
         if code is None:
-            for num, elem in list(items.items()):
-                if res_name == elem[1]:
-                    code = "k" + num
-                elif elem[0] in res_name:
-                    code = "r" + num
-                else:
-                    continue
+            code = get_item_code_by_name(res_name)
         if code is None:
             continue
         response += "<a href=\"https://t.me/share/url?url=/g_deposit {} {}\">{} x {}</a>\n".format(code, count,
@@ -708,8 +699,8 @@ def get_possible_text(stock, tier: int = None) -> str:
         eq = get_equipment_by_name(item[0])
         if eq is None:
             continue
-        parts_count = stock.get("k" + short_code, 0)
-        recipes_count = stock.get("r" + short_code, 0)
+        parts_count = stock.get("k" + short_code if len(item) < len(list(item.values())[-1]) else item[-1], 0)
+        recipes_count = stock.get("r" + short_code if len(item) < len(list(item.values())[-1]) else item[-2], 0)
         need_parts = max(0, item[2] - parts_count) + 1 - min(1, recipes_count)
         craft_count = min(recipes_count, parts_count // item[2])
         if eq is None:
