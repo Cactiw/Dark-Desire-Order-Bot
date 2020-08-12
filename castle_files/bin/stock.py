@@ -699,8 +699,8 @@ def get_possible_text(stock, tier: int = None) -> str:
         eq = get_equipment_by_name(item[0])
         if eq is None:
             continue
-        parts_count = stock.get("k" + short_code if len(item) < len(list(items.values())[-1]) else item[-1], 0)
-        recipes_count = stock.get("r" + short_code if len(item) < len(list(items.values())[-1]) else item[-2], 0)
+        parts_count = stock.get("k" + (short_code if len(item) < len(list(items.values())[-1]) else item[-1]), 0)
+        recipes_count = stock.get("r" + (short_code if len(item) < len(list(items.values())[-1]) else item[-2]), 0)
         need_parts = max(0, item[2] - parts_count) + 1 - min(1, recipes_count)
         craft_count = min(recipes_count, parts_count // item[2])
         if eq is None:
