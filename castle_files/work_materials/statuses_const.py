@@ -10,6 +10,8 @@ statuses = {
 
     1000: {"name": "🐿Матерь Кусек", "price": None, "unique": True},
     1001: {"name": "🐱Смущённая Киса", "price": None, "unique": True},
+
+    2001: {"name": "Pro-Gamer Скалы (08.20)", "price": None, "unique": True}
 }
 
 
