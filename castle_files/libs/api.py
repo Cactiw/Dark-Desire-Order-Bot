@@ -979,6 +979,7 @@ class CW3API:
         try:
             self.connect()
         except Exception:
+            logging.error("Exiting start_pika: {}".format(traceback.format_exc()))
             return
         for i in range(self.num_workers):
             worker = threading.Thread(target=self.__work)
@@ -999,7 +1000,7 @@ class CW3API:
             self.bot.send_message(chat_id=SUPER_ADMIN_ID, text="Невозможно запустить апи: {}\n"
                                                                "Выполняется повторное подключение".format(e))
             self.start_pika()
-            raise e
+            # raise e  # wtf?
         self.producer = self.connection.Producer(auto_declare=False)
         self.connecting = False
 
