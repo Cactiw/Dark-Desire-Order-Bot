@@ -5,7 +5,7 @@ from castle_files.libs.alliance import Alliance, AllianceResults
 from castle_files.libs.alliance_location import AllianceLocation
 
 from castle_files.bin.service_functions import get_time_remaining_to_battle, get_message_forward_time, \
-    get_message_and_player_id
+    get_message_and_player_id, get_current_datetime
 from castle_files.bin.buttons import get_alliance_inline_buttons
 
 from castle_files.work_materials.globals import dispatcher, cursor, job
@@ -17,6 +17,7 @@ import traceback
 import re
 import time
 import datetime
+import json
 
 from telegram import InlineKeyboardMarkup
 from functools import reduce, wraps
@@ -245,6 +246,9 @@ def add_alliance_location(bot, update):
         player.reputation += 250
         player.update()
         text += "\nПолучено: 250🔘"
+    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+    cursor.execute(request, (mes.from_user.id, "add_alliance_location", 1, get_current_datetime(),
+                             json.dumps({"link": link}, ensure_ascii=False)))
 
     bot.send_message(chat_id=mes.chat_id, text=text, reply_to_message_id=mes.message_id)
 
