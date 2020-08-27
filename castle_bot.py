@@ -633,7 +633,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('list_guilds', list_guilds))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_battle_stats, battle_stats))
 
-    dispatcher.add_handler(MessageHandler(Filters.all & filter_is_merc, unknown_input, pass_user_data=True))
+    # dispatcher.add_handler(MessageHandler(Filters.all & filter_is_merc, unknown_input, pass_user_data=True))
     dispatcher.add_handler(CommandHandler('create_guild', create_guild))
 
     dispatcher.add_handler(MessageHandler(Filters.command & filter_mailing_pin, mailing_pin))
