@@ -150,10 +150,12 @@ class CW3API:
         :param body: dict - Message body
         """
         try:
+            logging.info("Got shops message")
             shops = body
             self.api_info.update({"shops": shops})
             for shop in shops:
                 Shop.update_or_create_shop(shop)
+            logging.info("Saved shops")
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
             logging.error(traceback.format_exc())
