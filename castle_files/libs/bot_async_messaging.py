@@ -1,7 +1,7 @@
 from telegram import Bot
 from telegram.utils.request import Request
 from telegram.error import (TelegramError, Unauthorized, BadRequest,
-                            TimedOut, ChatMigrated, NetworkError)
+                            TimedOut, ChatMigrated, NetworkError, RetryAfter)
 
 from castle_files.libs.message_group import MessageGroup, message_groups, groups_need_to_be_sent, message_groups_locks
 from castle_files.work_materials.buttons_translate import buttons_translate
@@ -355,6 +355,12 @@ class AsyncBot(Bot):
                 logging.error(traceback.format_exc())
                 method = super(AsyncBot, self).send_message
             message = method(*args, **kwargs)
+        except RetryAfter:
+            time.sleep(1)
+            self.waiting_chats_message_queue.put(MessageInQueue(*args, **kwargs))
+            return
+        except Exception:
+            logging.error("Unknown exception in bot worker! {}".format(traceback.format_exc()))
         finally:
             body = {"chat_id": chat_id, "time": time.time()}
             self.second_reset_queue.put(body)
