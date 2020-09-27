@@ -70,7 +70,7 @@ def get_castle_place_in_worldtop(worldtop: dict, castle: str) -> int:
         if k == castle:
             return place
         place += 1
-    return None
+    return -1
 
 
 def sort_worldtop(worldtop):
@@ -129,7 +129,7 @@ def parse_stats():
                     continue
                 castle = parse.group(1)
                 count = int(parse.group(2))
-                score = worldtop.get(castle)
+                score = worldtop.get(castle, 0)
                 score += count
                 worldtop.update({castle: score})
                 sort_worldtop(worldtop)
@@ -185,7 +185,7 @@ def send_worldtop_update(old_worldtop: dict, worldtop: dict):
     i = 0
     for k, v in list(worldtop.items()):
         i += 1
-        change = v - old_worldtop.get(k)
+        change = v - old_worldtop.get(k, 0)
         place_change = get_castle_place_in_worldtop(old_worldtop, k) - i
         response += "# <code>{}({}){}:{:>5}🏆(+{:>2})</code>\n".format(
             i, "{}{}".format("🔺" if place_change > 0 else "🔻" if place_change < 0 else "▪️",

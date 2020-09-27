@@ -307,7 +307,7 @@ def get_map_battle_emoji(result, attack, defense) -> str:
     return emoji
 
 
-def sort_and_add_types_to_location_list(location_to_text: [AllianceLocation, str]) -> str:
+def sort_and_add_types_to_location_list(location_to_text: [AllianceLocation, str], begin_text: str = "") -> str:
     """
     Сортирует локации по типу и уровню; Объединяет в один текст, подписывает тип локаций перед группой
     :param location_to_text: [AllianceLocation: str]
@@ -315,7 +315,7 @@ def sort_and_add_types_to_location_list(location_to_text: [AllianceLocation, str
     """
     location_to_text.sort(key=lambda x: (x[0].type, x[0].lvl))
     current_type = None
-    res = ""
+    res = begin_text
     for location, text in location_to_text:
         if location.type != current_type:
             res += "\n<b>{}</b>\n".format(location.type)
@@ -353,7 +353,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
         AllianceResults.fill_old_owned_info()
         locations_to_results = []
         for result in results.partition("\n")[2].split("\n\n"):
-            location_result = "<a href=\"https://t.me/ChatWarsDigest/{}\">🗺 Map news:</a>\n".format(message_id)
+            location_result = ""
             parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)
             attack = re.search("🎖Attack: (.+)\n", result)
             defense = re.search("🎖Defense: (.+)\n", result)
@@ -380,7 +380,10 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
             locations_to_results.append([location, location_result])
 
         if not debug:
-            AllianceResults.set_location_text(sort_and_add_types_to_location_list(locations_to_results))
+            AllianceResults.set_location_text(sort_and_add_types_to_location_list(
+                locations_to_results,
+                begin_text="\n<a href=\"https://t.me/ChatWarsDigest/{}\">🗺 Map news:</a>".format(message_id))
+            )
 
 
 @alliance_access
