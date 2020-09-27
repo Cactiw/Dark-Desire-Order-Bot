@@ -73,7 +73,7 @@ async def stats_handler(event):
             logging.info("Adding text to guilds_str = {}".format(guilds_str))
         else:
             print("put stats in queue")
-            castles_stats_queue.put({"data": text, "debug": debug})
+            castles_stats_queue.put({"data": text, "message_id": event.message.message_id, "debug": debug})
             castles_stats_queue.put({"data": guilds_str, "debug": debug})
             guilds_str = ""
             return

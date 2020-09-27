@@ -324,10 +324,10 @@ def sort_and_add_types_to_location_list(location_to_text: [AllianceLocation, str
     return res
 
 
-def parse_alliance_battle_results(results: str, debug: bool):
+def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
     if results.startswith("🤝Headquarters news:"):
         # Сводки с самих альянсов
-        total_results = "🤝Headquarters news:\n"
+        total_results = "<a href=\"https://t.me/ChatWarsDigest/{}\">🤝Headquarters news:</a>\n".format(message_id)
         for result in results.partition("\n")[2].split("\n\n\n"):
             parse = re.search("(.+) was (.+)[.:]", result)
             if parse is None:
@@ -353,7 +353,7 @@ def parse_alliance_battle_results(results: str, debug: bool):
         AllianceResults.fill_old_owned_info()
         locations_to_results = []
         for result in results.partition("\n")[2].split("\n\n"):
-            location_result = ""
+            location_result = "<a href=\"https://t.me/ChatWarsDigest/{}\">🗺 Map news:</a>\n".format(message_id)
             parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)
             attack = re.search("🎖Attack: (.+)\n", result)
             defense = re.search("🎖Defense: (.+)\n", result)

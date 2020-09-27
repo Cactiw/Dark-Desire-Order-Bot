@@ -85,6 +85,7 @@ def sort_worldtop(worldtop):
 def parse_stats():
     data = castles_stats_queue.get()
     while data is not None:
+        message_id = data.get("message_id")
         debug = data.get("debug", False)
         data = data.get("data")
         # logging.error("Got data in parse: {}".format(data))
@@ -141,7 +142,7 @@ def parse_stats():
             # Итоги штабов альянсов
             logging.info("Got alliance news")
             try:
-                parse_alliance_battle_results(data, debug)
+                parse_alliance_battle_results(data, message_id, debug)
             except Exception:
                 logging.error(traceback.format_exc())
         else:
