@@ -153,7 +153,7 @@ def send_withdraw(bot, update, *args):
                 not_enough += "{} x {}\n".format(get_item_name_by_code(code), count - in_stock)
         response_full += "{} {} ".format(code, count)
         res_count += 1
-        if res_count >= 8:
+        if res_count >= WITHDRAW_MESSAGE_LIMIT:
             response = format_all_withdraws(response, response_full, not_enough)
             bot.send_message(chat_id=chat_id, text=response, parse_mode='HTML')
             response, response_full, not_enough = "/g_withdraw ", "/g_withdraw ", ""
