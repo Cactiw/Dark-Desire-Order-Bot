@@ -150,7 +150,8 @@ class AllianceResults:
                     alliance = Alliance.get_alliance(guild.alliance_id) if guild.alliance_id is not None else None
                     text_to_send = alliance.add_flag_to_name(cls.get_text(), locations=True) if alliance is not None \
                         else cls.get_text()
-                    dispatcher.bot.send_message(chat_id=guild.chat_id, text=text_to_send, parse_mode='HTML')
+                    dispatcher.bot.send_message(chat_id=guild.chat_id, text=text_to_send, parse_mode='HTML',
+                                                disable_web_page_preview=True)
 
     @classmethod
     def add_flag_to_old_alliance_locations(cls, s, alliance_id):
