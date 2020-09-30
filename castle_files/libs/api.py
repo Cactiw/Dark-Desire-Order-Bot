@@ -576,6 +576,15 @@ class CW3API:
             if guild is None or guild.tag != tag:
                 logging.warning("Received guild info, but guild is None or not euqal for"
                                 " {} (@{})".format(player.nickname, player.username))
+                if guild is not None:
+                    logging.info("Removing info about access from incorrect guild")
+                    api_players = guild.api_info.get("api_players", [])
+                    try:
+                        api_players.pop(player.id)
+                        guild.update_to_database()
+                    except ValueError:
+                        logging.warning("Player already do not have api access")
+                        pass
                 return
             old_stock, old_glory, change_send = guild.api_info.get("stock") or {}, guild.api_info.get("glory") or 0, \
                                                 guild.api_info.get("change_stock_send") or False
