@@ -582,7 +582,7 @@ class CW3API:
                     try:
                         api_players.pop(player.id)
                         guild.update_to_database()
-                    except ValueError:
+                    except (ValueError, IndexError):
                         logging.warning("Player already do not have api access")
                         pass
                 return
