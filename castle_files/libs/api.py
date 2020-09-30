@@ -580,7 +580,7 @@ class CW3API:
                     logging.info("Removing info about access from incorrect guild")
                     api_players = guild.api_info.get("api_players", [])
                     try:
-                        api_players.pop(player.id)
+                        api_players.remove(player.id)
                         guild.update_to_database()
                     except (ValueError, IndexError):
                         logging.warning("Player already do not have api access")
