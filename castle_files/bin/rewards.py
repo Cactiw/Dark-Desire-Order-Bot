@@ -110,6 +110,14 @@ def reward_change_castle_chat_picture(player, reward, *args, **kwargs):
 
 
 def reward_disable_global_triggers(player, reward, cost, *args, **kwargs):
+    try:
+        reward = int(reward)
+    except ValueError:
+        dispatcher.bot.send_message(player.id, text="Неверный синтаксис. Введите корректное id чата "
+                                                    "(не удаляя минус, если он присутствовал!)")
+        player.reputation += cost
+        player.update()
+        raise RewardRollbackException
     if check_global_triggers_ignore(int(reward)):
         dispatcher.bot.send_message(player.id, text="В чате уже активна награда. Жетоны возвращены.")
         player.reputation += cost
@@ -191,18 +199,27 @@ rewards = {"castle_message_change": {
         "get": reward_remove_global_trigger
     },
     "castle_disable_global_triggers_hour": {
-        "price": 30, "moderation": False, "text": "Введите chat_id чата, в котором отключить триггеры:\n"
-                                                  "(/chat_info в нужном чате)",
+        "price": 30, "moderation": False,
+        "text": "Введите chat_id чата, в котором отключить триггеры:\n"
+                "(/chat_info в нужном чате)\n"
+                "Обратите внимание, id чата - длинное число, часто отрицательное, в этом случае его нужно прислать "
+                "<b>вместе с минусом!</b>",
         "get": reward_disable_global_triggers, "after_reward_received": ignore_triggers_updated
     },
     "castle_disable_global_triggers_day": {
-        "price": 600, "moderation": False, "text": "Введите chat_id чата, в котором отключить триггеры:\n"
-                                                   "(/chat_info в нужном чате)",
+        "price": 600, "moderation": False,
+        "text": "Введите chat_id чата, в котором отключить триггеры:\n"
+                "(/chat_info в нужном чате)\n"
+                "Обратите внимание, id чата - длинное число, часто отрицательное, в этом случае его нужно прислать "
+                "<b>вместе с минусом!</b>",
         "get": reward_disable_global_triggers, "after_reward_received": ignore_triggers_updated
     },
     "castle_disable_global_triggers_weeks": {
-        "price": 6000, "moderation": False, "text": "Введите chat_id чата, в котором отключить триггеры:\n"
-                                                    "(/chat_info в нужном чате)",
+        "price": 6000, "moderation": False,
+        "text": "Введите chat_id чата, в котором отключить триггеры:\n"
+                "(/chat_info в нужном чате)\n"
+                "Обратите внимание, id чата - длинное число, часто отрицательное, в этом случае его нужно прислать "
+                "<b>вместе с минусом!</b>",
         "get": reward_disable_global_triggers, "after_reward_received": ignore_triggers_updated
     },
     "castle_change_chat_picture": {
