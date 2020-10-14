@@ -5,6 +5,7 @@
 from castle_files.work_materials.statuses_const import statuses as statuses_const, statuses_to_messages, \
     default_status_messages
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, moscow_tz
+from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.libs.player import Player
 
@@ -206,7 +207,7 @@ def statuses(bot, update):
             status = statuses_const.get(status_id)
             name = status.get("name")
         response += "<b>{}</b>\n/status_on_{}\n\n".format(name, status_id)
-    bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
+    bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')
 
 
 def status_on(bot, update):
