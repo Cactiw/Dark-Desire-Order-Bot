@@ -27,6 +27,7 @@ if len(sys.argv) > 1:
         if arg == "--auth":
             logging.info("Starting telethon auth")
             script_work()  # Для авторизации на новой машине
+            exit(0)
 
 # order_bot_processing()
 processes = []
