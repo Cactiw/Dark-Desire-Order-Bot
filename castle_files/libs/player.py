@@ -14,6 +14,7 @@ import logging
 import json
 import time
 import datetime
+import re
 
 from multiprocessing import Queue
 
@@ -134,7 +135,15 @@ class Player:
                         return True
         return False
 
-
+    @staticmethod
+    def parse_guild_tag(nickname: str) -> str:
+        """
+        Метод возвращает тег гильдии, беря его из ника игрока
+        :param nickname: str - Player`s nickname
+        :return str - guild tag (if presented - else None)
+        """
+        parse = re.search("(\\[\\w+?])", nickname)
+        return parse.group(1) if parse is not None else None
 
     """
     Метод получения игрока по его id. Сначала проверяется, находится ли игрок в словаре players, то есть был ли

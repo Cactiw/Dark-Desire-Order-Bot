@@ -324,10 +324,37 @@ def sort_and_add_types_to_location_list(location_to_text: [AllianceLocation, str
     return res
 
 
+def search_players(result: dict, attack, defense, location_name):
+    if attack is not None:
+        attack = attack.group(1)
+        run_search(result, attack, "⚔", location_name)
+    if defense is not None:
+        defense = defense.group(1)
+        run_search(result, defense, "🛡", location_name)
+
+
+def run_search(result, search_str, emoji, location_name):
+    OFFSET = "   ╰"
+    processed_guilds = set()
+    for nickname in search_str.split(", "):
+        guild_tag = Player.parse_guild_tag(nickname)
+        guild = Guild.get_guild(guild_tag)
+        if guild is not None:
+            old_str = result.get(guild_tag, "")
+            if guild_tag in processed_guilds:
+                old_str += "\n{}{}{}".format(OFFSET, emoji, nickname)
+            else:
+                old_str += "{}\n{}{}{}".format(location_name, OFFSET, emoji, nickname)
+                processed_guilds.add(guild_tag)
+            result.update({guild_tag: old_str})
+
+
 def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
+    print("Parsing!")
     if results.startswith("🤝Headquarters news:"):
         # Сводки с самих альянсов
         total_results = "<a href=\"https://t.me/ChatWarsDigest/{}\">🤝Headquarters news:</a>\n".format(message_id)
+        tops = {}
         for result in results.partition("\n")[2].split("\n\n\n"):
             parse = re.search("(.+) was (.+)[.:]", result)
             if parse is None:
@@ -342,16 +369,18 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
                 stock, glory = int(gained.group(1)) if gained.group(1) is not None else 0, \
                                int(gained.group(2)) if gained.group(2) is not None else 0
             emoji = get_hq_battle_emoji(battle_result, attack, defense)
+            search_players(tops, attack, defense, "{}{}".format(emoji, name))
             total_results += "{}{}{}{}\n".format(emoji, name, " -{}📦".format(stock) if stock > 0 else "",
                                                         " -{}🎖".format(glory) if glory > 0 else "")
         if not debug:
-            AllianceResults.set_hq_text(total_results)
+            AllianceResults.set_hq_text(total_results, tops)
     elif results.startswith("🗺State of map:"):
         # Сводки с локаций
         AllianceLocation.increase_turns_owned()
         AllianceLocation.set_possible_expired()
         AllianceResults.fill_old_owned_info()
         locations_to_results = []
+        tops = {}
         for result in results.partition("\n")[2].split("\n\n"):
             location_result = ""
             parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)
@@ -369,7 +398,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
             location.can_expired = False
             emoji = get_map_battle_emoji(battle_result, attack, defense)
             location_result += "{}{}\n".format(emoji, location.format_name())
-
+            search_players(tops, attack, defense, "{}{}".format(emoji, name))
             if new_owner is not None:
                 alliance = Alliance.get_or_create_alliance_by_name(new_owner)
                 location.owner_id = alliance.id

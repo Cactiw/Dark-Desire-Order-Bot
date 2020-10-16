@@ -119,22 +119,32 @@ class AllianceResults:
     has_hq: bool = False
     has_locations: bool = False
     old_owned: {str: int} = {}
+    tops: {str: str} = {}
 
     @classmethod
     def get_text(cls):
         return cls.text
 
     @classmethod
-    def set_hq_text(cls, text: str):
+    def set_hq_text(cls, text: str, tops: dict):
         cls.text = text + cls.text
         cls.has_hq = True
+        cls.save_tops(tops)
+
         cls.check_and_send_results()
 
     @classmethod
-    def set_location_text(cls, text: str):
+    def set_location_text(cls, text: str, tops: dict):
         cls.text = cls.text + text
         cls.has_locations = True
+        cls.save_tops(tops)
+
         cls.check_and_send_results()
+
+    @classmethod
+    def save_tops(cls, tops):
+        for guild_tag, s in tops.items():
+            cls.tops.update({guild_tag: cls.tops.get(guild_tag, "Игроки, попавшие в топ альянсов:\n") + s})
 
     @classmethod
     def check_and_send_results(cls):
@@ -153,6 +163,11 @@ class AllianceResults:
                     dispatcher.bot.send_message(chat_id=guild.chat_id, text=text_to_send, parse_mode='HTML',
                                                 disable_web_page_preview=True)
 
+            for guild_tag, text in cls.tops.items():
+                guild = Guild.get_guild(guild_tag=guild_tag)
+                if guild is not None:
+                    dispatcher.bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
+
     @classmethod
     def add_flag_to_old_alliance_locations(cls, s, alliance_id):
         print(cls.old_owned)
@@ -167,6 +182,7 @@ class AllianceResults:
         cls.has_hq = False
         cls.has_locations = False
         cls.old_owned.clear()
+        cls.tops.clear()
 
     @classmethod
     def fill_old_owned_info(cls):
