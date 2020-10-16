@@ -368,7 +368,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
                 stock, glory = int(gained.group(1)) if gained.group(1) is not None else 0, \
                                int(gained.group(2)) if gained.group(2) is not None else 0
             emoji = get_hq_battle_emoji(battle_result, attack, defense)
-            search_players(tops, attack, defense, "{}{}".format(emoji, name))
+            search_players(tops, attack, defense, "{}🎪{}".format(emoji, name))
             total_results += "{}{}{}{}\n".format(emoji, name, " -{}📦".format(stock) if stock > 0 else "",
                                                         " -{}🎖".format(glory) if glory > 0 else "")
         if not debug:
@@ -397,7 +397,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
             location.can_expired = False
             emoji = get_map_battle_emoji(battle_result, attack, defense)
             location_result += "{}{}\n".format(emoji, location.format_name())
-            search_players(tops, attack, defense, "{}{}".format(emoji, name))
+            search_players(tops, attack, defense, "{}{}".format(emoji, location.emoji + location.format_name()))
             if new_owner is not None:
                 alliance = Alliance.get_or_create_alliance_by_name(new_owner)
                 location.owner_id = alliance.id
