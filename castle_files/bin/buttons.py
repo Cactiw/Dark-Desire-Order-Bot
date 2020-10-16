@@ -167,6 +167,9 @@ def get_guild_settings_buttons(guild):
                                  callback_data="gsbattlenotify_{}".format(guild.id)),
         ],
         [
+            InlineKeyboardButton("{} охоту на мобов".format(
+                "Отключить" if guild.settings is None or guild.settings.get("mobs_hunt") else "Включить"),
+                callback_data="gsmobshunt_{}".format(guild.id)),
             InlineKeyboardButton("{} сводки альянса".format(
                 "Отключить" if guild.settings is None or guild.settings.get("alliance_results") else "Включить"),
                 callback_data="gsallianceresults_{}".format(guild.id)),

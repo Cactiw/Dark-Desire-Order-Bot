@@ -32,6 +32,8 @@ buttons_translate = {
     "Включить напоминалку в 12": "Turn on reminder at 12PM",
     "Отключить пинги к битве": "Disable pings for battle",
     "Включить пинги к битве": "Enable pings for battle",
+    "Включить охоту на мобов": "Enable mobs hunt",
+    "Отключить охоту на мобов": "Disable mobs hunt",
     "Включить сводки альянса": "Enable alliance results",
     "Отключить сводки альянса": "Disable alliance results",
     "⚔️Атака": "⚔️Attack",

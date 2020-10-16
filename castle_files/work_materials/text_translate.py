@@ -78,6 +78,7 @@ texts_translate = {
     "🛒Уведомления о продаже    ": "🛒Sale notifications:      ",
     "📦Изменения в стоке        ": "📦Stock changes            ",
     "📌Пинг на аим              ": "📌Aim ping                 ",
+    "🐻Охота на мобов": "🐻Mobs hunt     ",
     "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
     "На лобном месте, левее фонтана, прибит пергамент с важной новостью:": "You stand in the middle of the ⛲️Central "
                                                                            "square of the Rock of the Dark Desire.\n\n "

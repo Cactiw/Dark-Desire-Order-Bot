@@ -490,8 +490,9 @@ def get_guild_settings_text(guild):
     if settings is None:
         settings = {}
         guild.settings = settings
-    withdraw, unpin, arena_notify, battle_notify, alliance_results = settings.get("withdraw"), settings.get("unpin"), \
-        settings.get("arena_notify"), settings.get("battle_notify"), settings.get("alliance_results")
+    withdraw, unpin, arena_notify, battle_notify, alliance_results, mobs_hunt = settings.get("withdraw"), \
+        settings.get("unpin"), settings.get("arena_notify"), settings.get("battle_notify"), \
+        settings.get("alliance_results"), settings.get("mobs_hunt")
     if withdraw is None:
         withdraw = True
         settings.update({"withdraw": withdraw})
@@ -516,6 +517,12 @@ def get_guild_settings_text(guild):
     response += "<code>{:<20}</code> <b>{}</b>\n".format("⚔️️Пинги к битве",  # Не имею ни малейшего понятия, почему 20
                                                          "✅включены" if battle_notify else "❌отключены")
 
+    if mobs_hunt is None:
+        mobs_hunt = True
+        settings.update({"mobs_hunt": mobs_hunt})
+
+    response += "<code>{:<20}</code> <b>{}</b>\n".format("🐻Охота на мобов",
+                                                         "✅включена" if mobs_hunt else "❌отключена")
     if alliance_results is None:
         alliance_results = False
         settings.update({"alliance_results": alliance_results})
@@ -558,7 +565,8 @@ def guild_setting(bot, update):
 
 def edit_guild_setting(bot, update):
     data_to_setting = {"gswith": "withdraw", "gsunpin": "unpin", "gsarenanotify": "arena_notify",
-                       "gsbattlenotify": "battle_notify", "gsallianceresults" :"alliance_results"}
+                       "gsbattlenotify": "battle_notify", "gsallianceresults": "alliance_results",
+                       "gsmobshunt": "mobs_hunt"}
     mes = update.callback_query.message
     data = update.callback_query.data
     setting = data_to_setting.get(data.partition("_")[0])

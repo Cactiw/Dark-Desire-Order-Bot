@@ -235,8 +235,12 @@ def mob(bot, update):
                     if ping:
                         threading.Thread(target=send_notify, args=(link, mes.chat_id, ping)).start()
 
-        threading.Thread(target=send_mob_message_and_start_updating,
-                         args=(bot, mes, player, response, buttons, is_pm, link, forward_message_date, ping_list)).start()
+        guild = Guild.get_guild(player.guild)
+        if guild is None or guild.settings.get("mobs_hunt", True) is True or mes.chat_id != guild.chat_id:
+            threading.Thread(target=send_mob_message_and_start_updating,
+                             args=(
+                                 bot, mes, player, response, buttons, is_pm, link, forward_message_date, ping_list)
+                             ).start()
     return
 
 
