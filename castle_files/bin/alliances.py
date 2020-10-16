@@ -336,24 +336,35 @@ def search_players(result: dict, attack, defense, location_name):
 def run_search(result, search_str, emoji, location_name):
     OFFSET = "   ╰"
     processed_guilds = set()
+    guild_results, alliance_results = result.get("guilds"), result.get("alliances")
     for nickname in search_str.split(", "):
         guild_tag = Player.parse_guild_tag(nickname)
         guild = Guild.get_guild(guild_tag=guild_tag)
         if guild is not None:
-            old_str = result.get(guild_tag, "")
+            alliance = Alliance.get_alliance(guild.alliance_id) if guild.alliance_id else None
+            old_str = guild_results.get(guild_tag, "")
             if guild_tag in processed_guilds:
                 old_str += "\n{}{}{}".format(OFFSET, emoji, nickname)
             else:
                 old_str += "\n\n{}\n{}{}{}".format(location_name, OFFSET, emoji, nickname)
                 processed_guilds.add(guild_tag)
-            result.update({guild_tag: old_str})
+            guild_results.update({guild_tag: old_str})
+
+            if alliance is not None:
+                old_str = alliance_results.get(alliance.name, "")
+                if alliance.name in processed_guilds:
+                    old_str += "\n{}{}{}".format(OFFSET, emoji, nickname)
+                else:
+                    old_str += "\n\n{}\n{}{}{}".format(location_name, OFFSET, emoji, nickname)
+                    processed_guilds.add(alliance.name)
+                alliance_results.update({alliance.name: old_str})
 
 
 def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
     if results.startswith("🤝Headquarters news:"):
         # Сводки с самих альянсов
         total_results = "<a href=\"https://t.me/ChatWarsDigest/{}\">🤝Headquarters news:</a>\n".format(message_id)
-        tops = {}
+        tops = {"guilds": {}, "alliances": {}}
         for result in results.partition("\n")[2].split("\n\n\n"):
             parse = re.search("(.+) was (.+)[.:]", result)
             if parse is None:
@@ -379,7 +390,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
         AllianceLocation.set_possible_expired()
         AllianceResults.fill_old_owned_info()
         locations_to_results = []
-        tops = {}
+        tops = {"guilds": {}, "alliances": {}}
         for result in results.partition("\n")[2].split("\n\n"):
             location_result = ""
             parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)

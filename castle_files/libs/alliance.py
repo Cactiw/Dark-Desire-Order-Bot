@@ -119,7 +119,8 @@ class AllianceResults:
     has_hq: bool = False
     has_locations: bool = False
     old_owned: {str: int} = {}
-    tops: {str: str} = {}
+    guild_tops: {str: str} = {}
+    alliance_tops: {str: str} = {}
 
     @classmethod
     def get_text(cls):
@@ -143,9 +144,11 @@ class AllianceResults:
 
     @classmethod
     def save_tops(cls, tops):
-        print("Tops:", tops)
-        for guild_tag, s in tops.items():
-            cls.tops.update({guild_tag: cls.tops.get(guild_tag, "Игроки, попавшие в топ альянсов:") + s})
+        guild_tops, alliance_tops = tops.get("guilds"), tops.get("alliances")
+        for guild_tag, s in guild_tops.items():
+            cls.guild_tops.update({guild_tag: cls.guild_tops.get(guild_tag, "Игроки, попавшие в топ альянсов:") + s})
+        for guild_tag, s in alliance_tops.items():
+            cls.alliance_tops.update({guild_tag: cls.alliance_tops.get(guild_tag, "Игроки, попавшие в топ альянсов:") + s})
 
     @classmethod
     def check_and_send_results(cls):
@@ -156,6 +159,12 @@ class AllianceResults:
                         chat_id=alliance.hq_chat_id, parse_mode='HTML',
                         text=AllianceResults.add_flag_to_old_alliance_locations(
                             alliance.add_flag_to_name(cls.get_text()), alliance.id))
+                    top_str = cls.alliance_tops.get(alliance.name)
+                    if top_str:
+                        dispatcher.bot.send_message(
+                            chat_id=alliance.hq_chat_id, parse_mode='HTML',
+                            text=top_str)
+
             for guild in Guild.get_all_guilds():
                 if guild.settings is not None and guild.settings.get("alliance_results", False):
                     alliance = Alliance.get_alliance(guild.alliance_id) if guild.alliance_id is not None else None
@@ -164,7 +173,7 @@ class AllianceResults:
                     dispatcher.bot.send_message(chat_id=guild.chat_id, text=text_to_send, parse_mode='HTML',
                                                 disable_web_page_preview=True)
 
-            for guild_tag, text in cls.tops.items():
+            for guild_tag, text in cls.guild_tops.items():
                 guild = Guild.get_guild(guild_tag=guild_tag)
                 if guild is not None:
                     dispatcher.bot.send_message(chat_id=guild.chat_id, text=text, parse_mode='HTML')
@@ -183,7 +192,8 @@ class AllianceResults:
         cls.has_hq = False
         cls.has_locations = False
         cls.old_owned.clear()
-        cls.tops.clear()
+        cls.guild_tops.clear()
+        cls.alliance_tops.clear()
 
     @classmethod
     def fill_old_owned_info(cls):
