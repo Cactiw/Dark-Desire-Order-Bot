@@ -338,19 +338,18 @@ def run_search(result, search_str, emoji, location_name):
     processed_guilds = set()
     for nickname in search_str.split(", "):
         guild_tag = Player.parse_guild_tag(nickname)
-        guild = Guild.get_guild(guild_tag)
+        guild = Guild.get_guild(guild_tag=guild_tag)
         if guild is not None:
             old_str = result.get(guild_tag, "")
             if guild_tag in processed_guilds:
                 old_str += "\n{}{}{}".format(OFFSET, emoji, nickname)
             else:
-                old_str += "{}\n{}{}{}".format(location_name, OFFSET, emoji, nickname)
+                old_str += "\n\n{}\n{}{}{}".format(location_name, OFFSET, emoji, nickname)
                 processed_guilds.add(guild_tag)
             result.update({guild_tag: old_str})
 
 
 def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
-    print("Parsing!")
     if results.startswith("🤝Headquarters news:"):
         # Сводки с самих альянсов
         total_results = "<a href=\"https://t.me/ChatWarsDigest/{}\">🤝Headquarters news:</a>\n".format(message_id)
@@ -363,7 +362,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
             stock, glory = 0, 0
             name, battle_result = parse.group(1), parse.group(2)
             attack = re.search("🎖Attack: (.+)\n", result)
-            defense = re.search("🎖Defense: (.+)\n", result)
+            defense = re.search("🎖Defense: (.+)", result)
             gained = re.search("for (\\d+)?📦 and (\\d+)?🎖", result)
             if gained is not None:
                 stock, glory = int(gained.group(1)) if gained.group(1) is not None else 0, \
@@ -385,7 +384,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
             location_result = ""
             parse = re.search("(.+) lvl\\.(\\d+) ((was (.+))|(belongs to (.*?)(:|\\. (.+):)))\n", result)
             attack = re.search("🎖Attack: (.+)\n", result)
-            defense = re.search("🎖Defense: (.+)\n", result)
+            defense = re.search("🎖Defense: (.+)", result)
             if parse is None:
                 logging.error("Error in parse map news: {}".format(traceback.format_exc()))
                 continue
@@ -411,7 +410,8 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
         if not debug:
             AllianceResults.set_location_text(sort_and_add_types_to_location_list(
                 locations_to_results,
-                begin_text="\n<a href=\"https://t.me/ChatWarsDigest/{}\">🗺 Map news:</a>".format(message_id))
+                begin_text="\n<a href=\"https://t.me/ChatWarsDigest/{}\">🗺 Map news:</a>".format(message_id)),
+                tops=tops
             )
 
 

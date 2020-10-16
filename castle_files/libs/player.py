@@ -142,7 +142,7 @@ class Player:
         :param nickname: str - Player`s nickname
         :return str - guild tag (if presented - else None)
         """
-        parse = re.search("(\\[\\w+?])", nickname)
+        parse = re.search("\\[(\\w+?)]", nickname)
         return parse.group(1) if parse is not None else None
 
     """

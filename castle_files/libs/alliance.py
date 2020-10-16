@@ -143,8 +143,9 @@ class AllianceResults:
 
     @classmethod
     def save_tops(cls, tops):
+        print("Tops:", tops)
         for guild_tag, s in tops.items():
-            cls.tops.update({guild_tag: cls.tops.get(guild_tag, "Игроки, попавшие в топ альянсов:\n") + s})
+            cls.tops.update({guild_tag: cls.tops.get(guild_tag, "Игроки, попавшие в топ альянсов:") + s})
 
     @classmethod
     def check_and_send_results(cls):
