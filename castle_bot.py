@@ -538,8 +538,8 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_get_reward, get_reward, pass_user_data=True))
 
-    dispatcher.add_handler(CommandHandler('request_kabala', request_kabala))
-    dispatcher.add_handler(CommandHandler('kabala', kabala, pass_user_data=True))
+    # dispatcher.add_handler(CommandHandler('request_kabala', request_kabala))
+    # dispatcher.add_handler(CommandHandler('kabala', kabala, pass_user_data=True))
 
     # Продолжаются хендлеры замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_request_bot_guild_message_notify,
