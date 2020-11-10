@@ -12,7 +12,7 @@ from castle_files.bin.trigger import global_triggers_in, get_message_type_and_da
 from castle_files.bin.service_functions import check_access, get_time_remaining_to_battle, get_current_datetime
 
 from castle_files.work_materials.globals import STATUSES_MODERATION_CHAT_ID, dispatcher, moscow_tz, cursor, job, \
-    MID_CHAT_ID, CENTRAL_SQUARE_CHAT_ID
+    MID_CHAT_ID, CENTRAL_SQUARE_CHAT_ID, HOME_CASTLE
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, TelegramError
@@ -78,9 +78,12 @@ def reward_remove_global_trigger(player, reward, cost, *args, **kwargs):
 
 def reward_g_def(player, reward, cost, *args, **kwargs):
     guild = Guild.get_guild(player.guild)
-    if guild is None:
-        dispatcher.bot.send_message(player.id, text="Гильдия не найдена. Вы должны состоять в гильдии. "
-                                                    "Жетоны возвращены.")
+    if guild is None or guild.castle != HOME_CASTLE:
+        if guild is None:
+            text = "Гильдия не найдена. Вы должны состоять в гильдии.\nЖетоны возвращены."
+        else:
+            text = "Функция доступна только для гильдий из Скалы.\nЖетоны возвращены."
+        dispatcher.bot.send_message(player.id, text=text)
         player.reputation += cost
         player.update()
         raise RewardRollbackException
