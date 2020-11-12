@@ -217,8 +217,10 @@ def show_worldtop(bot, update, args):
     response = "Worldtop: {}\n".format("битва {}\n({}):".format(
         battle_id, count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S")) if battle_id is not None else "")
     i = 1
+    worldtop_points = list(worldtop.values())
     for k, v in list(worldtop.items()):
-        response += "# {} {}: <code>{:>5}</code> 🏆 очков\n".format(i, k, v)
+        response += "# {} {}: <code>{:>5}</code> 🏆 очков {}\n".format(
+            i, k, v, "❗️" if worldtop_points.count(v) > 1 else "")
         i += 1
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML')
 
