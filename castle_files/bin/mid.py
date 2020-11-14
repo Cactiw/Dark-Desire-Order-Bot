@@ -20,7 +20,9 @@ from telegram.error import TelegramError
 
 
 import threading
+import traceback
 import datetime
+import logging
 import time
 import re
 
@@ -196,9 +198,11 @@ def unpin_orders():
         guild = Guild.get_guild(guild_id=guild_id)
         if guild.settings is None or guild.settings.get("unpin") in [None, True]:
             try:
-                dispatcher.bot.unpinChatMessage(chat_id=guild.chat_id)
+                dispatcher.bot.unpin_all_messages(chat_id=guild.chat_id)
             except TelegramError:
                 pass
+            except Exception:
+                logging.error(traceback.format_exc())
 
 
 def plan_mid_notifications():

@@ -16,6 +16,7 @@ import logging
 import traceback
 import re
 import sys
+import requests
 
 MESSAGE_PER_SECOND_LIMIT = 29
 MESSAGE_PER_CHAT_LIMIT = 3
@@ -67,6 +68,10 @@ class AsyncBot(Bot):
             8: super(AsyncBot, self).answerCallbackQuery
         }
 
+    # @property
+    # def base_url(self):
+    #     return "https://api.telegram.org/bot{}/".format(self.token)
+
     def send_message(self, *args, **kwargs):
         message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
@@ -112,6 +117,18 @@ class AsyncBot(Bot):
             user_data.pop("message_group")
             return self.get_message_group(player_id)
         return group
+
+    def unpin_all_messages(self, chat_id, *args, **kwargs):
+        result = requests.get(
+            self.base_url + "/unpinAllChatMessages",
+            params={
+                "chat_id": chat_id,
+                **kwargs
+            }
+        )
+        if result.status_code // 100 != 2:
+            logging.error("Can not unpin messages: {}".format(result.text))
+        return result
 
     def send_video(self, *args, **kwargs):
         kwargs.update({"message_type": 1})
