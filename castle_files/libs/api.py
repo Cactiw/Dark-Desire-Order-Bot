@@ -354,6 +354,7 @@ class CW3API:
             player.hp = profile.get("hp")
             player.max_hp = profile.get("maxHp")
             player.mana = profile.get("mana")
+            player.stamina = profile.get("stamina")
             if "🎗" in player.nickname:  # Отключено в связи с эмодзи в никах
                 pass
             else:
