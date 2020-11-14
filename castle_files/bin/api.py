@@ -512,22 +512,22 @@ def stock(bot, update):
     bot.send_message_group(mes.chat_id)
 
 
-def autospend_gold(bot, update):
+def check_wtb_access(bot, update):
     """
     Функция для автослива голды... Не дописана, не работает
     """
     mes = update.message
-    player = Player.get_player(mes.from_user.id)
+    player = Player.get_player(mes.from_user.id if mes else update.callback_query.from_user.id)
     access = player.api_info.get("access") or []
     if "wtb" not in access:
-        cwapi.auth_additional_operation(mes.from_user.id, "TradeTerminal", player=player)
-        bot.send_message(chat_id=mes.chat_id,
+        cwapi.auth_additional_operation(player.id, "TradeTerminal", player=player)
+        bot.send_message(chat_id=player.id,
                          text="Для возможности покупать ресурсы на бирже, пожалуйста, "
                               "пришлите форвард сообщения, полученного от @ChatWarsBot.")
-        return
-    return
+        return False
+    return True
 
-    parse = re.search(" (.*) (\\d+)")
+    # parse = re.search(" (.*) (\\d+)")
 
 
 def grassroots_update_players(bot, job):
