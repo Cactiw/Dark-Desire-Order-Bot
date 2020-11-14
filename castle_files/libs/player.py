@@ -30,7 +30,7 @@ class Player:
                  game_class=None, class_skill_lvl=None, castle=None, last_updated=None, reputation=0, created=None,
                  status=None, guild_history=None, exp=None, api_info=None, stock=None, settings=None, exp_info=None,
                  class_info=None, mobs_info=None, tea_party_info=None, quests_info=None, hp=None, max_hp=None,
-                 pogs=None, mana=None, max_stamina=None):
+                 pogs=None, mana=None, max_stamina=None, gold=None):
         self.id = player_id
         self.username = username
         self.nickname = nickname
@@ -65,6 +65,7 @@ class Player:
         self.pogs = pogs
         self.mana = mana
         self.max_stamina = max_stamina
+        self.gold = gold
 
         self.__current_reports_count = -1
         self.__previous_reports_count = -1
@@ -173,7 +174,7 @@ class Player:
         request = "select username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, " \
                   "game_class, class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, " \
                   "exp, api_info, stock, id, settings, exp_info, class_info, mobs_info, tea_party_info, quests_info, " \
-                  "hp, max_hp, pogs, mana, max_stamina " \
+                  "hp, max_hp, pogs, mana, max_stamina, gold " \
                   "from players where "
         if player_id is not None:
             request += "id = %s"
@@ -197,7 +198,7 @@ class Player:
         username, nickname, guild_tag, guild, lvl, attack, defense, stamina, pet, equipment, game_class, \
             class_skill_lvl, castle, last_updated, reputation, created, status, guild_history, exp, api_info, \
             stock, player_id, settings, exp_info, class_info, mobs_info, tea_party_info, quests_info, hp, max_hp,\
-            pogs, mana, max_stamina = row
+            pogs, mana, max_stamina, gold = row
         if api_info is None:
             api_info = {}
         eq = {}
@@ -216,7 +217,7 @@ class Player:
                         reputation=reputation, created=created, status=status, guild_history=guild_history, exp=exp,
                         api_info=api_info, stock=stock, settings=settings, exp_info=exp_info, class_info=class_info,
                         mobs_info=mobs_info, tea_party_info=tea_party_info, quests_info=quests_from_db, hp=hp,
-                        max_hp=max_hp, pogs=pogs, mana=mana, max_stamina=max_stamina)
+                        max_hp=max_hp, pogs=pogs, mana=mana, max_stamina=max_stamina, gold=gold)
         players.update({player_id: player})  # Кладу игрока в память для дальнейшего ускоренного использования
         if quests_info is None:
             quests_info = {}
@@ -282,7 +283,7 @@ class Player:
                   "class_skill_lvl = %s, castle = %s, last_updated = %s, reputation = %s, created = %s, status = %s, " \
                   "guild_history = %s, exp = %s, api_info = %s, stock = %s, settings = %s, exp_info = %s, " \
                   "class_info = %s, mobs_info = %s, tea_party_info = %s, quests_info = %s, hp = %s, max_hp = %s," \
-                  "pogs = %s, mana = %s, max_stamina = %s " \
+                  "pogs = %s, mana = %s, max_stamina = %s, gold = %s " \
                   "where id = %s"
         eq_to_db = self.equipment_to_json()
         quests_to_db = self.quests_to_json()
@@ -297,7 +298,7 @@ class Player:
                                  json.dumps(self.settings), json.dumps(self.exp_info, ensure_ascii=False),
                                  json.dumps(self.class_info), json.dumps(self.mobs_info),
                                  json.dumps(self.tea_party_info, ensure_ascii=False), quests_to_db, self.hp,
-                                 self.max_hp, self.pogs, self.mana, self.max_stamina,
+                                 self.max_hp, self.pogs, self.mana, self.max_stamina, self.gold,
                                  self.id))
         cursor.close()
         return 0
