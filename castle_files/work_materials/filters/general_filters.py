@@ -3,7 +3,7 @@
 """
 
 from telegram.ext import BaseFilter
-from castle_files.work_materials.globals import CHAT_WARS_ID, MERC_ID
+from castle_files.work_materials.globals import CHAT_WARS_ID, MERC_ID, dispatcher
 from castle_files.bin.service_functions import check_access
 
 from telegram import Update
@@ -65,3 +65,14 @@ class FilterIsMerc(BaseFilter):
 
 filter_is_merc = FilterIsMerc()
 filter_is_merc.update_filter = True
+
+
+class FilterPlayerStatus(BaseFilter):
+    def __init__(self, status):
+        self.status = status
+
+    def filter(self, message):
+        user_data = dispatcher.user_data.get(message.from_user.id)
+        if user_data is None:
+            return False
+        return user_data.get("status") == self.status
