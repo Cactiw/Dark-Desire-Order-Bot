@@ -101,6 +101,7 @@ class CW3API:
             "authAdditionalOperation": self.on_request_additional_operation,
             "grantAdditionalOperation": self.on_grant_additional_operational,
             "requestStock": self.on_stock_info,
+            "wantToBuy": self.on_want_to_buy,
             'cw3-deals': self.on_deals,
             # 'cw3-offers': self.on_offers,  # not implemented
             'cw3-sex_digest': self.on_sex_digest,
@@ -228,8 +229,11 @@ class CW3API:
                 except KeyError:
                     pass
                 player.update()
-
-        callback = self.callbacks.get(body.get("action"))
+        try:
+            callback = self.callbacks.get(body.get("action"))
+        except Exception:
+            logging.error("API {} error: {}".format(body.get("action"), traceback.format_exc()))
+            return
         if callback is None:
             logging.warning("Callback is None for {}".format(body))
             return
@@ -524,6 +528,17 @@ class CW3API:
         except Exception:
             logging.error(traceback.format_exc())
 
+    def on_want_to_buy(self, body):
+        if body.get("result") != "Ok":
+            logging.error("error while requesting stock info, {}".format(body))
+            return
+        payload = body.get("payload")
+        player_id = payload.get("userId")
+        player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
+        if player is None:
+            return
+        pass
+
     def on_guild_info(self, body):
         """
         Метод, который вызывается при получении информации о гильдии (в том числе и её стока)
@@ -805,13 +820,7 @@ class CW3API:
         :param player_id: int - Player.id
         :param player: optional | Player instance (to avoid database request)
         """
-        if player is None:
-            player = Player.get_player(player_id, notify_on_error=False)
-            if player is None:
-                raise RuntimeError
-        if player is None:
-            raise RuntimeError
-        token = player.api_info.get("token")
+        player, token = self.get_token_player(player_id, player)
         if token is None:
             self.remove_player_from_guild_access(Guild.get_guild(player.guild), player)
             raise RuntimeError
@@ -819,6 +828,31 @@ class CW3API:
             "token": token,
             "action": "guildInfo"
         })
+
+    def want_to_buy(self, player_id, item_code, quantity, price, exact_price, player=None):
+        player, token = self.get_token_player(player_id, player)
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+             "token": token,
+             "action": "wantToBuy",
+             "payload": {
+                 "itemCode": item_code,
+                 "quantity": quantity,
+                 "price": price,
+                 "exactPrice": exact_price
+             }
+        })
+
+    def get_token_player(self, player_id, player):
+        if player is None:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        return player, token
 
     def remove_player_from_guild_access(self, guild, player):
         """
