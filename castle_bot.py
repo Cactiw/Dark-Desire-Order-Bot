@@ -64,7 +64,7 @@ from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send
     info_trigger, replace_trigger, import_triggers
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
     deposit, alch_possible_craft, craft, craft_action, set_craft_possible_tier, autospend_gold, add_autospend_rule, \
-    new_autospend_rule, delete_autospend_rule
+    new_autospend_rule, delete_autospend_rule, autospend_toggle
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -203,6 +203,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(autospend_gold, pattern="autospend_gold"))
     dispatcher.add_handler(CallbackQueryHandler(add_autospend_rule, pattern="autospend_rule_add", pass_user_data=True))
+    dispatcher.add_handler(CallbackQueryHandler(autospend_toggle, pattern="autospend_toggle"))
 
     dispatcher.add_handler(CallbackQueryHandler(change_profile_setting, pattern="prs.*_\\d+"))
 

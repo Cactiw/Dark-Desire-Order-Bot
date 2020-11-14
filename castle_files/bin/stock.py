@@ -763,7 +763,8 @@ def set_craft_possible_tier(bot, update, user_data):
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")
 
 
-def autospend_gold(bot, update, start_text=""):
+
+def autospend_gold(bot, update, start_text="", message=None):
     player = Player.get_player(update.message.from_user.id if update.message else update.callback_query.from_user.id)
     if not player.has_api_access:
         bot.send_message(chat_id=player.id, text="Для автослива голды необходим доступ к апи.\nПредоставьте его: /auth")
@@ -773,7 +774,12 @@ def autospend_gold(bot, update, start_text=""):
         return
 
     rules = player.api_info.get("autospend_rules")
-    response = start_text + "<b>💰Автослив золота</b>\n"
+    enabled = player.api_info.get("autospend")
+    if enabled is None:
+        enabled = True
+        player.api_info.update({"autospend": True})
+        player.update()
+    response = start_text + "<b>{}💰Автослив золота</b>\n".format("✅" if enabled else "❌")
     if not rules:
         response += "Правил ещё нет. Добавьте правило!"
     else:
@@ -783,8 +789,26 @@ def autospend_gold(bot, update, start_text=""):
                 get_resource_name_by_code(resource_code) or "Неизвестно ({})".format(resource_code),
                 max_gold, i
             )
+    buttons = get_autospend_buttons(enabled)
 
-    bot.send_message(chat_id=player.id, text=response, parse_mode='HTML', reply_markup=get_autospend_buttons())
+    if update.callback_query:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+    if message:
+        bot.editMessageText(chat_id=message.chat_id, message_id=message.message_id, text=response,
+                            parse_mode='HTML', reply_markup=buttons)
+    else:
+        bot.send_message(chat_id=player.id, text=response, parse_mode='HTML', reply_markup=buttons)
+
+
+def autospend_toggle(bot, update):
+    player = Player.get_player(update.callback_query.from_user.id)
+    enabled = player.api_info.get("autospend", False)
+    player.api_info.update({"autospend": not enabled})
+    player.update()
+    autospend_gold(bot, update, message=update.callback_query.message)
+
+
 
 
 def add_autospend_rule(bot, update, user_data):

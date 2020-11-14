@@ -590,6 +590,11 @@ def get_profile_settings_text(player):
         mobs_notify = True
     response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на мобов",
                                                          "✅включен" if mobs_notify else "❌отключен")
+
+    autospend = player.api_info.get("autospend", False)
+    response += "<code>{:<26}</code> <b>{}</b>\n".format(
+        "💰Автослив золота", "✅включен" if autospend else "❌отключен"
+    )
     return response
 
 
