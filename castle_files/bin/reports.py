@@ -1,6 +1,6 @@
 from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc, SKIPPED_DIVISIONS
 
-from castle_files.bin.service_functions import count_battle_id
+from castle_files.bin.service_functions import count_battle_id, check_access
 from castle_files.bin.stock import get_item_code_by_name
 from castle_files.bin.quest_triggers import on_add_report
 
@@ -218,7 +218,7 @@ def battle_drop(bot, update):
 
 def battle_equip(bot, update):
     mes = update.message
-    if mes.from_user.id != SUPER_ADMIN_ID:
+    if not check_access(mes.from_user.id):
         return
     battle_id = re.search("\\d+", mes.text)
     if battle_id is None:
