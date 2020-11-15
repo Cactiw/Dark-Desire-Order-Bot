@@ -771,6 +771,8 @@ def autospend_gold(bot, update, start_text="", message=None):
         return
     from castle_files.bin.api import check_wtb_access
     if not check_wtb_access(bot, update):
+        if update.callback_query:
+            bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
         return
 
     rules = player.api_info.get("autospend_rules")
