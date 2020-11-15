@@ -820,7 +820,11 @@ def add_autospend_rule(bot, update, user_data):
 
 def new_autospend_rule(bot, update, user_data):
     player = Player.get_player(update.message.from_user.id)
-    resource_code, max_gold = update.message.text.split()
+    try:
+        resource_code, max_gold = update.message.text.split()
+    except (ValueError, TypeError):
+        bot.send_message(chat_id=player.id, text="Неверный синтаксис.")
+        return
     resource_name = get_resource_name_by_code(resource_code)
     if resource_name is None:
         bot.send_message(chat_id=player.id, text="Ресурс не найден. Повторите попытку.")

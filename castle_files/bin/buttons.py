@@ -264,10 +264,10 @@ def get_vote_buttons(vote, choice=None):
 def get_autospend_buttons(enabled: bool = True):
     buttons = [
         [
-            InlineKeyboardButton("Добавить правило", callback_data="autospend_rule_add")
+            InlineKeyboardButton("➕Добавить правило", callback_data="autospend_rule_add")
         ],
         [
-            InlineKeyboardButton("Выключить" if enabled else "Включить", callback_data="autospend_toggle")
+            InlineKeyboardButton("🔃Выключить" if enabled else "🔃Включить", callback_data="autospend_toggle")
         ]
     ]
     return InlineKeyboardMarkup(buttons)
