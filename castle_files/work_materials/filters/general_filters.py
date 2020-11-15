@@ -3,7 +3,7 @@
 """
 
 from telegram.ext import BaseFilter
-from castle_files.work_materials.globals import CHAT_WARS_ID, MERC_ID, dispatcher
+from castle_files.work_materials.globals import CHAT_WARS_ID, MERC_ID, dispatcher, SUPER_ADMIN_ID
 from castle_files.bin.service_functions import check_access
 
 from telegram import Update
@@ -54,6 +54,19 @@ class FilterHasAccess(BaseFilter):
 
 filter_has_access = FilterHasAccess()
 filter_has_access.update_filter = True
+
+
+class FilterSuperAdmin(BaseFilter):
+    def filter(self, message):
+        if isinstance(message, Update):
+            message = message.message
+            if message is None:
+                return False
+        return message.from_user.id == SUPER_ADMIN_ID
+
+
+filter_superadmin = FilterSuperAdmin()
+filter_superadmin.update_filter = True
 
 
 class FilterIsMerc(BaseFilter):

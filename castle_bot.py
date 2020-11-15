@@ -49,10 +49,10 @@ from castle_files.work_materials.filters.alliance_filters import filter_alliance
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
 from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc, \
-    FilterPlayerStatus
+    FilterPlayerStatus, filter_superadmin
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
-    stock, ws, players_update_monitor, ws_with_code
+    stock, ws, players_update_monitor, ws_with_code, wtb
 from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher, send_guilds_stats
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -316,6 +316,7 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler(Filters.text & FilterPlayerStatus("add_autospend_rule"), new_autospend_rule,
                                           pass_user_data=True))
     dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/del_gsrule_.*"), delete_autospend_rule))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_superadmin & Filters.regex("/wtb"), wtb))
 
     # Альянсы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_alliance, view_alliance))
