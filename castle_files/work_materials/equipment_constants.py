@@ -28,6 +28,7 @@ main_hand = [
     Equipment("main_hand", "w", "29", "Trident", 16, 14, 2),
     Equipment("main_hand", "w", "30", "Hunter Bow", 22, 8, 2),
     Equipment("main_hand", "w", "31", "War hammer", 15, 15, 2),
+    Equipment("main_hand", "w", "32", "Doomblade Sword", 36, 1, 3),
     Equipment("main_hand", "w", "33", "Thundersoul Sword", 35, 0, 3),
     Equipment("main_hand", "w", "34", "Doomblade Sword", 36, 1, 3),
     Equipment("main_hand", "w", "35", "Eclipse", 37, 0, 3),
