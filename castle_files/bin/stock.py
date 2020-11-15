@@ -774,10 +774,10 @@ def autospend_gold(bot, update, start_text="", message=None):
         return
 
     rules = player.api_info.get("autospend_rules")
-    enabled = player.api_info.get("autospend")
+    enabled = player.settings.get("autospend")
     if enabled is None:
         enabled = True
-        player.api_info.update({"autospend": True})
+        player.settings.update({"autospend": True})
         player.update()
     response = start_text + "<b>{}💰Автослив золота</b>\n".format("✅" if enabled else "❌")
     if not rules:
@@ -803,8 +803,8 @@ def autospend_gold(bot, update, start_text="", message=None):
 
 def autospend_toggle(bot, update):
     player = Player.get_player(update.callback_query.from_user.id)
-    enabled = player.api_info.get("autospend", False)
-    player.api_info.update({"autospend": not enabled})
+    enabled = player.settings.get("autospend", False)
+    player.settings.update({"autospend": not enabled})
     player.update()
     autospend_gold(bot, update, message=update.callback_query.message)
 

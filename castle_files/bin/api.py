@@ -530,6 +530,49 @@ def check_wtb_access(bot, update):
     # parse = re.search(" (.*) (\\d+)")
 
 
+def wtb(bot, update):
+    """
+    Only for debug purposes
+    """
+    parse = re.match("/wtb_(\\d+)_(\\d+)_(\\d+)", update.message.text)
+    if parse is None:
+        bot.send_message(chat_id=update.message.from_user.id, text="Неверный синтаксис")
+        return
+    item_code, quantity, price = parse.groups()
+    cwapi.want_to_buy(player_id=update.message.from_user.id, item_code=item_code, quantity=quantity, price=price,
+                      exact_price=False)
+
+
+def autospend_start(bot, job):
+    logging.info("Spending players gold...")
+    cursor = conn.cursor()
+    request = "select id from players where (settings ->> 'autospend')::boolean is true;"
+    cursor.execute(request)
+    player_ids = cursor.fetchall()
+    for player_id in player_ids:
+        player = Player.get_player(player_id, notify_on_error=False)
+        if not player.api_info.get("autospend_rules"):
+            continue
+        player.api_info.pop("autospend_process", None)
+        bot.send_message(
+            chat_id=player.id, text="Процесс слива голды начался!\n",
+            on_sent=on_autospend_message_sent, on_sent_args=[player.id]
+        )
+    cursor.close()
+
+
+def on_autospend_message_sent(message, player_id, *args, **kwargs):
+    player = Player.get_player(player_id, notify_on_error=False)
+    player.api_info.update({"autospend_process": {
+        "message_id": message.message_id,
+        "message_text": message.text + "\n",
+        "rule": 0,
+    }})
+    player.update()
+    cwapi.update_player(player_id, player=player)
+    # cwapi.proceed_autospend(player)
+
+
 def grassroots_update_players(bot, job):
     """
     Запрос на обновление профилей всех игроков (на текущий момент обновляется только сток(grassroots_update_stock),
