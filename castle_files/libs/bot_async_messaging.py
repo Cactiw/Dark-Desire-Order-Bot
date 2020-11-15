@@ -338,6 +338,8 @@ class AsyncBot(Bot):
                 logging.error(traceback.format_exc())
                 method = super(AsyncBot, self).send_message
             message = method(*args, **kwargs)
+            kwargs.pop("message_type", None)
+            self._on_method_complete(message_type, message, *args, **kwargs)
         except Unauthorized:
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
@@ -383,6 +385,20 @@ class AsyncBot(Bot):
             self.second_reset_queue.put(body)
             self.minute_reset_queue.put(body)
         return message
+
+    def _on_method_complete(self, message_type: int, message, *args, **kwargs):
+        """
+        Метод, который вызовется после выполнения метода апи бота
+        """
+        if message_type == 0:
+            # Сообщение было отправлено
+            on_sent = kwargs.get("on_sent")
+            if on_sent is not None:
+                # Нужно выполнить функцию после отправки сообщения, запускаю в отдельном потоке
+                threading.Thread(
+                    target=on_sent, args=[message] + kwargs.get("on_sent_args", []), kwargs=kwargs.get("on_sent_kwargs")
+                ).start()
+
 
     def start(self):
         for i in range(0, self.num_workers):
