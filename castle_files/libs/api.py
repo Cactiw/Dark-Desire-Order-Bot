@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals,\
-    MID_CHAT_ID, SUPER_ADMIN_ID
+    MID_CHAT_ID, SUPER_ADMIN_ID, job
 from globals import master_pid
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -775,6 +775,13 @@ class CW3API:
             "token": token,
             "action": "requestProfile"
         })
+
+    def update_player_later(self, player_id, when, player=None):
+        job.run_once(self._update_player_job, when, context=[player_id, player])
+
+    def _update_player_job(self, bot, job):
+        player_id, player = job.context
+        self.update_player(player_id, player=player)
 
     def update_gear(self, player_id, player=None):
         """
