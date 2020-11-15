@@ -41,6 +41,9 @@ def get_profile_settings_buttons(player):
         [
             InlineKeyboardButton("📌Пинг на мобов", callback_data="prsmobsping_{}".format(player.id)),
         ],
+        [
+            InlineKeyboardButton("💰Автослив золота⚙️", callback_data="autospend_gold"),
+        ]
     ]
     # if player.game_class == 'Ranger' and player.class_skill_lvl is not None:
     if player.class_skill_lvl is not None:
@@ -255,6 +258,18 @@ def get_vote_buttons(vote, choice=None):
         buttons.append([InlineKeyboardButton(text=var, callback_data="vote_{}_{}".format(vote.id, i))])
     if choice is not None:
         buttons[choice][0].text = '✅' + buttons[choice][0].text
+    return InlineKeyboardMarkup(buttons)
+
+
+def get_autospend_buttons(enabled: bool = True):
+    buttons = [
+        [
+            InlineKeyboardButton("➕Добавить правило", callback_data="autospend_rule_add")
+        ],
+        [
+            InlineKeyboardButton("🔃Выключить" if enabled else "🔃Включить", callback_data="autospend_toggle")
+        ]
+    ]
     return InlineKeyboardMarkup(buttons)
 
 

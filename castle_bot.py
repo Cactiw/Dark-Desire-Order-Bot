@@ -48,10 +48,11 @@ from castle_files.work_materials.filters.alliance_filters import filter_alliance
     filter_view_alliance, filter_alliance_roster, filter_alliance_pin
 from castle_files.work_materials.filters.trade_union_filters import filter_trade_union, filter_union_list, \
     filter_need_to_ban_in_union_chat, filter_split_union
-from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc
+from castle_files.work_materials.filters.general_filters import filter_is_pm, filter_has_access, filter_is_merc, \
+    FilterPlayerStatus, filter_superadmin
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
-    stock, ws, players_update_monitor, autospend_gold, ws_with_code
+    stock, ws, players_update_monitor, ws_with_code, wtb
 from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher, send_guilds_stats
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -62,7 +63,8 @@ from castle_files.bin.mid import mailing_pin, mailing, plan_battle_jobs, change_
 from castle_files.bin.trigger import add_trigger, remove_trigger, triggers, send_trigger, fill_triggers_lists, \
     info_trigger, replace_trigger, import_triggers
 from castle_files.bin.stock import guild_parts, guild_recipes, send_withdraw, set_withdraw_res, withdraw_resources, \
-    deposit, alch_possible_craft, craft, craft_action, set_craft_possible_tier
+    deposit, alch_possible_craft, craft, craft_action, set_craft_possible_tier, autospend_gold, add_autospend_rule, \
+    new_autospend_rule, delete_autospend_rule, autospend_toggle
 from castle_files.bin.guild import create_guild, edit_guild, edit_guild_commander, change_guild_commander, chat_info,\
     edit_guild_chat, change_guild_chat, add, guild_info, list_guilds, edit_guild_division, change_guild_division, \
     list_players, leave_guild, change_guild_bool_state, remove_player, request_delete_guild, delete_guild, \
@@ -199,6 +201,10 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(profile_settings, pattern="pr_settings_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(profile_exp, pattern="pr_exp_\\d+"))
 
+    dispatcher.add_handler(CallbackQueryHandler(autospend_gold, pattern="autospend_gold"))
+    dispatcher.add_handler(CallbackQueryHandler(add_autospend_rule, pattern="autospend_rule_add", pass_user_data=True))
+    dispatcher.add_handler(CallbackQueryHandler(autospend_toggle, pattern="autospend_toggle"))
+
     dispatcher.add_handler(CallbackQueryHandler(change_profile_setting, pattern="prs.*_\\d+"))
 
     # Хендлеры для инлайн кнопок гильдий
@@ -304,8 +310,13 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('ws', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('/ws_\\w+'), ws_with_code))
-    dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
+    # dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & FilterPlayerStatus("add_autospend_rule"), new_autospend_rule,
+                                          pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/del_gsrule_.*"), delete_autospend_rule))
+    dispatcher.add_handler(MessageHandler(Filters.command & filter_superadmin & Filters.regex("/wtb"), wtb))
 
     # Альянсы
     dispatcher.add_handler(MessageHandler(Filters.text & filter_view_alliance, view_alliance))

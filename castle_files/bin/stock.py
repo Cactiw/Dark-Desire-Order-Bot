@@ -8,6 +8,7 @@ from castle_files.work_materials.equipment_constants import equipment_names, get
     get_equipment_by_code, search_equipment_by_name
 from castle_files.work_materials.alch_constants import alch_recipes
 from castle_files.work_materials.recipes import craft as craft_dict
+
 from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.libs.guild import Guild
@@ -18,7 +19,7 @@ from castle_files.bin.stock_service import get_item_name_by_code, get_item_code_
     get_equipment_by_name
 from castle_files.bin.service_functions import increase_or_add_value_to_dict, decrease_or_pop_value_from_dict, \
     pop_from_user_data_if_presented, merge_int_dictionaries, build_inline_buttons_menu
-from castle_files.bin.buttons import get_craft_buttons
+from castle_files.bin.buttons import get_craft_buttons, get_autospend_buttons
 from castle_files.bin.equipment import TIERS, InlineKeyboardMarkup
 
 from distutils.util import strtobool
@@ -760,3 +761,103 @@ def set_craft_possible_tier(bot, update, user_data):
     except Exception:
         logging.error(traceback.format_exc())
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Готово!")
+
+
+
+def autospend_gold(bot, update, start_text="", message=None):
+    player = Player.get_player(update.message.from_user.id if update.message else update.callback_query.from_user.id)
+    if not player.has_api_access:
+        bot.send_message(chat_id=player.id, text="Для автослива голды необходим доступ к апи.\nПредоставьте его: /auth")
+        return
+    from castle_files.bin.api import check_wtb_access
+    if not check_wtb_access(bot, update):
+        return
+
+    rules = player.api_info.get("autospend_rules")
+    enabled = player.settings.get("autospend")
+    if enabled is None:
+        enabled = True
+        player.settings.update({"autospend": True})
+        player.update()
+    response = start_text + "<b>{}💰Автослив золота</b>\n".format("✅" if enabled else "❌")
+    if not rules:
+        response += "Правил ещё нет. Добавьте правило!"
+    else:
+        response += "Заданные правила автослива:\n"
+        for i, (resource_code, max_gold) in enumerate(rules):
+            response += "{}) <b>{}</b> {}💰 /del_gsrule_{}\n".format(
+                i,
+                get_resource_name_by_code(resource_code) or "Неизвестно ({})".format(resource_code),
+                max_gold, i
+            )
+    buttons = get_autospend_buttons(enabled)
+
+    if update.callback_query:
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+    if message:
+        bot.editMessageText(chat_id=message.chat_id, message_id=message.message_id, text=response,
+                            parse_mode='HTML', reply_markup=buttons)
+    else:
+        bot.send_message(chat_id=player.id, text=response, parse_mode='HTML', reply_markup=buttons)
+
+
+def autospend_toggle(bot, update):
+    player = Player.get_player(update.callback_query.from_user.id)
+    enabled = player.settings.get("autospend", False)
+    player.settings.update({"autospend": not enabled})
+    player.update()
+    autospend_gold(bot, update, message=update.callback_query.message)
+
+
+
+
+def add_autospend_rule(bot, update, user_data):
+    user_data.update({"status": "add_autospend_rule"})
+    bot.send_message(chat_id=update.callback_query.message.chat_id,
+                     text="Введите новое правило слива голды.\nСинтаксис: {код_ресурса} {максимальная_цена_покупки}")
+    bot.answer_callback_query(update.callback_query.id)
+
+
+def new_autospend_rule(bot, update, user_data):
+    player = Player.get_player(update.message.from_user.id)
+    try:
+        resource_code, max_gold = update.message.text.split()
+    except (ValueError, TypeError):
+        bot.send_message(chat_id=player.id, text="Неверный синтаксис.")
+        return
+    resource_name = get_resource_name_by_code(resource_code)
+    if resource_name is None:
+        bot.send_message(chat_id=player.id, text="Ресурс не найден. Повторите попытку.")
+        return
+
+    try:
+        max_gold = int(max_gold)
+        if max_gold <= 0 or max_gold > 1000:
+            raise ValueError
+    except ValueError:
+        bot.send_message(chat_id=player.id, text="Цена должна быть положительным числом, не больше 1000.")
+        return
+
+    rules = player.api_info.get("autospend_rules", [])
+    new_rules = list(filter(lambda rule: rule[0] != resource_code, rules))
+    new_rules.append([resource_code, max_gold])
+    player.api_info.update({"autospend_rules": new_rules})
+    player.update()
+    user_data.pop("status")
+
+    autospend_gold(bot, update, start_text="✅Правило добавлено!\n\n")
+
+
+def delete_autospend_rule(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    rules = player.api_info.get("autospend_rules")
+    try:
+        parse = re.match("/del_gsrule_(\\d+)", update.message.text)
+        rules.pop(int(parse.group(1)))
+    except Exception:
+        bot.send_message(chat_id=player.id, text="Не удалось удалить правило.\nНомер правила верен? Правило существует?")
+        return
+    player.update()
+    autospend_gold(bot, update, start_text="✅Правило удалено!\n\n")
+

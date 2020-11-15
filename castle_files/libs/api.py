@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import dispatcher, classes_to_emoji_inverted, moscow_tz, Conn, psql_creditals,\
-    MID_CHAT_ID, SUPER_ADMIN_ID
+    MID_CHAT_ID, SUPER_ADMIN_ID, job
 from globals import master_pid
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -101,12 +101,18 @@ class CW3API:
             "authAdditionalOperation": self.on_request_additional_operation,
             "grantAdditionalOperation": self.on_grant_additional_operational,
             "requestStock": self.on_stock_info,
+            "wantToBuy": self.on_want_to_buy,
             'cw3-deals': self.on_deals,
             # 'cw3-offers': self.on_offers,  # not implemented
             'cw3-sex_digest': self.on_sex_digest,
             'cw3-yellow_pages': self.on_yellow_pages,
             # 'cw3-au_digest': self.on_au_digest,  # not implemented
         }
+        self.WTB_DELAY = 4
+
+    @property
+    def prices(self) -> dict:
+        return self.api_info.get("prices")
 
     def kafka_work(self, consumer):
         """
@@ -194,7 +200,6 @@ class CW3API:
             if player is None or (player.settings is not None and player.settings.get("sold_notify") is False):
                 return
             print(player.id, player.nickname)
-            print("player is not None")
             item, price, qty, b_castle, b_name = item, body.get("price"), qty, castle, body.get("buyerName")
             response = "🛒Вы продали <b>{}</b> <b>{}</b>.\nПолучено <b>{}</b>💰 ({} x {}💰).\n" \
                        "Покупатель: {}<b>{}</b>".format(qty, item, price * qty, qty, price, b_castle, b_name)
@@ -228,8 +233,11 @@ class CW3API:
                 except KeyError:
                     pass
                 player.update()
-
-        callback = self.callbacks.get(body.get("action"))
+        try:
+            callback = self.callbacks.get(body.get("action"))
+        except Exception:
+            logging.error("API {} error: {}".format(body.get("action"), traceback.format_exc()))
+            return
         if callback is None:
             logging.warning("Callback is None for {}".format(body))
             return
@@ -350,6 +358,8 @@ class CW3API:
             player.hp = profile.get("hp")
             player.max_hp = profile.get("maxHp")
             player.mana = profile.get("mana")
+            player.stamina = profile.get("stamina")
+            player.gold = profile.get("gold")
             if "🎗" in player.nickname:  # Отключено в связи с эмодзи в никах
                 pass
             else:
@@ -381,6 +391,10 @@ class CW3API:
                 player.update()
                 # Обновление сообщения с мобами
                 pass
+
+
+            if player.api_info.get("autospend_process"):
+                self.proceed_autospend(player)
         except Exception:
             logging.error(traceback.format_exc())
 
@@ -523,6 +537,21 @@ class CW3API:
             # print(player.stock)
         except Exception:
             logging.error(traceback.format_exc())
+
+    def on_want_to_buy(self, body):
+        # print(json.dumps(body, indent=4, ensure_ascii=False))
+        payload = body.get("payload")
+        player_id = payload.get("userId")
+        player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
+        if body.get("result") != "Ok":
+            logging.error("error on wtb, {}".format(body))
+            self.update_player(player_id=player.id, player=player)
+            return
+
+        if player is None:
+            return
+
+        self.update_player_later(player_id=player.id, when=self.WTB_DELAY, player=player)
 
     def on_guild_info(self, body):
         """
@@ -759,6 +788,13 @@ class CW3API:
             "action": "requestProfile"
         })
 
+    def update_player_later(self, player_id, when, player=None):
+        job.run_once(self._update_player_job, when, context=[player_id, player])
+
+    def _update_player_job(self, bot, job):
+        player_id, player = job.context
+        self.update_player(player_id, player=player)
+
     def update_gear(self, player_id, player=None):
         """
         Метод запроса обновления снаряжения игрока
@@ -805,13 +841,7 @@ class CW3API:
         :param player_id: int - Player.id
         :param player: optional | Player instance (to avoid database request)
         """
-        if player is None:
-            player = Player.get_player(player_id, notify_on_error=False)
-            if player is None:
-                raise RuntimeError
-        if player is None:
-            raise RuntimeError
-        token = player.api_info.get("token")
+        player, token = self.get_token_player(player_id, player)
         if token is None:
             self.remove_player_from_guild_access(Guild.get_guild(player.guild), player)
             raise RuntimeError
@@ -819,6 +849,83 @@ class CW3API:
             "token": token,
             "action": "guildInfo"
         })
+
+    def want_to_buy(self, player_id, item_code, quantity, price, exact_price, player=None):
+        player, token = self.get_token_player(player_id, player)
+        if token is None:
+            raise RuntimeError
+        self.publish_message({
+             "token": token,
+             "action": "wantToBuy",
+             "payload": {
+                 "itemCode": item_code,
+                 "quantity": int(quantity),
+                 "price": int(price),
+                 "exactPrice": exact_price
+             }
+        })
+
+    def proceed_autospend(self, player):
+        process = player.api_info.get("autospend_process")
+        rule_num, current_price, message_id, response = process.get("rule"), process.get("price"), \
+                                                    process.get("message_id"), process.get("message_text")
+        rules = player.api_info.get("autospend_rules")
+        response += "Осталось {}💰\n".format(player.gold)
+        try:
+            rule = rules[rule_num]
+        except IndexError:
+            logging.error("Ошибка автослива: кончились правила")
+            response += "Автослив завершён! ({}💰)\nКончились правила???".format(player.gold)
+            player.api_info.pop("autospend_process", None)
+            player.update()
+            dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
+            return
+        item_code, max_price = rule
+        if current_price is None:
+            current_price = self.prices.get(item_code, max_price) - 1
+        current_price += 1
+        if current_price > max_price or current_price > player.gold:
+            # Следующее правило слива
+            new_rule = self.find_suitable_autospend_rule(rule_num, rules, player)
+            if new_rule is None:
+                response += "Автослив завершён! ({}💰)\n".format(player.gold)
+                player.api_info.pop("autospend_process", None)
+                player.update()
+                dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
+                return
+            rule_num, item_code, current_price, to_buy = new_rule
+            process.update({"rule": rule_num, "price": current_price})
+        else:
+            to_buy = player.gold // current_price
+        response += "Покупаю {} х {} по {}💰...\n".format(to_buy, get_item_name_by_code(item_code), current_price)
+        process.update({"message_text": response})
+        dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
+        self.want_to_buy(player_id=player.id, item_code=item_code, price=current_price, quantity=to_buy,
+                         exact_price=False)
+        player.update()
+
+    def find_suitable_autospend_rule(self, rule_num, rules, player):
+        rule_num += 1
+        while rule_num < len(rules):
+            rule = rules[rule_num]
+            resource_code, max_price = rule
+            current_price = self.prices.get(resource_code, max_price)
+            to_buy = player.gold // current_price
+            if to_buy > 0:
+                return rule_num, resource_code, current_price, to_buy
+            rule_num += 1
+
+        return None
+
+    def get_token_player(self, player_id, player):
+        if player is None:
+            player = Player.get_player(player_id, notify_on_error=False)
+            if player is None:
+                raise RuntimeError
+        if player is None:
+            raise RuntimeError
+        token = player.api_info.get("token")
+        return player, token
 
     def remove_player_from_guild_access(self, guild, player):
         """

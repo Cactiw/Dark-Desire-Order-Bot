@@ -19,7 +19,7 @@ items = {
     "17": ["Clarity Shoes", "Clarity Shoes part", 3],
     "18": ["Clarity Bracers", "Clarity Bracers part", 3],
     "19": ["Thundersoul Sword", "Thundersoul blade", 5],
-    "20": ["Doomblade sword", "Doomblade blade", 5],
+    "20": ["Doomblade Sword", "Doomblade blade", 5],
     "21": ["Eclipse", "Eclipse blade", 5],
     "22": ["Guard's Spear", "Guard's blade", 5],
     "23": ["King's Defender", "King's Defender blade", 5],

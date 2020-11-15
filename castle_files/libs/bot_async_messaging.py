@@ -61,6 +61,7 @@ class AsyncBot(Bot):
                                  4: self.send_document, 5: self.send_sticker, 6: self.send_voice, 7: self.sendVideoNote}
         self.methods_ty_types = {v: k for k, v in list(self.types_to_methods.items())}
         self.types_to_original_methods = {
+            -1: super(AsyncBot, self).editMessageText,
             0: super(AsyncBot, self).send_message, 1: super(AsyncBot, self).send_video,
             2: super(AsyncBot, self).send_audio, 3: super(AsyncBot, self).send_photo,
             4: super(AsyncBot, self).send_document, 5: super(AsyncBot, self).send_sticker,
@@ -251,10 +252,15 @@ class AsyncBot(Bot):
             logging.error("Error in adapting message: {}".format(traceback.format_exc()))
             return args, kwargs
 
+    def edit_message_text(self, *args, **kwargs):
+        self.editMessageText(*args, **kwargs)
 
     def editMessageText(self, *args, **kwargs):
         args, kwargs = self.check_and_translate(*args, **kwargs)
-        return super(AsyncBot, self).editMessageText(*args, **kwargs)
+        kwargs.update({"message_type": -1})
+        message = MessageInQueue(*args, **kwargs)
+        self.message_queue.put(message)
+        return 0
 
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
@@ -338,6 +344,8 @@ class AsyncBot(Bot):
                 logging.error(traceback.format_exc())
                 method = super(AsyncBot, self).send_message
             message = method(*args, **kwargs)
+            kwargs.pop("message_type", None)
+            self._on_method_complete(message_type, message, *args, **kwargs)
         except Unauthorized:
             return UNAUTHORIZED_ERROR_CODE
         except BadRequest:
@@ -383,6 +391,20 @@ class AsyncBot(Bot):
             self.second_reset_queue.put(body)
             self.minute_reset_queue.put(body)
         return message
+
+    def _on_method_complete(self, message_type: int, message, *args, **kwargs):
+        """
+        Метод, который вызовется после выполнения метода апи бота
+        """
+        if message_type == 0:
+            # Сообщение было отправлено
+            on_sent = kwargs.get("on_sent")
+            if on_sent is not None:
+                # Нужно выполнить функцию после отправки сообщения, запускаю в отдельном потоке
+                threading.Thread(
+                    target=on_sent, args=[message] + kwargs.get("on_sent_args", []), kwargs=kwargs.get("on_sent_kwargs")
+                ).start()
+
 
     def start(self):
         for i in range(0, self.num_workers):

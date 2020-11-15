@@ -196,8 +196,8 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
                 ("💧: {}, ".format(player.mana) if player.mana else "") + \
         "🔘: <code>{}</code>\n".format(player.reputation)
     guild = Guild.get_guild(guild_id=player.guild) if player.guild is not None else None
-    response += "Гильдия: {} | {}🔋\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет",
-                                             player.stamina)
+    response += "Гильдия: {} | {}/{}🔋\n".format("<code>{}</code>".format(guild.tag) if guild is not None else "нет",
+                                                player.stamina, player.max_stamina)
     if guild is not None and self_request:
         response += "Покинуть гильдию: /leave_guild\n"
     elif guild is not None and guild.check_high_access(requested_player.id) and \
@@ -476,7 +476,8 @@ def hero(bot, update, user_data):
     lvl = int(re.search("🏅Уровень: (\\d+)", text).group(1))
     attack = int(re.search("⚔Атака: (\\d+)", text).group(1))
     defense = int(re.search("🛡Защита: (\\d+)", text).group(1))
-    stamina = int(re.search("🔋Выносливость: \\d+/(\\d+)", text).group(1))
+    stamina = re.search("🔋Выносливость: (\\d+)/(\\d+)", text)
+    stamina, max_stamina = tuple(map(lambda x: int(x), stamina.groups()))
     pet = re.search("Питомец:\n.(\\s.+\\(\\d+ lvl\\))", text)
     exp = int(re.search("🔥Опыт: (\\d+)", text).group(1))
     last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
@@ -522,7 +523,7 @@ def hero(bot, update, user_data):
             return
         player = Player(mes.from_user.id, mes.from_user.username, nickname, guild_tag, None, lvl, attack, defense,
                         stamina, pet, player_equipment, castle=castle, last_updated=last_updated, created=last_updated,
-                        exp=exp)
+                        exp=exp, max_stamina=max_stamina)
         # Добавляем игрока в бд
         player.insert_into_database()
         player = player.reload_from_database()
@@ -549,6 +550,7 @@ def hero(bot, update, user_data):
         player.attack = attack
         player.defense = defense
         player.stamina = stamina
+        player.max_stamina = max_stamina
         player.pet = pet
         player.equipment = player_equipment
         player.castle = castle
@@ -590,6 +592,11 @@ def get_profile_settings_text(player):
         mobs_notify = True
     response += "<code>{:<26}</code> <b>{}</b>\n".format("📌Пинг на мобов",
                                                          "✅включен" if mobs_notify else "❌отключен")
+
+    autospend = settings.get("autospend", False)
+    response += "<code>{:<26}</code> <b>{}</b>\n".format(
+        "💰Автослив золота", "✅включен" if autospend else "❌отключен"
+    )
     return response
 
 
