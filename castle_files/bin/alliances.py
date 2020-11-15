@@ -505,7 +505,11 @@ def alliance_pin(bot, update):
     new_text: str = update.message.text
     changed = False
     parse = re.findall("/ga_((atk|def)_(\\w+)|def)", update.message.text)
+    parsed_links = set()
     for full, cmd, link in parse:
+        if full in parsed_links:
+            continue
+        parsed_links.add(full)
         location = AllianceLocation.get_location_by_link(link)
         if location is None:
             self = False
