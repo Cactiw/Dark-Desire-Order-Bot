@@ -158,7 +158,8 @@ class AllianceResults:
                     dispatcher.bot.send_message(
                         chat_id=alliance.hq_chat_id, parse_mode='HTML',
                         text=AllianceResults.add_flag_to_old_alliance_locations(
-                            alliance.add_flag_to_name(cls.get_text()), alliance.id))
+                            alliance.add_flag_to_name(cls.get_text()), alliance.id),
+                        disable_web_page_preview=True)
                     top_str = cls.alliance_tops.get(alliance.name)
                     if top_str:
                         dispatcher.bot.send_message(
