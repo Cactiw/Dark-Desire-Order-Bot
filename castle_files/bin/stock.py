@@ -785,7 +785,8 @@ def autospend_gold(bot, update, start_text="", message=None):
     else:
         response += "Заданные правила автослива:\n"
         for i, (resource_code, max_gold) in enumerate(rules):
-            response += "{} {}💰 /del_gsrule_{}\n".format(
+            response += "{}) <b>{}</b> {}💰 /del_gsrule_{}\n".format(
+                i,
                 get_resource_name_by_code(resource_code) or "Неизвестно ({})".format(resource_code),
                 max_gold, i
             )
