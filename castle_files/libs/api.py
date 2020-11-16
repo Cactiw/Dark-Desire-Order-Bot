@@ -545,7 +545,7 @@ class CW3API:
         player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
         if body.get("result") != "Ok":
             logging.error("error on wtb, {}".format(body))
-            self.update_player(player_id=player.id, player=player)
+            self.update_player_later(player_id=player.id, when=self.WTB_DELAY, player=player)
             return
 
         if player is None:
