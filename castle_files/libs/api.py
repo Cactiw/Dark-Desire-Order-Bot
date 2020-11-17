@@ -543,6 +543,9 @@ class CW3API:
         payload = body.get("payload")
         player_id = payload.get("userId")
         player = Player.get_player(player_id, notify_on_error=False, new_cursor=self.cursor)
+        process = player.api_info.get("autospend_process")
+        if process:
+            process.update({"result": body.get("result")})
         if body.get("result") != "Ok":
             logging.error("error on wtb, {}".format(body))
             self.update_player_later(player_id=player.id, when=self.WTB_DELAY, player=player)
@@ -871,14 +874,16 @@ class CW3API:
                                                     process.get("message_id"), process.get("message_text")
         rules = player.api_info.get("autospend_rules")
         response += "Осталось {}💰\n".format(player.gold)
+        result = process.get("result")
+        if result in {"UserIsBusy", "BattleIsNear", "AuthorizationFailed", "NotRegistered", "BadFormat", "BadCurrency",
+                      "BadAmount"}:
+            response += "Результат: {}\n".format(result)
+            self.end_autospend(player, response, message_id)
         try:
             rule = rules[rule_num]
         except IndexError:
             logging.error("Ошибка автослива: кончились правила")
-            response += "Автослив завершён! ({}💰)\nКончились правила???".format(player.gold)
-            player.api_info.pop("autospend_process", None)
-            player.update()
-            dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
+            self.end_autospend(player, response, message_id)
             return
         item_code, max_price = rule
         if current_price is None:
@@ -888,10 +893,7 @@ class CW3API:
             # Следующее правило слива
             new_rule = self.find_suitable_autospend_rule(rule_num, rules, player)
             if new_rule is None:
-                response += "Автослив завершён! ({}💰)\n".format(player.gold)
-                player.api_info.pop("autospend_process", None)
-                player.update()
-                dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
+                self.end_autospend(player, response, message_id)
                 return
             rule_num, item_code, current_price, to_buy = new_rule
             process.update({"rule": rule_num, "price": current_price})
@@ -903,6 +905,12 @@ class CW3API:
         self.want_to_buy(player_id=player.id, item_code=item_code, price=current_price, quantity=to_buy,
                          exact_price=False)
         player.update()
+
+    def end_autospend(self, player, response, message_id):
+        response += "Автослив завершён! ({}💰)\n".format(player.gold)
+        player.api_info.pop("autospend_process", None)
+        player.update()
+        dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
 
     def find_suitable_autospend_rule(self, rule_num, rules, player):
         rule_num += 1
