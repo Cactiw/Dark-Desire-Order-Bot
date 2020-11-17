@@ -898,7 +898,7 @@ class CW3API:
         else:
             to_buy = player.gold // current_price
         response += "Покупаю {} х {} по {}💰...\n".format(to_buy, get_item_name_by_code(item_code), current_price)
-        process.update({"message_text": response})
+        process.update({"message_text": response, "current_price": current_price})
         dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
         self.want_to_buy(player_id=player.id, item_code=item_code, price=current_price, quantity=to_buy,
                          exact_price=False)
