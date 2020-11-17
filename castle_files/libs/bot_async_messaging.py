@@ -522,7 +522,10 @@ class AsyncBot(Bot):
         while self.processing and message_in_queue is not None:
             args = message_in_queue.args
             kwargs = message_in_queue.kwargs
-            self.actually_send_message(*args, **kwargs)
+            try:
+                self.actually_send_message(*args, **kwargs)
+            except Exception:
+                logging.error("Exception outside workloop: {}".format(traceback.format_exc()))
             message_in_queue = self.message_queue.get()
             if message_in_queue is None:
                 return 0
