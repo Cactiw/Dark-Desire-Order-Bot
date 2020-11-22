@@ -876,9 +876,11 @@ class CW3API:
         response += "Осталось {}💰\n".format(player.gold)
         result = process.get("result")
         if result in {"UserIsBusy", "BattleIsNear", "AuthorizationFailed", "NotRegistered", "BadFormat", "BadCurrency",
-                      "BadAmount"}:
+                      "BadAmount"} or True:  # Для отладки
             response += "Результат: {}\n".format(result)
-            self.end_autospend(player, response, message_id)
+            if result in {"UserIsBusy", "BattleIsNear", "AuthorizationFailed", "NotRegistered", "BadFormat", "BadCurrency",
+                      "BadAmount"}:
+                self.end_autospend(player, response, message_id)
         try:
             rule = rules[rule_num]
         except IndexError:
