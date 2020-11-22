@@ -13,7 +13,7 @@ def get_item_code_by_name(name):
     name = name.lower()
     max_len = len(list(items.values())[-1])
     for num, elem in list(items.items()):
-        if name == elem[1].lower():
+        if elem[1].lower() in name:
             code = "k" + num
             if len(elem) == max_len:
                 code = "k" + elem[-1]
