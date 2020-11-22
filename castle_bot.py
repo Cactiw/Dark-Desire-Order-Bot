@@ -313,10 +313,6 @@ def castle_bot_processing():
     # dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & FilterPlayerStatus("add_autospend_rule") & filter_is_pm,
-                                          new_autospend_rule, pass_user_data=True))
-    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/del_gsrule_.*") & filter_is_pm,
-                                          delete_autospend_rule))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_superadmin & Filters.regex("/wtb"), wtb))
 
     # Альянсы
@@ -477,6 +473,11 @@ def castle_bot_processing():
 
     # Хендлеры для виртуального замка
     dispatcher.add_handler(MessageHandler(Filters.text & filter_back, back, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & FilterPlayerStatus("add_autospend_rule") & filter_is_pm,
+                                          new_autospend_rule, pass_user_data=True))
+    dispatcher.add_handler(MessageHandler(Filters.command & Filters.regex("/del_gsrule_.*") & filter_is_pm,
+                                          delete_autospend_rule))
 
     # dispatcher.add_handler(MessageHandler(Filters.text & filter_not_constructed, not_constructed))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_not_constructed, construct, pass_user_data=True))

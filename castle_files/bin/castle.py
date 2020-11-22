@@ -99,6 +99,8 @@ def back(bot, update, user_data):
         "roulette": "tea_party",
         "awaiting_roulette_bet": "roulette",
 
+        "add_autospend_rule": "barracks"
+
     }
 
     statuses_rp_off = {
