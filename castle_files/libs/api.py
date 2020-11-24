@@ -870,7 +870,7 @@ class CW3API:
 
     def proceed_autospend(self, player):
         process = player.api_info.get("autospend_process")
-        rule_num, current_price, message_id, response = process.get("rule"), process.get("price"), \
+        rule_num, current_price, message_id, response = process.get("rule"), process.get("current_price"), \
                                                     process.get("message_id"), process.get("message_text")
         rules = player.api_info.get("autospend_rules")
         response += "Осталось {}💰\n".format(player.gold)
@@ -903,10 +903,10 @@ class CW3API:
             to_buy = player.gold // current_price
         response += "Покупаю {} х {} по {}💰...\n".format(to_buy, get_item_name_by_code(item_code), current_price)
         process.update({"message_text": response, "current_price": current_price})
+        player.update()
         dispatcher.bot.edit_message_text(chat_id=player.id, message_id=message_id, text=response)
         self.want_to_buy(player_id=player.id, item_code=item_code, price=current_price, quantity=to_buy,
                          exact_price=False)
-        player.update()
 
     def end_autospend(self, player, response, message_id):
         response += "Автослив завершён! ({}💰)\n".format(player.gold)
