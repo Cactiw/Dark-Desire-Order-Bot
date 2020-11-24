@@ -169,7 +169,9 @@ def guild_recipes(bot, update, user_data):
     mes = update.message
     user_recipes = {}
     for string in mes.text.splitlines()[1:]:
-        item = re.match("r(\\S+) (.+) x (\\d+)", string)
+        item = re.match("r(\\S+) 📃(.+) x (\\d+)", string)
+        if item is None:
+            continue
         item_code = item.group(1)
         item_name = item.group(2)
         item_count = int(item.group(3))
@@ -188,7 +190,10 @@ def guild_parts(bot, update, user_data):
         bot.send_message(chat_id=mes.chat_id, text="Пришли мне форвард /g_stock_rec из @ChatWarsBot")
         return
     for string in mes.text.splitlines()[1:]:
-        item_code = re.match("k\\S+", string).group()[1:]
+        item_code = re.match("k\\S+", string)
+        if item_code is None:
+            continue
+        item_code = item_code.group()[1:]
         item_count = int(re.search("x (\\d+)", string).group(1))
         recipes_count = recipes.get(item_code)
         if recipes_count is None:
