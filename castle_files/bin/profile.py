@@ -19,6 +19,7 @@ from castle_files.bin.api import auth
 from castle_files.bin.quest_triggers import on_doc_status
 
 from castle_files.work_materials.filters.general_filters import filter_is_pm
+from castle_files.work_materials.level_constants import levels
 
 from telegram.error import TelegramError
 
@@ -715,6 +716,18 @@ def profile_exp(bot, update):
         response += "{}: +🔥<code>{}</code>" \
                     "\n".format(datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None).strftime("%d/%m/%y"),
                                 player.exp - previous_exp)
+        prediction_data = list(player.exp_info.values())[-4:]
+        prediction_data = [prediction_data[i] - prediction_data[i - 1] for i in range(1, len(prediction_data))]
+        if prediction_data:
+            avg_exp = sum(prediction_data) / len(prediction_data)
+            remain = levels.get(player.lvl + 1, {}).get("exp")
+            if remain is not None:
+                response += "\nВ среднем <code>{}</code>🔥 в день.\n" \
+                            "До следующего уровня приблизительно <b>{}</b> дней.".format(
+                    int(avg_exp),
+                    int(remain // avg_exp) + (1 if remain % avg_exp else 0)
+                )
+
     bot.send_message(chat_id=update.callback_query.from_user.id, text=response, parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
 
