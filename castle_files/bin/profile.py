@@ -720,13 +720,17 @@ def profile_exp(bot, update):
         prediction_data = [prediction_data[i] - prediction_data[i - 1] for i in range(1, len(prediction_data))]
         if prediction_data:
             avg_exp = sum(prediction_data) / len(prediction_data)
-            remain = levels.get(player.lvl + 1, {}).get("exp")
-            if remain is not None:
-                response += "\nВ среднем <code>{}</code>🔥 в день.\n" \
-                            "До следующего уровня приблизительно <b>{}</b> дней.".format(
-                    int(avg_exp),
-                    int(remain // avg_exp) + (1 if remain % avg_exp else 0)
-                )
+            need_reach = levels.get(player.lvl + 1, {}).get("exp")
+            if need_reach is not None:
+                remain = need_reach - player.exp
+                if remain < 0:
+                    logging.error("Wrong info about level exp: {} {} {}".format(player.nickname, player.lvl, player.exp))
+                else:
+                    response += "\nВ среднем <code>{}</code>🔥 в день.\n" \
+                                "До следующего уровня приблизительно <b>{}</b> дней.".format(
+                                    int(avg_exp),
+                                    int(remain // avg_exp) + (1 if remain % avg_exp else 0)
+                        )
 
     bot.send_message(chat_id=update.callback_query.from_user.id, text=response, parse_mode='HTML')
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
