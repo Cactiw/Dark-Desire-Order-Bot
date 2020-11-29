@@ -729,7 +729,7 @@ def profile_exp(bot, update):
                     response += "\nВ среднем <code>{}</code>🔥 в день.\n" \
                                 "До следующего уровня приблизительно <b>{}</b> дней.".format(
                                     int(avg_exp),
-                                    int(remain // avg_exp) + (1 if remain % avg_exp else 0)
+                                    int(remain // avg_exp) + (1 if remain % avg_exp else 0) if avg_exp > 0 else "❔"
                         )
 
     bot.send_message(chat_id=update.callback_query.from_user.id, text=response, parse_mode='HTML')
