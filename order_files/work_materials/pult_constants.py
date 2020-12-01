@@ -8,10 +8,12 @@ times = ["⚠️", "58", "59", "30", "45", "50"]
 times_to_time = [None, datetime.timedelta(minutes=2), datetime.timedelta(minutes=1),
                  datetime.timedelta(seconds=30), datetime.timedelta(seconds=15), datetime.timedelta(seconds=10)]
 
-tactics = ["/t\n🐢", "/t\n🌹", "/t\n🍆", "/t\n🍁", "/rand", ""]
-tactics_to_order = ["/tactics_tortuga", "/tactics_rassvet", "/tactics_ferma", "/tactics_amber", "/tactics_random", ""]
+tactics = ["/t\n🐢", "/t\n☘️", "/t\n🍆", "/t\n🍁", "/t\n🦇", ""]
+tactics_to_order = ["/tactics_tortuga", "/tactics_oplot", "/tactics_ferma", "/tactics_amber", "/tactics_night", ""]
 tactics_order_to_emoji = {"/tactics_tortuga": "🐢", "/tactics_rassvet": "🌹", "/tactics_ferma": "🍆",
-                          "/tactics_amber": "🍁", "/tactics_random": "❓", "": ""}
+                          "/tactics_amber": "🍁", "/tactics_random": "❓",
+                          "/tactics_night": "🌹", "tactics_oplot": "☘️",
+                          "": ""}
 
 defense = ["Деф дома 🖤", "В атаку!", ""]
 defense_to_order = ["\uD83D\uDDA4Деф!🛡", "Attack!", None]
