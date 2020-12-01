@@ -229,6 +229,7 @@ def players_update_monitor():
                 continue
             if i % GUILD_UPDATE_INTERVAL_SECONDS == 0:
                 # Обновление гильдии
+                logging.info("Updating guild...")
                 request = "select guild_id from guilds order by last_updated nulls first"
                 cursor.execute(request)
                 rows = cursor.fetchall()
@@ -242,9 +243,10 @@ def players_update_monitor():
                 if guild is None or player_id is None:
                     logging.error("No guild to update")
                     continue
+                logging.info("Updating {} through CW3 API".format(guild.tag))
                 cwapi.update_guild_info(player_id)
                 guild.api_info.update()
-                logging.debug("Updating {} through CW3 API".format(guild.tag))
+                logging.debug("Updating {} through CW3 API ({})".format(guild.tag, player_id))
 
             request = "select id from players where api_info -> 'token' is not null order by last_updated limit %s"
             cursor.execute(request, (MAX_PLAYERS_AUTO_UPDATE_PER_SECOND,))

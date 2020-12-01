@@ -563,6 +563,7 @@ class CW3API:
         """
         try:
             payload = body.get("payload")
+            print(body)
             if payload is None:
                 logger.debug("Payload is None in guild info: {}".format(body))
                 return
@@ -606,7 +607,7 @@ class CW3API:
                 logging.warning("Received guild info, but player is None (or guild) for id {}".format(player_id))
                 return
             if guild is None or guild.tag != tag:
-                logging.warning("Received guild info, but guild is None or not euqal for"
+                logging.warning("Received guild info, but guild is None or not equqal for"
                                 " {} (@{})".format(player.nickname, player.username))
                 if guild is not None:
                     logging.info("Removing info about access from incorrect guild")
