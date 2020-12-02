@@ -255,12 +255,15 @@ class AsyncBot(Bot):
     def edit_message_text(self, *args, **kwargs):
         self.editMessageText(*args, **kwargs)
 
-    def editMessageText(self, *args, **kwargs):
+    def editMessageTextRestricted(self, *args, **kwargs):
         args, kwargs = self.check_and_translate(*args, **kwargs)
         kwargs.update({"message_type": -1})
         message = MessageInQueue(*args, **kwargs)
         self.message_queue.put(message)
         return 0
+
+    def editMessageText(self, *args, **kwargs):
+        return super(AsyncBot, self).editMessageText(*args, **kwargs)
 
     def sync_send_message(self, *args, **kwargs):
         return super(AsyncBot, self).send_message(*args, **kwargs)
