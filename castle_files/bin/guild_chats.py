@@ -10,7 +10,6 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.work_materials.globals import dispatcher
 from castle_files.bin.telethon_script import castles_stats_queue
-from castle_files.bin.api import check_guilds_api_access
 from castle_files.bin.alliances import parse_alliance_battle_results
 
 from telegram.error import TelegramError

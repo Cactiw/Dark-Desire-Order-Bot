@@ -5,6 +5,7 @@ from mwt import MWT
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import datetime
+import logging
 import re
 
 
@@ -88,6 +89,17 @@ def plan_work(callback, hour, minute, second, context={}):
     send_time = datetime.datetime.combine(date_to_send, time_to_send)  # Время в мск
     send_time = moscow_tz.localize(send_time).astimezone(tz=local_tz).replace(tzinfo=None)  # Локальное время
     job.run_once(callback, when=send_time, context=context)
+
+
+def plan_work_week(callback, day: int, hour: int, context={}):
+    today = datetime.date.today()
+    target = datetime.datetime.combine(today + datetime.timedelta(days=day - today.weekday()),
+                                       datetime.time(hour))
+    if target - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) < datetime.timedelta(0):
+        # Время уже прошло, планируем на следующую неделю
+        target += datetime.timedelta(days=7)
+    job.run_once(callback, target, context=context)
+    logging.info("Academy guild stats notify planned on {}".format(great_format_time(target)))
 
 
 digit_to_emoji = {

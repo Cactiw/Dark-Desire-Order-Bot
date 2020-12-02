@@ -563,7 +563,6 @@ class CW3API:
         """
         try:
             payload = body.get("payload")
-            print(body)
             if payload is None:
                 logger.debug("Payload is None in guild info: {}".format(body))
                 return

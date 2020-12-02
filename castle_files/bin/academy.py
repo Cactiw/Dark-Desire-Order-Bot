@@ -5,7 +5,7 @@
 from castle_files.libs.guild import Guild
 from castle_files.libs.player import Player
 
-from castle_files.bin.service_functions import great_format_time
+from castle_files.bin.service_functions import great_format_time, plan_work_week
 
 from castle_files.work_materials.globals import ACADEMY_HQ_CHAT_ID, SUPER_ADMIN_ID, moscow_tz, job
 
@@ -123,16 +123,6 @@ def send_guilds_stats(bot, job):
     bot.send_message(chat_id=ACADEMY_HQ_CHAT_ID, text=response, parse_mode='HTML')
 
     time.sleep(1)
-    plan_academy_guilds_stats_send()
+    plan_work_week(send_guilds_stats, SUNDAY_INDEX, ACADEMY_NOTIFY_HOUR)
 
-
-def plan_academy_guilds_stats_send():
-    today = datetime.date.today()
-    target = datetime.datetime.combine(today + datetime.timedelta(days=SUNDAY_INDEX - today.weekday()),
-                                       datetime.time(ACADEMY_NOTIFY_HOUR))
-    if target - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None) < datetime.timedelta(0):
-        # Время уже прошло, планируем на следующую неделю
-        target += datetime.timedelta(days=7)
-    job.run_once(send_guilds_stats, target)
-    logging.info("Academy guild stats notify planned on {}".format(great_format_time(target)))
 
