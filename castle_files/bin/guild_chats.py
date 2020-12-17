@@ -22,6 +22,8 @@ import logging
 import copy
 import traceback
 
+import psycopg2
+
 
 ping_by_chat_id = {}
 
@@ -59,6 +61,12 @@ def save_worldtop(worldtop: dict, battle_id: int = None):
             args.append(v)
         request = request[:-2] + ')' + 'values(%s, %s, %s, %s, %s, %s, %s, %s)'
         cursor.execute(request, args)
+    except psycopg2.IntegrityError:
+        request = "update worldtop set "
+        for k, v in list(worldtop.items()):
+            request += "{} = {}, ".format(emodji_to_castle_names.get(k), v)
+        request = request[:-2] + " where battle_id = {}".format(battle_id)
+        cursor.execute(request)
     except Exception:
         logging.error(traceback.format_exc())
 
