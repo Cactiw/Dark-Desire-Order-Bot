@@ -295,7 +295,7 @@ def send_mob_message_and_start_updating(bot, mes, player, response, buttons, is_
         lst.append({"chat_id": chat_id, "message_id": new_mes.message_id,
                     "cw_send_time": forward_message_date.timestamp(), "access": access,
                     "last_update_time": time.time()})
-    if access:
+    if access and ping:
         for pl in ping:
             if pl.has_api_access:
                 cwapi.update_player(player_id=pl.id, player=pl)
