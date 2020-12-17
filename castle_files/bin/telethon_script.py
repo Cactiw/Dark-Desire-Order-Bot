@@ -66,7 +66,10 @@ def script_work():
         print("telegram script launched")
         loop = asyncio.get_event_loop()
         loop.create_task(send_worldtop())
-        loop.run_until_complete(client.disconnected)
+        try:
+            loop.run_until_complete(client.disconnected)
+        except KeyboardInterrupt:
+            pass
 
 
 async def stats_handler(event):
