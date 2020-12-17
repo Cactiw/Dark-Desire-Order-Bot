@@ -1,7 +1,7 @@
 from telethon.sync import TelegramClient, events, connection
 from telethon.tl.types import PeerChannel
 
-from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG
+from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG, CHAT_WARS_ID
 
 try:
     from config import phone, username, password, api_id, api_hash
@@ -14,11 +14,14 @@ except ImportError:
 
 from multiprocessing import Queue
 
+import castle_files.work_materials.globals as globals
+
 from retrying import retry
 
 import socks
 import logging
 import traceback
+import asyncio
 
 logging.getLogger('telethon').setLevel(logging.WARNING)
 
@@ -31,6 +34,10 @@ guilds_str = ""
 
 WAIT_BEFORE_RETRY = 30
 MAX_RETRIES = 5
+
+WORLDTOP_PERIOD = 30  # minutes
+
+client: TelegramClient = None
 
 
 def not_keyboard_interrupt(exception: Exception) -> bool:
@@ -49,6 +56,7 @@ def script_work():
                                       connection=connection.tcpmtproxy.ConnectionTcpMTProxyIntermediate)
     else:
         admin_client = TelegramClient(session_path, api_id, api_hash)
+    client = admin_client
     # admin_client.start(phone, password)
     #
     # client = admin_client
@@ -56,8 +64,9 @@ def script_work():
         admin_client.get_entity("ChatWarsBot")
         client.add_event_handler(stats_handler, event=events.NewMessage)
         print("telegram script launched")
-
-        admin_client.run_until_disconnected()
+        loop = asyncio.get_event_loop()
+        loop.create_task(send_worldtop())
+        loop.run_until_complete(client.disconnected)
 
 
 async def stats_handler(event):
@@ -77,3 +86,16 @@ async def stats_handler(event):
             castles_stats_queue.put({"data": guilds_str, "debug": debug})
             guilds_str = ""
             return
+    elif event.message.from_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
+        logging.info("Received /worldtop")
+        castles_stats_queue.put({"data": text, "type": "worldtop"})
+
+
+async def send_worldtop():
+    await asyncio.sleep(5)
+    await client.send_message(CHAT_WARS_ID, "/worldtop")
+    for i in range(WORLDTOP_PERIOD * 60 // 5):
+        if not globals.processing:
+            return
+        await asyncio.sleep(5)
+    await send_worldtop()

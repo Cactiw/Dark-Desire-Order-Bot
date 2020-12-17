@@ -121,19 +121,8 @@ def parse_stats():
                     dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
             worldtop_strings = data.split("\n\n")[-1].splitlines()
             worldtop = load_worldtop(battle_id=count_battle_id() - 1)
+            parse_worldtop_strings_results(worldtop_strings)
             old_worldtop = copy.deepcopy(worldtop)
-            for string in worldtop_strings:
-                parse = re.search("(.).* \\+(\\d+) 🏆 очков", string)
-                if parse is None:
-                    continue
-                castle = parse.group(1)
-                count = int(parse.group(2))
-                score = worldtop.get(castle, 0)
-                score += count
-                worldtop.update({castle: score})
-                sort_worldtop(worldtop)
-                logging.info("Worldtop updated: {}: {}".format(castle, count))
-            save_worldtop(worldtop)
             if not debug:
                 send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
@@ -144,6 +133,9 @@ def parse_stats():
                 parse_alliance_battle_results(data, message_id, debug)
             except Exception:
                 logging.error(traceback.format_exc())
+        elif "Past battles" in data:
+            # /worldtop
+            parse_save_worldtop(data)
         else:
             #  Сообщение о пиратстве
             response_by_tags = {}
@@ -176,6 +168,33 @@ def parse_stats():
                     continue
                 dispatcher.bot.send_message(chat_id=guild.chat_id, text=string, parse_mode='HTML')
         data = castles_stats_queue.get()
+
+
+def parse_worldtop_strings_results(worldtop_strings):
+    worldtop = load_worldtop(battle_id=count_battle_id() - 1)
+    for string in worldtop_strings:
+        parse = re.search("(.).* \\+(\\d+) 🏆 очков", string)
+        if parse is None:
+            continue
+        castle = parse.group(1)
+        count = int(parse.group(2))
+        score = worldtop.get(castle, 0)
+        score += count
+        worldtop.update({castle: score})
+        sort_worldtop(worldtop)
+        logging.info("Worldtop updated: {}: {}".format(castle, count))
+    save_worldtop(worldtop)
+
+
+def parse_save_worldtop(text):
+    worldtop = load_worldtop()
+    for string in text.splitlines():
+        parse = re.search("([{}]).+?(\\d+) 🏆 очков".format("".join(castles)), string)
+        if parse:
+            castle, points = parse.groups()
+            worldtop.update({castle: points})
+    save_worldtop(worldtop)
+
 
 
 def send_worldtop_update(old_worldtop: dict, worldtop: dict):
