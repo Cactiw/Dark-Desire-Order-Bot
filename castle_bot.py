@@ -307,6 +307,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('g_stock_equip', stock, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('g_stock_other', stock, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('repair', repair))
+    dispatcher.add_handler(CommandHandler('repair_full', repair))
     dispatcher.add_handler(CommandHandler('ws', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('/ws_\\w+'), ws_with_code))

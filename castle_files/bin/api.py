@@ -287,10 +287,10 @@ def repair_comparator(shop: dict, castle: str):
     :return:
     """
     shop_castle = shop.get("ownerCastle")
-    gold = shop.get("maintenanceCost")
+    gold, mana = shop.get("maintenanceCost"), shop.get("mana")
     if shop_castle == castle:
-        return -1000 + gold
-    return gold
+        return -1000 + gold, -mana
+    return gold, -mana
 
 
 def ws_comparator(shop, castle):
@@ -312,6 +312,7 @@ def repair(bot, update):
     Показывает список лавок с открытым обслуживанием (команда /repair)
     """
     mes = update.message
+    full = "full" in update.message.text
     shops = cwapi.api_info.get("shops")
     if shops is None or not shops:
         bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
@@ -324,17 +325,21 @@ def repair(bot, update):
             sh.append(shop)
     sh.sort(key=lambda x: repair_comparator(x, player_castle), reverse=True)
 
-    response = "Доступные магазины для обслуживания:\n"
+    response = "Выгодные магазины для обслуживания:\n"
     castle_stage = sh[0].get("ownerCastle") if sh else '🖤'
+    gold_min = min(list(map(lambda shop: shop.get("maintenanceCost", 1000), sh)))
     for shop in sh:
         castle, link, gold, mana, discount, name = shop.get("ownerCastle"), shop.get("link"), shop.get("maintenanceCost"), \
                                              shop.get("mana"), shop.get("castleDiscount"), shop.get("name")
+        if not full and gold > gold_min and castle != player_castle:
+            continue
         if castle_stage != castle == player_castle:
             castle_stage = player_castle
             response += "\n"
         response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💰{} 💧{} {}" \
                     "\n".format(castle, "/ws_" + link, "/ws_" + link, gold, mana,
                                 "🏰: -{}%".format(discount) if discount is not None else "")
+    response += "\n<em>/repair_full - все открытые лавки</em>"
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 
 
