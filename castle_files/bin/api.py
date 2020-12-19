@@ -11,7 +11,7 @@ from castle_files.libs.bot_async_messaging import MAX_MESSAGE_LENGTH
 
 from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
-from castle_files.bin.service_functions import get_time_remaining_to_battle, plan_work_week
+from castle_files.bin.service_functions import get_time_remaining_to_battle, plan_work_week, get_current_datetime
 
 from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher, job
 
@@ -339,6 +339,11 @@ def repair(bot, update):
         response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💰{} 💧{} {}" \
                     "\n".format(castle, "/ws_" + link, "/ws_" + link, gold, mana,
                                 "🏰: -{}%".format(discount) if discount is not None else "")
+    last_updated = cwapi.api_info.get("shops_updated")
+    if last_updated:
+        updated = (get_current_datetime() - last_updated).total_seconds() // 60
+        response += "\nОбновлено {}".format("{} часов назад".format(int(updated // 60))
+                                            if updated // 60 else "{} минут назад".format(int(updated)))
     response += "\n<em>/repair_full - все открытые лавки</em>"
     bot.send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
 

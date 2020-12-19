@@ -12,6 +12,7 @@ from castle_files.libs.shop import Shop
 
 from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator, \
     get_item_name_by_code
+from castle_files.bin.service_functions import get_current_datetime
 
 import threading
 import logging
@@ -162,6 +163,7 @@ class CW3API:
             self.api_info.update({"shops": shops})
             for shop in shops:
                 Shop.update_or_create_shop(shop)
+            self.api_info.update({"shops_updated": get_current_datetime()})
             logging.info("Saved shops")
             # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         except Exception:
