@@ -361,6 +361,8 @@ texts_translate = {
     "Нужно": "Need",
     "Крафт": "Craft",
     "Изготовить": "Craft",
+    "Покупка запрещена. Разрешите покупки при помощи CWAPI повторно.":
+        "wtb command is forbidden. Allow purchases using CWAPI again.",
     "Автослив золота": "Gold auto-spend",
     "Заданные правила автослива:": "Current auto-spend rules:",
     "Введите новое правило слива голды.\nСинтаксис: {код_ресурса} {максимальная_цена_покупки}":

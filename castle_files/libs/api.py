@@ -552,6 +552,8 @@ class CW3API:
         if body.get("result") != "Ok":
             logging.error("error on wtb, {}".format(body))
             if body.get("result") == "Forbidden":
+                self.bot.send_message(chat_id=player_id,
+                                      text="Покупка запрещена. Разрешите покупки при помощи CWAPI повторно.")
                 self.auth_additional_operation(player_id, payload.get("requiredOperation"), player=player)
             else:
                 self.update_player_later(player_id=player.id, when=self.WTB_DELAY, player=player)
