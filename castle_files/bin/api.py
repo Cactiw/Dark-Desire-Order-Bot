@@ -44,6 +44,9 @@ def auth(bot, update):
     """
     Функция авторизации API CW3 (команда /auth)
     """
+    player = Player.get_player(update.message.from_user.id, notify_on_error=False)
+    if player:
+        player.api_info.pop("access", None)
     cwapi.request_auth_token(update.message.from_user.id)
     bot.send_message(chat_id=update.message.chat_id, text="Пришлите форвард сообщения, полученного от @ChatWarsBot.\n"
                                                           "Если ничего не пришло, то попробуйте ещё раз позже.")

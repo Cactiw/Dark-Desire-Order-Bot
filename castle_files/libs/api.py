@@ -744,12 +744,15 @@ class CW3API:
         if token is None:
             raise RuntimeError
         player.api_info.update({"operation": operation})
-        player.api_info.get("access").remove("wtb", None)
+        access = player.api_info.get("access", [])
+        access = list(filter(lambda x: x != "wtb", access))
+        player.api_info.update({"access": access})
         self.publish_message({
             "token": token,
             "action": "authAdditionalOperation",
             "payload": {"operation": operation}
         })
+        player.update()
 
     def grant_additional_operation(self, user_id, request_id, auth_code, player=None):
         """
