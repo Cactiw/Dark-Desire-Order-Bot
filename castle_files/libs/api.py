@@ -1070,7 +1070,7 @@ class CW3API:
             # 'cw3-au_digest',
 
             bootstrap_servers=['digest-api.chtwrs.com:9092'],
-            auto_offset_reset='earliest',
+            auto_offset_reset='latest',
             enable_auto_commit=True,
             group_id=self.GROUP_ID,
             value_deserializer=lambda x: json.loads(x.decode('utf-8'))
