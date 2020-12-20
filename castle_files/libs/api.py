@@ -87,7 +87,7 @@ class CW3API:
         self.exchange = kombu.Exchange(self.EXCHANGE)
         self.inbound_queue = kombu.Queue(self.INBOUND)
 
-        self.NUM_KAFKA_CONSUMERS = 2
+        self.NUM_KAFKA_CONSUMERS = 1
         self.kafka_consumers = []
 
         self.sent = 0
