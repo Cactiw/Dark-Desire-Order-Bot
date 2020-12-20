@@ -551,7 +551,10 @@ class CW3API:
             process.update({"result": body.get("result")})
         if body.get("result") != "Ok":
             logging.error("error on wtb, {}".format(body))
-            self.update_player_later(player_id=player.id, when=self.WTB_DELAY, player=player)
+            if body.get("result") == "Forbidden":
+                self.auth_additional_operation(player_id, payload.get("requiredOperation"), player=player)
+            else:
+                self.update_player_later(player_id=player.id, when=self.WTB_DELAY, player=player)
             return
 
         if player is None:
@@ -741,6 +744,7 @@ class CW3API:
         if token is None:
             raise RuntimeError
         player.api_info.update({"operation": operation})
+        player.api_info.get("access").remove("wtb", None)
         self.publish_message({
             "token": token,
             "action": "authAdditionalOperation",
