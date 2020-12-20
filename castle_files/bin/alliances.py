@@ -246,9 +246,13 @@ def add_alliance_location(bot, update):
         player.reputation += 250
         player.update()
         text += "\nПолучено: 250🔘"
-    request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
-    cursor.execute(request, (mes.from_user.id, "add_alliance_location", 1, get_current_datetime(),
-                             json.dumps({"link": link}, ensure_ascii=False)))
+        request = "insert into castle_logs(player_id, action, result, date, additional_info) values (%s, %s, %s, %s, %s)"
+        cursor.execute(request, (mes.from_user.id, "add_alliance_location", 1, get_current_datetime(),
+                                 json.dumps({"link": link}, ensure_ascii=False)))
+    else:
+        request = "insert into castle_logs(action, result, date, additional_info) values (%s, %s, %s, %s)"
+        cursor.execute(request, ("add_alliance_location", 1, get_current_datetime(),
+                                 json.dumps({"link": link, "player_id": mes.from_user.id}, ensure_ascii=False)))
 
     bot.send_message(chat_id=mes.chat_id, text=text, reply_to_message_id=mes.message_id)
 
