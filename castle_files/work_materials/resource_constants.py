@@ -78,7 +78,7 @@ resources = {
     "Teclia shot": "76",
     "Pygmy spice": "77",
     "Assagane": "78",
-    "Ripheokamm": "79",
+    "Ripheokam": "79",
     "Gonitro": "80",
     "Void Moss": "81",
     "Bottle of Poison": "508",
