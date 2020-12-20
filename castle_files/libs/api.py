@@ -43,7 +43,7 @@ class CW3API:
     WAIT_BEFORE_RETRY_CONNECTION_SECONDS = 30
     api_info = {}
 
-    def __init__(self, cwuser: str, cwpass: str, workers: int = 1):
+    def __init__(self, cwuser: str, cwpass: str, workers: int = 1, debug: bool = False):
         """
         Инициализация класса для работы с АПИ
         :param cwuser: str - API username
@@ -82,7 +82,7 @@ class CW3API:
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
 
-        self.GROUP_ID = "cactiw_castle_skalen_CW3"
+        self.GROUP_ID = "cactiw_CW3" if not debug else "cactiw_castle_skalen_debug"
 
         self.exchange = kombu.Exchange(self.EXCHANGE)
         self.inbound_queue = kombu.Queue(self.INBOUND)
@@ -121,7 +121,7 @@ class CW3API:
         """
         for message in consumer:
             try:
-                # print(message.value)
+                print(message.value)
                 self.callbacks.get(message.topic, lambda x: x)(message.value)
             except Exception:
                 logging.error(traceback.format_exc())

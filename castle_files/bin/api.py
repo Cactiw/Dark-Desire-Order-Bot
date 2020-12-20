@@ -26,11 +26,16 @@ import datetime
 
 import re
 
+try:
+    from config import debug
+except ImportError:
+    debug = False
+
 MAX_PLAYERS_AUTO_UPDATE_PER_SECOND = 2
 GUILD_UPDATE_INTERVAL_SECONDS = 20
 
 
-cwapi = CW3API(cwuser, cwpass)
+cwapi = CW3API(cwuser, cwpass, debug=debug)
 
 
 def start_api():
