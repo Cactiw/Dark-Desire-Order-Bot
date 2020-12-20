@@ -40,6 +40,7 @@ def load_worldtop(battle_id: int = None) -> dict:
     """
     if battle_id is None:
         battle_id = count_battle_id()
+    cursor = conn.cursor()
     request = "select ferma, amber, oplot, rassvet, tortuga, night, skala from worldtop where battle_id = %s"
     cursor.execute(request, (battle_id,))
     row = cursor.fetchone()
@@ -47,10 +48,12 @@ def load_worldtop(battle_id: int = None) -> dict:
         return {}
     worldtop = {k: v for k, v in zip(castles, row)}
     sort_worldtop(worldtop)
+    cursor.close()
     return worldtop
 
 
 def save_worldtop(worldtop: dict, battle_id: int = None):
+    cursor = conn.cursor()
     try:
         if battle_id is None:
             battle_id = count_battle_id()
@@ -69,6 +72,7 @@ def save_worldtop(worldtop: dict, battle_id: int = None):
         cursor.execute(request)
     except Exception:
         logging.error(traceback.format_exc())
+    cursor.close()
 
 
 def get_castle_place_in_worldtop(worldtop: dict, castle: str) -> int:
