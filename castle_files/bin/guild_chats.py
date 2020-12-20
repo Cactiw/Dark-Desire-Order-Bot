@@ -133,8 +133,8 @@ def parse_stats():
                     dispatcher.bot.send_message(chat_id=CENTRAL_SQUARE_CHAT_ID, text=response_all, parse_mode='HTML')
             worldtop_strings = data.split("\n\n")[-1].splitlines()
             worldtop = load_worldtop(battle_id=count_battle_id() - 1)
-            parse_worldtop_strings_results(worldtop_strings)
             old_worldtop = copy.deepcopy(worldtop)
+            parse_worldtop_strings_results(worldtop_strings)
             if not debug:
                 send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
