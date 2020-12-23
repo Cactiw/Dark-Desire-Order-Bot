@@ -134,7 +134,7 @@ def parse_stats():
             worldtop_strings = data.split("\n\n")[-1].splitlines()
             worldtop = load_worldtop(battle_id=count_battle_id() - 1)
             old_worldtop = copy.deepcopy(worldtop)
-            parse_worldtop_strings_results(worldtop_strings)
+            worldtop = parse_worldtop_strings_results(worldtop_strings)
             if not debug:
                 send_worldtop_update(old_worldtop, worldtop)
             logging.info("Worldtop at the end: {}".format(worldtop))
@@ -196,6 +196,7 @@ def parse_worldtop_strings_results(worldtop_strings):
         sort_worldtop(worldtop)
         logging.info("Worldtop updated: {}: {}".format(castle, count))
     save_worldtop(worldtop)
+    return worldtop
 
 
 def parse_save_worldtop(text):
