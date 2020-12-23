@@ -358,6 +358,7 @@ texts_translate = {
     "Слишком короткий поисковый запрос \\(менее (4) символов\\)":
         "Search query is too short (minimum {} symbols are required)",
     "Найденная экипировка:": "Equipment found:",
+    "Крафт в стоках игроков (.+):": "Craft in {} guild stock:",
     "Нужно": "Need",
     "Крафт": "Craft",
     "Изготовить": "Craft",
