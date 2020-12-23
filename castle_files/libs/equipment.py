@@ -6,6 +6,8 @@
 
 from castle_files.libs.shop import Shop
 
+from castle_files.work_materials.item_consts import items
+
 import json
 import re
 
@@ -48,6 +50,8 @@ class Equipment:
         self.condition = condition
         self.quality = quality
 
+        self.item = self.get_item()
+
         self.source_name = self.name
 
     def set_code(self, code):
@@ -56,6 +60,21 @@ class Equipment:
         quality = re.search("[a-z]+$", code)
         if quality is not None:
             self.quality = quality.group(0).upper()
+
+    def get_item(self):
+        lower_name = self.name.lower()
+        for short_code, item in items.items():
+            if lower_name == item[0].lower():
+                return item
+        return None
+
+    @property
+    def recipe_code(self):
+        return "r" + (self.code if len(self.item) < len(list(items.values())[-1]) else self.item[-2])
+
+    @property
+    def part_code(self):
+        return "k" + (self.code if len(self.item) < len(list(items.values())[-1]) else self.item[-1])
 
     def format_code(self) -> str:
         return self.type + self.code
