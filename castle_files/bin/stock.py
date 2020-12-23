@@ -868,3 +868,85 @@ def delete_autospend_rule(bot, update):
     player.update()
     autospend_gold(bot, update, start_text="✅Правило удалено!\n\n")
 
+
+def get_gs_buttons(selected_tier: int):
+    return build_inline_buttons_menu(
+        TIERS, "gs_tier_", 2, None if selected_tier is None else lambda data, num: num == selected_tier,
+        skip_first=2)
+
+
+def gs(bot, update, user_data):
+    player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    if guild is None:
+        return
+    parse = re.match("/gs_(\\w+)", update.message.text)
+    if parse is None:
+        if update.message.text == "/gs":
+            return gs_craft(bot, update, player, guild, user_data)
+        bot.send_message(chat_id=update.message.chat_id, text="Неверный синтаксис")
+        return
+    code = parse.group(1)
+    all_parts = False
+    if code.startswith("ap"):
+        code = code.partition("ap")[2]
+        all_parts = True
+    response = "<b>{}</b> у игроков {}:\n".format(get_item_name_by_code(code), guild.format())
+    if all_parts:
+        eq = get_equipment_by_code(code)
+        for pl in sorted(
+                filter(
+                    lambda cur_pl: eq.recipe_code in cur_pl.stock or eq.part_code in cur_pl.stock, guild.get_members()
+                ), key=lambda cur_pl: cur_pl.stock.get(eq.recipe_code, 0) + cur_pl.stock.get(eq.part_code, 0),
+                reverse=True
+        ):
+            response += "<code>{}</code> {}📄 {}🔩\n".format(
+                pl.nickname, pl.stock.get(eq.recipe_code, 0), pl.stock.get(eq.part_code, 0))
+    else:
+        for pl in sorted(filter(lambda cur_pl: code in cur_pl.stock.keys(), guild.get_members()), key=lambda cur_pl: cur_pl.stock.get(code), reverse=True):
+            response += "<code>x{:<2}</code> {}\n".format(pl.stock.get(code), pl.username)
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode="HTML")
+
+
+def gs_craft(bot, update, player, guild, user_data):
+    response = get_gs_craft_text(guild)
+    pop_from_user_data_if_presented(user_data, "gs_tier")
+    bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML',
+                     reply_markup=InlineKeyboardMarkup(get_gs_buttons(None)))
+
+
+def gs_craft_button_click(bot, update, user_data):
+    tier = user_data.get("gs_tier")
+    parse = re.search("_(\\d+)", update.callback_query.data)
+    if parse is None:
+        bot.answerCallbackQuery(update.callback_query.id, text="Произошла ошибка.")
+        return
+    new_tier = int(parse.group(1))
+    if new_tier == tier:
+        new_tier = None
+        user_data.pop("gs_tier")
+    else:
+        user_data.update({"gs_tier": new_tier})
+    response = get_gs_craft_text(Guild.get_guild(Player.get_player(update.callback_query.from_user.id).guild), new_tier)
+    bot.editMessageText(
+        chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id,
+        text=response, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(get_gs_buttons(new_tier)))
+    bot.answerCallbackQuery(update.callback_query.id)
+
+
+def get_gs_craft_text(guild, tier=None) -> str:
+    response = "Крафт в стоках игроков:\n"
+    for short_code, item in list(items.items()):
+        eq = get_equipment_by_name(item[0])
+        if eq is None or (tier is not None and tier != eq.tier):
+            continue
+        part_code = eq.part_code
+        recipe_code = eq.recipe_code
+        part_count, recipe_count = 0, 0
+        for player in guild.get_members():
+            recipe_count += player.stock.get(recipe_code, 0)
+            part_count += player.stock.get(part_code, 0)
+        if part_count or recipe_count:
+            response += "{}{} {}📄 {}🔩 /gs_ap{}\n".format(
+                eq.get_tier_emoji(), eq.name, recipe_count, part_count, eq.format_code())
+    return response
