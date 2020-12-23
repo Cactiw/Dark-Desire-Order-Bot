@@ -935,7 +935,7 @@ def gs_craft_button_click(bot, update, user_data):
 
 
 def get_gs_craft_text(guild, tier=None) -> str:
-    response = "Крафт в стоках игроков:\n"
+    response = "Крафт в стоках игроков {}:\n".format(guild.format())
     for short_code, item in list(items.items()):
         eq = get_equipment_by_name(item[0])
         if eq is None or (tier is not None and tier != eq.tier):
