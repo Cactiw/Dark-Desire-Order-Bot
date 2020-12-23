@@ -901,10 +901,10 @@ def gs(bot, update, user_data):
                 reverse=True
         ):
             response += "<code>{}</code> {}📄 {}🔩\n".format(
-                pl.nickname, pl.stock.get(eq.recipe_code, 0), pl.stock.get(eq.part_code, 0))
+                pl.pure_nickname, pl.stock.get(eq.recipe_code, 0), pl.stock.get(eq.part_code, 0))
     else:
         for pl in sorted(filter(lambda cur_pl: code in cur_pl.stock.keys(), guild.get_members()), key=lambda cur_pl: cur_pl.stock.get(code), reverse=True):
-            response += "<code>x{:<2}</code> {}\n".format(pl.stock.get(code), pl.username)
+            response += "<code>x{:<2}</code> {}\n".format(pl.stock.get(code), pl.pure_nickname)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode="HTML")
 
 
