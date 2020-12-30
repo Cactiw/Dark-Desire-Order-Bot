@@ -132,6 +132,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                                           time_add_str, pot_str)
     if '⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡' in response:
         response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🖤 ФД! 🖤")
+        if datetime.date.today() < datetime.date(year=2021, day=3, month=1):
+            response += "\n\n🎇Happy New Year!🎇\n"
     buttons = get_order_buttons(castle_target, defense)
     orders_sent = 0
     if divisions == 'ALL':
