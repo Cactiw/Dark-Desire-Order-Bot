@@ -336,8 +336,20 @@ class CW3API:
         Метод, который вызывается при получении профиля игрока
         :param body: dict - Message body
         """
-        if body.get("result") != "Ok":
+        result = body.get("result")
+        if result != "Ok":
             logging.error("error while requesting profile, {}".format(body))
+            if result in {"Forbidden", "NoSuchUser"}:
+                try:
+                    payload = body.get("payload")
+                    user_id = payload.get("userId")
+                    player = Player.get_player(user_id, notify_on_error=False, new_cursor=self.cursor)
+                    if player is None:
+                        return
+                    player.api_info.clear()
+                    player.update()
+                except Exception:
+                    logging.error(traceback.format_exc())
             return
         # print(json.dumps(body, sort_keys=1, indent=4, ensure_ascii=False))
         try:
