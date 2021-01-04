@@ -50,6 +50,8 @@ class Equipment:
         self.condition = condition
         self.quality = quality
 
+        self.recipe_code = None
+        self.part_code = None
         self.item = self.get_item()
 
         self.source_name = self.name
@@ -65,16 +67,19 @@ class Equipment:
         lower_name = self.name.lower()
         for short_code, item in items.items():
             if lower_name == item[0].lower():
+                self.recipe_code = "r" + (short_code if len(item) < len(list(items.values())[-1]) else item[-2])
+                self.part_code = "k" + (short_code if len(item) < len(list(items.values())[-1]) else item[-1])
                 return item
         return None
 
-    @property
-    def recipe_code(self):
-        return "r" + (self.code if len(self.item) < len(list(items.values())[-1]) else self.item[-2])
-
-    @property
-    def part_code(self):
-        return "k" + (self.code if len(self.item) < len(list(items.values())[-1]) else self.item[-1])
+    # Commented out due to very high Chat Wars complexity - this system does not work well.
+    # @property
+    # def recipe_code(self):
+    #     return "r" + (self.code if len(self.item) < len(list(items.values())[-1]) else self.item[-2])
+    #
+    # @property
+    # def part_code(self):
+    #     return "k" + (self.code if len(self.item) < len(list(items.values())[-1]) else self.item[-1])
 
     def format_code(self) -> str:
         return self.type + self.code
