@@ -893,6 +893,9 @@ def gs(bot, update, user_data):
         all_parts = True
     response = "<b>{}</b> у игроков {}:\n".format(get_item_name_by_code(code), guild.format())
     if all_parts:
+        from castle_files.bin.api import update_whole_guild_stocks
+        update_whole_guild_stocks(player, guild)
+
         eq = get_equipment_by_code(code)
         for pl in sorted(
                 filter(

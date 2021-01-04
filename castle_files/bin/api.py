@@ -136,6 +136,13 @@ def update_guild(bot, update):
     bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
 
 
+def update_whole_guild_stocks(player, guild):
+    for pl in guild.get_members():
+        if pl.has_api_access:
+            cwapi.update_stock(pl.id, player=pl)
+    cwapi.update_guild_info(player.id)
+
+
 def try_update_all_stocks(player_id: int):
     try:
         cwapi.update_stock(player_id)
