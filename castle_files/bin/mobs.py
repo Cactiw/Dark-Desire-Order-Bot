@@ -170,6 +170,8 @@ def mob(bot, update):
               "%s, %s, %s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
     minutes = 5 if 'ambush' in mes.text else 3
+    if "Вы нашли странное укрытие. Некоторые символы в дверном проёме выглядят знакомо" in mes.text:
+        minutes = 7
     helpers = []
     try:
         cursor.execute(request, (link, names, lvls, forward_message_date, mes.from_user.id, is_pm, buffs, minutes))
