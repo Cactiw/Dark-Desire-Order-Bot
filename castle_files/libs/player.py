@@ -53,7 +53,7 @@ class Player:
         self.guild_history = guild_history
         self.exp = exp
         self.api_info = api_info
-        self.stock = stock
+        self.stock = stock or {}
         self.settings = settings or {}
         self.exp_info = exp_info or {}
         self.class_info = class_info or {}
