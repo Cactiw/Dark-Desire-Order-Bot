@@ -32,6 +32,9 @@ from telegram.error import TimedOut, TelegramError
 PING_LIMIT = 4
 MOBS_UPDATE_INTERVAL_SECS = 10
 
+AMBUSH_MINUTES = 6
+USUAL_MINUTES = 3
+
 
 def get_mobs_text_and_buttons(chat_id, link, mobs, lvls, helpers, forward_message_date, buffs, minutes,
                               created_player_id):
@@ -169,7 +172,7 @@ def mob(bot, update):
               "minutes) values (" \
               "%s, %s, %s, %s, %s, %s, %s, %s)"
     is_pm = filter_is_pm(mes)
-    minutes = 5 if 'ambush' in mes.text else 3
+    minutes = AMBUSH_MINUTES if 'ambush' in mes.text else USUAL_MINUTES
     if "Вы нашли странное укрытие. Некоторые символы в дверном проёме выглядят знакомо" in mes.text:
         minutes = 7
     helpers = []
@@ -188,7 +191,7 @@ def mob(bot, update):
                 return
             request = "update mobs set on_channel = true where link = %s"
             cursor.execute(request, (link,))
-    minutes = 5 if 'ambush' in mes.text else 3
+    minutes = AMBUSH_MINUTES if 'ambush' in mes.text else USUAL_MINUTES
     response, buttons, avg_lvl, remaining_time = get_mobs_text_and_buttons(mes.chat_id, link, names, lvls, helpers,
                                                                            forward_message_date, buffs, minutes,
                                                                            mes.from_user.id)
@@ -400,7 +403,7 @@ def mob_help(bot, update):
                                 show_alert=True)
     else:
         helpers.append(update.callback_query.from_user.username)
-    minutes = 5 if 'засада' in mes.text else 3
+    minutes = AMBUSH_MINUTES if 'засада' in mes.text else USUAL_MINUTES
     response, buttons, avg_lvl, remailing_time = get_mobs_text_and_buttons(mes.chat_id, link, names, lvls, helpers,
                                                                            forward_message_date, buffs, minutes,
                                                                            player_id)
