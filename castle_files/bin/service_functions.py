@@ -121,8 +121,8 @@ def translate_number_to_emoji(n: int) -> str:
     res = ""
     while n > 0:
         digit = n % 10
-        res += digit_to_emoji.get(digit, "")
-        n /= 10
+        res = digit_to_emoji.get(digit, "") + res
+        n //= 10
     return res
 
 
