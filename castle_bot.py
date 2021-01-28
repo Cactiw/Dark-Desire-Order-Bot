@@ -52,7 +52,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
     FilterPlayerStatus, filter_superadmin
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
-    stock, ws, players_update_monitor, ws_with_code, wtb, clear_guilds_api_players
+    stock, ws, players_update_monitor, ws_with_code, wtb, clear_guilds_api_players, autospend_start_button
 from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher, send_guilds_stats
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -204,6 +204,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CallbackQueryHandler(autospend_gold, pattern="autospend_gold"))
     dispatcher.add_handler(CallbackQueryHandler(add_autospend_rule, pattern="autospend_rule_add", pass_user_data=True))
     dispatcher.add_handler(CallbackQueryHandler(autospend_toggle, pattern="autospend_toggle"))
+    dispatcher.add_handler(CallbackQueryHandler(autospend_start_button, pattern="autospend_now"))
 
     dispatcher.add_handler(CallbackQueryHandler(change_profile_setting, pattern="prs.*_\\d+"))
 

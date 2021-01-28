@@ -586,14 +586,24 @@ def autospend_start(bot, job):
     player_ids = cursor.fetchall()
     for player_id in player_ids:
         player = Player.get_player(player_id, notify_on_error=False)
-        if not player.api_info.get("autospend_rules"):
-            continue
-        player.api_info.pop("autospend_process", None)
-        bot.send_message(
-            chat_id=player.id, text="Процесс слива голды начался!\n",
-            on_sent=on_autospend_message_sent, on_sent_args=[player.id]
-        )
+        autospend_player(bot, player)
     cursor.close()
+
+
+def autospend_start_button(bot, update):
+    player = Player.get_player(update.callback_query.from_user.id)
+    autospend_player(bot, player)
+    bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+
+
+def autospend_player(bot, player):
+    if player is None or not player.api_info.get("autospend_rules"):
+        return
+    player.api_info.pop("autospend_process", None)
+    bot.send_message(
+        chat_id=player.id, text="Процесс слива голды начался!\n",
+        on_sent=on_autospend_message_sent, on_sent_args=[player.id]
+    )
 
 
 def on_autospend_message_sent(message, player_id, *args, **kwargs):

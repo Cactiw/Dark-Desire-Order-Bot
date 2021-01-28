@@ -17,6 +17,7 @@ buttons_translate = {
     "⚙️Настройки": "⚙Settings",
     "💰Автослив золота⚙️": "💰Gold auto-spend⚙️",
     "➕Добавить правило": "➕Add rule",
+    "💰Слить сейчас": "💰Spend now",
     "🔃Выключить": "🔃Turn off",
     "🔃Включить": "🔃Turn on",
     "🛒Уведомления о продаже": "🛒Sale notifications",

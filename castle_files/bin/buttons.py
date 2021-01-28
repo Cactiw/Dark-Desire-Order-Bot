@@ -268,6 +268,9 @@ def get_autospend_buttons(enabled: bool = True):
         ],
         [
             InlineKeyboardButton("🔃Выключить" if enabled else "🔃Включить", callback_data="autospend_toggle")
+        ],
+        [
+            InlineKeyboardButton("💰Слить сейчас", callback_data="autospend_now")
         ]
     ]
     return InlineKeyboardMarkup(buttons)
