@@ -611,7 +611,6 @@ def profile_settings(bot, update):
     buttons = get_profile_settings_buttons(player)
     bot.send_message(chat_id=update.callback_query.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
-    print(response)
     pass
 
 
