@@ -211,7 +211,7 @@ def parse_save_worldtop(text):
 
 
 def send_worldtop_update(old_worldtop: dict, worldtop: dict):
-    send_chats = [SON_CHAT_ID, COMMAND_CHAT_ID]
+    send_chats = [SON_CHAT_ID]
     response = "Worldtop changes:\n"
     i = 0
     for k, v in list(worldtop.items()):
