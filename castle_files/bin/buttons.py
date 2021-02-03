@@ -200,6 +200,15 @@ def get_update_history_buttons(update_id, last_update_id):
     return InlineKeyboardMarkup(buttons)
 
 
+def get_portraits_buttons(current, high_access_list):
+    buttons = [[]]
+    if current > 0:
+        buttons[0].append(InlineKeyboardButton("⬅️️", callback_data="portraits_{}".format(current - 1)))
+    if current + 1 < len(high_access_list):
+        buttons[0].append(InlineKeyboardButton("➡️️", callback_data="portraits_{}".format(current + 1)))
+    return InlineKeyboardMarkup(buttons)
+
+
 def get_tops_buttons(stat, curr='all'):
     buttons = [
         [

@@ -2,7 +2,7 @@
 В этом модуле находятся функции, связанные с "игровым" замком - виртуальным замком Скалы в боте
 """
 from castle_files.bin.buttons import send_general_buttons, get_general_buttons, get_tops_buttons, \
-    get_roulette_tops_buttons
+    get_roulette_tops_buttons, get_portraits_buttons
 from castle_files.bin.service_functions import dict_invert
 from castle_files.bin.common_functions import unknown_input
 from castle_files.bin.mid import do_mailing, fill_mid_players
@@ -209,18 +209,47 @@ def castle_gates(bot, update, user_data):
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode='HTML', reply_markup=reply_markup)
 
 
-# Посмотреть состав мида
-def watch_portraits(bot, update):
-    """
-    Функция, показывающая советников короля (МИДа)
-    """
+def get_portraits_text(portrait_num: int = 0):
     response = "Стены замка увешаны портретами текущих генералов Скалы:\n"
     for user_id in high_access_list:
         player = Player.get_player(user_id, notify_on_error=False)
         if player is None:
             continue
         response += "@{} - <b>{}</b>\n".format(player.username, player.nickname)
-    bot.send_message(chat_id=update.message.from_user.id, text=response, parse_mode='HTML')
+
+    player = Player.get_player(high_access_list[portrait_num])
+    if player is None:
+        player = Player.get_player(high_access_list[0])
+    response += "\n<a href=\"https://t.me/{}\">{}</a>".format(player.username, player.nickname)
+    return response
+
+
+# Посмотреть состав мида
+def watch_portraits(bot, update):
+    """
+    Функция, показывающая советников короля (МИДа)
+    """
+    if update.message:
+        current = 0
+        need_update = False
+    else:
+        parse = re.search("_(\\d+)", update.callback_query.data)
+        if parse is None:
+            bot.answerCallbackQuery(callback_query_id=update.callback_query.id, text="Ошибка. Попробуйте снова.",
+                                    show_alert=True)
+            return
+        current = int(parse.group(1))
+        need_update = True
+    response = get_portraits_text(current)
+    if need_update:
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id,
+                            message_id=update.callback_query.message.message_id,
+                            text=response, parse_mode='HTML',
+                            reply_markup=get_portraits_buttons(current, high_access_list))
+        bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
+    else:
+        bot.send_message(chat_id=update.message.from_user.id, text=response, parse_mode='HTML',
+                         reply_markup=get_portraits_buttons(0, high_access_list))
 
 
 def headquarters(bot, update, user_data):

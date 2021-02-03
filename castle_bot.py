@@ -233,6 +233,7 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(gs_craft_button_click, pattern="gs_tier_\\d+", pass_user_data=True))
 
+    dispatcher.add_handler(CallbackQueryHandler(watch_portraits, pattern="portraits_\\d+"))
 
     dispatcher.add_handler(CallbackQueryHandler(guild_setting, pattern="giset_\\d+"))
     dispatcher.add_handler(CallbackQueryHandler(edit_guild_setting, pattern="gs.*_\\d+"))
