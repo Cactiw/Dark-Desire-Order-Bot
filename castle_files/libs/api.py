@@ -945,7 +945,7 @@ class CW3API:
             resource_code, max_price = rule
             current_price = self.prices.get(resource_code, max_price)
             to_buy = player.gold // current_price
-            if to_buy > 0:
+            if to_buy > 0 and current_price <= max_price:
                 return rule_num, resource_code, current_price, to_buy
             rule_num += 1
 
