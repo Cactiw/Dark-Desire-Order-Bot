@@ -140,7 +140,8 @@ def moderate_status(bot, update):
                             datetime.datetime.now(tz=moscow_tz).strftime("%d/%m/%y %H:%M:%S"))
     if yes:
         player.tea_party_info.update({"own_status": new_status})
-        text = "Новый статус (<b>{}</b>) успешно прошёл модерацию.".format(new_status)
+        text = "Новый статус (<b>{}</b>) успешно прошёл модерацию.\nАктивируйте его! " \
+               "Просмотреть доступные статусы: /statuses".format(new_status)
         # Записываю в статусы новый
         pl_statuses = player.tea_party_info.get("statuses")
         if pl_statuses is None:
