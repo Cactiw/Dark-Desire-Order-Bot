@@ -195,7 +195,7 @@ def mob(bot, update):
     response, buttons, avg_lvl, remaining_time = get_mobs_text_and_buttons(mes.chat_id, link, names, lvls, helpers,
                                                                            forward_message_date, buffs, minutes,
                                                                            mes.from_user.id)
-    player = Player.get_player(mes.from_user.id)
+    player: Player = Player.get_player(mes.from_user.id)
     if is_pm and (player is None or player.castle == '🖤'):
         if 'It\'s an ambush!'.lower() in mes.text.lower():
             bot.send_message(chat_id=mes.chat_id, text="Засады не отправляются на канал. "
@@ -210,6 +210,8 @@ def mob(bot, update):
             bot.send_message(chat_id=mes.chat_id, parse_mode='HTML',
                              text="Отправлено на <a href=\"https://t.me/mobs_skala_cw3\">канал</a>, а также в "
                                   "<a href=\"https://t.me/CwMobsNotifyBot\">бота</a>. Спасибо!")
+            if player is not None and player.has_api_access:
+                cwapi.update_player(player.id, player=player)
             try:
                 # requests.post('http://127.0.0.1:5555/addMob',
                 #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
