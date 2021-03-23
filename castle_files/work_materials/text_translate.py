@@ -410,7 +410,7 @@ texts_translate = {
         "Requested stock update of all guild members.\nThis may take some time.",
     "В скором времени данные будут обновлены.": "Data will be updated soon.",
     "Вы можете запросить обновление стоков всех игроков в гильдии: /update_guild_stocks":
-        "You can request a stock update for all players in the guild: / update_guild_stocks",
+        "You can request a stock update for all players in the guild: /update_guild_stocks",
 
     "Изменения в стоке:": "Stock changes",
     "Приобретено:": "Earned:",
