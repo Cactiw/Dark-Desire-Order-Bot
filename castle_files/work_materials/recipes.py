@@ -1753,7 +1753,7 @@ craft['mechblade arrows pack']['type'] = 'craft'
 craft['mechblade arrows pack']['guild'] = 1
 
 craft['onslaught cape'] = defaultdict(dict)
-craft['onslaught cape']['recipe']['sapphire'] = 9
+craft['onslaught cape']['recipe']['sapphire'] = 1
 craft['onslaught cape']['recipe']['onslaught cape recipe'] = 1
 craft['onslaught cape']['recipe']['onslaught cape part'] = 4
 craft['onslaught cape']['recipe']['blacksmith mold'] = 1
