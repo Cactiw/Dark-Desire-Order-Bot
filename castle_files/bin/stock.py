@@ -893,9 +893,6 @@ def gs(bot, update, user_data):
         all_parts = True
     response = "<b>{}</b> у игроков {}:\n".format(get_item_name_by_code(code), guild.format())
     if all_parts:
-        from castle_files.bin.api import update_whole_guild_stocks
-        update_whole_guild_stocks(player, guild)
-
         eq = get_equipment_by_code(code)
         for pl in sorted(
                 filter(
@@ -906,6 +903,8 @@ def gs(bot, update, user_data):
             response += "<code>{}</code> {}📄 {}🔩\n".format(
                 pl.pure_nickname, pl.stock.get(eq.recipe_code, 0), pl.stock.get(eq.part_code, 0))
     else:
+        from castle_files.bin.api import update_whole_guild_stocks
+        update_whole_guild_stocks(player, guild)
         for pl in sorted(filter(lambda cur_pl: code in cur_pl.stock.keys(), guild.get_members()), key=lambda cur_pl: cur_pl.stock.get(code), reverse=True):
             response += "<code>x{:<2}</code> {}\n".format(pl.stock.get(code), pl.pure_nickname)
     bot.send_message(chat_id=update.message.chat_id, text=response, parse_mode="HTML")

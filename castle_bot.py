@@ -52,7 +52,8 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
     FilterPlayerStatus, filter_superadmin
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
-    stock, ws, players_update_monitor, ws_with_code, wtb, clear_guilds_api_players, autospend_start_button
+    stock, ws, players_update_monitor, ws_with_code, wtb, clear_guilds_api_players, autospend_start_button, \
+    request_update_guild_stocks
 from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher, send_guilds_stats
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -301,6 +302,7 @@ def castle_bot_processing():
     # API
     dispatcher.add_handler(CommandHandler('auth', auth, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('update_guild', update_guild, filters=filter_is_pm))
+    dispatcher.add_handler(CommandHandler('update_guild_stocks', request_update_guild_stocks, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('update_stock', update_stock, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('update', update, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('stock', stock, filters=filter_is_pm))

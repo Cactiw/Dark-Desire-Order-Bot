@@ -133,7 +133,21 @@ def update_guild(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Ошика. Проверьте наличие доступа у бота. "
                                                    "Возможно, стоит сделать /auth ещё раз.")
         return
-    bot.send_message(chat_id=mes.chat_id, text="Запрошено обновление гильдии. В скором времени данные будут обновлены.")
+    bot.send_message(chat_id=mes.chat_id,
+                     text="Запрошено обновление гильдии. В скором времени данные будут обновлены.\n"
+                          "Вы можете запросить обновление стоков всех игроков в гильдии: /update_guild_stocks")
+
+
+def request_update_guild_stocks(bot, update):
+    player = Player.get_player(update.message.from_user.id)
+    guild = Guild.get_guild(player.guild)
+    if not guild:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Вы не состоите в гильдии. Попросите командира добавить вас")
+        return
+    update_whole_guild_stocks(player, guild)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Запрошено обновление стоков всех игроков в гильдии.\nЭто может занять некоторое время.")
 
 
 def update_whole_guild_stocks(player, guild):
