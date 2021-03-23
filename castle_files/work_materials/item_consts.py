@@ -110,4 +110,7 @@ items = {
     "122": ["Discarnate Circlet", "Discarnate Circlet part", 8, "122", "122"],
     "123": ["Discarnate Shoes", "Discarnate Shoes part", 8, "123", "123"],
     "124": ["Discarnate Bracers", "Discarnate Bracers part", 8, "124", "124"],
+    "125": ["Onslaught Cape", "Onslaught Cape part", 4, "125", "125"],
+    "126": ["Indissoluble Apron", "Indissoluble Apron part", 4, "126", "126"],
+    "127": ["Artificer Cloak", "Artificer Cloak part", 4, "127", "127"],
 }
