@@ -12,7 +12,7 @@ from castle_files.libs.castle.location import Location
 
 from castle_files.bin.buttons import send_general_buttons, get_profile_buttons, get_profile_settings_buttons
 from castle_files.bin.service_functions import check_access, dict_invert, plan_work, count_battle_id, \
-    get_forward_message_time, get_message_forward_time
+    get_forward_message_time, get_message_forward_time, get_current_datetime
 from castle_files.bin.reports import count_battle_time
 from castle_files.bin.statuses import get_status_text_by_id, get_status_message_by_text
 from castle_files.bin.api import auth
@@ -465,7 +465,7 @@ def hero(bot, update, user_data):
         return
     forward_message_date = get_forward_message_time(mes)
     print(forward_message_date)
-    if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30) and \
+    if get_current_datetime() - forward_message_date > datetime.timedelta(seconds=30) and \
             mes.from_user.id not in urned_players:
         bot.send_message(chat_id=mes.chat_id, text="Этот профиль старше 30 секунд. Пришли актуальный профиль!",
                          reply_to_message_id=mes.message_id)
@@ -651,7 +651,7 @@ def add_class_from_player(bot, update):
                                                         "прислать ответ @ChatWarsBot на команду /hero")
         return
     forward_message_date = get_forward_message_time(mes)
-    if datetime.datetime.now() - forward_message_date > datetime.timedelta(seconds=30):
+    if get_current_datetime() - forward_message_date > datetime.timedelta(seconds=30):
         bot.send_message(chat_id=mes.chat_id, text="Этот профиль старше 30 секунд. Пришли актуальный профиль!",
                          reply_to_message_id=mes.message_id)
         return
