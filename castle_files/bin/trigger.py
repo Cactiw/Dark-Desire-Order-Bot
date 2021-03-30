@@ -100,8 +100,14 @@ def send_trigger(bot, update):
     send_trigger_with_type_and_data(bot, update.message.chat_id, trigger_type, data)
 
 
+GLOBAL_TRIGGERS_IGNORE = {
+    -1001250048555  # With special thanks to @sinior_pomidor
+}
+
+
 def check_global_triggers_ignore(chat_id):
-    return ignore_global_triggers.get(chat_id, datetime.datetime(1970, 1, 1)) > get_current_datetime()
+    return ignore_global_triggers.get(chat_id, datetime.datetime(1970, 1, 1)) > get_current_datetime() or \
+           chat_id in GLOBAL_TRIGGERS_IGNORE
 
 
 def remove_trigger(bot, update):
