@@ -702,7 +702,7 @@ def profile_exp(bot, update):
         return
     response = "Изменения в опыте <b>{}</b>:\n".format(player.nickname)
     previous_exp = None
-    print(player.exp_info)
+    # print(player.exp_info)
     if not player.exp_info:
         response += "<em>Пусто</em>"
     else:
