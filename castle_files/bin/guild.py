@@ -852,18 +852,27 @@ def add(bot, update):
         if player.guild != guild.id:
             bot.send_message(chat_id=update.message.chat_id, text="Можно добавлять игроков только в свою гильдию")
             return
-    if update.message.chat_id != guild.chat_id:
+    if update.message.chat_id != guild.chat_id and not filter_is_pm(update):
         bot.send_message(chat_id=update.message.chat_id, text="Добавлять игроков в гильдию можно только в официальном "
                                                               "чате гильдии")
         return
     if player.id != guild.commander_id and player.id not in guild.assistants:
         bot.send_message(chat_id=update.message.chat_id, text="Только командир и его замы могут добавлять бойцов.")
         return
-    if update.message.reply_to_message is None:
+    if update.message.reply_to_message is None and not filter_is_pm(update):
         bot.send_message(chat_id=update.message.chat_id, text="Сообщение должно являться ответом на сообщение игрока, "
                                                               "которого необходимо добавить в гильдию.")
         return
-    player_to_add = Player.get_player(update.message.reply_to_message.from_user.id)
+
+    if filter_is_pm(update):
+        try:
+            player_id = int(update.message.text.partition(" ")[2])
+        except Exception:
+            bot.send_message(chat_id=update.message.chat_id, text="Укажите id игрока через пробел.")
+            return
+        player_to_add = Player.get_player(player_id)
+    else:
+        player_to_add = Player.get_player(update.message.reply_to_message.from_user.id)
     if player_to_add is None:
         bot.send_message(chat_id=update.message.chat_id, text="Игрок для добавления не найден.")
         return
