@@ -106,6 +106,7 @@ def worldtop_work():
             pass
 
 
+@events.register(events.NewMessage(PeerChannel(RESULTS_PARSE_CHANNEL_ID)))
 async def stats_handler(event):
     global guilds_str
     text = event.message.message
