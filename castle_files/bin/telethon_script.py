@@ -97,11 +97,11 @@ def worldtop_work():
         worldtop_client = TelegramClient(session_path, api_id, api_hash)
     with worldtop_client as cur_client:
         cur_client.get_entity("ChatWarsBot")
-        client.add_event_handler(worldtop_handler, event=events.NewMessage)
+        cur_client.add_event_handler(worldtop_handler, event=events.NewMessage)
         loop = asyncio.get_event_loop()
         loop.create_task(send_worldtop())
         try:
-            loop.run_until_complete(client.disconnected)
+            loop.run_until_complete(cur_client.disconnected)
         except KeyboardInterrupt:
             pass
 
@@ -133,7 +133,7 @@ async def stats_handler(event):
         castles_stats_queue.put({"data": text, "type": "worldtop"})
 
 
-def worldtop_handler(event):
+async def worldtop_handler(event):
     text = event.message.message
     if event.message.from_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
         logging.info("Received /worldtop")
@@ -143,7 +143,7 @@ def worldtop_handler(event):
 
 async def send_worldtop():
     await asyncio.sleep(5)
-    await client.send_message(CHAT_WARS_ID, "/worldtop")
+    await worldtop_client.send_message(CHAT_WARS_ID, "/worldtop")
     for i in range(WORLDTOP_PERIOD * 60 // 5):
         if not globals.processing:
             return
