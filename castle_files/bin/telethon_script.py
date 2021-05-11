@@ -4,7 +4,7 @@ from telethon.tl.types import PeerChannel
 from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG, CHAT_WARS_ID
 
 try:
-    from config import phone, username, password, api_id, api_hash
+    from config import phone, username, worldtop_username, api_id, api_hash
 except ImportError:
     pass
 try:
@@ -38,11 +38,27 @@ MAX_RETRIES = 5
 WORLDTOP_PERIOD = 30  # minutes
 
 client: TelegramClient = None
+worldtop_client: TelegramClient = None
 
 
 def not_keyboard_interrupt(exception: Exception) -> bool:
     logging.error(traceback.format_exc())
     return not isinstance(exception, KeyboardInterrupt)
+
+
+def auth():
+    try:
+        script_work()
+    except KeyboardInterrupt:
+        pass
+
+    try:
+        worldtop_work()
+    except KeyboardInterrupt:
+        pass
+
+    print("Auth successful!")
+    exit(0)
 
 
 # @retry(wait_fixed=WAIT_BEFORE_RETRY * 1000, retry_on_exception=not_keyboard_interrupt,
@@ -57,13 +73,31 @@ def script_work():
     else:
         admin_client = TelegramClient(session_path, api_id, api_hash)
     client = admin_client
-    # admin_client.start(phone, password)
-    #
-    # client = admin_client
+
     with admin_client as client:
         admin_client.get_entity("ChatWarsBot")
         client.add_event_handler(stats_handler, event=events.NewMessage)
         print("telegram script launched")
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(client.disconnected)
+        except KeyboardInterrupt:
+            pass
+
+
+def worldtop_work():
+    global worldtop_client
+    session_path = "./sessions/{}".format(worldtop_username)
+
+    if telethon_proxy is not None:
+        proxy = (telethon_proxy["host"], telethon_proxy["port"], telethon_proxy["secret"])
+        worldtop_client = TelegramClient(session_path, api_id, api_hash, proxy=proxy,
+                                         connection=connection.tcpmtproxy.ConnectionTcpMTProxyIntermediate)
+    else:
+        worldtop_client = TelegramClient(session_path, api_id, api_hash)
+    with worldtop_client as cur_client:
+        cur_client.get_entity("ChatWarsBot")
+        client.add_event_handler(worldtop_handler, event=events.NewMessage)
         loop = asyncio.get_event_loop()
         loop.create_task(send_worldtop())
         try:
@@ -97,6 +131,14 @@ async def stats_handler(event):
     elif event.message.from_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
         logging.info("Received /worldtop")
         castles_stats_queue.put({"data": text, "type": "worldtop"})
+
+
+def worldtop_handler(event):
+    text = event.message.message
+    if event.message.from_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
+        logging.info("Received /worldtop")
+        castles_stats_queue.put({"data": text, "type": "worldtop"})
+
 
 
 async def send_worldtop():

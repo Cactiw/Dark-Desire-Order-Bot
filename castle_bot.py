@@ -111,7 +111,7 @@ from castle_files.bin.tasks import plan_daily_tasks
 
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
-from castle_files.bin.telethon_script import script_work
+from castle_files.bin.telethon_script import script_work, worldtop_work
 from castle_files.bin.common_functions import unknown_input, sql, direct_send_message, change_lang
 
 from castle_files.bin.save_load_user_data import load_data, save_data
@@ -712,6 +712,10 @@ def castle_bot_processing():
         telethon_script = multiprocessing.Process(target=script_work, name="Telethon Parse Channels", args=())
         telethon_script.start()
         processes.append(telethon_script)
+
+        worldtop_script = multiprocessing.Process(target=worldtop_work, name="Telethon Parse Worldtop", args=())
+        worldtop_script.start()
+        processes.append(worldtop_script)
 
         parse_stats_pr = threading.Thread(target=parse_stats, name="Stats Parse")
         parse_stats_pr.start()

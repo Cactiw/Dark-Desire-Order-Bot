@@ -5,7 +5,7 @@ import logging
 from order_bot import order_bot_processing
 from castle_bot import castle_bot_processing
 
-from castle_files.bin.telethon_script import script_work
+from castle_files.bin.telethon_script import auth
 
 import sys
 
@@ -26,7 +26,7 @@ if len(sys.argv) > 1:
     for arg in sys.argv[1:]:
         if arg == "--auth":
             logging.info("Starting telethon auth")
-            script_work()  # Для авторизации на новой машине
+            auth()  # Для авторизации на новой машине
             exit(0)
 
 # order_bot_processing()
