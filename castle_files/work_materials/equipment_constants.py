@@ -248,8 +248,8 @@ cloaks = [
     Equipment("cloaks", "a", "101", "Craftsman Apron", 3, 3, 4),
     Equipment("cloaks", "a", "102", "Stoneskin Cloak", 3, 6, 4),
     Equipment("cloaks", "a", "117", "Onslaught Cape", 11, 4, 5),
-    Equipment("cloaks", "a", "118", "Indissoluble Apron", 4, 11, 5),
-    Equipment("cloaks", "a", "119", "Artificer Cloak", 7, 7, 5),
+    Equipment("cloaks", "a", "118", "Indissoluble Cloak", 4, 11, 5),
+    Equipment("cloaks", "a", "119", "Artificer Apron", 7, 7, 5),
 ]
 
 equipment = {
