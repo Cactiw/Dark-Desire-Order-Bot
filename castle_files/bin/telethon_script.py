@@ -1,7 +1,8 @@
 from telethon.sync import TelegramClient, events, connection
 from telethon.tl.types import PeerChannel
 
-from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG, CHAT_WARS_ID
+from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG, CHAT_WARS_ID,\
+    RESULTS_FORWARD_CHAT_ID
 
 try:
     from config import phone, username, worldtop_username, api_id, api_hash
@@ -110,29 +111,33 @@ def worldtop_work():
 @events.register(events.NewMessage(PeerChannel(RESULTS_PARSE_CHANNEL_ID)))
 async def stats_handler(event):
     global guilds_str
-    text = event.message.message
-    if event.message.from_id != CHAT_WARS_ID:
-        print("Got telegram event", event)
-        print(text)
-        print(event.message.to_id, [PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)],
-              event.message.to_id in [PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)])
-    if event.message.to_id in [PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)] and \
+    text = event.message.message if hasattr(event.message, 'message') else event.message.text
+    chat_id = event.message.to_id if hasattr(event.message, 'to_id') else event.message.chat_id
+    message_id = event.message.id if hasattr(event.message, 'id') else event.message.message_id
+    if chat_id in {
+        PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG),
+        RESULTS_FORWARD_CHAT_ID
+    } and \
             ('Результаты сражений:' in text or '⛺️Гильдия' in text or '⛺Гильдия' in text or "Headquarters" in text or
              "🗺State of map" in text):
-        debug = event.message.to_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
+        debug = chat_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
         logging.error("Received data from telegram, sending: {}".format(text))
         if '⛺️Гильдия' in text:
             guilds_str += text + "\n"
             logging.info("Adding text to guilds_str = {}".format(guilds_str))
         else:
             print("put stats in queue")
-            castles_stats_queue.put({"data": text, "message_id": event.message.id, "debug": debug})
+            castles_stats_queue.put({"data": text, "message_id": message_id, "debug": debug})
             castles_stats_queue.put({"data": guilds_str, "debug": debug})
             guilds_str = ""
             return
-    elif event.message.from_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
+    elif chat_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
         logging.info("Received /worldtop")
         castles_stats_queue.put({"data": text, "type": "worldtop"})
+
+
+def forwarded_stats(bot, update):
+    asyncio.run(stats_handler(update))
 
 
 async def worldtop_handler(event):

@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler, RegexHandler
 
 from castle_files.work_materials.globals import dispatcher, updater, conn, Production_castle_token, ServerIP, \
-    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID, job
+    CONNECT_TYPE, enable_api, enable_telethon, SUPER_ADMIN_ID, job, RESULTS_FORWARD_CHAT_ID
 
 from castle_files.work_materials.filters.api_filters import filter_grant_auth_code
 from castle_files.work_materials.filters.profile_filters import filter_is_hero, filter_view_hero, filter_view_profile, \
@@ -111,7 +111,7 @@ from castle_files.bin.tasks import plan_daily_tasks
 
 from castle_files.bin.drop_data import drop_table, send_search_bot  # ReiRose LTD 2019
 
-from castle_files.bin.telethon_script import script_work, worldtop_work
+from castle_files.bin.telethon_script import script_work, worldtop_work, forwarded_stats
 from castle_files.bin.common_functions import unknown_input, sql, direct_send_message, change_lang
 
 from castle_files.bin.save_load_user_data import load_data, save_data
@@ -291,6 +291,8 @@ def castle_bot_processing():
     dispatcher.add_handler(MessageHandler((Filters.command | Filters.text) & filter_is_trigger, send_trigger))
 
     dispatcher.add_handler(CommandHandler('change_rp', change_rp, pass_user_data=True))
+
+    dispatcher.add_handler(MessageHandler(Filters.all & Filters.chat(RESULTS_FORWARD_CHAT_ID), forwarded_stats))
 
     # Язык бота
     dispatcher.add_handler(CommandHandler('en', change_lang, filters=filter_is_pm, pass_user_data=True))
