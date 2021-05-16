@@ -114,13 +114,12 @@ async def stats_handler(event):
     text = event.message.message if hasattr(event.message, 'message') else event.message.text
     chat_id = event.message.to_id if hasattr(event.message, 'to_id') else event.message.chat_id
     message_id = event.message.id if hasattr(event.message, 'id') else event.message.message_id
-    if chat_id in {
-        PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG),
-        RESULTS_FORWARD_CHAT_ID
-    } and \
+    if ((type(chat_id) == PeerChannel and chat_id in [
+        PeerChannel(RESULTS_PARSE_CHANNEL_ID), PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
+    ]) or chat_id == RESULTS_FORWARD_CHAT_ID) and \
             ('Результаты сражений:' in text or '⛺️Гильдия' in text or '⛺Гильдия' in text or "Headquarters" in text or
              "🗺State of map" in text):
-        debug = chat_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
+        debug = type(chat_id) == PeerChannel and chat_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
         logging.error("Received data from telegram, sending: {}".format(text))
         if '⛺️Гильдия' in text:
             guilds_str += text + "\n"
