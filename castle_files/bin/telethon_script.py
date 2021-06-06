@@ -141,7 +141,7 @@ def forwarded_stats(bot, update):
 
 async def worldtop_handler(event):
     text = event.message.message
-    if event.message.from_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
+    if event.message.from_id == CHAT_WARS_ID and "🏆" in text and "🚩" in text and "Past battles:" in text:
         logging.info("Received /worldtop")
         castles_stats_queue.put({"data": text, "type": "worldtop"})
 
