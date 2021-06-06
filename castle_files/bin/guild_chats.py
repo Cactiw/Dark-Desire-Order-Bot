@@ -202,9 +202,9 @@ def parse_worldtop_strings_results(worldtop_strings):
 def parse_save_worldtop(text):
     worldtop = load_worldtop()
     for string in text.splitlines():
-        parse = re.search("([{}]).+?(\\d+) 🏆 очков".format("".join(castles)), string)
+        parse = re.search("([{}]).+? 🚩([\\d.]+) 🏆(\\d+)".format("".join(castles)), string)
         if parse:
-            castle, points = parse.groups()
+            castle, avg_place, points = parse.groups()
             worldtop.update({castle: points})
     save_worldtop(worldtop)
 
