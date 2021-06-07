@@ -1,13 +1,13 @@
 from telethon import TelegramClient, events
 import asyncio
 
-from config import api_id, api_hash
+from config import forward_api_id, forward_api_hash
 
 
 async def main():
 
     session = "./current.session"
-    async with TelegramClient(session, api_id, api_hash) as client:
+    async with TelegramClient(session, forward_api_id, forward_api_hash) as client:
 
         @client.on(events.NewMessage(chats=(-1001369273162,)))
         async def handler(event: events.NewMessage.Event):
