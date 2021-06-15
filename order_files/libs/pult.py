@@ -17,7 +17,7 @@ class Pult:
         self.status = pult_status_default.copy()
         self.divisions = divisions_const.copy()
         self.divisions[-1] = '✅' + self.divisions[-1]
-        self.rangers_division_num = self.divisions.index("Луки")
+        self.rangers_division_num = self.divisions.index("Луки") if 'Луки' in self.divisions else None
         self.all_attackers_division_num = self.divisions.index('Все атакеры')
         self.academy_division_num = self.divisions.index('Академ')
         self.all_division_num = self.divisions.index('✅ВСЕ')
@@ -68,13 +68,13 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
             InlineKeyboardButton(divisions[0], callback_data="pdv0"),
             InlineKeyboardButton(divisions[1], callback_data="pdv1"),
             InlineKeyboardButton(divisions[2], callback_data="pdv2"),
-            InlineKeyboardButton(divisions[6], callback_data="pdv6"),
-            InlineKeyboardButton(divisions[4], callback_data="pdv4"),  # Луки
+            InlineKeyboardButton(divisions[5], callback_data="pdv6"),
+            # InlineKeyboardButton(divisions[4], callback_data="pdv4"),  # Луки
         ],
         [
             InlineKeyboardButton(divisions[3], callback_data="pdv3"),
-            InlineKeyboardButton(divisions[5], callback_data="pdv5"),
-            InlineKeyboardButton(divisions[7], callback_data="pdv7"),
+            InlineKeyboardButton(divisions[4], callback_data="pdv5"),
+            InlineKeyboardButton(divisions[6], callback_data="pdv7"),
 
         ],
         [
