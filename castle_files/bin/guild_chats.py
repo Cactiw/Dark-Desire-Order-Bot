@@ -1,5 +1,6 @@
 from castle_files.work_materials.globals import cursor, job, dispatcher, SUPER_ADMIN_ID, CENTRAL_SQUARE_CHAT_ID, \
-    moscow_tz, conn, utc, castles, emodji_to_castle_names, WORLDTOP_CHANGES_CHANNEL_ID, SON_CHAT_ID, COMMAND_CHAT_ID
+    moscow_tz, conn, utc, castles, emodji_to_castle_names, WORLDTOP_CHANGES_CHANNEL_ID, SON_CHAT_ID, FRS_CHAT_ID,\
+    COMMAND_CHAT_ID
 from castle_files.bin.service_functions import get_time_remaining_to_battle, check_access, get_admin_ids, \
     count_battle_id, count_battles_in_this_week, plan_work
 from castle_files.bin.reports import count_battle_time
@@ -211,7 +212,7 @@ def parse_save_worldtop(text):
 
 
 def send_worldtop_update(old_worldtop: dict, worldtop: dict):
-    send_chats = [SON_CHAT_ID]
+    send_chats = [SON_CHAT_ID, FRS_CHAT_ID]
     response = "Worldtop changes:\n"
     i = 0
     for k, v in list(worldtop.items()):
