@@ -26,5 +26,5 @@ potions_to_order = ["Пьем ⚔️АТК ⚗️зелья!\n"
                     "<a href=\"https://t.me/share/url?url=/misc peace\">🛡Peace</a>\n"
                     "<a href=\"https://t.me/share/url?url=/misc morph\">⚗Morph</a>\n\n"]
 
-pult_status_default = {'divisions': [False, False, False, False, False, True], 'target': -1, 'defense': 2,
+pult_status_default = {'divisions': [False, False, False, False, False, False, True], 'target': -1, 'defense': 2,
                        'time': -1, "tactics": 5}

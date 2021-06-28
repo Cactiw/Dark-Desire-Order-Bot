@@ -21,7 +21,9 @@ class Pult:
         self.all_attackers_division_num = self.divisions.index('Все атакеры')
         self.academy_division_num = self.divisions.index('Академ')
         self.all_division_num = self.divisions.index('✅ВСЕ')
-        self.divisions_active = [False, False, False, False, False, False, False, True]
+        self.divisions_active = [False] * len(self.divisions)
+        self.divisions_active[self.all_division_num] = True
+
         self.castles = castles_const.copy()
         self.times = times_const.copy()
         self.potions = potions_const.copy()
@@ -68,13 +70,13 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
             InlineKeyboardButton(divisions[0], callback_data="pdv0"),
             InlineKeyboardButton(divisions[1], callback_data="pdv1"),
             InlineKeyboardButton(divisions[2], callback_data="pdv2"),
-            InlineKeyboardButton(divisions[5], callback_data="pdv6"),
+            InlineKeyboardButton(divisions[5], callback_data="pdv5"),
             # InlineKeyboardButton(divisions[4], callback_data="pdv4"),  # Луки
         ],
         [
             InlineKeyboardButton(divisions[3], callback_data="pdv3"),
-            InlineKeyboardButton(divisions[4], callback_data="pdv5"),
-            InlineKeyboardButton(divisions[6], callback_data="pdv7"),
+            InlineKeyboardButton(divisions[4], callback_data="pdv4"),
+            InlineKeyboardButton(divisions[6], callback_data="pdv6"),
 
         ],
         [
@@ -160,7 +162,7 @@ def rebuild_pult(action, pult, context):
                 pult.divisions[i] = divisions_const[i]
                 pult.divisions_active[i] = False
         elif context != pult.academy_division_num:
-            for i in [pult.all_division_num, pult.all_attackers_division_num, pult.rangers_division_num]:
+            for i in [pult.all_division_num, pult.all_attackers_division_num]:  # , pult.rangers_division_num]:
                 pult.divisions[i] = divisions_const[i]
                 pult.divisions_active[i] = False
         if pult.divisions_active[context]:
