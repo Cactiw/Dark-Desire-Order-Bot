@@ -5,6 +5,8 @@ from order_files.work_materials.globals import deferred_orders, moscow_tz, local
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+import random
+
 
 class Pult:
     pults = {}
@@ -65,58 +67,61 @@ class Pult:
 
 
 def build_pult(divisions, castles, times, defense, tactics, potions, deferred_time=None, variant=None):
+    # Random number so each time callback data is unique - helps with Telegram limitations.
+    rnd = int(random.random() * 100000)
+
     __pult_buttons = [
         [
-            InlineKeyboardButton(divisions[0], callback_data="pdv0"),
-            InlineKeyboardButton(divisions[1], callback_data="pdv1"),
-            InlineKeyboardButton(divisions[2], callback_data="pdv2"),
-            InlineKeyboardButton(divisions[5], callback_data="pdv5"),
-            # InlineKeyboardButton(divisions[4], callback_data="pdv4"),  # Луки
+            InlineKeyboardButton(divisions[0], callback_data="pdv0_{}".format(rnd)),
+            InlineKeyboardButton(divisions[1], callback_data="pdv1_{}".format(rnd)),
+            InlineKeyboardButton(divisions[2], callback_data="pdv2_{}".format(rnd)),
+            InlineKeyboardButton(divisions[5], callback_data="pdv5_{}".format(rnd)),
+            # InlineKeyboardButton(divisions[4], callback_data="pdv4_{}".format(rnd)),  # Луки
         ],
         [
-            InlineKeyboardButton(divisions[3], callback_data="pdv3"),
-            InlineKeyboardButton(divisions[4], callback_data="pdv4"),
-            InlineKeyboardButton(divisions[6], callback_data="pdv6"),
+            InlineKeyboardButton(divisions[3], callback_data="pdv3_{}".format(rnd)),
+            InlineKeyboardButton(divisions[4], callback_data="pdv4_{}".format(rnd)),
+            InlineKeyboardButton(divisions[6], callback_data="pdv6_{}".format(rnd)),
 
         ],
         [
-            InlineKeyboardButton(castles[0], callback_data="pc0"),
-            InlineKeyboardButton(castles[1], callback_data="pc1"),
-            InlineKeyboardButton(castles[2], callback_data="pc2"),
+            InlineKeyboardButton(castles[0], callback_data="pc0_{}".format(rnd)),
+            InlineKeyboardButton(castles[1], callback_data="pc1_{}".format(rnd)),
+            InlineKeyboardButton(castles[2], callback_data="pc2_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton(castles[3], callback_data="pc3"),
-            InlineKeyboardButton(castles[4], callback_data="pc4"),
-            InlineKeyboardButton(castles[5], callback_data="pc5"),
+            InlineKeyboardButton(castles[3], callback_data="pc3_{}".format(rnd)),
+            InlineKeyboardButton(castles[4], callback_data="pc4_{}".format(rnd)),
+            InlineKeyboardButton(castles[5], callback_data="pc5_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton(castles[6], callback_data="pc6"),
+            InlineKeyboardButton(castles[6], callback_data="pc6_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton(times[0], callback_data="pt0"),
-            InlineKeyboardButton(times[1], callback_data="pt1"),
-            InlineKeyboardButton(times[2], callback_data="pt2"),
-            InlineKeyboardButton(times[3], callback_data="pt3"),
-            InlineKeyboardButton(times[4], callback_data="pt4"),
-            InlineKeyboardButton(times[5], callback_data="pt5"),
+            InlineKeyboardButton(times[0], callback_data="pt0_{}".format(rnd)),
+            InlineKeyboardButton(times[1], callback_data="pt1_{}".format(rnd)),
+            InlineKeyboardButton(times[2], callback_data="pt2_{}".format(rnd)),
+            InlineKeyboardButton(times[3], callback_data="pt3_{}".format(rnd)),
+            InlineKeyboardButton(times[4], callback_data="pt4_{}".format(rnd)),
+            InlineKeyboardButton(times[5], callback_data="pt5_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton(potions[0], callback_data="pp0"),
-            InlineKeyboardButton(potions[1], callback_data="pp1"),
+            InlineKeyboardButton(potions[0], callback_data="pp0_{}".format(rnd)),
+            InlineKeyboardButton(potions[1], callback_data="pp1_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton(defense[1], callback_data="pds1"),
-            InlineKeyboardButton(defense[0], callback_data="pds0"),
+            InlineKeyboardButton(defense[1], callback_data="pds1_{}".format(rnd)),
+            InlineKeyboardButton(defense[0], callback_data="pds0_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton(tactics[0], callback_data="pdt0"),
-            InlineKeyboardButton(tactics[1], callback_data="pdt1"),
-            InlineKeyboardButton(tactics[2], callback_data="pdt2"),
-            InlineKeyboardButton(tactics[3], callback_data="pdt3"),
-            InlineKeyboardButton(tactics[4], callback_data="pdt4"),
+            InlineKeyboardButton(tactics[0], callback_data="pdt0_{}".format(rnd)),
+            InlineKeyboardButton(tactics[1], callback_data="pdt1_{}".format(rnd)),
+            InlineKeyboardButton(tactics[2], callback_data="pdt2_{}".format(rnd)),
+            InlineKeyboardButton(tactics[3], callback_data="pdt3_{}".format(rnd)),
+            InlineKeyboardButton(tactics[4], callback_data="pdt4_{}".format(rnd)),
         ],
         [
-            InlineKeyboardButton("📢 SEND 📢", callback_data="ps")
+            InlineKeyboardButton("📢 SEND 📢", callback_data="ps_{}".format(rnd))
         ]
     ]
     if deferred_time is not None or variant is not None:

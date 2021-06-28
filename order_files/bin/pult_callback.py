@@ -162,6 +162,7 @@ def send_variant(bot, update):
 
 
 def pult_callback(bot, update):
+    update.callback_query.data = update.callback_query.data.partition("_")[0]
     data = update.callback_query.data
     try:
         fill_mid_players(other_process=True)  # TODO сделать нормально
