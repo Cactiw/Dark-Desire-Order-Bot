@@ -118,6 +118,7 @@ from castle_files.bin.save_load_user_data import load_data, save_data
 from castle_files.bin.unloading_resources import resources_monitor
 
 from castle_files.bin.telethon_script import castles_stats_queue
+from castle_files.bin.duels import my_duels, myguild_duels
 
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -188,6 +189,10 @@ def skip(bot, update):
 
 
 def castle_bot_processing():
+
+    # Duels
+    dispatcher.add_handler(CommandHandler('duels', my_duels))
+    dispatcher.add_handler(CommandHandler('gduels', myguild_duels))
 
     # Хендлеры для инлайн кнопок в топах
     dispatcher.add_handler(CallbackQueryHandler(send_new_top, pattern="top_[^_]+_.*"))
