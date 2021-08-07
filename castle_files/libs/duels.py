@@ -51,10 +51,10 @@ class Duels:
 
         cursor = conn.cursor()
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
-                  "loser_name, loser_tag, loser_castle, loser_level, is_challenge, date " \
+                  "loser_name, loser_tag, loser_castle, loser_level, date " \
                   "from duels " \
-                  "where winner_id = '{}' and loser_id = '{}' and date = {} limit 1".format(winner_id, loser_id, date)
-        cursor.execute(request)
+                  "where winner_id = %s and loser_id = %s and date = %s limit 1"
+        cursor.execute(request, (winner_id, loser_id, date))
         row = cursor.fetchone()
         cursor.close()
         if row is None:
@@ -63,7 +63,7 @@ class Duels:
         return duel
 
     @staticmethod
-    def today_duels(palyer_id):
+    def today_duels(player_id):
 
         date = datetime.datetime.utcnow().replace(tzinfo=timezone.utc).astimezone(moscow_tz)
         if date.hour < 13:
@@ -76,8 +76,8 @@ class Duels:
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
                   "loser_name, loser_tag, loser_castle, loser_level, date " \
                   "from duels " \
-                  "where winner_id = '{}' or loser_id = '{}' and date > {}".format(palyer_id, palyer_id, timestamp)
-        cursor.execute(request)
+                  "where winner_id = %s or loser_id = %s and date > %s"
+        cursor.execute(request, (player_id, player_id, timestamp))
         rows = cursor.fetchall()
         cursor.close()
         duels = [Duels(*row) for row in rows]
@@ -95,8 +95,8 @@ class Duels:
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
                   "loser_name, loser_tag, loser_castle, loser_level, date " \
                   "from duels " \
-                  "where winner_tag = '{}' or loser_tag = '{}' and date > {}".format(guild_tag, guild_tag, timestamp)
-        cursor.execute(request)
+                  "where winner_tag = %s or loser_tag = %s and date > %s"
+        cursor.execute(request, (guild_tag, guild_tag, timestamp))
         rows = cursor.fetchall()
         cursor.close()
         duels = [Duels(*row) for row in rows]

@@ -29,60 +29,58 @@ def myguild_duels(bot, update):
         return
 
     duels, date = Duels.today_guilds_duels(guild.tag)
-    text = format_guild_duels(duels, date, guild.tag)
+    text = format_guild_duels(guild, duels, date)
     bot.send_message(chat_id=mes.chat_id, text=text)
 
 
 def format_myduels(duels, date, player, cw_id):
 
-    text = '{} {}\n duels on {}/{}'.format(player.lvl, player.nickname, date.day, date.month)
-    if len(duels):
-        win_count = 0
-        win_text = ''
-        lose_count = 0
-        lose_text = ''
-        lvl = 0
-        for duel in duels:
-            if cw_id == duel.winner_id:
-                win_count += 1
-                lvl = duel.winner_level
-                if duel.loser_tag:
-                    guild = r'[{}]'.format(duel.loser_tag)
-                else:
-                    guild = ''
-                win_text += '{} {} {} {}\n'.format(duel.loser_level, duel.loser_castle, guild, duel.loser_name)
-            elif cw_id == duel.loser_id:
-                lose_count += 1
-                lvl = duel.loser_level
-                if duel.winner_tag:
-                    guild = r'[{}]'.format(duel.winner_tag)
-                else:
-                    guild = ''
-                lose_text += '{} {} {} {}\n'.format(duel.winner_level, duel.winner_castle, guild, duel.winner_name)
-        text = '{} {}\n'.format(lvl, player.nickname)
-        text += 'duels on {}/{}\n\n'.format(date.day, date.month)
-        text += '❤️ Won {}\n'.format(win_count)
-        text += win_text
-        text += '\n'
-
-        text += '💔 Lost {}\n'.format(lose_count)
-        text += lose_text
-        text += '\n'
-        text += 'Total {}/{}'.format(win_count, lose_count)
-
-    else:
+    text = '{} {}{}\n duels on {}/{}\n'.format(player.lvl, player.castle, player.nickname, date.day, date.month)
+    if not duels:
         print('no duels')
         text += '\nDuels not found'
+        return text
 
+    win_count = 0
+    win_text = ''
+    lose_count = 0
+    lose_text = ''
+    lvl = 0
+    for duel in duels:
+        if cw_id == duel.winner_id:
+            win_count += 1
+            lvl = duel.winner_level
+            if duel.loser_tag:
+                guild = r'[{}]'.format(duel.loser_tag)
+            else:
+                guild = ''
+            win_text += '{} {} {} {}\n'.format(duel.loser_level, duel.loser_castle, guild, duel.loser_name)
+        elif cw_id == duel.loser_id:
+            lose_count += 1
+            lvl = duel.loser_level
+            if duel.winner_tag:
+                guild = r'[{}]'.format(duel.winner_tag)
+            else:
+                guild = ''
+            lose_text += '{} {} {} {}\n'.format(duel.winner_level, duel.winner_castle, guild, duel.winner_name)
+    text += "\n"
+    text += '❤️ Won {}\n'.format(win_count)
+    text += win_text
+    text += '\n'
+
+    text += '💔 Lost {}\n'.format(lose_count)
+    text += lose_text
+    text += '\n'
+    text += 'Total {}/{}'.format(win_count, lose_count)
     return text
 
 
-def format_guild_duels(duels, date, guild_tag):
-    text = '[{}] duels on {}/{}'.format(guild_tag, date.day, date.month)
-    if len(duels):
+def format_guild_duels(guild, duels, date):
+    text = r'{} duels on {}/{}'.format(guild.format(), date.day, date.month)
+    if duels:
         guildmates = {}
         for duel in duels:
-            if guild_tag == duel.winner_tag:
+            if guild.tag == duel.winner_tag:
                 if not guildmates.get(duel.winner_name, False):
                     guildmates[duel.winner_name] = {}
                     guildmates[duel.winner_name]['lvl'] = duel.winner_level
@@ -90,7 +88,7 @@ def format_guild_duels(duels, date, guild_tag):
                     guildmates[duel.winner_name]['lose'] = 0
                 else:
                     guildmates[duel.winner_name]['win'] += 1
-            elif guild_tag == duel.loser_tag:
+            elif guild.tag == duel.loser_tag:
                 if not guildmates.get(duel.loser_name, False):
                     guildmates[duel.loser_name] = {}
                     guildmates[duel.loser_name]['lvl'] = duel.loser_level
@@ -98,7 +96,6 @@ def format_guild_duels(duels, date, guild_tag):
                     guildmates[duel.loser_name]['lose'] = 1
                 else:
                     guildmates[duel.loser_name]['lose'] += 1
-        text = r'[{}] duels on {}/{}'.format(guild_tag, date.day, date.month)
         text += '\n\n'
         won = 0
         lost = 0
