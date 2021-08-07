@@ -9,6 +9,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.equipment import Equipment
 from castle_files.libs.shop import Shop
+from castle_files.libs.duels import Duels
 
 from castle_files.bin.stock import get_equipment_by_name, get_item_code_by_name, stock_sort_comparator, \
     get_item_name_by_code
@@ -108,6 +109,7 @@ class CW3API:
             'cw3-sex_digest': self.on_sex_digest,
             'cw3-yellow_pages': self.on_yellow_pages,
             # 'cw3-au_digest': self.on_au_digest,  # not implemented
+            'cw3-duels': self.on_duels,
         }
         self.WTB_DELAY = 4
 
@@ -122,7 +124,10 @@ class CW3API:
         for message in consumer:
             try:
                 # print(message.value)
-                self.callbacks.get(message.topic, lambda x: x)(message.value)
+                if message.topic == 'cw3-duels':
+                    self.callbacks.get(message.topic, lambda x: x)(message.value, message.timestamp)
+                else:
+                    self.callbacks.get(message.topic, lambda x: x)(message.value)
             except Exception:
                 logging.error(traceback.format_exc())
 
@@ -208,6 +213,37 @@ class CW3API:
                        "Покупатель: {}<b>{}</b>".format(qty, item, price * qty, qty, price, b_castle, b_name)
             self.bot.send_message(chat_id=player.id, text=response, parse_mode='HTML')
             # cursor = conn.cursor()
+        except Exception:
+            logging.error(traceback.format_exc())
+
+    def on_duels(self, body, timestamp):
+        """
+        Обработка сообщения дуели
+        :param body: dict - Message body
+        """
+        try:
+            winner = body.get('winner')
+            loser = body.get('loser')
+
+            duel_dict = {
+                'winner_id': winner.get('id'),
+                'winner_name': winner.get('name'),
+                'winner_tag': winner.get('tag'),
+                'winner_castle': winner.get('castle'),
+                'winner_level': winner.get('level'),
+
+                'loser_id': loser.get('id'),
+                'loser_name': loser.get('name'),
+                'loser_tag': loser.get('tag'),
+                'loser_castle': loser.get('castle'),
+                'loser_level': loser.get('level'),
+
+                'is_chalenge': body.get('isChallenge'),
+                'date': int(timestamp / 1000)
+
+            }
+            Duels.update_or_create_duel(duel_dict)
+
         except Exception:
             logging.error(traceback.format_exc())
 
@@ -1076,7 +1112,7 @@ class CW3API:
         return kafka.KafkaConsumer(
             # 'cw3-offers',
             'cw3-deals',
-            # 'cw3-duels',
+            'cw3-duels',
             'cw3-sex_digest',
             'cw3-yellow_pages',
             # 'cw3-au_digest',
