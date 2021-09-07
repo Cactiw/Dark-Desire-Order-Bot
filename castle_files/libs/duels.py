@@ -64,7 +64,6 @@ class Duels:
 
     @staticmethod
     def today_duels(player_id):
-
         date = datetime.datetime.utcnow().replace(tzinfo=timezone.utc).astimezone(moscow_tz)
         if date.hour < 13:
             date = date - timedelta(days=1)
@@ -76,7 +75,7 @@ class Duels:
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
                   "loser_name, loser_tag, loser_castle, loser_level, date " \
                   "from duels " \
-                  "where winner_id = %s or loser_id = %s and date > %s"
+                  "where (winner_id = %s or loser_id = %s) and date > %s"
         cursor.execute(request, (player_id, player_id, timestamp))
         rows = cursor.fetchall()
         cursor.close()
@@ -95,7 +94,7 @@ class Duels:
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
                   "loser_name, loser_tag, loser_castle, loser_level, date " \
                   "from duels " \
-                  "where winner_tag = %s or loser_tag = %s and date > %s"
+                  "where (winner_tag = %s or loser_tag = %s) and date > %s"
         cursor.execute(request, (guild_tag, guild_tag, timestamp))
         rows = cursor.fetchall()
         cursor.close()
