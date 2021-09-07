@@ -69,7 +69,7 @@ class Duels:
             date = date - timedelta(days=1)
         date = date.replace(hour=13, minute=0, second=0)
 
-        timestamp = int(date.timestamp() * 1000)
+        timestamp = int(date.timestamp())
 
         cursor = conn.cursor()
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
@@ -89,7 +89,7 @@ class Duels:
             date = date - timedelta(days=1)
         date = date.replace(hour=13, minute=0, second=0)
 
-        timestamp = int(date.timestamp() * 1000)
+        timestamp = int(date.timestamp())
         cursor = conn.cursor()
         request = "select winner_id, winner_name, winner_tag, winner_castle, winner_level, loser_id," \
                   "loser_name, loser_tag, loser_castle, loser_level, date " \
