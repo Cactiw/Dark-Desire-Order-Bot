@@ -2,7 +2,7 @@ python-telegram-bot==12.1.1
 psycopg2-binary
 telethon==1.14.0
 pytz
-tzlocal
+tzlocal==2.1
 pySocks
 gitpython
 kafka
