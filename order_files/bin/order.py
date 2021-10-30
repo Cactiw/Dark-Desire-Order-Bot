@@ -69,8 +69,8 @@ def attackCommand(bot, update):
                 orders_failed += 1
                 response += current.text
         else:
-            order_backup_queue.put(current)
-            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, globals.order_id))
+            # order_backup_queue.put(current)
+            logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current.order_id, globals.order_id))
 
     globals.order_id += 1
     stats = "Выполнено в <b>{0}</b>, отправлено в <b>{1}</b> чатов, " \
