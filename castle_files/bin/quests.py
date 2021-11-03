@@ -6,13 +6,15 @@ from castle_files.bin.buttons import get_general_buttons, send_general_buttons
 from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
 from castle_files.bin.service_functions import get_message_forward_time, plan_work
 from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return, on_won_arena
+from castle_files.bin.service_functions import check_access
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
-from castle_files.libs.quest import Quest, CollectResourceQuest, quests
+from castle_files.libs.quest import Quest, CollectResourceQuest, quests, GuildQuest
 from castle_files.libs.my_job import MyJob
 
-from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn, local_tz
+from castle_files.work_materials.globals import job, dispatcher, cursor, moscow_tz, construction_jobs, conn, \
+    local_tz, utc, MID_CHAT_ID
 from castle_files.work_materials.quest_texts import quest_texts
 
 import time
@@ -590,3 +592,61 @@ def load_construction_jobs():
     except Exception:
         logging.error(traceback.format_exc())
 
+
+def guild_quests(bot, update):
+    mes = update.message
+    if not check_access(mes.from_user.id):
+        return
+    quests = GuildQuest.all_quests()
+    text = ''
+    for quest in quests:
+        date = datetime.datetime.fromtimestamp(quest.last_update).strftime('%Y-%m-%d %H:%S')
+        text += '<code>{}</code> {} <code>{}</code> {}\n'.format(
+            quest.guild.ljust(3, ' '), quest.castle, quest.percent.rjust(5, ' '), date)
+    if text:
+        bot.send_message(chat_id=mes.chat_id, text=text, parse_mode='HTML')
+        return
+
+    bot.send_message(chat_id=mes.chat_id, text='Квестов нет', parse_mode='HTML')
+
+
+def del_quest(bot, update, guild=None):
+    mes = update.message
+    guild = mes.text.replace('/del_quest ', '').strip()
+    if not check_access(mes.from_user.id):
+        return
+    if guild:
+        quest = GuildQuest()
+        quest.del_quest(guild)
+
+
+def add_guild_quest(bot, update, user_data):
+    mes = update.message
+    s = mes.text
+    player = Player.get_player(mes.from_user.id)
+    if player is None:
+        return
+
+    try:
+        forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    except ValueError:
+        try:
+            forward_message_date = mes.forward_date
+        except AttributeError:
+            forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+
+    line = re.search(r'Progress: (.*)% (.)', s)
+    percent = line.group(1)
+    castle = line.group(2)
+    guild = player.guild_tag
+
+    text = None
+    status, guild, castle, percent = GuildQuest.update_or_create_quest(
+        {"guild": guild, "percent": percent, "castle": castle, "last_update": forward_message_date})
+    if status == 'new':
+        text = 'NEW quest {} {} {}'.format(guild, castle, percent)
+    elif status == 'update':
+        if percent >= 1.0:
+            text = 'UPDATE quest {} {} +{}'.format(guild, castle, round(percent, 2))
+    if text:
+        bot.send_message(chat_id=MID_CHAT_ID, text=text, parse_mode='HTML')
