@@ -33,7 +33,8 @@ from castle_files.work_materials.filters.technical_tower_filters import filter_t
     filter_guides, filter_commits_history
 from castle_files.work_materials.filters.quest_filters import filter_sawmill, filter_quarry, filter_treasury, \
     filter_king_cabinet_construction, filter_begin_construction, filter_construction_plate, filter_construct, \
-    filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result, filter_cw_arena_result
+    filter_tea_party_quest, filter_tea_party, filter_two_go_quest, filter_cw_quest_result, filter_cw_arena_result, \
+    filter_guild_quest
 from castle_files.work_materials.filters.reward_filters import filter_smuggler, filter_get_reward, \
     filter_reward_delete_message
 from castle_files.work_materials.filters.feedback_filters import filter_request_audience, filter_accept_audience, \
@@ -88,7 +89,7 @@ from castle_files.bin.technical_tower import technical_tower, my_cabinet, reques
     change_update_history, manuscript, view_manuscript_category, guides
 from castle_files.bin.quests import sawmill, quarry, treasury, load_construction_jobs, king_cabinet_construction,\
     begin_construction, construct, construction_plate, tea_party_quest, tea_party, two_quest_pressed_go, \
-    add_cw_quest_result, add_arena_result
+    add_cw_quest_result, add_arena_result, del_quest, guild_quests, add_guild_quest
 from castle_files.bin.castle_feedback import request_king_audience, accept_king_audience, decline_king_audience, \
     request_mid_feedback, send_mid_feedback, send_reply_to_mid_request, restrict_feedback, unrestrict_feedback
 from castle_files.bin.castle_duty import begin_duty, end_duty, request_duty_feedback, send_duty_feedback, \
@@ -681,6 +682,11 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('sql', sql))
 
     dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
+
+    # Field practice
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_quest, add_guild_quest, pass_user_data=True))
+    dispatcher.add_handler(CommandHandler('guild_quests', guild_quests))
+    dispatcher.add_handler(CommandHandler('del_quest', del_quest))
     # End of the restrictions---------------------------------------------------------------------------------------
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm, unknown_input, pass_user_data=True))
