@@ -639,6 +639,11 @@ def castle_bot_processing():
 
     dispatcher.add_handler(MessageHandler(Filters.all & filter_ban_in_duty_chat, check_ban_in_duty_chat))
 
+    # Field practice
+    dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_quest, add_guild_quest))
+    dispatcher.add_handler(CommandHandler('guild_quests', guild_quests))
+    dispatcher.add_handler(CommandHandler('del_quest', del_quest))
+
     # Хендлеры для триггеров - тоже как можно ниже, из-за возможного совпадения глобальных триггеров с командами бота
     dispatcher.add_handler(CommandHandler('create_trigger', add_trigger))
     dispatcher.add_handler(CommandHandler('create_global_trigger', add_trigger))
@@ -683,10 +688,6 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CommandHandler('revoke_duty_link', revoke_duty_link))
 
-    # Field practice
-    dispatcher.add_handler(MessageHandler(Filters.text & filter_guild_quest, add_guild_quest, pass_user_data=True))
-    dispatcher.add_handler(CommandHandler('guild_quests', guild_quests))
-    dispatcher.add_handler(CommandHandler('del_quest', del_quest))
     # End of the restrictions---------------------------------------------------------------------------------------
 
     dispatcher.add_handler(MessageHandler(Filters.text & filter_is_pm, unknown_input, pass_user_data=True))

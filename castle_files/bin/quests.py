@@ -621,7 +621,7 @@ def del_quest(bot, update, guild=None):
         bot.send_message(chat_id=mes.chat_id, text="Квест удален.")
 
 
-def add_guild_quest(bot, update, user_data):
+def add_guild_quest(bot, update):
     logging.info("Parsing quest info!")
     mes = update.message
     s = mes.text
