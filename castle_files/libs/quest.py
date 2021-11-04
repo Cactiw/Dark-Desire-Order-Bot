@@ -1,6 +1,6 @@
 
 
-from castle_files.work_materials.globals import moscow_tz, dispatcher
+from castle_files.work_materials.globals import conn, moscow_tz, dispatcher
 
 from castle_files.bin.stock_service import get_item_name_by_code
 
@@ -92,7 +92,6 @@ class Quest:
             self.progress if self.progress <= self.objective else self.objective, self.objective)
 
 
-
 class CollectResourceQuest(Quest):
     def __init__(self, id: int, resources: {str: int}, reward: int, status: str,
                  progress: {str: int}, started_time: time.time, objective_draft=None, daily_unique=False):
@@ -121,7 +120,6 @@ class CollectResourceQuest(Quest):
             self.progress.update({key: old_value + value})
         self.try_complete()
 
-
     def check_complete(self) -> bool:
         for key, need_value in list(self.objective.items()):
             have_value = self.progress.get(key) or 0
@@ -139,6 +137,94 @@ class CollectResourceQuest(Quest):
         return text[:-1]
 
 
+class GuildQuest:
+
+    attributes = ['guild', 'castle', 'percent', 'last_update']
+
+    def __init__(self, guild=None, castle=None, percent=None, last_update=None):
+        self.guild = guild.upper() if guild else None
+        self.castle = castle
+        self.percent = percent
+        self.last_update = last_update
+
+    @classmethod
+    def update_or_create_quest(cls, quest_dict: dict):
+
+        quest_dict['last_update'] = int(quest_dict['last_update'].timestamp())
+        quest = cls.get_quest(guild=quest_dict['guild'], last_update=quest_dict['last_update'])
+        new, update = False, False
+        if quest and quest.last_update < quest_dict['last_update']:
+            update = True
+            old_percent = quest.percent
+            old_castle = quest.castle
+        if quest is None:
+            quest = cls(*cls.attributes)
+            new = True
+        for attribute in cls.attributes:
+            setattr(quest, attribute, quest_dict.get(attribute, None))
+
+        if new:
+            quest.create()
+            return 'new', quest_dict['guild'], quest_dict['castle'], quest_dict['percent']
+        elif update:
+            quest.update()
+            if old_castle == quest_dict['castle']:
+                return 'update', quest_dict['guild'], quest_dict['castle'], float(quest_dict['percent']) - float(old_percent)
+            else:
+                return 'new', quest_dict['guild'], f"{old_castle} -> {quest_dict['castle']}", quest_dict['percent']
+
+        return None, None, None, None
+
+    @staticmethod
+    def get_quest(guild: str, last_update: int):
+        cursor = conn.cursor()
+        request = "select guild, castle, percent, last_update from guild_quest" \
+                  " where guild = '{}' limit 1".format(guild)
+        cursor.execute(request)
+        row = cursor.fetchone()
+        cursor.close()
+        if row is None:
+            return None
+        quest = GuildQuest(*row)
+        return quest
+
+    @staticmethod
+    def all_quests():
+        cursor = conn.cursor()
+        request = "select guild, castle, percent, last_update from guild_quest"
+        cursor.execute(request)
+        rows = cursor.fetchall()
+        cursor.close()
+        quests = [GuildQuest(*row) for row in rows]
+        return quests
+
+    def create(self):
+        request = "insert into guild_quest(guild, castle, percent, last_update) values (%s, %s, %s, %s)"
+        cursor = conn.cursor()
+
+        cursor.execute(request, (
+            self.guild, self.castle, self.percent, self.last_update))
+        cursor.close()
+
+    def update(self):
+        request = "update guild_quest set castle = %s, percent = %s, last_update = %s where guild = %s"
+        cursor = conn.cursor()
+
+        cursor.execute(request, (
+            self.castle, self.percent, self.last_update, self.guild))
+        cursor.close()
+
+    @staticmethod
+    def del_quest(guild):
+        guild = guild.upper()
+        if len(guild) < 2 or len(guild) > 3:
+            return
+        cursor = conn.cursor()
+        request = "delete from guild_quest where guild = %s"
+        cursor.execute(request, (guild,))
+        cursor.close()
+
+
 #
 # class FeedbackRequestQuest(Quest):
 #     def __init__(self, id: int, quest_type: str, objective, reward: int, status: str,
@@ -146,8 +232,6 @@ class CollectResourceQuest(Quest):
 #         super(FeedbackRequestQuest, self).__init__(
 #             id, quest_type, "daily", "Обратиться к {}", objective, reward, status, progress, started_time)
 #
-
-
 
 
 quests = {

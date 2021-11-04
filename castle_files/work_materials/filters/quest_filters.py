@@ -149,4 +149,10 @@ class FilterCWArenaResult(BaseFilter):
 filter_cw_arena_result = FilterCWArenaResult()
 
 
+class FilterGuildQuest(BaseFilter):
+    def filter(self, message):
+        return filter_is_chat_wars_forward(message) and \
+               re.search("🗺Field practice. Quest from strategist:", message.text) is not None
 
+
+filter_guild_quest = FilterGuildQuest()
