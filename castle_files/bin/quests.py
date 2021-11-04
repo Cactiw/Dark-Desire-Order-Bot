@@ -622,6 +622,7 @@ def del_quest(bot, update, guild=None):
 
 
 def add_guild_quest(bot, update, user_data):
+    logging.info("Parsing quest info!")
     mes = update.message
     s = mes.text
     player = Player.get_player(mes.from_user.id)
@@ -643,6 +644,9 @@ def add_guild_quest(bot, update, user_data):
     elif status == 'update':
         if percent >= 1.0:
             text = 'UPDATE quest {} {} +{}'.format(guild, castle, round(percent, 2))
+    logging.info(f"Quest text: {text}")
     if text:
         bot.send_message(chat_id=MID_CHAT_ID, text=text, parse_mode='HTML')
         bot.send_message(chat_id=mes.chat_id, text="Данные о квесте обновлены. Спасибо!")
+    else:
+        logging.warning(f"Quest text is None: {[player.guild_tag]}")
