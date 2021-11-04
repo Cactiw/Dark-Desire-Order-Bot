@@ -618,6 +618,7 @@ def del_quest(bot, update, guild=None):
     if guild:
         quest = GuildQuest()
         quest.del_quest(guild)
+        bot.send_message(chat_id=mes.chat_id, text="Квест удален.")
 
 
 def add_guild_quest(bot, update, user_data):
@@ -627,13 +628,7 @@ def add_guild_quest(bot, update, user_data):
     if player is None:
         return
 
-    try:
-        forward_message_date = utc.localize(mes.forward_date).astimezone(tz=moscow_tz).replace(tzinfo=None)
-    except ValueError:
-        try:
-            forward_message_date = mes.forward_date
-        except AttributeError:
-            forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
+    forward_message_date = get_message_forward_time(mes)
 
     line = re.search(r'Progress: (.*)% (.)', s)
     percent = line.group(1)
@@ -650,3 +645,4 @@ def add_guild_quest(bot, update, user_data):
             text = 'UPDATE quest {} {} +{}'.format(guild, castle, round(percent, 2))
     if text:
         bot.send_message(chat_id=MID_CHAT_ID, text=text, parse_mode='HTML')
+        bot.send_message(chat_id=mes.chat_id, text="Данные о квесте обновлены. Спасибо!")
