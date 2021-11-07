@@ -628,6 +628,8 @@ def add_guild_quest(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
+    if player.guild is None:
+        return
 
     forward_message_date = get_message_forward_time(mes)
 
