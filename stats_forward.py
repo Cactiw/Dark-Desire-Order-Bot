@@ -1,7 +1,10 @@
 from telethon import TelegramClient, events
 import asyncio
+import logging
 
 from config import forward_api_id, forward_api_hash
+
+logging.basicConfig(level=logging.INFO)
 
 
 async def main():
