@@ -14,9 +14,12 @@ async def main():
 
         @client.on(events.NewMessage(chats=(-1001369273162,)))
         async def handler(event: events.NewMessage.Event):
+            print("Got message!")
             await client.send_message(-1001274086574, event.message.message)
 
         await client.run_until_disconnected()
 
 
-asyncio.get_event_loop().run_until_complete(main())
+if __name__ == "__main__":
+    print("Starting client!")
+    asyncio.get_event_loop().run_until_complete(main())
