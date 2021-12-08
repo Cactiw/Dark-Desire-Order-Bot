@@ -1,5 +1,5 @@
 from telethon.sync import TelegramClient, events, connection
-from telethon.tl.types import PeerChannel
+from telethon.tl.types import PeerChannel, PeerUser
 
 from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG, CHAT_WARS_ID,\
     RESULTS_FORWARD_CHAT_ID
@@ -99,7 +99,7 @@ def worldtop_work():
         worldtop_client = TelegramClient(session_path, api_id, api_hash)
     with worldtop_client as cur_client:
         cur_client.get_entity("ChatWarsBot")
-        cur_client.add_event_handler(worldtop_handler, event=events.NewMessage)
+        cur_client.add_event_handler(worldtop_handler, event=events.NewMessage(incoming=True))
         loop = asyncio.get_event_loop()
         loop.create_task(send_worldtop())
         try:
@@ -141,6 +141,8 @@ def forwarded_stats(bot, update):
 
 async def worldtop_handler(event):
     text = event.message.message
+    if isinstance(event.message.peer_id, PeerUser):
+        event.message.from_id = event.message.peer_id.user_id
     if event.message.from_id == CHAT_WARS_ID and "🏆" in text and "🚩" in text and "Past battles:" in text:
         logging.info("Received /worldtop")
         castles_stats_queue.put({"data": text, "type": "worldtop"})
