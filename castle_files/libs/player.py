@@ -22,7 +22,7 @@ players = {}
 players_need_update = Queue()
 
 cursor = conn.cursor()
-classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel']
+classes_list = ['Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel', 'Noble', 'Berserker']
 
 
 class Player:
