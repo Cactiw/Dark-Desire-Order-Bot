@@ -595,7 +595,22 @@ def wtb(bot, update):
 def autospend_start(bot, job):
     logging.info("Spending players gold...")
     cursor = conn.cursor()
-    request = "select id from players where (settings ->> 'autospend')::boolean is true;"
+    request = "select id from players where (settings ->> 'autospend')::boolean is true "\
+              "and ((settings ->> 'spend_time')::int is Null or (settings ->> 'spend_time')::int = 46);"
+    cursor.execute(request)
+    player_ids = cursor.fetchall()
+    for player_id in player_ids:
+        player = Player.get_player(player_id, notify_on_error=False)
+        autospend_player(bot, player)
+    cursor.close()
+
+
+def autospend_start_custom(bot, job):
+    logging.info("Spending players gold...")
+    spend_time = job.context[0]
+    cursor = conn.cursor()
+    request = "select id from players where (settings ->> 'autospend')::boolean is true "\
+              "and (settings ->> 'spend_time')::int = " + str(spend_time) + ";"
     cursor.execute(request)
     player_ids = cursor.fetchall()
     for player_id in player_ids:

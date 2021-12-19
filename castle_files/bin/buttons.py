@@ -215,13 +215,13 @@ def get_tops_buttons(stat, curr='all'):
             InlineKeyboardButton("{}ВСЕ".format('✅' if curr == 'all' else ""), callback_data="top_{}_all".format(stat)),
             InlineKeyboardButton("{}⚗️".format('✅' if curr == '⚗️' else ""), callback_data="top_{}_⚗️".format(stat)),
             InlineKeyboardButton("{}⚒".format('✅' if curr == '⚒' else ""), callback_data="top_{}_⚒".format(stat)),
+            InlineKeyboardButton("{}🎩".format('✅' if curr == '🎩' else ""), callback_data="top_{}_🎩".format(stat)),
+            InlineKeyboardButton("{}📦".format('✅' if curr == '📦' else ""), callback_data="top_{}_📦".format(stat)),
         ],
         [
-            InlineKeyboardButton("{}📦".format('✅' if curr == '📦' else ""), callback_data="top_{}_📦".format(stat)),
             InlineKeyboardButton("{}🏹".format('✅' if curr == '🏹' else ""), callback_data="top_{}_🏹".format(stat)),
             InlineKeyboardButton("{}⚔️".format('✅' if curr == '⚔️' else ""), callback_data="top_{}_⚔️".format(stat)),
             InlineKeyboardButton("{}🛡".format('✅' if curr == '🛡' else ""), callback_data="top_{}_🛡".format(stat)),
-            InlineKeyboardButton("{}🎩".format('✅' if curr == '🎩' else ""), callback_data="top_{}_🎩".format(stat)),
             InlineKeyboardButton("{}🩸".format('✅' if curr == '🩸' else ""), callback_data="top_{}_🩸".format(stat)),
         ]
     ]
@@ -272,7 +272,7 @@ def get_vote_buttons(vote, choice=None):
     return InlineKeyboardMarkup(buttons)
 
 
-def get_autospend_buttons(enabled: bool = True):
+def get_autospend_buttons(enabled: bool = True, time: int = 46):
     buttons = [
         [
             InlineKeyboardButton("➕Добавить правило", callback_data="autospend_rule_add")
@@ -284,6 +284,13 @@ def get_autospend_buttons(enabled: bool = True):
             InlineKeyboardButton("💰Слить сейчас", callback_data="autospend_now")
         ]
     ]
+    spend_row = []
+    for minutes in [47, 48, 49, 50, 51]:
+        if time == minutes:
+            spend_row.append(InlineKeyboardButton(f"✅ {minutes}", callback_data=f"unspend_{minutes}"))
+        else:
+            spend_row.append(InlineKeyboardButton(f"⏰ {minutes}", callback_data=f"spend_{minutes}"))
+    buttons.append(spend_row)
     return InlineKeyboardMarkup(buttons)
 
 
