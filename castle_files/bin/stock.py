@@ -782,11 +782,16 @@ def autospend_gold(bot, update, start_text="", message=None):
 
     rules = player.api_info.get("autospend_rules")
     enabled = player.settings.get("autospend")
+    spend_time = player.settings.get("spend_time", 46)
     if enabled is None:
         enabled = True
         player.settings.update({"autospend": True})
         player.update()
     response = start_text + "<b>{}💰Автослив золота</b>\n".format("✅" if enabled else "❌")
+    if spend_time == 46:
+        response += 'По умолчанию слив голды в 46 минут перед каждой битвой\n'
+    else:
+        response += f'Cлив голды в {spend_time} минут перед каждой битвой\n'
     if not rules:
         response += "Правил ещё нет. Добавьте правило!"
     else:
@@ -797,7 +802,7 @@ def autospend_gold(bot, update, start_text="", message=None):
                 get_resource_name_by_code(resource_code) or "Неизвестно ({})".format(resource_code),
                 max_gold, i
             )
-    buttons = get_autospend_buttons(enabled)
+    buttons = get_autospend_buttons(enabled, spend_time)
 
     if update.callback_query:
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id)
@@ -817,6 +822,23 @@ def autospend_toggle(bot, update):
     autospend_gold(bot, update, message=update.callback_query.message)
 
 
+def spend_gold_time(bot, update, unset=False):
+    data = update.callback_query.data
+    time = re.search("_(\\d+)", data)
+    if time:
+        time = int(time.group(1))
+        player = Player.get_player(update.callback_query.from_user.id)
+        spend_time = player.settings.get("spend_time", 46)
+        if not unset:
+            player.settings.update({"spend_time": time})
+        else:
+            player.settings.update({"spend_time": 46})
+        player.update()
+        autospend_gold(bot, update, message=update.callback_query.message)
+
+
+def unspend_gold_time(bot, update):
+    spend_gold_time(bot, update, unset=True)
 
 
 def add_autospend_rule(bot, update, user_data):

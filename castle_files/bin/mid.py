@@ -8,7 +8,7 @@ from castle_files.libs.castle.location import Location
 from castle_files.bin.guild_chats import rangers_notify_start
 from castle_files.bin.alliances import plan_clear_alliance_results
 from castle_files.bin.api import grassroots_update_players, grassroots_update_stock, send_potion_stats, \
-    update_stock_for_fails, autospend_start
+    update_stock_for_fails, autospend_start, autospend_start_custom
 from castle_files.bin.service_functions import check_access
 
 from castle_files.work_materials.globals import job, MID_CHAT_ID, moscow_tz, local_tz, dispatcher, SUPER_ADMIN_ID, \
@@ -168,6 +168,10 @@ def plan_battle_jobs():
                  context={"change_send": True})
 
     job.run_once(autospend_start, next_battle_time - datetime.timedelta(hours=0, minutes=14, seconds=00))
+    for spend_time in [47, 48, 49, 50, 51]:
+        job.run_once(autospend_start_custom,
+                     next_battle_time - datetime.timedelta(hours=0, minutes=(60 - spend_time), seconds=0),
+                     context=[spend_time])
 
     # job.run_once(grassroots_update_stock, 0.1, context={"change_send": True})
     # job.run_once(update_stock_for_fails, 5, context={"change_send": True})

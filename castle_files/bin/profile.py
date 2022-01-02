@@ -643,6 +643,8 @@ def add_class_from_player(bot, update):
         "алхимик": "Alchemist",
         "кузнец": "Blacksmith",
         "добытчик": "Collector",
+        "нобл": "Noble",
+        "берсерк": "Berserker"
     }
     mes = update.message
     player = Player.get_player(mes.from_user.id)
