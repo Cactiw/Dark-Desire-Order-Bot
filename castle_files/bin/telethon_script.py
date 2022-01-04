@@ -1,5 +1,5 @@
 from telethon.sync import TelegramClient, events, connection
-from telethon.tl.types import PeerChannel, PeerUser
+from telethon.tl.types import PeerChannel, PeerUser, PeerChat
 
 from castle_files.work_materials.globals import RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG, CHAT_WARS_ID,\
     RESULTS_FORWARD_CHAT_ID
@@ -78,7 +78,45 @@ def script_work():
     with admin_client as client:
         admin_client.get_entity("ChatWarsDigest")
         admin_client.get_entity("ChatWarsBot")
-        client.add_event_handler(stats_handler, event=events.NewMessage)
+
+        @client.on(events.NewMessage(incoming=True))
+        async def stats_internal_handler(event):
+            global guilds_str
+
+            if isinstance(event.message.peer_id, PeerUser):
+                event.message.from_id = event.message.peer_id.user_id
+
+            if isinstance(event.message.from_id, PeerUser):
+                event.message.from_id = event.message.from_id.user_id
+            else:
+                if isinstance(event.message.peer_id, PeerChat):
+                    event.message.from_id = event.message.peer_id.chat_id
+                if isinstance(event.message.peer_id, PeerChannel):
+                    event.message.from_id = event.message.from_id.channel_id
+
+            text = event.message.message if hasattr(event.message, 'message') else event.message.text
+            chat_id = event.message.from_id if hasattr(event.message, 'from_id') else event.message.chat_id
+            message_id = event.message.id if hasattr(event.message, 'id') else event.message.message_id
+            if (chat_id in [RESULTS_PARSE_CHANNEL_ID, RESULTS_PARSE_CHANNEL_ID_DEBUG] or chat_id == RESULTS_FORWARD_CHAT_ID) and \
+                    (
+                            'Результаты сражений:' in text or '⛺️Гильдия' in text or '⛺Гильдия' in text or "Headquarters" in text or
+                            "🗺State of map" in text):
+                debug = type(chat_id) == PeerChannel and chat_id == PeerChannel(RESULTS_PARSE_CHANNEL_ID_DEBUG)
+                logging.error("Received data from telegram, sending: {}".format(text))
+                if '⛺️Гильдия' in text:
+                    guilds_str += text + "\n"
+                    logging.info("Adding text to guilds_str = {}".format(guilds_str))
+                else:
+                    print("put stats in queue")
+                    castles_stats_queue.put({"data": text, "message_id": message_id, "debug": debug})
+                    castles_stats_queue.put({"data": guilds_str, "debug": debug})
+                    guilds_str = ""
+                    return
+            elif chat_id == CHAT_WARS_ID and "🏆 очков" in text and "Past battles:" in text:
+                logging.info("Received /worldtop")
+                castles_stats_queue.put({"data": text, "type": "worldtop"})
+
+
         print("telegram script launched")
         loop = asyncio.get_event_loop()
         try:
