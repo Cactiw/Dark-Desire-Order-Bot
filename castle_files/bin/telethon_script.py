@@ -92,7 +92,7 @@ def script_work():
                 if isinstance(event.message.peer_id, PeerChat):
                     event.message.from_id = event.message.peer_id.chat_id
                 if isinstance(event.message.peer_id, PeerChannel):
-                    event.message.from_id = event.message.from_id.channel_id
+                    event.message.from_id = event.message.peer_id.channel_id
 
             text = event.message.message if hasattr(event.message, 'message') else event.message.text
             chat_id = event.message.from_id if hasattr(event.message, 'from_id') else event.message.chat_id
