@@ -1209,6 +1209,7 @@ def change_guild_chat(bot, update, user_data):
         return
     guild.chat_id = chat.id
     guild.chat_name = chat.title
+    guild.invite_link = None
     try:
         guild.invite_link = bot.exportChatInviteLink(chat_id)
         if guild.invite_link is not None:
