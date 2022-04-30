@@ -32,7 +32,8 @@ classes_to_emoji_inverted = dict(zip(classes_to_emoji.values(), classes_to_emoji
 # class_chats = {'Alchemist': -1001438734208, 'Blacksmith': -1001164490198, 'Collector': -1001439849094,
 #                'Ranger': -1001189370559, 'Knight': -1001479145097, 'Sentinel': -1001165430197}
 class_chats = {'Alchemist': -1001303783942, 'Blacksmith': -1001164490198, 'Collector': -1001254394389,
-               'Ranger': -1001439995849, 'Knight': -1001289110366, 'Sentinel': -1001165430197}
+               'Ranger': -1001439995849, 'Knight': -1001289110366, 'Sentinel': -1001165430197,
+               'Berserker': -1001585939361}
 
 bot = AsyncBot(token=Production_castle_token, workers=16, request_kwargs=request_kwargs)
 updater = AsyncUpdater(bot=bot)
