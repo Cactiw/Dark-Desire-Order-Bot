@@ -1153,7 +1153,7 @@ def change_guild_commander(bot, update, user_data):
         guild.add_player(player)
     guild.commander_id = player_id
     if player.id not in guild.members:
-        guild.add_player(player.id)
+        guild.add_player(player)
     guild.update_to_database()
     if "status" in user_data:
         user_data.pop("status")
