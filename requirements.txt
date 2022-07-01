@@ -10,3 +10,4 @@ kafka-python
 retrying
 kombu
 librabbitmq-fork
+requests
