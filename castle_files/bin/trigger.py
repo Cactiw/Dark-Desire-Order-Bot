@@ -101,7 +101,7 @@ def send_trigger(bot, update):
 
 
 GLOBAL_TRIGGERS_IGNORE = {
-    -1001250048555  # With special thanks to @sinior_pomidor
+    -1001250048555, -1001686326526  # With special thanks to @sinior_pomidor
 }
 
 
