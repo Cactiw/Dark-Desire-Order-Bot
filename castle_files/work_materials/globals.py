@@ -22,7 +22,7 @@ emodji_to_castle_names = {'🍆': 'ferma', '🍁': 'amber', '☘': 'oplot', '�
 classes_list = [
     'Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel',
     'Master', 'Esquire', 'Berserker', 'Noble']
-classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '⚒', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',
+classes_to_emoji = {'Alchemist': '⚗️', 'Blacksmith': '🛠', 'Collector': '📦', 'Ranger': '🏹', 'Knight': '⚔️',
                     'Sentinel': '🛡', 'Esquire': '🗡', 'Master': '⛏', 'Воин': '🗡',
                     'Noble': '🎩', 'Berserker': '🩸'}
 classes_to_emoji_inverted = dict(zip(classes_to_emoji.values(), classes_to_emoji.keys()))
