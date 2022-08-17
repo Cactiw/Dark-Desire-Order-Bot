@@ -13,12 +13,12 @@ import json
 class Shop:
     attributes = ["link", "name", "ownerTag", "ownerName", "ownerCastle", "kind", "mana", "offers", "castleDiscount",
                   "guildDiscount", "specialization", "qualityCraftLevel", "maintenanceEnabled", "maintenanceCost",
-                  "last_seen"]
+                  "last_seen", "specializations"]
     last_update = None
     UPDATE_LIMIT = 5 * 60
 
     def __init__(self, id, link, name, ownerTag, ownerName, ownerCastle, kind, mana, offers, castleDiscount,
-                 guildDiscount, specialization, qualityCraftLevel, maintenanceEnabled, maintenanceCost, last_seen):
+                 guildDiscount, specialization, specializations, qualityCraftLevel, maintenanceEnabled, maintenanceCost, last_seen):
         self.id = id
         self.link = link
         self.name = name
@@ -31,6 +31,7 @@ class Shop:
         self.castleDiscount = castleDiscount
         self.guildDiscount = guildDiscount
         self.specialization = specialization
+        self.specializations = specializations
         self.qualityCraftLevel = qualityCraftLevel
         self.maintenanceEnabled = maintenanceEnabled
         self.maintenanceCost = maintenanceCost
@@ -42,6 +43,9 @@ class Shop:
 
     def get_json_specialization(self):
         return json.dumps(self.specialization, ensure_ascii=False) if self.specialization is not None else None
+
+    def get_json_specializations(self):
+        return json.dumps(self.specializations, ensure_ascii=False) if self.specializations != {} else '{}'
 
     def get_offered_names(self):
         return list(map(lambda offer: offer.get("item"), self.offers))
@@ -102,7 +106,7 @@ class Shop:
 
         cursor = conn.cursor()
         request = "select id, link, name, ownerTag, ownerName, ownerCastle, kind, mana, offers, castleDiscount, " \
-                  "guildDiscount, specialization, qualityCraftLevel, maintenanceEnabled, maintenanceCost, last_seen " \
+                  "guildDiscount, specialization, specializations, qualityCraftLevel, maintenanceEnabled, maintenanceCost, last_seen " \
                   "from shops " \
                   "where {} = %s limit 1".format(arg_name)
         cursor.execute(request, (arg,))
@@ -118,23 +122,26 @@ class Shop:
     def update(self):
         request = "update shops set id = %s, link = %s, name = %s, ownerTag = %s, ownerName = %s, ownerCastle = %s, " \
                   "kind = %s, mana = %s, offers = %s, castleDiscount = %s, guildDiscount = %s, specialization = %s, " \
+                  "specializations = %s," \
                   "qualityCraftLevel = %s, maintenanceEnabled = %s, maintenanceCost = %s, last_seen = %s where id = %s"
         cursor = conn.cursor()
         cursor.execute(request, (
             self.id, self.link, self.name, self.ownerTag, self.ownerName, self.ownerCastle, self.kind, self.mana,
             self.get_json_offers(), self.castleDiscount, self.guildDiscount, self.get_json_specialization(),
+            self.get_json_specializations(),
             self.qualityCraftLevel, self.maintenanceEnabled, self.maintenanceCost, self.last_seen, self.id))
         cursor.close()
 
     def create(self):
         request = "insert into shops(link, name, ownerTag, ownerName, ownerCastle, kind, mana, offers, " \
-                  "castleDiscount, guildDiscount, specialization, qualityCraftLevel, maintenanceEnabled, " \
-                  "maintenanceCost, last_seen) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                  "castleDiscount, guildDiscount, specialization, specializations, qualityCraftLevel, maintenanceEnabled, " \
+                  "maintenanceCost, last_seen) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         cursor = conn.cursor()
         cursor.execute(request, (
             self.link, self.name, self.ownerTag, self.ownerName, self.ownerCastle, self.kind, self.mana,
             self.get_json_offers(),
-            self.castleDiscount, self.guildDiscount, self.get_json_specialization(), self.qualityCraftLevel,
+            self.castleDiscount, self.guildDiscount, self.get_json_specialization(),
+            self.get_json_specializations(), self.qualityCraftLevel,
             self.maintenanceEnabled, self.maintenanceCost, get_current_datetime()))
         cursor.close()
 

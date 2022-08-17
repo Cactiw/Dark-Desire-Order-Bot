@@ -10,6 +10,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 from castle_files.libs.alliance import Alliance
 
+from castle_files.work_materials.cook_constants import cook_mapper
 from castle_files.work_materials.globals import dispatcher, king_id, SUPER_ADMIN_ID, construction_jobs
 
 import datetime
@@ -618,3 +619,22 @@ def send_general_buttons(user_id, user_data, bot=None):
                      reply_markup=get_general_buttons(user_data, player=player), parse_mode='HTML',
                      disable_web_page_preview=show_web_page_preview(player, user_data)
                      )
+
+def cook_button(seq='', letter='A'):
+    if letter in seq:
+        button = InlineKeyboardButton("✅" + cook_mapper.get(letter).get('short_name'), callback_data="unsetcook_" + seq + letter)
+    else:
+        button = InlineKeyboardButton(cook_mapper.get(letter).get('short_name'), callback_data="setcook_" + seq + letter)
+    return button
+
+
+def get_cook_butons(seq=''):
+    buttons = [
+        [cook_button(seq, 'A'), cook_button(seq, 'B')],
+        [cook_button(seq, 'M'), cook_button(seq, 'N')],
+        [cook_button(seq, 'C'), cook_button(seq, 'D')],
+        [cook_button(seq, 'E'), cook_button(seq, 'F')],
+        [cook_button(seq, 'G'), cook_button(seq, 'H')],
+        [cook_button(seq, 'I'), cook_button(seq, 'J'), cook_button(seq, 'K'), cook_button(seq, 'L')]
+    ]
+    return InlineKeyboardMarkup(buttons)
