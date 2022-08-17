@@ -13,7 +13,7 @@ from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
 from castle_files.bin.service_functions import get_time_remaining_to_battle, plan_work_week, get_current_datetime
 
-from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher, job
+from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher, job, HOME_CASTLE
 
 from config import cwuser, cwpass
 
@@ -347,7 +347,7 @@ def repair(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
         return
     player = Player.get_player(mes.from_user.id)
-    player_castle = player.castle if player is not None else '🖤'
+    player_castle = player.castle if player is not None else HOME_CASTLE
     sh = []
     for shop in shops:
         if shop.get("maintenanceEnabled"):
@@ -355,7 +355,7 @@ def repair(bot, update):
     sh.sort(key=lambda x: repair_comparator(x, player_castle), reverse=True)
 
     response = "Выгодные магазины для обслуживания:\n"
-    castle_stage = sh[0].get("ownerCastle") if sh else '🖤'
+    castle_stage = sh[0].get("ownerCastle") if sh else HOME_CASTLE
     gold_min = min(list(map(lambda shop: shop.get("maintenanceCost", 1000), sh)))
     for shop in sh:
         castle, link, gold, mana, discount, name = shop.get("ownerCastle"), shop.get("link"), shop.get("maintenanceCost"), \
@@ -391,7 +391,7 @@ def ws(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
         return
     player = Player.get_player(mes.from_user.id)
-    player_castle = player.castle if player is not None else '🖤'
+    player_castle = player.castle if player is not None else HOME_CASTLE
     sh = []
     for shop in shops:
         offers = []

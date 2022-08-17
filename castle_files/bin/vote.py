@@ -1,7 +1,7 @@
 """
 Функции, связанные с голосованиями
 """
-from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID, classes_list
+from castle_files.work_materials.globals import cursor, moscow_tz, SUPER_ADMIN_ID, classes_list, HOME_CASTLE
 
 from castle_files.bin.buttons import get_vote_buttons
 from castle_files.bin.service_functions import check_access
@@ -270,8 +270,8 @@ def vote(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    if player.castle != '🖤':
-        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
+    if player.castle != HOME_CASTLE:
+        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям {}!".format(HOME_CASTLE))
         return
     if player.guild is None and player.id not in ALLOWED_LIST:
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")
@@ -319,8 +319,8 @@ def set_vote_variant(bot, update):
     player = Player.get_player(update.callback_query.from_user.id)
     if player is None:
         return
-    if player.castle != '🖤':
-        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям 🖤Скалы!")
+    if player.castle != HOME_CASTLE:
+        bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только жителям {}!".format(HOME_CASTLE))
         return
     if player.guild is None and player.id not in ALLOWED_LIST:
         bot.send_message(chat_id=mes.chat_id, text="Голосование доступно только членам гильдий.")

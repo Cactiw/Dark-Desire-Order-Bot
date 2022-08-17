@@ -4,7 +4,8 @@
 """
 
 from castle_files.work_materials.globals import DEFAULT_CASTLE_STATUS, cursor, moscow_tz, construction_jobs, MERC_ID, \
-    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc, castle_chats
+    classes_to_emoji, dispatcher, class_chats, CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id, conn, utc, castle_chats, \
+    castles, HOME_CASTLE, HOME_NAME
 from castle_files.work_materials.equipment_constants import get_equipment_by_code, get_equipment_by_name
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -73,7 +74,7 @@ def class_chat_check(mes):
     for user in users:
         player = Player.get_player(user.id)
         if player is None or player.game_class is None or class_chats.get(player.game_class) != mes.chat_id or \
-                player.castle != '🖤':
+                player.castle != HOME_CASTLE:
             return True
     return False
 
@@ -81,7 +82,7 @@ def class_chat_check(mes):
 def class_chat_player_check(player_id, chat_id):
     player = Player.get_player(player_id)
     if player is None or player.game_class is None or class_chats.get(player.game_class) != chat_id or \
-            player.castle != '🖤':
+            player.castle != HOME_CASTLE:
         return True
     return False
 
@@ -118,7 +119,7 @@ def castle_chat_check(message):
             return False
         if player is None:
             return True
-        if player is None or player.castle != '🖤':
+        if player is None or player.castle != HOME_CASTLE:
             return True
     return False
 
@@ -134,9 +135,9 @@ def remove_players_from_chat(bot, update):
         player = Player.get_player(user.id)
         if message.from_user.id in [CASTLE_BOT_ID, SUPER_ADMIN_ID, king_id] or check_access(message.from_user.id):
             return
-        if player is None or player.castle != '🖤':
+        if player is None or player.castle != HOME_CASTLE:
             try:
-                text = "Этот чат только для игроков 🖤Скалы"
+                text = "Этот чат только для игроков {}".format(HOME_CASTLE)
                 bot.kickChatMember(chat_id=message.chat_id, user_id=user_id)
                 bot.send_message(chat_id=message.chat_id,
                                  text=text, parse_mode='HTML')
@@ -183,7 +184,7 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
         logging.error("id:{} nickname:{} class:{} username:{}".format(player.id, player.nickname,
                                                                       player.game_class, player.username))
     response = "<b>{}</b> - {} {}\n".format(player.nickname, class_format,
-                                            "🖤Скалы" if player.castle == '🖤' else player.castle)
+                                            "{}".format(HOME_CASTLE) if player.castle == HOME_CASTLE else player.castle)
     response += "{}id: <code>{}</code>, ".format("@{}, ".format(player.username) if player.username is not None else "",
                                                  player.id)
     if user_data is None:
@@ -205,7 +206,7 @@ def get_profile_text(player, self_request=True, user_data=None, requested_player
             (requested_player.guild == guild.id or guild.is_academy()):
         response += "Удалить из гильдии: /remove_player_{}\n".format(player.id)
     if self_request:
-        if player.game_class is not None and player.castle == '🖤' and player.game_class not in ['Master', 'Esquire']:
+        if player.game_class is not None and player.castle == HOME_CASTLE and player.game_class not in ['Master', 'Esquire']:
             try:
                 if class_links.get(player.game_class) is None:
                     revoke_class_link(player.game_class)
@@ -445,16 +446,16 @@ urned_players = [29821655]
 def hero(bot, update, user_data):
     mes = update.message
     text = mes.text
-    castle = re.search("([🍁☘️🖤🐢🦇🌹🍆🎖]+)(.+)", text)
+    castle = re.search("([{}🎖]+)(.+)".format(''.join(castles)), text)
     nickname = castle.group(2)
     castle = castle.group(1)
-    if castle != '🖤':
+    if castle != HOME_CASTLE:
         pass
         # Игрок не из Скалы
         # bot.send_message(chat_id=mes.from_user.id, text="Пользователям не из Скалы запрещена регистрация!")
         # return
     player = Player.get_player(mes.from_user.id, notify_on_error=False)
-    if player is not None and player.id == 402027858 and player.castle != '🖤' and castle == '🖤':
+    if player is not None and player.id == 402027858 and player.castle != HOME_CASTLE and castle == HOME_CASTLE:
         # Рыбак вернулся!
         bot.send_message(chat_id=player.id,
                          text="Стражи с гулким стуком ударяют копьями о землю. Врата медленно "
@@ -471,16 +472,16 @@ def hero(bot, update, user_data):
                          reply_to_message_id=mes.message_id)
         return
     # Парсинг хиро
-    guild_tag = re.search("[🍁☘🖤🐢🦇🌹🍆🎖]\\[(.+)\\]", text)
+    guild_tag = re.search("[{}🎖]\\[(.+)\\]".format(''.join(castles)), text)
     if guild_tag:
         guild_tag = guild_tag.group(1)
-    lvl = int(re.search("🏅Уровень: (\\d+)", text).group(1))
-    attack = int(re.search("⚔Атака: (\\d+)", text).group(1))
-    defense = int(re.search("🛡Защита: (\\d+)", text).group(1))
-    stamina = re.search("🔋Выносливость: (\\d+)/(\\d+)", text)
+    lvl = int(re.search("🏅(?:Уровень|Level): (\\d+)", text).group(1))
+    attack = int(re.search("(?:⚔|⚔️)(?:Атака|Atk): (\\d+)", text).group(1))
+    defense = int(re.search("🛡(?:Защита|Def): (\\d+)", text).group(1))
+    stamina = re.search("🔋(?:Выносливость|Stamina): (\\d+)/(\\d+)", text)
     stamina, max_stamina = tuple(map(lambda x: int(x), stamina.groups()))
     pet = re.search("Питомец:\n.(\\s.+\\(\\d+ lvl\\))", text)
-    exp = int(re.search("🔥Опыт: (\\d+)", text).group(1))
+    exp = int(re.search("🔥(?:Опыт|Exp): (\\d+)", text).group(1))
     last_updated = datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     if pet:
         pet = pet.group(1)
@@ -496,6 +497,8 @@ def hero(bot, update, user_data):
         "cloaks": None
     }
     equip_strings = text.partition("🎽Экипировка")[2].splitlines()[1:]
+    if not equip_strings:
+        equip_strings = text.partition("🎽Equipment")[2].splitlines()[1:]
     for string in equip_strings:
         # clear_name = re.search("\\+?\\d?\\s?(.+?)\\s\\+", string)
         clear_name = re.search("(⚡?\\+?\\d*\\s?(.+?))\\s\\+((\\d*)⚔)?\\s*\\+?(\\d*)🛡?", string)
@@ -531,12 +534,12 @@ def hero(bot, update, user_data):
 
         user_data.update({"status": DEFAULT_CASTLE_STATUS, "location_id": 0})
         bot.send_message(chat_id=mes.chat_id,
-                         text="Добро пожаловать в 🖤Скалу, <b>{}</b>!\n\n<a href=\"https://t.me/joinchat/DdKE7kUfsmDVIC2DJymw_A\">Чат центральной площади</a>\n\nДля добавления информации о классе "
+                         text="Добро пожаловать в {}{}, <b>{}</b>!\n\n<a href=\"https://t.me/joinchat/DdKE7kUfsmDVIC2DJymw_A\">Чат центральной площади</a>\n\nДля добавления информации о классе "
                               "необходимо прислать ответ @ChatWarsBot на кнопку \"🏅Герой\" (рекомендуется сделать для "
                               "получения доступа к некоторых дополнительным фишкам, особенно стражникам).\n\n"
                               "<em>Вы всегда можете отключить рп составляющую бота командой </em>/change_rp.<em> "
                               "Обратите внимание, что это сделает недоступными некоторые функции "
-                              "бота.</em>".format(player.nickname),
+                              "бота.</em>".format(player.nickname, HOME_CASTLE, HOME_NAME),
                          parse_mode='HTML')
         if filter_is_pm(mes):
             send_general_buttons(mes.from_user.id, user_data)
@@ -657,13 +660,15 @@ def add_class_from_player(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Этот профиль старше 30 секунд. Пришли актуальный профиль!",
                          reply_to_message_id=mes.message_id)
         return
-    game_class = re.search("🖤{} (\\w+) Скалы".format(re.escape(player.nickname)), mes.text)
+    game_class = re.search("{}{} (\\w+) of [\\w\\s]+".format(HOME_CASTLE, re.escape(player.nickname)), mes.text)
     if game_class is None:
         bot.send_message(chat_id=mes.chat_id, text="Произошла ошибка.", reply_to_message_id=mes.message_id)
         return
     game_class = game_class.group(1)
     if game_class.lower() in translate:
         game_class = translate.get(game_class.lower())
+    elif game_class in list(translate.values()):
+        game_class = game_class.strip().capitalize()
     player.game_class = game_class
     player.update_to_database()
     bot.send_message(chat_id=mes.from_user.id, text="Информация о классе обновлена, <b>{}</b>! Теперь ты "
@@ -766,7 +771,7 @@ def get_rangers(bot, update):
     mes = update.message
     if not check_whois_access(mes.from_user.id):
         return
-    response = "Лучники 🖤Скалы:\n"
+    response = "Лучники {}:\n".format(HOME_CASTLE)
     request = "select '@' || username, nickname, lvl from players where game_class = 'Ranger' order by lvl desc"
     cursor.execute(request)
     row = cursor.fetchone()

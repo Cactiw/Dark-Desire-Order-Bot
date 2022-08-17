@@ -22,7 +22,7 @@ union_chats = {}
 def add_union(bot, update):
     mes = update.message
     name = re.search("Trade Union: (.*)", mes.text)
-    creator_nick = re.search("🏅Owner:['🍆🍁☘🌹🐢🦇🖤](.*)", mes.text)
+    creator_nick = re.search("🏅Owner:['{}](.*)".format(''.join(castles)), mes.text)
     if name is None:
         bot.send_message(chat_id=mes.chat_id, text="Ошибка распознавания имени")
         return

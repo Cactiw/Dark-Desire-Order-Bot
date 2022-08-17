@@ -1,4 +1,4 @@
-from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc, SKIPPED_DIVISIONS
+from castle_files.work_materials.globals import moscow_tz, local_tz, cursor, conn, SUPER_ADMIN_ID, utc, SKIPPED_DIVISIONS, HOME_CASTLE, castles
 
 from castle_files.bin.service_functions import count_battle_id, check_access
 from castle_files.bin.stock import get_item_code_by_name
@@ -47,7 +47,7 @@ def add_report(bot, update, user_data):
         except AttributeError:
             forward_message_date = local_tz.localize(mes.date).astimezone(tz=moscow_tz).replace(tzinfo=None)
 
-    line = re.search("[🍆🍁☘️🌹🐢🦇🖤️]*(.*)\\s⚔️:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s", s)
+    line = re.search("[{}]*(.*)\\s⚔️:(\\d+)\\(?(.?\\d*)\\)?.*🛡:(\\d+)\\(?(.?\\d*)\\)?.*Lvl: (\\d+)\\s".format(''.join(castles)), s)
     """ 
     . - замок, (.*)\\s - никнейм в игре - от замка до эмодзи атаки. ⚔:(\\d+) - Парсинг атаки в конкретной битве
     \\(? - Возможно атака подверглась модификациям, тогда сразу после числа атаки будет открывающая скобка. 
@@ -75,7 +75,7 @@ def add_report(bot, update, user_data):
     battle_id = count_battle_id(mes)
     hp = re.search("❤️Hp: (-?\\d+)", s)
     hp = int(hp.group(1)) if hp is not None else 0
-    outplay = re.search("Тактически переиграл (.+) на ⚔️(\\d+)", s)
+    outplay = re.search("(?:Тактически переиграл|You outplayed) (.+) (?:на|by) ⚔️(\\d+)", s)
     outplay_dict = {}
     if outplay is not None:
         outplay_nickname = outplay.group(1)
@@ -263,7 +263,7 @@ def battle_stats(bot, update):
                                                        count_battle_time(battle_id).strftime("%d/%m/%y %H:%M:%S"))
     while row is not None:
         player = Player.get_player(row[0])
-        if player.castle != '🖤':
+        if player.castle != HOME_CASTLE:
             row = cursor1.fetchone()
             continue
         if player.guild is None:

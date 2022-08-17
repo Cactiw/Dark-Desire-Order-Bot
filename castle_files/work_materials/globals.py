@@ -51,6 +51,7 @@ cursor = conn.cursor()
 DEFAULT_CASTLE_STATUS = 'central_square'
 
 HOME_CASTLE = "🖤"
+HOME_NAME = "Скала"
 
 SKIPPED_DIVISIONS = ["Луки", "Траст"]
 

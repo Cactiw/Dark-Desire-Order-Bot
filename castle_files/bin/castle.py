@@ -12,7 +12,7 @@ from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
 
 from castle_files.work_materials.globals import high_access_list, DEFAULT_CASTLE_STATUS, cursor, conn, SUPER_ADMIN_ID, \
-    classes_to_emoji, CENTRAL_SQUARE_CHAT_ID, job, moscow_tz, dispatcher
+    classes_to_emoji, CENTRAL_SQUARE_CHAT_ID, job, moscow_tz, dispatcher, HOME_CASTLE
 from globals import update_request_queue
 
 from telegram import ReplyKeyboardMarkup
@@ -477,9 +477,9 @@ def get_tops_text(player: Player, stat: str, stat_text: str, game_class: str = N
                   "count::text::integer desc".format(select)  # Этот запрос составлялся час. Помянем.
 
     else:
-        request = "select nickname, {}, game_class, lvl, id from players where castle = '🖤' and {} is not null " \
+        request = "select nickname, {}, game_class, lvl, id from players where castle = {} and {} is not null " \
                   "and api_info -> 'token' is not null {}" \
-                  "order by {} desc".format(stat, stat, "and game_class = '{}' ".format(game_class) if
+                  "order by {} desc".format(stat, HOME_CASTLE, stat, "and game_class = '{}' ".format(game_class) if
                                             game_class is not None else "", stat)
         response += "<em>Обратите внимание, в топе отображаются только игроки, подключившие API (команда /auth).</em>" \
                     "\n\n"

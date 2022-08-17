@@ -112,10 +112,10 @@ def parse_stats():
                     for castle_results_string in data.split("\n\n"):
                         if tag in castle_results_string:
                             try:
-                                attacked_castle = re.search('[🍁☘🖤🐢🦇🌹🍆]', castle_results_string).group(0)
+                                attacked_castle = re.search('[{}]'.format(''.join(castles)), castle_results_string).group(0)
                             except TypeError:
                                 attacked_castle = "???"
-                            nicknames_list = re.findall(".\\[{}\\][^🍁☘🖤🐢🦇🌹🍆🎖\n]+".format(tag), castle_results_string)
+                            nicknames_list = re.findall(".\\[{}\\][^{}🎖\n]+".format(tag, ''.join(castles)), castle_results_string)
                             print(nicknames_list)
                             for nickname in nicknames_list:
                                 if response == "":
@@ -158,7 +158,7 @@ def parse_stats():
             for guild_str in guild_list:
                 new_str = guild_str
                 new_str = "{}".format('⚔️' if 'атакована' in new_str else '🛡') + new_str
-                tags = re.findall("[🍁☘🖤🐢🦇🌹🍆](\\w+)", guild_str)
+                tags = re.findall("[[{}](\\w+)".format(''.join(castles)), guild_str)
                 tags = list(set(tags))
                 for tag in tags:
                     new_str = new_str.replace(tag, "<b>{}</b>".format(tag))
