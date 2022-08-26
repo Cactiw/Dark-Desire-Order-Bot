@@ -3,7 +3,7 @@
 """
 
 from castle_files.work_materials.globals import MOB_CHAT_ID, moscow_tz, utc, cursor, mobs_messages, mobs_lock, \
-    dispatcher, conn, ping_messages, classes_to_emoji
+    dispatcher, conn, ping_messages, classes_to_emoji, HOME_CASTLE
 from castle_files.work_materials.filters.general_filters import filter_is_pm
 
 from castle_files.libs.player import Player
@@ -196,7 +196,7 @@ def mob(bot, update):
                                                                            forward_message_date, buffs, minutes,
                                                                            mes.from_user.id)
     player: Player = Player.get_player(mes.from_user.id)
-    if is_pm and (player is None or player.castle == '🖤'):
+    if is_pm and (player is None or player.castle == HOME_CASTLE):
         if 'It\'s an ambush!'.lower() in mes.text.lower():
             bot.send_message(chat_id=mes.chat_id, text="Засады не отправляются на канал. "
                                                        "Зовите бойцов вашей гильдии на помощь!")
@@ -214,14 +214,14 @@ def mob(bot, update):
                 cwapi.update_player(player.id, player=player)
             try:
                 # requests.post('http://127.0.0.1:5555/addMob',
-                #               json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+                #               json=json.dumps({"castle": HOME_CASTLE, "text": mes.text, "telegram_id": mes.from_user.id,
                 #                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
                 #               timeout=0.3)
 
                 pass
                 # Верно!
                 requests.post('http://144.91.112.129:5555/addMob',
-                              json=json.dumps({"castle": '🖤', "text": mes.text, "telegram_id": mes.from_user.id,
+                              json=json.dumps({"castle": HOME_CASTLE, "text": mes.text, "telegram_id": mes.from_user.id,
                                                "forward_date": forward_message_date.timestamp()}, ensure_ascii=False),
                               timeout=0.3)
             except Exception:

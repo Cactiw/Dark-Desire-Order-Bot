@@ -1,7 +1,7 @@
 from telegram.ext import BaseFilter
 
 from castle_files.work_materials.filters.general_filters import filter_is_chat_wars_forward, filter_is_pm
-from castle_files.work_materials.globals import allowed_list, class_chats, castle_chats, CASTLE_CHAT_ID
+from castle_files.work_materials.globals import allowed_list, class_chats, castle_chats, CASTLE_CHAT_ID, castles
 
 from castle_files.libs.player import Player
 
@@ -57,8 +57,8 @@ filter_forbidden = FilterForbidden()
 
 class FilterIsHero(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and re.match("[🍆🍁☘🌹🐢🦇🖤]+", message.text) is not None and \
-               re.search("🎒Рюкзак:", message.text) is not None
+        return filter_is_chat_wars_forward(message) and re.match("[{}]+".format(''.join(castles)), message.text) is not None and \
+               re.search("(:?📦Склад|📦Warehouse):", message.text) is not None
 
 
 filter_is_hero = FilterIsHero()
@@ -67,8 +67,9 @@ filter_is_hero = FilterIsHero()
 class FilterIsProfile(BaseFilter):
     def filter(self, message):
         return filter_is_pm(message) and filter_is_chat_wars_forward(message) \
-               and "Битва" in message.text and "семи замков через" in message.text and \
-               "Состояние:" in message.text and "Подробнее: /hero" in message.text
+               and re.search('(:?Battle of the [\\w]+ castles in|Битва [\\w]+ замков через)', message.text) and \
+               ("Состояние:" in message.text or "State:" in message.text) and \
+               ("Подробнее: /hero" in message.text or "More: /hero" in message.text)
 
 
 filter_is_profile = FilterIsProfile()

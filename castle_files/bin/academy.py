@@ -7,7 +7,7 @@ from castle_files.libs.player import Player
 
 from castle_files.bin.service_functions import great_format_time, plan_work_week
 
-from castle_files.work_materials.globals import ACADEMY_HQ_CHAT_ID, SUPER_ADMIN_ID, moscow_tz, job
+from castle_files.work_materials.globals import ACADEMY_HQ_CHAT_ID, SUPER_ADMIN_ID, moscow_tz, job, HOME_CASTLE
 
 import datetime
 import time
@@ -115,7 +115,7 @@ def send_guilds_stats(bot, job):
         guild = Guild.get_guild(guild_id)
         if not guild.is_active():
             continue
-        if guild.castle != "🖤":
+        if guild.castle != HOME_CASTLE:
             continue
         lvl, members = guild.api_info.get("lvl"), guild.api_info.get("members")
         response += "<b>{}</b> 👥{} {}\n".format(guild.tag, guild.members_count,
