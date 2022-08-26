@@ -13,6 +13,7 @@ from castle_files.bin.stock import get_item_name_by_code
 from castle_files.bin.reports import count_battle_time, count_battle_id
 from castle_files.bin.service_functions import get_time_remaining_to_battle, plan_work_week, get_current_datetime
 
+from castle_files.work_materials.cook_constants import cook_mapper
 from castle_files.work_materials.globals import conn, SUPER_ADMIN_ID, castles, MID_CHAT_ID, dispatcher, job, HOME_CASTLE
 
 from config import cwuser, cwpass
@@ -23,6 +24,7 @@ import traceback
 import threading
 import copy
 import datetime
+from collections import Counter
 
 import re
 
@@ -795,4 +797,97 @@ def send_potion_stats(bot, job):
     if clear:
         cwapi.api_info.update({"potions_info": {}})
 
+def ws_cook(bot, update):
+    mes = update.message
+    shops = cwapi.api_info.get("shops")
+    if shops is None or not shops:
+        bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
+        return
+    response = 'Help по эффектам:\n' \
+               'Taste of rage = +15 атаки\n' \
+               'Taste of peace = +15 защиты\n' \
+               'Scent of mana = +75 маны\n' \
+               'Flavor of health = +75 хп\n' \
+               'Rage mana balance = +15 атаки -150 маны\n' \
+               'Peace rage balance = +15 защиты -15 атаки\n' \
+               'Rage peace balance = +15 атаки -15 защиты\n' \
+               'Peace health balance = +15 защиты -150 хп\n' \
+               'Uranus Dew = реген хп, 4 хп/мин\n' \
+               'Uranus Feast = +3 лвл Gastronomic Grasp для сбора еды\n' \
+               'Uranus Nature = +3 лвл Harvest для сбора травы\n' \
+               'Uranus Breath = реген маны, +3 маны/мин\n'
+    buttons = get_cook_butons()
+    bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
 
+def cook_shops(seq):
+    shops = cwapi.api_info.get("shops")
+    if shops is None or not shops:
+        bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
+        return
+    ingredients = [cook_mapper.get(x, {}).get('full_name') for x in seq]
+    response = ''
+    for shop in shops:
+        if shop.get("specializations") and shop.get("specializations").get('cooking'):
+
+            cooking = shop.get("specializations").get('cooking').get('Values', {})
+            recipes = {}
+            types = []
+            for x in cooking.keys():
+                if 'title' in x:
+                    rec = x.split('.')[2]
+                    if not recipes.get(rec.split(' ')[-1].lower(), False):
+                        recipes[rec.split(' ')[-1].lower()] = {'name': rec.replace(rec.split(' ')[-1], '').strip()}
+                    else:
+                        recipes[rec.split(' ')[-1].lower()]['name'] = rec.replace(rec.split(' ')[-1], '').strip()
+                elif 'type' in x:
+                    if not recipes.get(x.split('.')[0].lower(), False):
+                        recipes[x.split('.')[0].lower()] = {'type': x.split('.')[2]}
+                    else:
+                        recipes[x.split('.')[0].lower()]['type'] = x.split('.')[2]
+                elif 'points' in x:
+                    if not recipes.get(x.split('.')[0].lower(), False):
+                        recipes[x.split('.')[0].lower()] = {'points': [x.split('.')[2] for point in range(cooking.get(x))]}
+                    else:
+                        recipes[x.split('.')[0].lower()]['points'].extend([x.split('.')[2] for point in range(cooking.get(x))])
+            for rec in recipes.values():
+                common_items = list((Counter(ingredients) & Counter(rec.get('points', []))).elements())
+                if len(common_items) == len(ingredients):
+                #if all([elem in rec.get('points', [])  for elem in ingredients]):
+                    if rec.get('type') not in types:
+                        types.append(rec.get('type'))
+            if types:
+                castle, link, mana, name = shop.get("ownerCastle"), shop.get("link"), \
+                                         shop.get("mana"), shop.get("name")
+                response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💧{} {}" \
+                "\n".format(castle, "/wss_" + link + "_cook", "/wss_" + link, mana, ','.join(types))
+    last_updated = cwapi.api_info.get("shops_updated")
+    if not response:
+        response += 'Нет открытых магазинов с такими фильтрами\n'
+    if last_updated:
+        updated = (get_current_datetime() - last_updated).total_seconds() // 60
+        response += "\nОбновлено {}".format("{} часов назад".format(int(updated // 60))
+                                            if updated // 60 else "{} минут назад".format(int(updated)))
+
+    return response
+
+def set_cook(bot, update):
+    data = update.callback_query.data
+    seq = re.search("_(\\w+)", data)
+    if seq:
+        seq = seq.group(1)
+        response = cook_shops(seq)
+        buttons = get_cook_butons(seq)
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id, text=response,
+                            parse_mode='HTML', reply_markup=buttons)
+
+def unset_cook(bot, update, unset=False):
+    data = update.callback_query.data
+    seq = re.search("_(\\w+)", data)
+    if seq:
+        seq = seq.group(1)
+        to_del = seq[-1]
+        seq = seq.replace(to_del, '')
+        buttons = get_cook_butons(seq)
+        response = cook_shops(seq)
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id, text=response,
+                            parse_mode='HTML', reply_markup=buttons)

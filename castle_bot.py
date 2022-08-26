@@ -54,7 +54,7 @@ from castle_files.work_materials.filters.general_filters import filter_is_pm, fi
 
 from castle_files.bin.api import start_api, cwapi, auth, grant_auth_token, update, update_guild, update_stock, repair, \
     stock, ws, players_update_monitor, ws_with_code, wtb, clear_guilds_api_players, autospend_start_button, \
-    request_update_guild_stocks
+    request_update_guild_stocks, ws_cook, set_cook, unset_cook
 from castle_files.bin.service_functions import cancel, fill_allowed_list, pop_from_user_data
 from castle_files.bin.academy import add_teacher, del_teacher, send_guilds_stats
 from castle_files.bin.profile import hero, profile, view_profile, add_class_from_player, update_ranger_class_skill_lvl,\
@@ -267,6 +267,10 @@ def castle_bot_processing():
 
     dispatcher.add_handler(CallbackQueryHandler(alliance_stats, pattern="ga_stats_\\d+"))
 
+    # Хендлеры инлайн кнопок для лавок ноблей
+    dispatcher.add_handler(CallbackQueryHandler(set_cook, pattern="setcook_\\w+"))
+    dispatcher.add_handler(CallbackQueryHandler(unset_cook, pattern="unsetcook_\\w+"))
+
     dispatcher.add_handler(CallbackQueryHandler(skip))
 
     #
@@ -329,6 +333,7 @@ def castle_bot_processing():
     dispatcher.add_handler(CommandHandler('ws', ws, filters=filter_is_pm))
     dispatcher.add_handler(CommandHandler('ws_full', ws, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.command & filter_is_pm & Filters.regex('/ws_\\w+'), ws_with_code))
+    dispatcher.add_handler(CommandHandler('cook', ws_cook, filters=filter_is_pm))
     # dispatcher.add_handler(CommandHandler('autospend_gold', autospend_gold, filters=filter_is_pm))
     dispatcher.add_handler(MessageHandler(Filters.text & filter_grant_auth_code, grant_auth_token))
 
