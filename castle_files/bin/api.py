@@ -2,7 +2,7 @@
 В данном модуле находятся все необходимые callback-функции для работы с api CW3 (которые вызываются непосредственно
 командами в бота, остальные же функции находятся прямо в библиотеке)
 """
-
+from castle_files.bin.buttons import get_cook_butons
 from castle_files.libs.api import CW3API
 from castle_files.libs.player import Player
 from castle_files.libs.guild import Guild
@@ -35,7 +35,6 @@ except ImportError:
 
 MAX_PLAYERS_AUTO_UPDATE_PER_SECOND = 2
 GUILD_UPDATE_INTERVAL_SECONDS = 20
-
 
 cwapi = CW3API(cwuser, cwpass, debug=debug)
 
@@ -360,8 +359,9 @@ def repair(bot, update):
     castle_stage = sh[0].get("ownerCastle") if sh else HOME_CASTLE
     gold_min = min(list(map(lambda shop: shop.get("maintenanceCost", 1000), sh)))
     for shop in sh:
-        castle, link, gold, mana, discount, name = shop.get("ownerCastle"), shop.get("link"), shop.get("maintenanceCost"), \
-                                             shop.get("mana"), shop.get("castleDiscount"), shop.get("name")
+        castle, link, gold, mana, discount, name = shop.get("ownerCastle"), shop.get("link"), shop.get(
+            "maintenanceCost"), \
+                                                   shop.get("mana"), shop.get("castleDiscount"), shop.get("name")
         if not full and gold > gold_min and castle != player_castle:
             continue
         if castle_stage != castle == player_castle:
@@ -458,7 +458,6 @@ def ws_with_code(bot, update):
                      parse_mode='HTML')
 
 
-
 def stock(bot, update):
     """
     Выводит сток игрока (команда /stock)
@@ -484,7 +483,7 @@ def stock(bot, update):
         if curr_stock is None:
             bot.send_message(chat_id=mes.from_user.id,
                              text="Отсутствует информация о стоке. Для обновления нажмите /update_guild. "
-                             "Требуется доступ к API.")
+                                  "Требуется доступ к API.")
             return
     else:
         if not player.stock:
@@ -544,7 +543,7 @@ def stock(bot, update):
                         "\n".format("{} {} {}".format("g_withdraw" if is_guild else "g_deposit", code, count),
                                     "{} | {}".format(code, name) if code != name else
                                     name, count, "<b>{}</b>💰({}💰x{})".format(
-                                    price * count, price, count) if isinstance(price, int) else price)
+                price * count, price, count) if isinstance(price, int) else price)
         total_gold += price * count if isinstance(price, int) else 0
         if len(response + new_response) > MAX_MESSAGE_LENGTH:
             bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
@@ -556,7 +555,7 @@ def stock(bot, update):
         if stock_size is not None and stock_limit is not None:
             response += "📦Сток гильдии: <b>{}</b> / <b>{}</b>\n".format(stock_size, stock_limit)
         response += "Последнее обновление: <em>{}</em>".format(guild.last_updated.strftime(
-                "%d/%m/%y %H:%M") if guild.last_updated is not None else "Неизвестно")
+            "%d/%m/%y %H:%M") if guild.last_updated is not None else "Неизвестно")
     elif not is_guild:
         response += "Последнее обновление: <em>{}</em>\n".format(player.api_info.get("stock_update") or "Неизвестно")
     bot.group_send_message(chat_id=mes.chat_id, text=response, parse_mode='HTML')
@@ -597,7 +596,7 @@ def wtb(bot, update):
 def autospend_start(bot, job):
     logging.info("Spending players gold...")
     cursor = conn.cursor()
-    request = "select id from players where (settings ->> 'autospend')::boolean is true "\
+    request = "select id from players where (settings ->> 'autospend')::boolean is true " \
               "and ((settings ->> 'spend_time')::int is Null or (settings ->> 'spend_time')::int = 46);"
     cursor.execute(request)
     player_ids = cursor.fetchall()
@@ -611,7 +610,7 @@ def autospend_start_custom(bot, job):
     logging.info("Spending players gold...")
     spend_time = job.context[0]
     cursor = conn.cursor()
-    request = "select id from players where (settings ->> 'autospend')::boolean is true "\
+    request = "select id from players where (settings ->> 'autospend')::boolean is true " \
               "and (settings ->> 'spend_time')::int = " + str(spend_time) + ";"
     cursor.execute(request)
     player_ids = cursor.fetchall()
@@ -797,6 +796,7 @@ def send_potion_stats(bot, job):
     if clear:
         cwapi.api_info.update({"potions_info": {}})
 
+
 def ws_cook(bot, update):
     mes = update.message
     shops = cwapi.api_info.get("shops")
@@ -819,7 +819,8 @@ def ws_cook(bot, update):
     buttons = get_cook_butons()
     bot.send_message(chat_id=mes.from_user.id, text=response, parse_mode='HTML', reply_markup=buttons)
 
-def cook_shops(seq):
+
+def cook_shops(bot, mes, seq):
     shops = cwapi.api_info.get("shops")
     if shops is None or not shops:
         bot.send_message(chat_id=mes.chat_id, text="Нет данных о магазинах. Ожидайте обновления.")
@@ -846,20 +847,22 @@ def cook_shops(seq):
                         recipes[x.split('.')[0].lower()]['type'] = x.split('.')[2]
                 elif 'points' in x:
                     if not recipes.get(x.split('.')[0].lower(), False):
-                        recipes[x.split('.')[0].lower()] = {'points': [x.split('.')[2] for point in range(cooking.get(x))]}
+                        recipes[x.split('.')[0].lower()] = {
+                            'points': [x.split('.')[2] for point in range(cooking.get(x))]}
                     else:
-                        recipes[x.split('.')[0].lower()]['points'].extend([x.split('.')[2] for point in range(cooking.get(x))])
+                        recipes[x.split('.')[0].lower()]['points'].extend(
+                            [x.split('.')[2] for point in range(cooking.get(x))])
             for rec in recipes.values():
                 common_items = list((Counter(ingredients) & Counter(rec.get('points', []))).elements())
                 if len(common_items) == len(ingredients):
-                #if all([elem in rec.get('points', [])  for elem in ingredients]):
+                    # if all([elem in rec.get('points', [])  for elem in ingredients]):
                     if rec.get('type') not in types:
                         types.append(rec.get('type'))
             if types:
                 castle, link, mana, name = shop.get("ownerCastle"), shop.get("link"), \
-                                         shop.get("mana"), shop.get("name")
+                                           shop.get("mana"), shop.get("name")
                 response += "{} <a href=\"https://t.me/share/url?url={}\">{}</a> 💧{} {}" \
-                "\n".format(castle, "/wss_" + link + "_cook", "/wss_" + link, mana, ','.join(types))
+                            "\n".format(castle, "/wss_" + link + "_cook", "/wss_" + link, mana, ','.join(types))
     last_updated = cwapi.api_info.get("shops_updated")
     if not response:
         response += 'Нет открытых магазинов с такими фильтрами\n'
@@ -870,15 +873,18 @@ def cook_shops(seq):
 
     return response
 
+
 def set_cook(bot, update):
     data = update.callback_query.data
     seq = re.search("_(\\w+)", data)
     if seq:
         seq = seq.group(1)
-        response = cook_shops(seq)
+        response = cook_shops(bot, update.callback_query.message, seq)
         buttons = get_cook_butons(seq)
-        bot.editMessageText(chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id, text=response,
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id,
+                            message_id=update.callback_query.message.message_id, text=response,
                             parse_mode='HTML', reply_markup=buttons)
+
 
 def unset_cook(bot, update, unset=False):
     data = update.callback_query.data
@@ -888,6 +894,7 @@ def unset_cook(bot, update, unset=False):
         to_del = seq[-1]
         seq = seq.replace(to_del, '')
         buttons = get_cook_butons(seq)
-        response = cook_shops(seq)
-        bot.editMessageText(chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id, text=response,
+        response = cook_shops(bot, update.callback_query.message, seq)
+        bot.editMessageText(chat_id=update.callback_query.message.chat_id,
+                            message_id=update.callback_query.message.message_id, text=response,
                             parse_mode='HTML', reply_markup=buttons)
