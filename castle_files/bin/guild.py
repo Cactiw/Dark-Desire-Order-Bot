@@ -91,7 +91,7 @@ def guilds(bot, update):
 
 
 def get_edit_divisions():
-    return divisions_const[:3]
+    return divisions_const[:4]
 
 
 
