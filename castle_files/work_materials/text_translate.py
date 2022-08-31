@@ -1,7 +1,7 @@
 texts_translate = {
-    "Вы входите в Мандапу Славы - почетное место, где увековечены герои Скалы, их подвиги и заслуги перед замком. На "
+    "Вы входите в Мандапу Славы - почетное место, где увековечены герои (\\w+), их подвиги и заслуги перед замком. На "
     "стене развешаны лучшие из лучших.\n\nВыберите категорию:":
-        "You are entering the Hall of Fame - an honorable place where the heroes of the Rock, their exploits and "
+        "You are entering the Hall of Fame - an honorable place where the heroes of the {0}, their exploits and "
         "services to the castle are immortalized. There are best of the best on the wall.\n\nSelect a category:",
     "Доброго времени суток!\nВыберите действие:": "Good day to you! Select an action:",
     "Выберите категорию:": "Select a category:",
@@ -29,8 +29,8 @@ texts_translate = {
     "<em>Твой командир просил передать, что ты больше не в гильдии, воин!</em>":
         "A guard appeared around the corner and called out to you:\n"
         "<em>Your commander asked me to tell you that you are no longer in the Guild, warrior!</em>",
-    "Стены замка увешаны портретами текущих генералов Скалы:": "There are portraits of the current generals of the "
-                                                               "Rock on the castle walls:",
+    "Стены замка увешаны портретами текущих генералов (\\w+):": "There are portraits of the current generals of the "
+                                                               "{0} on the castle walls:",
     "🎗Командир гильдии": "🎗Guild commander",
     "🎗Зам командира гильдии": "🎗Guild assistant",
     "Репорты\\(эта неделя / прошлая / всего\\):": "Reports(this week / last / total):",
@@ -40,13 +40,13 @@ texts_translate = {
     "Чат отряда:": "Squad chat:",
     "Вступить": "Join",
     "Игроков в гильдии:": "Players in guild:",
-    "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу Скалы и даже попросить "
+    "Вы поднимаетесь в Тронный Зал. Здесь можно обратиться к Высшему Командному Составу (\\w+) и даже попросить "
     "аудиенции у 👑":
-        "You go upstairs to the Throne Room. Here you can contact the Highest Command Of the Rock and even ask for an "
+        "You go upstairs to the Throne Room. Here you can contact the Highest Command Of the {0} and even ask for an "
         "audience with the 👑",
-    "Вы подошли к вратам замка. Здесь как всегда немноголюдно. На посту дежурят стражи Скалы, возможно, они смогут "
+    "Вы подошли к вратам замка. Здесь как всегда немноголюдно. На посту дежурят стражи (\\w+), возможно, они смогут "
     "подсказать дорогу до нужного места, поделиться новостями или просто с радостью скоротают время в беседе.":
-        "You have come to the castle gate. it’s always not crowded here. There are Rock guards on duty, perhaps they "
+        "You have come to the castle gate. it’s always not crowded here. There are {0} guards on duty, perhaps they "
         "will be able to tell the way to the right place, to share the news or just happy to spend the time in "
         "conversation.",
     "Добро пожаловать в башню Техно-Магических наук.\n"
@@ -79,16 +79,16 @@ texts_translate = {
     "📦Изменения в стоке        ": "📦Stock changes            ",
     "📌Пинг на аим              ": "📌Aim ping                 ",
     "🐻Охота на мобов": "🐻Mobs hunt     ",
-    "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
+    "Вы стоите посреди ⛲️Центральной площади (\\w+) Темного Желания.\n"
     "На лобном месте, левее фонтана, прибит пергамент с важной новостью:": "You stand in the middle of the ⛲️Central "
-                                                                           "square of the Rock of the Dark Desire.\n\n "
+                                                                           "square of the {0} of the Dark Desire.\n\n "
                                                                            "On the frontal place, to the left of the "
                                                                            "fountain, the parchment with important "
                                                                            "news is nailed:",
-    "Вы стоите посреди ⛲️Центральной площади Скалы Темного Желания.\n"
+    "Вы стоите посреди ⛲️Центральной площади (\\w+) Темного Желания.\n"
     "Холодный ветер пробирает до костей и на площади немноголюдно.\nЗИМА БЛИЗКО!\n\n"
     "На лобном месте, левее фонтана, прибит пергамент с важной новостью:":
-        "You stand in the middle of the ⛲️Central square of the Rock of the Dark Desire.\n"
+        "You stand in the middle of the ⛲️Central square of the {0} of the Dark Desire.\n"
         "The cold wind chills to the bone and the square is not crowded.\nWINTER IS COMING!\n\n"
         "On the frontal place, to the left of the fountain, the parchment with important news is nailed:",
     "Заверено подписью и печатью Короля.": "Signed and sealed by the King.",
@@ -149,8 +149,8 @@ texts_translate = {
     "🔭<b>Башня Техно-Магических наук</b> - основа ордена Темного Желания. Здесь по крупицам "
     "собираются вести и отзывы о работе техно-магических артефактов, "
     "публикуются новости о работе ордена над усовершенствованием техно-магических "
-    "приспособлений Скалы."
-    "\n\n🏤<b>Мандапа Славы</b> -  почетное место, где увековечены герои Скалы, их подвиги и "
+    "приспособлений (\\w+)."
+    "\n\n🏤<b>Мандапа Славы</b> -  почетное место, где увековечены герои (\\w+), их подвиги и "
     "заслуги перед замком. Вечная слава и почет!":
         "🗺Pointers are as follows:\n"
         "🎪<b>Barracks</b> - the headquarters of your Guild. You can always find your comrades here, "
@@ -161,8 +161,8 @@ texts_translate = {
         "an audience with the King.\n\n "
         "🔭<b>TechMag Science Tower</b> - the basis of the order of Dark Desire. Here, bit by bit, the reviews "
         "of techno-magical artifacts are gathering. In this place you can also find the news about the work of the "
-        "order on the improvement of techno-magic rock fixtures.\n\n "
-        "🏤<b>Hall of Fame</b> - pride of place, where the heroes of the Rock, their exploits and services to the "
+        "order on the improvement of techno-magic {0} fixtures.\n\n "
+        "🏤<b>Hall of Fame</b> - pride of place, where the heroes of the {1}, their exploits and services to the "
         "castle "
         "are immortalized. Eternal glory and honor!",
     "На указателях ещё много места, возможно, в будущем, там появятся новые строки":
@@ -398,7 +398,7 @@ texts_translate = {
     "Не сделан": "Not done",
     "Голосование завершено!": "Voting is complete!",
 
-    "Голосование доступно только жителям 🖤Скалы!": "This vote is available only for 🖤Rock players",
+    "Голосование доступно только жителям (.)(\\w+)!": "This vote is available only for {0}{1} players",
     "Голосование доступно только членам гильдий.": "This vote is available only for guild players",
     "Для принятия участия в этом голосовании необходимо обновить профиль после его начала.":
         "To participate in this vote you need to update profile after it`s beginning",
@@ -406,11 +406,7 @@ texts_translate = {
     "Последнее обновление:": "Last update:",
     "Запрошено обновление профиля.": "Profile update has been requested.",
     "Запрошено обновление гильдии.": "Guild update has been requested.",
-    "Запрошено обновление стоков всех игроков в гильдии.\nЭто может занять некоторое время.":
-        "Requested stock update of all guild members.\nThis may take some time.",
     "В скором времени данные будут обновлены.": "Data will be updated soon.",
-    "Вы можете запросить обновление стоков всех игроков в гильдии: /update_guild_stocks":
-        "You can request a stock update for all players in the guild: /update_guild_stocks",
 
     "Изменения в стоке:": "Stock changes",
     "Приобретено:": "Earned:",
