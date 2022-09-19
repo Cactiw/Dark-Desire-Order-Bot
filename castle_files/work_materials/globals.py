@@ -15,9 +15,10 @@ except ImportError:
     enable_api = True
     enable_telethon = True
 
-castles = ['🍆', '🍁', '☘', '🌹', '🐢', '🦇', '🖤']
-emodji_to_castle_names = {'🍆': 'ferma', '🍁': 'amber', '☘': 'oplot', '🌹': 'rassvet', '🐢': 'tortuga', '🦇': 'night',
-                          '🖤': 'skala'}
+castles = ['🌑', '🐺', '🥔', '🦅', '🦌', '🦈', '🐉', '🐢', '☘️']
+emodji_to_castle_names = {'🌑': 'Moonlight Castle', '🐉': 'Dragonscale Castle', '☘': 'oplot', '🐺': 'Wolfpack Castle',
+                          '🐢': 'tortuga', '🦈': 'Sharkteeth Castle',
+                          '🥔': 'Potato Castle', '🦅': 'Highnest Castle', '🦌': 'Deerhorn Castle'}
 
 classes_list = [
     'Alchemist', 'Blacksmith', 'Collector', 'Ranger', 'Knight', 'Sentinel',
@@ -50,12 +51,12 @@ cursor = conn.cursor()
 
 DEFAULT_CASTLE_STATUS = 'central_square'
 
-HOME_CASTLE = "🖤"
-HOME_NAME = "Скала"
+HOME_NAME = "Deerhorn"
+HOME_CASTLE = "🦌"
 
 SKIPPED_DIVISIONS = ["Луки", "Траст"]
 
-CHAT_WARS_ID = 265204902
+CHAT_WARS_ID = 408101137
 SUPER_ADMIN_ID = 231900398
 high_access_list = [231900398, 205356091]
 # king_id = SUPER_ADMIN_ID  # TODO сделать механику Короля
