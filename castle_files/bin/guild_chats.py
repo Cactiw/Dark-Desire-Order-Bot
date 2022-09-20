@@ -368,7 +368,7 @@ def arena_notify(bot, job):
 
 
 def plan_arena_notify():
-    plan_work(arena_notify, 12, 0, 0)
+    plan_work(arena_notify, 10, 15, 0)
 
 
 def plan_top_notify():
