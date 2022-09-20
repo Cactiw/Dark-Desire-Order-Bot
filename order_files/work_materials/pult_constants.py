@@ -9,10 +9,12 @@ times_to_time = [None, datetime.timedelta(minutes=2), datetime.timedelta(minutes
                  datetime.timedelta(seconds=30), datetime.timedelta(seconds=15), datetime.timedelta(seconds=10)]
 
 tactics = ["/t\n🐢", "/t\n☘️", "/t\n🌑", "/t\n🐺", "/t\n🥔", "/t\n🦅", "/t\n🦈", "/t\n🐉", ""]
-tactics_to_order = ["/tactics_tortuga", "/tactics_oplot", "/tactics_ferma", "/tactics_amber", "/mysh_ebat", "/mysh_ebat", "/mysh_ebat", "/mysh_ebat", ""]
-tactics_order_to_emoji = {"/tactics_tortuga": "🐢", "/tactics_rassvet": "🌹", "/tactics_ferma": "🍆",
-                          "/tactics_amber": "🍁", "/tactics_random": "❓",
-                          "/tactics_night": "🌹", "tactics_oplot": "☘️",
+tactics_to_order = ["/tactics_tortuga", "/tactics_rampart", "/tactics_moonlight", "/tactics_wolfpack",
+                    "/tactics_potato", "/tactics_highnest", "/tactics_sharkteeth", "/tactics_dragonscale",
+                    ""]
+tactics_order_to_emoji = {"/tactics_tortuga": "🐢", "/tactics_moonlight": "🌑", "/tactics_wolfpack": "🐺",
+                          "/tactics_potato": "🥔", "/tactics_highnest": "🦅", "/tactics_sharkteeth": "🦈",
+                          "/tactics_dragonscale": "🐉", "/tactics_rampart": "☘️",
                           "": ""}
 
 defense = ["Деф дома 🖤", "В атаку!", ""]
