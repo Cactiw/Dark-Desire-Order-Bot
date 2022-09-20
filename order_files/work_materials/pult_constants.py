@@ -1,8 +1,8 @@
 import datetime
 
-divisions = ['Запад', 'Центр', 'Восток', 'Юг', 'Все атакеры', 'Траст', 'Академ', 'ВСЕ']  # 'Луки',
+divisions = ['West', 'Center', 'East', 'South', 'All attackers', 'Trust', 'Academy', 'ALL']  # 'Archers',
 
-castles = ['🌑', '🐺', '🥔', '🦅', '🦈', '🐉', '🐢', '☘️', '🦌Деф!🛡']
+castles = ['🌑', '🐺', '🥔', '🦅', '🦈', '🐉', '🐢', '☘️', '🦌Def!🛡']
 
 times = ["⚠️", "58", "59", "30", "45", "50"]
 times_to_time = [None, datetime.timedelta(minutes=2), datetime.timedelta(minutes=1),
@@ -17,14 +17,14 @@ tactics_order_to_emoji = {"/tactics_tortuga": "🐢", "/tactics_moonlight": "�
                           "/tactics_dragonscale": "🐉", "/tactics_rampart": "☘️",
                           "": ""}
 
-defense = ["Деф дома 🖤", "В атаку!", ""]
-defense_to_order = ["🦌Деф!🛡", "Attack!", None]
+defense = ["Def home 🖤", "Attack!", ""]
+defense_to_order = ["🦌Def!🛡", "Attack!", None]
 
-potions = ["⚗️ Атака", "⚗️ Деф"]
-potions_to_order = ["Пьем ⚔️АТК ⚗️зелья!\n"
+potions = ["⚗️ Atk", "⚗️ Def"]
+potions_to_order = ["Drink ⚔️ATK ⚗️potions!\n"
                     "<a href=\"https://t.me/share/url?url=/misc rage\">⚔️Rage</a>\n"
                     "<a href=\"https://t.me/share/url?url=/misc morph\">⚗Morph</a>\n\n",
-                    "Пьем 🛡ДЕФ ⚗️зелья!\n"
+                    "Drink 🛡DEF ⚗️potions!\n"
                     "<a href=\"https://t.me/share/url?url=/misc peace\">🛡Peace</a>\n"
                     "<a href=\"https://t.me/share/url?url=/misc morph\">⚗Morph</a>\n\n"]
 

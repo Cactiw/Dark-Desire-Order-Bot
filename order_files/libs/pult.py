@@ -19,10 +19,10 @@ class Pult:
         self.status = pult_status_default.copy()
         self.divisions = divisions_const.copy()
         self.divisions[-1] = '✅' + self.divisions[-1]
-        self.rangers_division_num = self.divisions.index("Луки") if 'Луки' in self.divisions else None
-        self.all_attackers_division_num = self.divisions.index('Все атакеры')
-        self.academy_division_num = self.divisions.index('Академ')
-        self.all_division_num = self.divisions.index('✅ВСЕ')
+        self.rangers_division_num = self.divisions.index("Archers") if 'Archers' in self.divisions else None
+        self.all_attackers_division_num = self.divisions.index('All attackers')
+        self.academy_division_num = self.divisions.index('Academy')
+        self.all_division_num = self.divisions.index('✅ALL')
         self.divisions_active = [False] * len(self.divisions)
         self.divisions_active[self.all_division_num] = True
 
