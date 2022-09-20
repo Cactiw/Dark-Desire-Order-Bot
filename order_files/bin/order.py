@@ -130,8 +130,8 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                            "<a href=\"https://t.me/share/url?url={}\">{}</a>".format(tactics, tactics)
                            if tactics != "" else "", "{}\n".format(time_add_str) if time_add_str != "" else
                                           time_add_str, pot_str)
-    if '⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡' in response:
-        response = response.replace("⚔:\uD83D\uDDA4Деф!🛡\n🛡:\uD83D\uDDA4Деф!🛡", "🖤 ФД! 🖤")
+    if '⚔:🦌Деф!🛡\n🛡:🦌Деф!🛡' in response:
+        response = response.replace("⚔:🦌Деф!🛡\n🛡:🦌Деф!🛡", "🖤 ФД! 🖤")
         if datetime.date.today() < datetime.date(year=2021, day=3, month=1):
             response += "\n\n🎇Happy New Year!🎇\n"
     buttons = get_order_buttons(castle_target, defense)

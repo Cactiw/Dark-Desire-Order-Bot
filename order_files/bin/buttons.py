@@ -2,10 +2,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 # castles_unicode = {'🍁': '\uD83C\uDF41', '☘': '\u2618\uFE0F', '🖤': '\uD83D\uDDA4', '🐢': '\uD83D\uDC22',
 #                    '🦇': '\uD83E\uDD87', '🌹': '\uD83C\uDF39', '🍆': '\uD83C\uDF46',
-#                    '\uD83D\uDDA4Деф!🛡': '\uD83D\uDDA4'}
+#                    '🦌Деф!🛡': '🦌'}
 castles_unicode = {'🌑': '🌑', '☘': '☘', '🐉': '🐉', '🐢': '🐢',
                    '🐺': '🐺', '🦈': '🦈', '🥔': '🥔', '🦅': '🦅', '🦌': '🦌',
-                   '\uD83D\uDDA4Деф!🛡': '🦌'}
+                   '🦌Деф!🛡': '🦌'}
 
 
 def get_order_buttons(attack, defense):
