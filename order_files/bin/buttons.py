@@ -22,8 +22,8 @@ def get_order_buttons(attack, defense):
         ])
     elif defense is not None:
         buttons.append([
-            InlineKeyboardButton(url=u"https://t.me/share/url?url={}".format(castles_unicode.get('🖤')),
-                                 text="🛡️{}".format(castles_unicode.get('🖤')))
+            InlineKeyboardButton(url=u"https://t.me/share/url?url={}".format(castles_unicode.get('🦌')),
+                                 text="🛡️{}".format(castles_unicode.get('🦌')))
         ])
     buttons.append([
         InlineKeyboardButton(url="t.me/ChatWarsBot", text="ChatWars")
