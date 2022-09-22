@@ -123,9 +123,9 @@ def build_pult(divisions, castles, times, defense, tactics, potions, deferred_ti
             InlineKeyboardButton(tactics[2], callback_data="pdt2_{}".format(rnd)),
             InlineKeyboardButton(tactics[3], callback_data="pdt3_{}".format(rnd)),
             InlineKeyboardButton(tactics[4], callback_data="pdt4_{}".format(rnd)),
-            InlineKeyboardButton(tactics[6], callback_data="pdt5_{}".format(rnd)),
-            InlineKeyboardButton(tactics[7], callback_data="pdt6_{}".format(rnd)),
-            InlineKeyboardButton(tactics[8], callback_data="pdt7_{}".format(rnd)),
+            InlineKeyboardButton(tactics[6], callback_data="pdt6_{}".format(rnd)),
+            InlineKeyboardButton(tactics[7], callback_data="pdt7_{}".format(rnd)),
+            InlineKeyboardButton(tactics[8], callback_data="pdt8_{}".format(rnd)),
         ],
         [
             InlineKeyboardButton("📢 SEND 📢", callback_data="ps_{}".format(rnd))
