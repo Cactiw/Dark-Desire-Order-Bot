@@ -1,4 +1,6 @@
 import logging, time
+
+import pytz
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 from order_files.work_materials.globals import cursor, order_chats, deferred_orders, job, moscow_tz, CALLBACK_CHAT_ID, \
@@ -119,7 +121,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     if time_to_battle >= datetime.timedelta(seconds=55):
         recashe_order_chats()
     time_begin = datetime.datetime.now()
-    time_add_str = count_next_battle_time().strftime("%H:%M") if time is None else time.strftime("%H:%M")
+    time_add_str = count_next_battle_time().astimezone(pytz.UTC).strftime("%H:%M") if time is None else time.strftime("%H:%M")
     pot_str = ""
     for i, p in enumerate(potions):
         if p:
