@@ -628,7 +628,7 @@ def add_guild_quest(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    if player.guild is None:
+    if player.guild is None or (player.guild.tag is None and player.guild_tag is None):
         return
 
     forward_message_date = get_message_forward_time(mes)
@@ -636,7 +636,7 @@ def add_guild_quest(bot, update):
     line = re.search(r'Progress: (.*)% (.)', s)
     percent = line.group(1)
     castle = line.group(2)
-    guild = player.guild_tag
+    guild = player.guild_tag or player.guild.tag
 
     text = None
     status, guild, castle, percent = GuildQuest.update_or_create_quest(
