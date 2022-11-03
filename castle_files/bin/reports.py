@@ -82,7 +82,7 @@ def add_report(bot, update, user_data):
         outplay_attack = int(outplay.group(2))
         outplay_dict.update({"nickname": outplay_nickname, "attack": outplay_attack})
 
-    if 'Встреча:' in s or ('Твои удары' in s.lower() and 'Атаки врагов' in s.lower() and 'Ластхит' in s.lower()):
+    if 'Встреча:' in s or '👾Encounter:' in s or ('Твои удары' in s and 'Атаки врагов' in s and 'Ластхит' in s or 'Your attacks:' in s):
         # Репорт с мобов
         earned = re.search("Получено: (.+) \\((\\d+)\\)", s)
         if earned is not None:
