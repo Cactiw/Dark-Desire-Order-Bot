@@ -7,6 +7,7 @@ from castle_files.bin.stock import get_item_code_by_name, get_item_name_by_code
 from castle_files.bin.service_functions import get_message_forward_time, plan_work
 from castle_files.bin.quest_triggers import on_add_cw_quest, on_resource_return, on_won_arena
 from castle_files.bin.service_functions import check_access
+from castle_files.libs.guild import Guild
 
 from castle_files.libs.player import Player
 from castle_files.libs.castle.location import Location, locations
@@ -628,7 +629,8 @@ def add_guild_quest(bot, update):
     player = Player.get_player(mes.from_user.id)
     if player is None:
         return
-    if player.guild is None or (player.guild.tag is None and player.guild_tag is None):
+    player_guild = Guild.get_guild(player.guild) if player.guild else None
+    if player_guild is None or (player_guild.tag is None and player.guild_tag is None):
         return
 
     forward_message_date = get_message_forward_time(mes)
@@ -636,7 +638,7 @@ def add_guild_quest(bot, update):
     line = re.search(r'Progress: (.*)% (.)', s)
     percent = line.group(1)
     castle = line.group(2)
-    guild = player.guild_tag or player.guild.tag
+    guild = player.guild_tag or player_guild.tag
 
     text = None
     status, guild, castle, percent = GuildQuest.update_or_create_quest(
