@@ -2,7 +2,7 @@ module.exports = {
   apps : [{
     name: 'Castle bot',
     script: 'castle_bot.py',
-    interpreter: 'python3',
+    interpreter: './venv/bin/python3',
     log_file: 'pm2_castle.log',
     min_uptime: 5000,
     kill_timeout: 15000,
@@ -26,7 +26,7 @@ module.exports = {
   {
     name: 'Order bot',
     script: 'order_bot.py',
-    interpreter: 'python3',
+    interpreter: './venv/bin/python3',
     log_file: 'pm2_order.log',
     min_uptime: 3000,
     kill_timeout: 10000,
