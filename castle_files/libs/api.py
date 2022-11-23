@@ -83,7 +83,7 @@ class CW3API:
         self.ROUTING_KEY = "{}_o".format(cwuser)
         self.INBOUND = "{}_i".format(self.cwuser)
 
-        self.GROUP_ID = "cactiw_CW3_1" if not debug else "cactiw_castle_skalen_debug"  # Int for number of resets
+        self.GROUP_ID = "cactiw_CW2_1" if not debug else "cactiw_castle_skalen2_debug"  # Int for number of resets
 
         self.exchange = kombu.Exchange(self.EXCHANGE)
         self.inbound_queue = kombu.Queue(self.INBOUND)
