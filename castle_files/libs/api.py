@@ -1111,10 +1111,10 @@ class CW3API:
     def create_kafka_consumer(self):
         return kafka.KafkaConsumer(
             # 'cw3-offers',
-            'cw3-deals',
-            'cw3-duels',
-            'cw3-sex_digest',
-            'cw3-yellow_pages',
+            'cw2-deals',
+            'cw2-duels',
+            'cw2-sex_digest',
+            'cw2-yellow_pages',
             # 'cw3-au_digest',
 
             bootstrap_servers=['digest-api.chtwrs.com:9092'],
