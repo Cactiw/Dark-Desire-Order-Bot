@@ -104,12 +104,12 @@ class CW3API:
             "grantAdditionalOperation": self.on_grant_additional_operational,
             "requestStock": self.on_stock_info,
             "wantToBuy": self.on_want_to_buy,
-            'cw3-deals': self.on_deals,
-            # 'cw3-offers': self.on_offers,  # not implemented
-            'cw3-sex_digest': self.on_sex_digest,
-            'cw3-yellow_pages': self.on_yellow_pages,
-            # 'cw3-au_digest': self.on_au_digest,  # not implemented
-            'cw3-duels': self.on_duels,
+            'cw2-deals': self.on_deals,
+            # 'cw2-offers': self.on_offers,  # not implemented
+            'cw2-sex_digest': self.on_sex_digest,
+            'cw2-yellow_pages': self.on_yellow_pages,
+            # 'cw2-au_digest': self.on_au_digest,  # not implemented
+            'cw2-duels': self.on_duels,
         }
         self.WTB_DELAY = 4
 
@@ -121,10 +121,11 @@ class CW3API:
         """
         Главный цикл работы kafka - итерация по сообщениям в очереди, пока self.kafka_active is True
         """
+        logging.info(f'Consuming kafka messages...')
         for message in consumer:
             try:
                 # print(message.value)
-                if message.topic == 'cw3-duels':
+                if message.topic == 'cw2-duels':
                     self.callbacks.get(message.topic, lambda x: x)(message.value, message.timestamp)
                 else:
                     self.callbacks.get(message.topic, lambda x: x)(message.value)
@@ -1105,7 +1106,7 @@ class CW3API:
         """
         Метод для запуска АПИ (вызывается извне)
         """
-        self.start_pika()
+        # self.start_pika()  # TODO: return when get access
         self.start_kafka()
 
     def create_kafka_consumer(self):
@@ -1130,12 +1131,14 @@ class CW3API:
         Вызывается после успешного запуска Kombu API
         """
         try:
+            logging.info('Starting kafka!')
             if self.kafka_active:
                 logging.warning("Kafka already consuming, returning")
                 return
             self.kafka_active = True
             for i in range(self.NUM_KAFKA_CONSUMERS):
                 self.kafka_consumers.append(self.create_kafka_consumer())
+                logging.info(f'Created {i} kafka consumer')
             self.start_kafka_consuming()
         except Exception:
             logging.exception("Can not start kafka: {}".format(traceback.format_exc()))
