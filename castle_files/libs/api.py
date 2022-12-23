@@ -57,7 +57,7 @@ class CW3API:
         self.lock = threading.Condition(self.__lock)
         self.cwuser = cwuser
         self.cwpass = cwpass
-        self.url = f'amqps://{cwuser}:{cwpass}@api.chtwrs.com:5673'
+        self.url = f'amqps://{cwuser}:{cwpass}@api.chatwars.me:5673'
         self.connected = False  # Соединение активно в данный момент
         self.connecting = False  # True, если соединение не установлено, но пытается установиться в данный момент
         self.active = True  # True при запуске, и False в самом конце, если self.active == True и
