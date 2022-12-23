@@ -1106,7 +1106,7 @@ class CW3API:
         """
         Метод для запуска АПИ (вызывается извне)
         """
-        # self.start_pika()  # TODO: return when get access
+        self.start_pika()
         self.start_kafka()
 
     def create_kafka_consumer(self):
