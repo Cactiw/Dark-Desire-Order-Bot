@@ -470,6 +470,8 @@ def add_cw_quest_result(bot, update):
     if player is None:
         return
     parse = re.findall("Получено: (.+) \\((\\d+)\\)", mes.text)
+    if not parse:
+        parse = re.findall("Earned: (.+) \\((\\d+)\\)", mes.text)
     drop = player.tea_party_info.get("cw_quests_drop")
     if drop is None:
         drop = {}
@@ -480,8 +482,12 @@ def add_cw_quest_result(bot, update):
         bot.send_message(chat_id=mes.chat_id, text="Данный квест уже учтён.")
         return
     exp = re.search("Получено: (\\d+) опыта", mes.text)
+    if exp is None:
+        exp = re.search("Earned: (\\d+) exp", mes.text)
     exp = int(exp.group(1)) if exp is not None else 0
     gold = re.search("and (\\d+) золотых монет", mes.text)
+    if gold is None:
+        gold = re.search("and (\\d+) gold", mes.text)
     gold = int(gold.group(1)) if gold is not None else 0
     new_quest = {"exp": exp, "gold": gold}
     for name, count in parse:
@@ -496,7 +502,7 @@ def add_cw_quest_result(bot, update):
 def add_arena_result(bot, update):
     mes = update.message
     player = Player.get_player(mes.from_user.id)
-    if player.nickname in mes.text and "Поздравляем!" in mes.text:
+    if player.nickname in mes.text and ("Поздравляем!" in mes.text or "Congratulations!" in mes.text):
         res = player.tea_party_info.get("cw_arena_result")
         if res is None:
             res = {}

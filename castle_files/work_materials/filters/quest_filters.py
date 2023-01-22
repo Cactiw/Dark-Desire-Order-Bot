@@ -134,7 +134,9 @@ filter_two_go_quest = FilterTwoGoQuest()
 
 class FilterCWQuestResult(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and re.search("Получено: \\d+ опыта", message.text) is not None
+        return filter_is_chat_wars_forward(message) and (
+                re.search("Получено: \\d+ опыта", message.text) or re.search("You received: \\d+ exp", message.text)
+        ) is not None
 
 
 filter_cw_quest_result = FilterCWQuestResult()
@@ -142,8 +144,10 @@ filter_cw_quest_result = FilterCWQuestResult()
 
 class FilterCWArenaResult(BaseFilter):
     def filter(self, message):
-        return filter_is_chat_wars_forward(message) and \
-               re.search("Рейтинги обновлены: /top5 & /top6", message.text) is not None
+        return filter_is_chat_wars_forward(message) and (
+                re.search("Рейтинги обновлены: /top5 & /top6", message.text) is not None or
+                re.search("Leaderboard of fighters are updated: /top5 & /top6", message.text) is not None
+        )
 
 
 filter_cw_arena_result = FilterCWArenaResult()
