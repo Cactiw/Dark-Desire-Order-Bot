@@ -236,6 +236,10 @@ rewards = {"castle_message_change": {
 }
 
 
+def _empty(*args, **kwargs):
+    pass
+
+
 def receive_reward(player, reward_name, reward, reward_text, cost, *args, **kwargs):
     try:
         reward["get"](player=player, reward=reward_text, cost=cost, reward_name=reward_name, *args, **kwargs)
@@ -249,7 +253,7 @@ def receive_reward(player, reward_name, reward, reward_text, cost, *args, **kwar
                  "Эту награду в последние 2 недели получали <b>{}</b> раз.".format(
                     player.nickname, reward_name, get_reward_combo(reward_name)),
             parse_mode='HTML')
-        reward.get("after_reward_received", lambda *x: None)(player, reward_name, cost, reward_text, *args, **kwargs)
+        reward.get("after_reward_received", _empty)(player, reward_name, cost, reward_text, *args, **kwargs)
 
 
 period_hours = {
