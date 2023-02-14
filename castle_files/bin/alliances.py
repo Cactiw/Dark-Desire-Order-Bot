@@ -22,7 +22,7 @@ import json
 from telegram import InlineKeyboardMarkup
 from functools import reduce, wraps
 
-ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury', 'Brown Author', 'Fresh Eclipse']
+ALLOWED_LIST = ['Creepy Balboa', 'Enchanted Warrior', 'Coarse Mercury', 'Brown Author', 'Fresh Eclipse', 'Icy Clown']
 
 
 def alliance_access(func):
