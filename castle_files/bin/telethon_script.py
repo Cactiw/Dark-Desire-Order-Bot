@@ -76,7 +76,7 @@ def script_work():
     client = admin_client
 
     with admin_client as client:
-        admin_client.get_entity("ChatWarsDigest")
+        admin_client.get_entity("chtwrsreports")
         admin_client.get_entity("ChatWarsBot")
 
         @client.on(events.NewMessage(incoming=True))

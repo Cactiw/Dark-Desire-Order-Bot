@@ -367,7 +367,7 @@ def run_search(result, search_str, emoji, location_name):
 def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
     if results.startswith("🤝Headquarters news:"):
         # Сводки с самих альянсов
-        total_results = "<a href=\"https://t.me/ChatWarsDigest/{}\">🤝Headquarters news:</a>\n".format(message_id)
+        total_results = "<a href=\"https://t.me/chtwrsreports/{}\">🤝Headquarters news:</a>\n".format(message_id)
         tops = {"guilds": {}, "alliances": {}}
         for result in results.partition("\n")[2].split("\n\n\n"):
             parse = re.search("(.+) was (.+)[.:]", result)
@@ -425,7 +425,7 @@ def parse_alliance_battle_results(results: str, message_id:int, debug: bool):
         if not debug:
             AllianceResults.set_location_text(sort_and_add_types_to_location_list(
                 locations_to_results,
-                begin_text="\n<a href=\"https://t.me/ChatWarsDigest/{}\">🗺 Map news:</a>".format(message_id)),
+                begin_text="\n<a href=\"https://t.me/chtwrsreports/{}\">🗺 Map news:</a>".format(message_id)),
                 tops=tops
             )
 
