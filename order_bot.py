@@ -114,6 +114,7 @@ def order_bot_processing():
     update_monitor = threading.Thread(target=castle_update_monitor, name="Order Database Update Monitor")
     # update_monitor.start()
     processes.append(update_monitor)
+    globals.bot_castle.start()
 
     if CONNECT_TYPE == 'webhook':
         updater.start_webhook(listen='0.0.0.0',
@@ -133,6 +134,7 @@ def order_bot_processing():
     # Разрываем подключение.
     conn.close()
     update_request_queue.put(None)
+    globals.bot_castle.stop()
 
 
 if __name__ == "__main__":

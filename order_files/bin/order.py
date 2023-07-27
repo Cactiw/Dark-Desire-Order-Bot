@@ -117,6 +117,7 @@ def wait_debug(bot, orders_count):
 
 
 def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics, potions, time=None):
+    bot = globals.bot_castle
     time_to_battle = count_next_battle_time() - datetime.datetime.now(tz=moscow_tz).replace(tzinfo=None)
     if time_to_battle >= datetime.timedelta(seconds=55):
         recashe_order_chats()
