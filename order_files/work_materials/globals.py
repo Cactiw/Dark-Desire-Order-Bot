@@ -8,7 +8,7 @@ from config import Production_order_token, Production_castle_token, psql_credita
 
 from libs.database import Conn
 
-admin_ids = [231900398, 205356091, 352318827]
+admin_ids = [231900398, 205356091, 352318827, 6212486598]
 allowed_chats = [231900398, -1001139194354, -376246101]
 
 CALLBACK_CHAT_ID = -1001351185651
