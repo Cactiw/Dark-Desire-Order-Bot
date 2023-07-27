@@ -26,7 +26,7 @@ class FilterSuperAdmin(BaseFilter):
     def filter(self, message):
         if message.from_user is None:
             return False
-        return message.from_user.id == admin_ids[0]
+        return message.from_user.id in admin_ids
 
 
 filter_super_admin = FilterSuperAdmin()
