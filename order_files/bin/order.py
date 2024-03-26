@@ -164,6 +164,7 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
     response = ""
     orders_OK = 0
     orders_failed = 0
+    orders_stuck = 0
     while orders_OK + orders_failed < orders_sent:
         current = order_backup_queue.get()
         if current.order_id == globals.order_id:
@@ -173,8 +174,10 @@ def send_order(bot, chat_callback_id, divisions, castle_target, defense, tactics
                 orders_failed += 1
                 response += current.text
         else:
-            order_backup_queue.put(current)
+            orders_stuck += 1
             logging.warning("Incorrect order_id, received {0}, now it is {1}".format(current, globals.order_id))
+            if orders_stuck < 1_000:
+                order_backup_queue.put(current)
 
     globals.order_id += 1
     time_end = datetime.datetime.now()
