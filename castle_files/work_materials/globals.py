@@ -15,8 +15,8 @@ except ImportError:
     enable_api = True
     enable_telethon = True
 
-castles = ['🌑', '🐺', '🥔', '🦅', '🦌', '🦈', '🐉', '🐢', '☘️']
-emodji_to_castle_names = {'🌑': 'Moonlight Castle', '🐉': 'Dragonscale Castle', '☘': 'oplot', '🐺': 'Wolfpack Castle',
+castles = ['🌑', '🐺', '🥔', '🦅', '🦌', '🦈', '🐉', '🐢', '🍀']
+emodji_to_castle_names = {'🌑': 'Moonlight Castle', '🐉': 'Dragonscale Castle', '🍀': 'oplot', '🐺': 'Wolfpack Castle',
                           '🐢': 'tortuga', '🦈': 'Sharkteeth Castle',
                           '🥔': 'Potato Castle', '🦅': 'Highnest Castle', '🦌': 'Deerhorn Castle'}
 
